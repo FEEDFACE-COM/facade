@@ -21,7 +21,6 @@ func NewFcdBeamer(host string, port uint) (*FcdBeamer) {
 func (beamer *FcdBeamer) beam() { 
     Debug("facade beamer listening at %s:%d",beamer.host,beamer.port) 
     listen, err := net.Listen("tcp",fmt.Sprintf("%s:%d",beamer.host,beamer.port))
-    //beamer.host+":"+string(beamer.port) )
     if err != nil {
         FATAL("fail to listen on %s:%d: %s",beamer.host,beamer.port,err)
     }
