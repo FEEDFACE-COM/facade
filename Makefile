@@ -37,6 +37,9 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
+get:
+	go get -v 
+	
 clean:
 	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} 
 
@@ -46,9 +49,10 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 ${BUILD_PRODUCT}: ${SOURCE_FILES}
 	go build -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(wildcard *.go)
 
+proto: $(PROTOC_FILES:.proto=.pb.go)
 
 proto/%.pb.go: proto/%.proto
 	protoc -I proto $^ --go_out=plugins=grpc:proto
 
 
-.PHONY: help info build clean
+.PHONY: help info build clean get proto

@@ -190,15 +190,5 @@ func ShowVersion() {
 
 
 
-type FcdBeamer   struct {}
-func NewFcdBeamer(host string, port uint) (*FcdBeamer) { return new(FcdBeamer) }
-func (beamer *FcdBeamer) beam() { Info("beaming... ") }
 
-type FcdSender   struct {}
-func NewFcdSender(host string, port uint, timeout float64) (*FcdSender) { return new(FcdSender) }
-func (sender *FcdSender) send() { Info("sending... ") }
-
-type FcdConfer   struct {}
-func NewFcdConfer(host string, port uint, timeout float64) (*FcdConfer) { return new(FcdConfer) }
-func (confer *FcdConfer) conf() { Info("confing... ") }
 
