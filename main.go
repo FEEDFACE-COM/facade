@@ -3,6 +3,7 @@ package main
 
 import (
     "fmt"
+    "strings"
     "flag"
     "log"
     "os"    
@@ -101,6 +102,7 @@ func main() {
             flags[Send].Usage = func() { ShowModeHelp(Send,flags) }
             flags[Send].Parse( flag.Args()[1:] )
             sender = NewFcdSender(connectHost,connectPort,connectTimeout)
+            sender.text = strings.Join(flags[Send].Args()[0:], "  ")
             
         case Conf:
             flags[Conf].Usage = func() { ShowModeHelp(Conf,flags) }

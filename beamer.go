@@ -2,6 +2,7 @@
 package main
 
 import (
+    "fmt"
     "net"    
     "golang.org/x/net/context"
     "google.golang.org/grpc"
@@ -18,8 +19,9 @@ func NewFcdBeamer(host string, port uint) (*FcdBeamer) {
 }
 
 func (beamer *FcdBeamer) beam() { 
-    Debug("beamer listening at %s:%d",beamer.host,beamer.port) 
-    listen, err := net.Listen("tcp",beamer.host+":"+string(beamer.port) )
+    Debug("facade beamer listening at %s:%d",beamer.host,beamer.port) 
+    listen, err := net.Listen("tcp",fmt.Sprintf("%s:%d",beamer.host,beamer.port))
+    //beamer.host+":"+string(beamer.port) )
     if err != nil {
         FATAL("fail to listen on %s:%d: %s",beamer.host,beamer.port,err)
     }
@@ -34,7 +36,7 @@ func (beamer *FcdBeamer) beam() {
 type FcdServer struct {}
 
 func (server *FcdServer) BeamText(ctx context.Context, request *proto.BeamRequest) (*proto.Response, error) {
-    Debug("beam %s",request.Text)
+    Debug(">> %s",request.Text)
     return &proto.Response{Success: true}, nil
 }
 

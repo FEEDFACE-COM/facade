@@ -1,7 +1,8 @@
 
-BUILD_NAME     = fcd
-BUILD_VERSION ?= $(shell git describe --tags)
-BUILD_DATE     ?= $(shell date -u +"%Y-%m-%d")
+BUILD_NAME      = fcd
+BUILD_VERSION  ?= $(shell git describe --tags)
+BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
+BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
 BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
@@ -33,7 +34,6 @@ info:
 	@echo "### Build Variables ###"
 	@echo " source     ${SOURCE_FILES}"
 	@echo " protoc     ${PROTOC_FILES}"
-	@echo " ldflags    ${LDFLAGS}"
 	
 build: ${BUILD_PRODUCT}
 
