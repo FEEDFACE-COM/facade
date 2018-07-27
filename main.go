@@ -108,11 +108,7 @@ func main() {
             confer = NewFcdConfer(connectHost,connectPort,connectTimeout)
             
         case Test:
-            err := doTest(testFlags, flag.Args()[1:])
-            if err != nil {
-                ERROR("could not test: %s",err)
-                os.Exit(-1)    
-            }
+            FATAL("TEST TEST TEST")
 
         case Version:
             ShowVersion()
