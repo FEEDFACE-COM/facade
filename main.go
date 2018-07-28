@@ -13,10 +13,9 @@ const AUTHOR =
 
 // "FACADE by FEEDFACE.COM"
 
-`   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _           
+`   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
   |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
   |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
-
 `
 
 //`   _   _   _   _   _   _
@@ -151,7 +150,7 @@ func ShowModeHelp(mode Mode, flagSetMap map[Mode]*flag.FlagSet) {
         if len(f.Name) == 1 { switches += " [ -"+f.Name+name+" ]" }
         if len(f.Name) >  1 { flags += " [ -"+f.Name+name+" ]" }
     })
-    fmt.Fprintf(os.Stderr,AUTHOR,)
+    ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
     fmt.Fprintf(os.Stderr,"  %s %s%s%s\n",BUILD_NAME,mode,switches,flags)
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
@@ -167,7 +166,7 @@ func ShowHelp() {
         if name != "" { name = "="+name }
         if len(f.Name) >=  1 { flags +=    " [ -"+f.Name+name+" ]" }
     })
-    fmt.Fprintf(os.Stderr,AUTHOR,)
+    ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
     fmt.Fprintf(os.Stderr,"  %s %s   ",BUILD_NAME,flags)
     for _,mode := range modes {
@@ -188,10 +187,8 @@ func ShowHelp() {
     
 
 func ShowVersion() {
-    fmt.Fprintf(os.Stderr, 
-`%s
-%s, version %s for %s, built %s
-`, AUTHOR, BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE )
+    fmt.Printf(AUTHOR)
+    fmt.Fprintf(os.Stderr,"\n%s, version %s for %s, built %s\n",BUILD_NAME,BUILD_VERSION,BUILD_PLATFORM,BUILD_DATE)
 }    
     
 
