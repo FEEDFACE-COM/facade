@@ -37,6 +37,7 @@ const (
     Help    Mode = "help"
     Test    Mode = "test"
 )
+var modes = []Mode{Send,Conf}
 
 
 
@@ -50,34 +51,42 @@ var (
 )
 
 
+
 func main() {
     log.SetFlags(0)
     
     flag.Usage = ShowHelp
 
+    flags := make(map[Mode] *flag.FlagSet)
 
-    var flags map[Mode] *flag.FlagSet
-    
-    flags = make(map[Mode] *flag.FlagSet)
-    flags[Beam] = flag.NewFlagSet(string(Beam), flag.ExitOnError)
-    flags[Send] = flag.NewFlagSet(string(Send), flag.ExitOnError)
-    flags[Conf] = flag.NewFlagSet(string(Conf), flag.ExitOnError)
-
-    for _,elem := range []*flag.FlagSet{flag.CommandLine,flags[Beam],flags[Send],flags[Conf]} {
-        elem.BoolVar(&VERBOSE,"v", false, "show verbose messages")
-        elem.BoolVar(&DEBUG,  "d", false, "show debug messages")
+    if SERVER_MODE_AVAILABLE {
+        modes = append(modes, Beam)
     }
     
+    for _,mode := range modes {
+        flags[mode] = flag.NewFlagSet(string(mode), flag.ExitOnError)
+        flags[mode].Usage = func() { ShowModeHelp(mode,flags) }
+    }
+
     for _,mode := range []Mode{Send,Conf} {
         flags[mode].UintVar(&connectPort, "port", connectPort, "connect to `port`" )
         flags[mode].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
         flags[mode].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
-    for _,mode := range []Mode{Beam} {
-        flags[mode].UintVar(&listenPort, "port", listenPort, "listen on `port`" )
-        flags[mode].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
-        flags[mode].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+    if SERVER_MODE_AVAILABLE {
+        flags[Beam].UintVar(&listenPort, "port", listenPort, "listen on `port`" )
+        flags[Beam].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
+        flags[Beam].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+    }
+
+    all := []*flag.FlagSet{flag.CommandLine}
+    for _,mode := range modes {
+        all = append(all,flags[mode])
+    }
+    for _,flagSet := range all {
+        flagSet.BoolVar(&VERBOSE,"v", false, "show verbose messages")
+        flagSet.BoolVar(&DEBUG,  "d", false, "show debug messages")
     }
     
     flag.Parse()
@@ -86,28 +95,30 @@ func main() {
         os.Exit(-2) 
     }
     
-    var beamer *FcdBeamer
-    var sender *FcdSender
-    var confer *FcdConfer
+    var client *Client
+    var server *Server
 
     
     switch ( Mode(flag.Args()[0]) ) {
 
         case Beam:
-            flags[Beam].Usage = func() { ShowModeHelp(Beam,flags) }
+            if !SERVER_MODE_AVAILABLE {
+                ShowHelp()
+                os.Exit(-2)    
+            }
             flags[Beam].Parse( flag.Args()[1:] )
-            beamer = NewFcdBeamer(listenHost,listenPort)
+            server = NewServer(listenHost,listenPort)
+            server.Serve()
             
         case Send:
-            flags[Send].Usage = func() { ShowModeHelp(Send,flags) }
             flags[Send].Parse( flag.Args()[1:] )
-            sender = NewFcdSender(connectHost,connectPort,connectTimeout)
-            sender.text = strings.Join(flags[Send].Args()[0:], "  ")
+            client = NewClient(connectHost,connectPort,connectTimeout)
+            client.text = strings.Join(flags[Send].Args()[0:], "  ")
+            client.Send()
             
         case Conf:
-            flags[Conf].Usage = func() { ShowModeHelp(Conf,flags) }
             flags[Conf].Parse( flag.Args()[1:] )
-            confer = NewFcdConfer(connectHost,connectPort,connectTimeout)
+            client = NewClient(connectHost,connectPort,connectTimeout)
             
         case Test:
             FATAL("TEST TEST TEST")
@@ -124,18 +135,7 @@ func main() {
             ShowHelp()
             os.Exit(-2)
     }
-    
-    if beamer != nil {
-        beamer.beam()    
-    }
-    
-    if sender != nil {
-        sender.send()
-    }
-    
-    if confer != nil {
-        confer.conf()
-    }
+        
     
 }
 
@@ -169,9 +169,15 @@ func ShowHelp() {
     })
     fmt.Fprintf(os.Stderr,AUTHOR,)
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s   %s | %s | %s\n",BUILD_NAME,flags,Beam,Send,Conf)
+    fmt.Fprintf(os.Stderr,"  %s %s   ",BUILD_NAME,flags)
+    for _,mode := range modes {
+        fmt.Fprintf(os.Stderr,"%s | ",mode)
+    }
+    fmt.Fprintf(os.Stderr,"%s\n",Version)
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Beam,"receive text and display")
+    if SERVER_MODE_AVAILABLE {
+        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Beam,"receive text and display")
+    }
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to display")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control display style")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show version info")

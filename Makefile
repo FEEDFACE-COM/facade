@@ -9,7 +9,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 PROTOC_FILES=$(wildcard proto/*.proto)
-SOURCE_FILES=$(wildcard *.go) $(PROTOC_FILES:.proto=.pb.go)
+SOURCE_FILES=$(shell go list -f '{{.GoFiles}}' | tr -d '[]') $(PROTOC_FILES:.proto=.pb.go)
 
 
 LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
@@ -17,10 +17,10 @@ LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSIO
 
 help:
 	@echo "### Usage ###"
-	@echo " make build    # build static binary"
+	@echo " make build    # build static executable"
+	@echo " make proto    # rebuild protocol files"
 	@echo " make info     # show build info"
 	@echo " make clean    # clean up"
-	@echo " make clean    # this help"
 
 
 info: 
@@ -47,7 +47,9 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
 ${BUILD_PRODUCT}: ${SOURCE_FILES}
-	go build -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(wildcard *.go)
+	go build -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
+
+
 
 proto: $(PROTOC_FILES:.proto=.pb.go)
 
