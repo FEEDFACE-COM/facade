@@ -1,9 +1,11 @@
 
-// +build !linux
-// +build !arm
+// +build !linux,!arm
+// +build !darwin,!amd64
 
 
 package main
+
+
 
 const SERVER_MODE_AVAILABLE = false
 

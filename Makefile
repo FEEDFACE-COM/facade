@@ -9,11 +9,16 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 PROTOC_FILES=$(wildcard proto/*.proto)
-SOURCE_FILES=$(shell go list -f '{{.GoFiles}}' | tr -d '[]') $(PROTOC_FILES:.proto=.pb.go)
+#SOURCE_FILES=$(shell go list -f '{{.GoFiles}}' . ./log ./render | tr -d '[]' | tr '\n' ' ') 
+#$(PROTOC_FILES:.proto=.pb.go)
+
+SOURCE_FILES=$(wildcard *.go */*.go)
 
 
 LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
 
+
+default: build
 
 help:
 	@echo "### Usage ###"
@@ -47,7 +52,7 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
 ${BUILD_PRODUCT}: ${SOURCE_FILES}
-	go build -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
+	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
 
 

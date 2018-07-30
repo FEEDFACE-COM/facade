@@ -5,8 +5,9 @@ import (
     "fmt"
     "strings"
     "flag"
-    "log"
+    log "./log"
     "os"    
+
 )
 
 const AUTHOR = 
@@ -41,10 +42,10 @@ var modes = []Mode{Send,Conf}
 
 
 var (
-    connectPort    uint     = 0xfcd
+    textPort       uint     = 0xfcd
+    confPort       uint     = 0xfcdc
     connectHost    string   = "localhost"
     connectTimeout float64  = 5.0
-    listenPort     uint     = 0xfcd
     listenHost     string   = "0.0.0.0"
     daemonize      bool     = false
 )
@@ -52,7 +53,9 @@ var (
 
 
 func main() {
-    log.SetFlags(0)
+    quiet, verbose, debug := false, false, false
+    
+    log.SetVerbosity(log.NOTICE)
     
     flag.Usage = ShowHelp
 
@@ -67,14 +70,18 @@ func main() {
         flags[mode].Usage = func() { ShowModeHelp(mode,flags) }
     }
 
+
+    flags[Send].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
+
     for _,mode := range []Mode{Send,Conf} {
-        flags[mode].UintVar(&connectPort, "port", connectPort, "connect to `port`" )
+        flags[mode].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
         flags[mode].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
         flags[mode].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
     if SERVER_MODE_AVAILABLE {
-        flags[Beam].UintVar(&listenPort, "port", listenPort, "listen on `port`" )
+        flags[Beam].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
+        flags[Beam].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
         flags[Beam].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
         flags[Beam].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
@@ -84,8 +91,9 @@ func main() {
         all = append(all,flags[mode])
     }
     for _,flagSet := range all {
-        flagSet.BoolVar(&VERBOSE,"v", false, "show verbose messages")
-        flagSet.BoolVar(&DEBUG,  "d", false, "show debug messages")
+        flagSet.BoolVar(&verbose,"v", verbose, "show info messages")
+        flagSet.BoolVar(&debug,  "d", debug,   "show debug messages")
+        flagSet.BoolVar(&debug,  "q", debug,   "show no messages")
     }
     
     flag.Parse()
@@ -97,7 +105,6 @@ func main() {
     var client *Client
     var server *Server
 
-    
     switch ( Mode(flag.Args()[0]) ) {
 
         case Beam:
@@ -106,21 +113,19 @@ func main() {
                 os.Exit(-2)    
             }
             flags[Beam].Parse( flag.Args()[1:] )
-            server = NewServer(listenHost,listenPort)
-            server.Serve()
+            server = NewServer(listenHost,confPort,textPort)
             
         case Send:
             flags[Send].Parse( flag.Args()[1:] )
-            client = NewClient(connectHost,connectPort,connectTimeout)
+            client = NewClient(connectHost,confPort,textPort,connectTimeout)
             client.text = strings.Join(flags[Send].Args()[0:], "  ")
-            client.Send()
             
         case Conf:
             flags[Conf].Parse( flag.Args()[1:] )
-            client = NewClient(connectHost,connectPort,connectTimeout)
+            client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
         case Test:
-            FATAL("TEST TEST TEST")
+            log.Fatal("TEST TEST TEST")
 
         case Version:
             ShowVersion()
@@ -134,6 +139,37 @@ func main() {
             ShowHelp()
             os.Exit(-2)
     }
+    
+    if debug { 
+        log.SetVerbosity(log.DEBUG) 
+    } else if verbose { 
+        log.SetVerbosity(log.INFO)
+    } else if quiet { 
+        log.SetVerbosity(log.WARNING) 
+    }
+    
+    
+    log.Info(AUTHOR)
+
+
+    switch ( Mode(flag.Args()[0]) ) {
+
+        case Beam:
+            if server == nil { log.PANIC("server not available") }
+            server.Serve()
+            
+        case Send:
+            if client == nil { log.PANIC("client not available") }
+            client.SendText()
+            
+        case Conf:
+            if client == nil { log.PANIC("client not available") }
+            client.SendConf()
+            
+        default:
+            log.PANIC("inconsistent mode")
+    }
+        
         
     
 }
