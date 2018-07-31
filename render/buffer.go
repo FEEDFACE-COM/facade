@@ -3,13 +3,13 @@ package render
 
 import (
     "fmt"
+    gfx "../gfx"
 )
 
 type Buffer struct {
     head *Line
     tail *Line
     size uint
-    page PageDirection
     twice bool
 }
 
@@ -20,17 +20,10 @@ type Line struct {
 }
 
 
-
-type PageDirection string
-const (
-    PageUp   PageDirection = "up"
-    PageDown PageDirection = "down"
-    DefaultPageDirection PageDirection = "up"
-)
     
 
 func EmptyBuffer(size uint) *Buffer {
-    buffer := &Buffer{page:DefaultPageDirection}
+    buffer := &Buffer{}
     for i:=uint(0); i<=size; i++ {
         buffer.addTail("")
     }
@@ -38,7 +31,7 @@ func EmptyBuffer(size uint) *Buffer {
 }
 
 func DebugBuffer(size uint) *Buffer {
-    buffer := &Buffer{page: DefaultPageDirection}
+    buffer := &Buffer{}
     for i:=uint(0); i<size; i++ {
         buffer.addTail(fmt.Sprintf("buffered %d/%d",i+1,size) )
     }
@@ -91,20 +84,20 @@ func (buffer *Buffer) Queue(timer *Timer, text string) {
 
 func (buffer *Buffer) Desc() string { return fmt.Sprintf("gridBuffer[%d]",buffer.size) }
 
-func (buffer *Buffer) Debug() string {
+func (buffer *Buffer) Debug(dir gfx.PageDirection) string {
     ret := ""
     var ptr *Line
     var idx uint
-    if buffer.page == PageDown { ptr = buffer.head ; idx = 0 }
-    if buffer.page == PageUp   { ptr = buffer.tail ; idx = buffer.size }
+    if dir == gfx.PageDown { ptr = buffer.head ; idx = 0 }
+    if dir == gfx.PageUp   { ptr = buffer.tail ; idx = buffer.size }
 
     for ptr != nil {
         h,t := " ", " "
         if ptr == buffer.head { h = "h" }
         if ptr == buffer.tail { t = "t" }
         ret = ret + fmt.Sprintf("#%02d %s%s %s\n",idx,h,t,ptr.text)
-        if buffer.page == PageDown { ptr = ptr.next; idx = (idx + 1)   }
-        if buffer.page == PageUp   { ptr = ptr.prev; idx = (idx - 1 + buffer.size) % buffer.size }
+        if dir == gfx.PageDown { ptr = ptr.next; idx = (idx + 1)   }
+        if dir == gfx.PageUp   { ptr = ptr.prev; idx = (idx - 1 + buffer.size) % buffer.size }
     }
     return ret
     

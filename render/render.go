@@ -3,6 +3,7 @@ package render
 
 import (
     "time"
+    gfx "../gfx"
     log "../log"
 )
 
@@ -51,7 +52,7 @@ func (renderer *Renderer) Start() error {
             }
         
             if DEBUG_BUFFER {
-                log.Debug("\n%.1fs %s\n%s",now.time,buffer.Desc(),buffer.Debug()) 
+                log.Debug("\n%.1fs %s\n%s",now.time,buffer.Desc(),buffer.Debug(gfx.PageDown)) 
             }
         }
         
