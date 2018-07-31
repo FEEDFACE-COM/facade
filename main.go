@@ -5,9 +5,9 @@ import (
     "fmt"
     "strings"
     "flag"
-    log "./log"
     "os"    
-
+    log "./log"
+    render "./render"
 )
 
 const AUTHOR = 
@@ -93,7 +93,7 @@ func main() {
     for _,flagSet := range all {
         flagSet.BoolVar(&verbose,"v", verbose, "show info messages")
         flagSet.BoolVar(&debug,  "d", debug,   "show debug messages")
-        flagSet.BoolVar(&debug,  "q", debug,   "show no messages")
+        flagSet.BoolVar(&debug,  "q", debug,   "show warning messages only")
     }
     
     flag.Parse()
@@ -104,7 +104,8 @@ func main() {
     
     var client *Client
     var server *Server
-
+    var renderer *render.Renderer
+    
     switch ( Mode(flag.Args()[0]) ) {
 
         case Beam:
@@ -114,6 +115,7 @@ func main() {
             }
             flags[Beam].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
+            renderer = render.NewRenderer()
             
         case Send:
             flags[Send].Parse( flag.Args()[1:] )
@@ -156,6 +158,16 @@ func main() {
 
         case Beam:
             if server == nil { log.PANIC("server not available") }
+            if renderer == nil { log.PANIC("renderer not available") }
+            
+            log.Debug("initialize graphics")
+            err := renderer.Init() 
+            if err != nil {
+                log.Fatal("could not initialize graphics: %s",err)    
+            }
+            renderer.Start()
+            
+            
             server.Serve()
             
         case Send:

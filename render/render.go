@@ -8,17 +8,23 @@ import (
 
 const FRAME_RATE = 60.0
 
-var (
-    
-)
+type Renderer struct {
+}
+
+func NewRenderer() *Renderer {
+    return &Renderer{}    
+}
+
+const DEBUG_CLOCK  = false
+const DEBUG_BUFFER = true
 
 
-func Init() error {
+func (renderer *Renderer) Init() error {
     return nil
 }
 
 
-func Start() error {
+func (renderer *Renderer) Start() error {
 
     InitClock()
 
@@ -26,7 +32,10 @@ func Start() error {
     var prev Clock = Clock{frame: 0}
     
 
-    log.Debug("render start")
+//    buffer := EmptyBuffer(4)
+    buffer := DebugBuffer(4)
+
+    log.Debug("renderer start")
     for {
         now.Tick()
 
@@ -34,13 +43,18 @@ func Start() error {
         // TBD
 
 
-        // show benchmarks
-        if (now.frame % 50 == 0) {
-            fps := float64(now.frame - prev.frame) / (now.time - prev.time)
-            log.Debug("frame #%05d %5.2ffps    %7.2fs  %4.2f↺  %4.2f⤢  %d#",
-                now.frame,fps,now.time,now.cycle,now.fader,now.count)
-            prev = now
+        if now.frame % 50 == 0 {
+            if DEBUG_CLOCK   {
+                fps := float64(now.frame - prev.frame) / (now.time - prev.time)
+                log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
+                prev = now
+            }
+        
+            if DEBUG_BUFFER {
+                log.Debug("\n%.1fs %s\n%s",now.time,buffer.Desc(),buffer.Debug()) 
+            }
         }
+        
         // wait for next frame
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }

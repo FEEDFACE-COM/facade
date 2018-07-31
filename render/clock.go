@@ -4,6 +4,7 @@ package render
 import (
     "time"   
     "math"
+    "fmt"
     gfx "../gfx"
 )
 
@@ -51,4 +52,6 @@ func (clock *Clock) Tick() {
     
 }
 
-
+func (clock *Clock) Desc() string {
+    return fmt.Sprintf("%7.2fs %4.2f↺ %4.2f⤢ %d#",clock.time,clock.cycle,clock.fader,clock.count)
+}
