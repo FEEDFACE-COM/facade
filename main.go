@@ -30,8 +30,10 @@ var BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE string
 
 type Mode string
 const (
-    Beam    Mode = "beam"
+    Read    Mode = "read"
+    Listen  Mode = "listen"
     Send    Mode = "send"
+    Pipe    Mode = "pipe"
     Conf    Mode = "conf"    
     Version Mode = "info"
     Help    Mode = "help"
@@ -61,8 +63,8 @@ func main() {
 
     flags := make(map[Mode] *flag.FlagSet)
 
-    if SERVER_MODE_AVAILABLE {
-        modes = append(modes, Beam)
+    if render.RENDERER_AVAILABLE {
+        modes = append(modes, Read)
     }
     
     for _,mode := range modes {
@@ -79,11 +81,11 @@ func main() {
         flags[mode].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
-    if SERVER_MODE_AVAILABLE {
-        flags[Beam].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
-        flags[Beam].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
-        flags[Beam].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
-        flags[Beam].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+    if render.RENDERER_AVAILABLE {
+        flags[Read].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
+        flags[Read].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
+        flags[Read].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
+        flags[Read].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
 
     all := []*flag.FlagSet{flag.CommandLine}
@@ -108,12 +110,12 @@ func main() {
     
     switch ( Mode(flag.Args()[0]) ) {
 
-        case Beam:
-            if !SERVER_MODE_AVAILABLE {
+        case Read:
+            if !render.RENDERER_AVAILABLE {
                 ShowHelp()
                 os.Exit(-2)    
             }
-            flags[Beam].Parse( flag.Args()[1:] )
+            flags[Read].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
             renderer = render.NewRenderer()
             
@@ -156,7 +158,7 @@ func main() {
 
     switch ( Mode(flag.Args()[0]) ) {
 
-        case Beam:
+        case Read:
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             
@@ -222,8 +224,8 @@ func ShowHelp() {
     }
     fmt.Fprintf(os.Stderr,"%s\n",Version)
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    if SERVER_MODE_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Beam,"receive text and display")
+    if render.RENDERER_AVAILABLE {
+        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Read,"receive text and display")
     }
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to display")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control display style")
