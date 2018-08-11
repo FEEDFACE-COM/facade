@@ -12,22 +12,25 @@ const RENDERER_AVAILABLE = true
 const FRAME_RATE = 60.0
 
 type Renderer struct {
+    buffer *Buffer
+    textChan chan Text
 }
 
 func NewRenderer() *Renderer {
     return &Renderer{}    
 }
 
-const DEBUG_CLOCK  = false
+const DEBUG_CLOCK  = true
 const DEBUG_BUFFER = true
 
 
 func (renderer *Renderer) Init() error {
+    renderer.buffer = NewBufferDebug(4)
     return nil
 }
 
 
-func (renderer *Renderer) Start() error {
+func (renderer *Renderer) Render() error {
 
     InitClock()
 
@@ -35,8 +38,6 @@ func (renderer *Renderer) Start() error {
     var prev Clock = Clock{frame: 0}
     
 
-//    buffer := EmptyBuffer(4)
-    buffer := DebugBuffer(4)
 
     log.Debug("renderer start")
     for {
@@ -44,6 +45,8 @@ func (renderer *Renderer) Start() error {
 
         //draw
         // TBD
+        renderer.buffer.mutex.Lock()
+        
 
 
         if now.frame % 50 == 0 {
@@ -54,9 +57,11 @@ func (renderer *Renderer) Start() error {
             }
         
             if DEBUG_BUFFER {
-                log.Debug("\n%.1fs %s\n%s",now.time,buffer.Desc(),buffer.Debug(gfx.PageDown)) 
+                log.Debug("\n%.1fs %s\n%s",now.time,renderer.buffer.Desc(),renderer.buffer.Debug(gfx.PageDown)) 
             }
         }
+
+        renderer.buffer.mutex.Unlock()
         
         // wait for next frame
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
@@ -64,3 +69,13 @@ func (renderer *Renderer) Start() error {
     return nil
 }
 
+
+func (renderer *Renderer) ReadText(textChan chan Text) error {
+    for {
+        text := <-textChan
+//        log.Debug(">> %s",text)
+        renderer.buffer.Queue(text,1.0)
+    }
+    return nil
+    
+}

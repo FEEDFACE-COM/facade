@@ -6,9 +6,12 @@ import (
     "strings"
     "flag"
     "os"    
+    "os/signal"
+//    "bufio"
     log "./log"
     render "./render"
 )
+
 
 const AUTHOR = 
 
@@ -53,10 +56,19 @@ var (
 )
 
 
-
 func main() {
     quiet, verbose, debug := false, false, false
     
+    
+    signals := make(chan os.Signal, 1)
+    signal.Notify(signals, os.Interrupt)
+    go func() {
+        sig := <-signals
+        log.Notice("%s",sig)
+        os.Exit(0)
+    }()
+
+
     log.SetVerbosity(log.NOTICE)
     
     flag.Usage = ShowHelp
@@ -65,6 +77,7 @@ func main() {
 
     if render.RENDERER_AVAILABLE {
         modes = append(modes, Read)
+        modes = append(modes, Listen)
     }
     
     for _,mode := range modes {
@@ -82,10 +95,10 @@ func main() {
     }
 
     if render.RENDERER_AVAILABLE {
-        flags[Read].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
-        flags[Read].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
-        flags[Read].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
-        flags[Read].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+        flags[Listen].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
+        flags[Listen].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
+        flags[Listen].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
+        flags[Listen].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
 
     all := []*flag.FlagSet{flag.CommandLine}
@@ -107,8 +120,10 @@ func main() {
     var client *Client
     var server *Server
     var renderer *render.Renderer
+    var scanner *Scanner
     
-    switch ( Mode(flag.Args()[0]) ) {
+    mode := Mode(flag.Args()[0])
+    switch ( mode ) {
 
         case Read:
             if !render.RENDERER_AVAILABLE {
@@ -116,8 +131,18 @@ func main() {
                 os.Exit(-2)    
             }
             flags[Read].Parse( flag.Args()[1:] )
+            renderer = render.NewRenderer()
+            scanner = NewScanner()
+
+        case Listen:
+            if !render.RENDERER_AVAILABLE {
+                ShowHelp()
+                os.Exit(-2)    
+            }
+            flags[Read].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
             renderer = render.NewRenderer()
+
             
         case Send:
             flags[Send].Parse( flag.Args()[1:] )
@@ -156,22 +181,26 @@ func main() {
     log.Info(AUTHOR)
 
 
-    switch ( Mode(flag.Args()[0]) ) {
+    switch ( mode ) {
 
         case Read:
-            if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            
+            if scanner == nil { log.PANIC("scanner not available") }
             log.Debug("initialize graphics")
             err := renderer.Init() 
             if err != nil {
                 log.Fatal("could not initialize graphics: %s",err)    
             }
-            renderer.Start()
-            
-            
+            texts := make(chan render.Text)
+            go scanner.ScanText(texts)
+            go renderer.ReadText(texts)
+            renderer.Render()
+
+        case Listen:
+            if server == nil { log.PANIC("server not available") }
+            if renderer == nil { log.PANIC("renderer not available") }
             server.Serve()
-            
+                    
         case Send:
             if client == nil { log.PANIC("client not available") }
             client.SendText()

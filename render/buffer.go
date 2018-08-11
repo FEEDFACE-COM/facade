@@ -3,12 +3,15 @@ package render
 
 import (
     "fmt"
+    "sync"
+//    log "../log"
     gfx "../gfx"
 )
 
 type Buffer struct {
     head *Line
     tail *Line
+    mutex *sync.Mutex
     size uint
     twice bool
 }
@@ -19,21 +22,24 @@ type Line struct {
     prev *Line
 }
 
+type Text string
 
     
 
-func EmptyBuffer(size uint) *Buffer {
+func NewBuffer(size uint) *Buffer {
     buffer := &Buffer{}
-    for i:=uint(0); i<=size; i++ {
+    buffer.mutex = &sync.Mutex{}
+    for i:=uint(0); i<size; i++ {
         buffer.addTail("")
     }
     return buffer
 }
 
-func DebugBuffer(size uint) *Buffer {
-    buffer := &Buffer{}
+func NewBufferDebug(size uint) *Buffer {
+    buffer := NewBuffer(size)
     for i:=uint(0); i<size; i++ {
-        buffer.addTail(fmt.Sprintf("buffered %d/%d",i+1,size) )
+        buffer.addTail( fmt.Sprintf("buffered %d/%d",i+1,size) )
+        buffer.delHead()
     }
     return buffer
 
@@ -70,16 +76,19 @@ func (buffer *Buffer) delHead() {
 }
 
 
-func (buffer *Buffer) Queue(timer *Timer, text string) {
-    if timer.fade() < 0.5 && buffer.size >= 2 && buffer.head.text == "" && buffer.head.next.text == "" {
-        buffer.head.text = text
+func (buffer *Buffer) Queue(text Text, fade float64) {
+    buffer.mutex.Lock()
+    if fade < 0.5 && buffer.size >= 2 && buffer.head.text == "" && buffer.head.next.text == "" {
+        buffer.head.text = string(text)
         buffer.twice = true
     } else if buffer.head.text == "" {
-        buffer.head.text = text
+        buffer.head.text = string(text)
     } else {
-        buffer.addTail(text)
+        buffer.addTail(string(text))
         buffer.delHead()
     }
+    buffer.mutex.Unlock()
+//    log.Debug("queue %s",text)
 }
 
 func (buffer *Buffer) Desc() string { return fmt.Sprintf("gridBuffer[%d]",buffer.size) }
