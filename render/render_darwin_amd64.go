@@ -5,6 +5,7 @@ import (
     "time"
     gfx "../gfx"
     log "../log"
+
 )
 
 const RENDERER_AVAILABLE = true
@@ -79,9 +80,19 @@ func (renderer *Renderer) Render() error {
 func (renderer *Renderer) ReadText(textChan chan Text) error {
     for {
         text := <-textChan
-//        log.Debug(">> %s",text)
+        log.Debug("++++ %s",text)
         renderer.buffer.Queue(text,1.0)
     }
     return nil
     
 }
+
+
+func (renderer *Renderer) ReadConf(confChan chan Conf) error {
+    for {
+        conf := <-confChan
+        log.Debug("++++ %s",conf)    
+    }
+    return nil
+}
+

@@ -25,7 +25,7 @@ func NewClient(host string, confPort uint, textPort uint, timeout float64) (*Cli
 
 func (client *Client) SendText(text string) { 
     textConnStr := fmt.Sprintf("%s:%d",client.host,client.textPort)
-    log.Info("connect to %s",textConnStr) 
+    log.Info("connect text to %s",textConnStr) 
     conn, err := net.Dial("tcp", textConnStr)
     if err != nil {
         log.Error("fail to dial %s: %s",textConnStr,err)
@@ -44,7 +44,7 @@ func (client *Client) SendText(text string) {
 
 func (client *Client) ScanAndSendText() {
     textConnStr := fmt.Sprintf("%s:%d",client.host,client.textPort)
-    log.Info("connect to %s",textConnStr) 
+    log.Info("connect text to %s",textConnStr) 
     conn, err := net.Dial("tcp", textConnStr)
     if err != nil {
         log.Error("fail to dial %s: %s",textConnStr,err)
@@ -72,8 +72,22 @@ func (client *Client) ScanAndSendText() {
 }
 
 
-func (client *Client) SendConf() { 
-    log.Info("connect to %s:%d",client.host,confPort) 
+func (client *Client) SendConf(conf string) { 
+    confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
+    log.Info("connect conf to %s",confConnStr) 
+    conn, err := net.Dial("tcp", confConnStr)
+    if err != nil {
+        log.Error("fail to dial %s: %s",confConnStr,err)
+        return
+    }
+    _, err = conn.Write( []byte(conf) )
+    if err != nil {
+        log.Error("fail to write to %s: %s",confConnStr,err)
+    }
+    if DEBUG_SEND {
+        log.Debug("==== %s",conf)
+    }
+    conn.Close()
 
 }
 

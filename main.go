@@ -7,7 +7,6 @@ import (
     "flag"
     "os"    
     "os/signal"
-//    "bufio"
     log "./log"
     render "./render"
 )
@@ -31,18 +30,18 @@ const AUTHOR =
 
 var BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE string
 
-type Mode string
+type Command string
 const (
-    Read    Mode = "read"
-    Listen  Mode = "recv"
-    Send    Mode = "send"
-    Pipe    Mode = "pipe"
-    Conf    Mode = "conf"    
-    Version Mode = "info"
-    Help    Mode = "help"
-    Test    Mode = "test"
+    Read    Command = "read"
+    Listen  Command = "recv"
+    Send    Command = "send"
+    Pipe    Command = "pipe"
+    Conf    Command = "conf"    
+    Version Command = "info"
+    Help    Command = "help"
+    Test    Command = "test"
 )
-var modes = []Mode{Send,Conf,Pipe}
+var cmds = []Command{Send,Conf,Pipe}
 
 
 
@@ -73,27 +72,27 @@ func main() {
     
     flag.Usage = ShowHelp
 
-    flags := make(map[Mode] *flag.FlagSet)
+    flags := make(map[Command] *flag.FlagSet)
 
     if render.RENDERER_AVAILABLE {
-        modes = append(modes, Read)
-        modes = append(modes, Listen)
+        cmds = append(cmds, Read)
+        cmds = append(cmds, Listen)
     }
     
-    for _,mode := range modes {
-        flags[mode] = flag.NewFlagSet(string(mode), flag.ExitOnError)
-        flags[mode].Usage = func() { ShowModeHelp(mode,flags) }
+    for _,cmd := range cmds {
+        flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
+        flags[cmd].Usage = func() { ShowCommandHelp(cmd,flags) }
     }
 
 
-    for _,mode := range []Mode{Send,Pipe} {
-        flags[mode].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
+    for _,cmd := range []Command{Send,Pipe} {
+        flags[cmd].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
     }
     
-    for _,mode := range []Mode{Send,Pipe,Conf} {
-        flags[mode].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
-        flags[mode].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
-        flags[mode].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
+    for _,cmd := range []Command{Send,Pipe,Conf} {
+        flags[cmd].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
+        flags[cmd].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
+        flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
     if render.RENDERER_AVAILABLE {
@@ -104,8 +103,8 @@ func main() {
     }
 
     all := []*flag.FlagSet{flag.CommandLine}
-    for _,mode := range modes {
-        all = append(all,flags[mode])
+    for _,cmd := range cmds {
+        all = append(all,flags[cmd])
     }
     for _,flagSet := range all {
         flagSet.BoolVar(&verbose,"v", verbose, "show info messages")
@@ -124,9 +123,10 @@ func main() {
     var renderer *render.Renderer
     var scanner *Scanner
     var text string
+    var conf string
     
-    mode := Mode(flag.Args()[0])
-    switch ( mode ) {
+    cmd := Command(flag.Args()[0])
+    switch ( cmd ) {
 
         case Read:
             if !render.RENDERER_AVAILABLE {
@@ -164,6 +164,7 @@ func main() {
         case Conf:
             flags[Conf].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            conf = strings.Join(flags[Conf].Args()[0:], " " )
             
         case Test:
             log.Fatal("TEST TEST TEST")
@@ -193,7 +194,7 @@ func main() {
     log.Info(AUTHOR)
 
 
-    switch ( mode ) {
+    switch ( cmd ) {
 
         case Read:
             if renderer == nil { log.PANIC("renderer not available") }
@@ -209,8 +210,11 @@ func main() {
             if renderer == nil { log.PANIC("renderer not available") }
             renderer.Init() 
             texts := make(chan render.Text)
-            go server.Listen(texts)
+            confs := make(chan render.Conf)
+            go server.ListenText(texts)
+            go server.ListenConf(confs)
             go renderer.ReadText(texts)
+            go renderer.ReadConf(confs)
             renderer.Render()
                     
         case Send:
@@ -223,10 +227,10 @@ func main() {
             
         case Conf:
             if client == nil { log.PANIC("client not available") }
-            client.SendConf()
+            client.SendConf(conf)
             
         default:
-            log.PANIC("inconsistent mode")
+            log.PANIC("inconsistent command")
     }
         
         
@@ -236,10 +240,10 @@ func main() {
 
 
 
-func ShowModeHelp(mode Mode, flagSetMap map[Mode]*flag.FlagSet) {
+func ShowCommandHelp(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
     switches := ""
     flags := ""
-    flagSetMap[mode].VisitAll( func(f *flag.Flag) { 
+    flagSetMap[cmd].VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
         if name != "" { name = "="+name }
         if len(f.Name) == 1 { switches += " [ -"+f.Name+name+" ]" }
@@ -247,9 +251,9 @@ func ShowModeHelp(mode Mode, flagSetMap map[Mode]*flag.FlagSet) {
     })
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s%s%s\n",BUILD_NAME,mode,switches,flags)
+    fmt.Fprintf(os.Stderr,"  %s %s%s%s\n",BUILD_NAME,cmd,switches,flags)
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
-    flagSetMap[mode].PrintDefaults()
+    flagSetMap[cmd].PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
 }
 
@@ -264,17 +268,19 @@ func ShowHelp() {
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
     fmt.Fprintf(os.Stderr,"  %s %s   ",BUILD_NAME,flags)
-    for _,mode := range modes {
-        fmt.Fprintf(os.Stderr,"%s | ",mode)
+    for _,cmd := range cmds {
+        fmt.Fprintf(os.Stderr,"%s | ",cmd)
     }
     fmt.Fprintf(os.Stderr,"%s\n",Version)
-    fmt.Fprintf(os.Stderr,"\nModes:\n")
+    fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if render.RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Read,"receive text and display")
+        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Read,"pipe stdin to display")
+        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Listen,"receive text and display")
     }
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to display")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control display style")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show version info")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to remote facade")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Pipe,"pipe stdin to remote facade")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control remote facade")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show facade info")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
