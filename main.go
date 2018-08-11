@@ -34,7 +34,7 @@ var BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE string
 type Mode string
 const (
     Read    Mode = "read"
-    Listen  Mode = "listen"
+    Listen  Mode = "recv"
     Send    Mode = "send"
     Pipe    Mode = "pipe"
     Conf    Mode = "conf"    
@@ -42,7 +42,7 @@ const (
     Help    Mode = "help"
     Test    Mode = "test"
 )
-var modes = []Mode{Send,Conf}
+var modes = []Mode{Send,Conf,Pipe}
 
 
 
@@ -86,9 +86,11 @@ func main() {
     }
 
 
-    flags[Send].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
-
-    for _,mode := range []Mode{Send,Conf} {
+    for _,mode := range []Mode{Send,Pipe} {
+        flags[mode].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
+    }
+    
+    for _,mode := range []Mode{Send,Pipe,Conf} {
         flags[mode].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
         flags[mode].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
         flags[mode].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
@@ -121,6 +123,7 @@ func main() {
     var server *Server
     var renderer *render.Renderer
     var scanner *Scanner
+    var text string
     
     mode := Mode(flag.Args()[0])
     switch ( mode ) {
@@ -146,8 +149,17 @@ func main() {
             
         case Send:
             flags[Send].Parse( flag.Args()[1:] )
+            if len(flags[Send].Args()) < 1 {
+                ShowHelp()
+                os.Exit(-1)                    
+            }
+            text = strings.Join(flags[Send].Args()[0:], " ")
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
-            client.text = strings.Join(flags[Send].Args()[0:], "  ")
+            
+        case Pipe:
+            flags[Pipe].Parse( flag.Args()[1:] )
+            client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            
             
         case Conf:
             flags[Conf].Parse( flag.Args()[1:] )
@@ -186,11 +198,7 @@ func main() {
         case Read:
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            log.Debug("initialize graphics")
-            err := renderer.Init() 
-            if err != nil {
-                log.Fatal("could not initialize graphics: %s",err)    
-            }
+            renderer.Init() 
             texts := make(chan render.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
@@ -199,11 +207,19 @@ func main() {
         case Listen:
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            server.Serve()
+            renderer.Init() 
+            texts := make(chan render.Text)
+            go server.Listen(texts)
+            go renderer.ReadText(texts)
+            renderer.Render()
                     
         case Send:
             if client == nil { log.PANIC("client not available") }
-            client.SendText()
+            client.SendText(text)
+            
+        case Pipe:
+            if client == nil { log.PANIC("client not available") }
+            client.ScanAndSendText()        
             
         case Conf:
             if client == nil { log.PANIC("client not available") }

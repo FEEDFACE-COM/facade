@@ -20,13 +20,19 @@ func NewRenderer() *Renderer {
     return &Renderer{}    
 }
 
-const DEBUG_CLOCK  = true
-const DEBUG_BUFFER = true
+const DEBUG_CLOCK  = false
+const DEBUG_BUFFER = false
 
+const DEBUG_FRAMES = 90
 
 func (renderer *Renderer) Init() error {
+    log.Debug("initialize renderer")
     renderer.buffer = NewBufferDebug(4)
-    return nil
+    var err error
+    if err != nil {
+        log.Fatal("could not initialize renderer: %s",err)    
+    }
+    return err
 }
 
 
@@ -49,7 +55,7 @@ func (renderer *Renderer) Render() error {
         
 
 
-        if now.frame % 50 == 0 {
+        if now.frame % DEBUG_FRAMES == 0 {
             if DEBUG_CLOCK   {
                 fps := float64(now.frame - prev.frame) / (now.time - prev.time)
                 log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
