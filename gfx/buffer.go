@@ -36,10 +36,6 @@ func NewBuffer(size uint) *Buffer {
     return buffer
 }
 
-func (buffer *Buffer) CloneBuffer(size uint) *Buffer {
-    ret := &Buffer{}
-    for     
-}
 
 func NewBufferDebug(size uint) *Buffer {
     buffer := NewBuffer(size)
