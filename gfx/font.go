@@ -3,14 +3,14 @@ package gfx
 
 import (
     "fmt"
-    conf "../conf"
+    proto "../proto"
 )
 
 type Font struct {
     face string
 }
 
-func NewFont(config *conf.Font) *Font {
+func NewFont(config *proto.Font) *Font {
     ret := &Font{face: config.Face}
     return ret    
 }

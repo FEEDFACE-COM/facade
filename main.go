@@ -9,7 +9,7 @@ import (
     "os/signal"
     log "./log"
     render "./render"
-    conf "./conf"
+    proto "./proto"
 )
 
 
@@ -181,15 +181,15 @@ func main() {
     
     
     
-    var config *conf.Conf = nil
+    var config *proto.Config = nil
     args := flags[cmd].Args()
     if len(args) < 1 {
     } else {
-        mode := conf.Mode(args[0])
+        mode := proto.Mode(args[0])
         switch (mode) {
             
-            case conf.PAGER:
-                config = conf.NewConf(mode)
+            case proto.PAGER:
+                config = proto.NewConfig(mode)
                 cflags := config.FlagSet()
                 cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
                 cflags.Parse( args[1:] )
@@ -215,11 +215,11 @@ func main() {
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
             if config == nil {
-                config = conf.NewConf(conf.PAGER)
+                config = proto.NewConfig(proto.PAGER)
             }
             renderer.Init() 
             renderer.Config(config)
-            texts := make(chan conf.Text)
+            texts := make(chan proto.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
             renderer.Render()
@@ -228,12 +228,12 @@ func main() {
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             if config == nil {
-                config = conf.NewConf(conf.PAGER)
+                config = proto.NewConfig(proto.PAGER)
             }
             renderer.Init() 
             renderer.Config(config)
-            texts := make(chan conf.Text)
-            confs := make(chan conf.Conf)
+            texts := make(chan proto.Text)
+            confs := make(chan proto.Config)
             go server.ListenText(texts)
             go server.ListenConf(confs)
             go renderer.ReadText(texts)
@@ -261,7 +261,7 @@ func main() {
 }
 
 
-func ShowModeHelp(mode conf.Mode, cmd Command, flagset *flag.FlagSet) {
+func ShowModeHelp(mode proto.Mode, cmd Command, flagset *flag.FlagSet) {
     switches := ""
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
@@ -313,7 +313,7 @@ func ShowHelp() {
         fmt.Fprintf(os.Stderr,"%s|",cmd)
     }
     fmt.Fprintf(os.Stderr,"    ")
-    for _,m := range conf.Modes {
+    for _,m := range proto.Modes {
         fmt.Fprintf(os.Stderr,"%s|",m)
     }
     fmt.Fprintf(os.Stderr,"\n")
@@ -327,9 +327,9 @@ func ShowHelp() {
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control remote facade")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.PAGER,"console pager")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.CLOUD,"wordcloud")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.SCROLL,"scroller")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.PAGER,"console pager")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.CLOUD,"wordcloud")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.SCROLL,"scroller")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")

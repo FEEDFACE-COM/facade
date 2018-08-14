@@ -5,7 +5,7 @@ import (
     "time"
     "sync"
     log "../log"
-    conf "../conf"
+    proto "../proto"
     gfx "../gfx"
 )
 
@@ -15,17 +15,15 @@ const RENDERER_AVAILABLE = true
 const FRAME_RATE = 60.0
 
 type Renderer struct {
-    mode conf.Mode
+    mode proto.Mode
     pager *gfx.Pager
     font *gfx.Font
-    textMutex *sync.Mutex
-    confMutex *sync.Mutex
+    mutex *sync.Mutex
 }
 
 func NewRenderer() *Renderer {
     ret := &Renderer{}
-    ret.textMutex = &sync.Mutex{}
-    ret.confMutex = &sync.Mutex{}
+    ret.mutex = &sync.Mutex{}
     return ret
 }
 
@@ -43,23 +41,23 @@ func (renderer *Renderer) Init() error {
     }
     
     
-    config := conf.NewConf(conf.PAGER)
+    config := proto.NewConfig(proto.PAGER)
     renderer.Config(config)
     return err
 }
 
 
-func (renderer *Renderer) Config(config *conf.Conf) {
+func (renderer *Renderer) Config(config *proto.Config) {
     renderer.mode = config.Mode
     switch (config.Mode) {
-        case conf.PAGER:
+        case proto.PAGER:
             renderer.pager = gfx.NewPager(config.Pager)    
     }
     if config.Font != nil {
         renderer.font = gfx.NewFont(config.Font)
     }
     if renderer.font == nil {
-        renderer.font = gfx.NewFont(conf.NewFont())    
+        renderer.font = gfx.NewFont(proto.NewFont())    
     }
 }
 
@@ -80,13 +78,12 @@ func (renderer *Renderer) Render() error {
 
         //draw
         // TBD
-        renderer.textMutex.Lock()
-        renderer.confMutex.Lock()
+        renderer.mutex.Lock()
         
 
 
         switch renderer.mode {
-            case conf.PAGER:
+            case proto.PAGER:
                 renderer.pager.Render()
         }
 
@@ -102,7 +99,7 @@ func (renderer *Renderer) Render() error {
                 str := string(renderer.mode)
                 str += " " + renderer.font.Desc()
                 switch renderer.mode {
-                    case conf.PAGER:
+                    case proto.PAGER:
                         str += " " + renderer.pager.Desc()
                     }
                 log.Debug(str)
@@ -125,8 +122,7 @@ func (renderer *Renderer) Render() error {
             
         }
 
-        renderer.confMutex.Unlock()
-        renderer.textMutex.Unlock()
+        renderer.mutex.Unlock()
         
         // wait for next frame
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
@@ -135,30 +131,26 @@ func (renderer *Renderer) Render() error {
 }
 
 
-func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
+func (renderer *Renderer) ReadText(textChan chan proto.Text) error {
     for {
         text := <-textChan
         log.Debug("read %s",text)
-        renderer.textMutex.Lock()        
-        renderer.confMutex.Lock()
+        renderer.mutex.Lock()        
         renderer.pager.Buffer().Queue(string(text),1.0)
-        renderer.confMutex.Unlock()
-        renderer.textMutex.Unlock()
+        renderer.mutex.Unlock()
     }
     return nil
     
 }
 
 
-func (renderer *Renderer) ReadConf(confChan chan conf.Conf) error {
+func (renderer *Renderer) ReadConf(confChan chan proto.Config) error {
     for {
         config := <-confChan
         log.Debug("read %s",config.Desc())    
-        renderer.textMutex.Lock()
-        renderer.confMutex.Lock()
+        renderer.mutex.Lock()
         renderer.Config(&config)
-        renderer.confMutex.Unlock()
-        renderer.textMutex.Unlock()
+        renderer.mutex.Unlock()
     }
     return nil
 }

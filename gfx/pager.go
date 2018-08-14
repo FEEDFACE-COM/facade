@@ -3,7 +3,7 @@ package gfx
 
 import (
     "fmt"
-    conf "../conf"
+    proto "../proto"
 )
 
 
@@ -19,7 +19,7 @@ type Pager struct {
 
 func (pager *Pager) Buffer() *Buffer { return pager.buffer }
 
-func NewPager(config *conf.Pager) *Pager {
+func NewPager(config *proto.Pager) *Pager {
     ret := &Pager{width:config.Width,height:config.Height}
     ret.grid = NewGrid(ret.width,ret.height)
     ret.buffer = NewBufferDebug(ret.height)

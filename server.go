@@ -8,7 +8,7 @@ import (
     "bufio"
     "encoding/gob"
     log "./log"
-    conf "./conf"
+    proto "./proto"
 )
 
 
@@ -27,7 +27,7 @@ func NewServer(host string, confPort uint, textPort uint) (*Server) {
     return &Server{host:host, confPort: confPort, textPort: textPort} 
 }
 
-func (server *Server) ListenConf(confChan chan conf.Conf) {
+func (server *Server) ListenConf(confChan chan proto.Config) {
     confListenStr := fmt.Sprintf("%s:%d",server.host,server.confPort)
     log.Debug("listen for config on %s",confListenStr) 
     confListener, err := net.Listen("tcp",confListenStr)
@@ -50,7 +50,7 @@ func (server *Server) ListenConf(confChan chan conf.Conf) {
     }
 }
 
-func (server *Server) ListenText(textChan chan conf.Text) { 
+func (server *Server) ListenText(textChan chan proto.Text) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
@@ -75,10 +75,10 @@ func (server *Server) ListenText(textChan chan conf.Text) {
 }
 
 
-func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Conf) {
+func (server *Server) ReceiveConf(confConn net.Conn, confChan chan proto.Config) {
     defer func() { log.Debug("close conf %s",confConn.RemoteAddr().String()); confConn.Close() }()
     decoder := gob.NewDecoder(confConn)
-    config := &conf.Conf{}
+    config := &proto.Config{}
     confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
     err := decoder.Decode(config)
     if err != nil {
@@ -91,7 +91,7 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Conf) {
     confChan <- *config
 }
 
-func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.Text) {
+func (server *Server) ReceiveText(textConn net.Conn, textChan chan proto.Text) {
     defer func() { log.Debug("close text %s",textConn.RemoteAddr().String()); textConn.Close() }()
     scanner := bufio.NewScanner(textConn)
     for scanner.Scan() {
@@ -100,7 +100,7 @@ func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.Text) {
         if DEBUG_RECV {
             log.Debug("recv %s",text)
         }
-        textChan <- conf.Text(text)
+        textChan <- proto.Text(text)
     }
     err := scanner.Err()
     if err != nil {
