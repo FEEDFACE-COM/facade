@@ -6,8 +6,11 @@ import (
     "net"
     "bufio"
     "os"
+//    "bytes"
+    "encoding/gob"
 //    "time"
     log "./log"
+    conf "./conf"
 )
 
 const DEBUG_SEND = true
@@ -44,7 +47,7 @@ func (client *Client) SendText(text string) {
 
 func (client *Client) ScanAndSendText() {
     textConnStr := fmt.Sprintf("%s:%d",client.host,client.textPort)
-    log.Info("connect text to %s",textConnStr) 
+    log.Info("connect to %s",textConnStr) 
     conn, err := net.Dial("tcp", textConnStr)
     if err != nil {
         log.Error("fail to dial %s: %s",textConnStr,err)
@@ -61,7 +64,7 @@ func (client *Client) ScanAndSendText() {
             return    
         }
         if DEBUG_SEND {
-            log.Debug(">>>> %s",text)
+            log.Debug("send %s",text)
         }
     }
     err = scanner.Err()
@@ -72,20 +75,24 @@ func (client *Client) ScanAndSendText() {
 }
 
 
-func (client *Client) SendConf(conf string) { 
+func (client *Client) SendConf(config *conf.Conf) { 
     confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
-    log.Info("connect conf to %s",confConnStr) 
+    log.Info("config %s",config.Desc())
+    log.Info("connect to %s",confConnStr) 
     conn, err := net.Dial("tcp", confConnStr)
     if err != nil {
         log.Error("fail to dial %s: %s",confConnStr,err)
         return
     }
-    _, err = conn.Write( []byte(conf) )
+    defer func() { log.Debug("close %s",conn.RemoteAddr().String()); conn.Close() }()
+    enc := gob.NewEncoder(conn)
+    err = enc.Encode( *config )
     if err != nil {
-        log.Error("fail to write to %s: %s",confConnStr,err)
+        log.Error("fail to encode %s: %s",config.Desc(),err)
+        return
     }
     if DEBUG_SEND {
-        log.Debug("==== %s",conf)
+        log.Debug("send %s",config.Desc())
     }
     conn.Close()
 

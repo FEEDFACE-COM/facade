@@ -6,8 +6,9 @@ import (
     "net"    
     "time"
     "bufio"
+    "encoding/gob"
     log "./log"
-    render "./render"
+    conf "./conf"
 )
 
 
@@ -26,7 +27,7 @@ func NewServer(host string, confPort uint, textPort uint) (*Server) {
     return &Server{host:host, confPort: confPort, textPort: textPort} 
 }
 
-func (server *Server) ListenConf(confChan chan render.Conf) {
+func (server *Server) ListenConf(confChan chan conf.Conf) {
     confListenStr := fmt.Sprintf("%s:%d",server.host,server.confPort)
     log.Debug("listen for config on %s",confListenStr) 
     confListener, err := net.Listen("tcp",confListenStr)
@@ -49,7 +50,7 @@ func (server *Server) ListenConf(confChan chan render.Conf) {
     }
 }
 
-func (server *Server) ListenText(textChan chan render.Text) { 
+func (server *Server) ListenText(textChan chan conf.Text) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
@@ -74,33 +75,32 @@ func (server *Server) ListenText(textChan chan render.Text) {
 }
 
 
-func (server *Server) ReceiveConf(confConn net.Conn, confChan chan render.Conf) {
+func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Conf) {
     defer func() { log.Debug("close conf %s",confConn.RemoteAddr().String()); confConn.Close() }()
-    scanner := bufio.NewScanner(confConn)
-    for scanner.Scan() {
-        confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
-        conf := scanner.Text()
-        if DEBUG_RECV {
-            log.Debug("==== %s",conf)
-        }
-        confChan <- render.Conf(conf)
-    }
-    err := scanner.Err()
+    decoder := gob.NewDecoder(confConn)
+    config := &conf.Conf{}
+    confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
+    err := decoder.Decode(config)
     if err != nil {
-        log.Error("fail to scan %s: %s",confConn.RemoteAddr().String(),err)
+        log.Error("fail to decode %s: %s",confConn.RemoteAddr().String(),err)
+        return
     }
+    if DEBUG_RECV {
+        log.Debug("recv %s",config.Desc())
+    }
+    confChan <- *config
 }
 
-func (server *Server) ReceiveText(textConn net.Conn, textChan chan render.Text) {
+func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.Text) {
     defer func() { log.Debug("close text %s",textConn.RemoteAddr().String()); textConn.Close() }()
     scanner := bufio.NewScanner(textConn)
     for scanner.Scan() {
         textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
         text := scanner.Text()
         if DEBUG_RECV {
-            log.Debug(">>>> %s",text)
+            log.Debug("recv %s",text)
         }
-        textChan <- render.Text(text)
+        textChan <- conf.Text(text)
     }
     err := scanner.Err()
     if err != nil {

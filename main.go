@@ -3,12 +3,13 @@ package main
 
 import (
     "fmt"
-    "strings"
+//    "strings"
     "flag"
     "os"    
     "os/signal"
     log "./log"
     render "./render"
+    conf "./conf"
 )
 
 
@@ -34,14 +35,12 @@ type Command string
 const (
     Read    Command = "read"
     Listen  Command = "recv"
-    Send    Command = "send"
     Pipe    Command = "pipe"
     Conf    Command = "conf"    
     Version Command = "info"
     Help    Command = "help"
-    Test    Command = "test"
 )
-var cmds = []Command{Send,Conf,Pipe}
+var cmds = []Command{Conf,Pipe}
 
 
 
@@ -53,6 +52,8 @@ var (
     listenHost     string   = "0.0.0.0"
     daemonize      bool     = false
 )
+
+
 
 
 func main() {
@@ -81,15 +82,13 @@ func main() {
     
     for _,cmd := range cmds {
         flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
-        flags[cmd].Usage = func() { ShowCommandHelp(cmd,flags) }
     }
 
-
-    for _,cmd := range []Command{Send,Pipe} {
+    for _,cmd := range []Command{Pipe} {
         flags[cmd].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
     }
     
-    for _,cmd := range []Command{Send,Pipe,Conf} {
+    for _,cmd := range []Command{Pipe,Conf} {
         flags[cmd].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
         flags[cmd].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
@@ -103,9 +102,9 @@ func main() {
     }
 
     all := []*flag.FlagSet{flag.CommandLine}
-    for _,cmd := range cmds {
-        all = append(all,flags[cmd])
-    }
+//    for _,cmd := range cmds {
+//        all = append(all,flags[cmd])
+//    }
     for _,flagSet := range all {
         flagSet.BoolVar(&verbose,"v", verbose, "show info messages")
         flagSet.BoolVar(&debug,  "d", debug,   "show debug messages")
@@ -117,13 +116,21 @@ func main() {
         ShowHelp(); 
         os.Exit(-2) 
     }
+    if debug { 
+        log.SetVerbosity(log.DEBUG) 
+    } else if verbose { 
+        log.SetVerbosity(log.INFO)
+    } else if quiet { 
+        log.SetVerbosity(log.WARNING) 
+    }
+    
     
     var client *Client
     var server *Server
-    var renderer *render.Renderer
     var scanner *Scanner
-    var text string
-    var conf string
+    var renderer *render.Renderer
+    
+    
     
     cmd := Command(flag.Args()[0])
     switch ( cmd ) {
@@ -133,6 +140,7 @@ func main() {
                 ShowHelp()
                 os.Exit(-2)    
             }
+            flags[Read].Usage = func() { ShowCommandHelp(Read,flags) }
             flags[Read].Parse( flag.Args()[1:] )
             renderer = render.NewRenderer()
             scanner = NewScanner()
@@ -142,33 +150,22 @@ func main() {
                 ShowHelp()
                 os.Exit(-2)    
             }
-            flags[Read].Parse( flag.Args()[1:] )
+            flags[Listen].Usage = func() { ShowCommandHelp(Listen,flags) }
+            flags[Listen].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
             renderer = render.NewRenderer()
 
-            
-        case Send:
-            flags[Send].Parse( flag.Args()[1:] )
-            if len(flags[Send].Args()) < 1 {
-                ShowHelp()
-                os.Exit(-1)                    
-            }
-            text = strings.Join(flags[Send].Args()[0:], " ")
-            client = NewClient(connectHost,confPort,textPort,connectTimeout)
-            
         case Pipe:
+            flags[Pipe].Usage = func() { ShowCommandHelp(Pipe,flags) }
             flags[Pipe].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
             
         case Conf:
+            flags[Conf].Usage = func() { ShowCommandHelp(Conf,flags) }
             flags[Conf].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
-            conf = strings.Join(flags[Conf].Args()[0:], " " )
             
-        case Test:
-            log.Fatal("TEST TEST TEST")
-
         case Version:
             ShowVersion()
             os.Exit(-2)
@@ -182,25 +179,47 @@ func main() {
             os.Exit(-2)
     }
     
-    if debug { 
-        log.SetVerbosity(log.DEBUG) 
-    } else if verbose { 
-        log.SetVerbosity(log.INFO)
-    } else if quiet { 
-        log.SetVerbosity(log.WARNING) 
+    
+    
+    var config *conf.Conf = nil
+    args := flags[cmd].Args()
+    if len(args) < 1 {
+    } else {
+        mode := conf.Mode(args[0])
+        switch (mode) {
+            
+            case conf.PAGER:
+                config = conf.NewConf(mode)
+                cflags := config.FlagSet()
+                cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
+                cflags.Parse( args[1:] )
+            
+            default:
+                ShowHelp()
+                os.Exit(-2)    
+        }
     }
+        
     
     
+    
+    
+    
+    
+        
     log.Info(AUTHOR)
-
 
     switch ( cmd ) {
 
         case Read:
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
+            if config == nil {
+                config = conf.NewConf(conf.PAGER)
+            }
             renderer.Init() 
-            texts := make(chan render.Text)
+            renderer.Config(config)
+            texts := make(chan conf.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
             renderer.Render()
@@ -208,26 +227,30 @@ func main() {
         case Listen:
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
+            if config == nil {
+                config = conf.NewConf(conf.PAGER)
+            }
             renderer.Init() 
-            texts := make(chan render.Text)
-            confs := make(chan render.Conf)
+            renderer.Config(config)
+            texts := make(chan conf.Text)
+            confs := make(chan conf.Conf)
             go server.ListenText(texts)
             go server.ListenConf(confs)
             go renderer.ReadText(texts)
             go renderer.ReadConf(confs)
             renderer.Render()
                     
-        case Send:
-            if client == nil { log.PANIC("client not available") }
-            client.SendText(text)
-            
         case Pipe:
             if client == nil { log.PANIC("client not available") }
-            client.ScanAndSendText()        
+            if config != nil {
+                client.SendConf(config)
+            }
+            client.ScanAndSendText()
             
         case Conf:
             if client == nil { log.PANIC("client not available") }
-            client.SendConf(conf)
+            if config == nil { log.PANIC("config not available") }
+            client.SendConf(config)
             
         default:
             log.PANIC("inconsistent command")
@@ -237,6 +260,24 @@ func main() {
     
 }
 
+
+func ShowModeHelp(mode conf.Mode, cmd Command, flagset *flag.FlagSet) {
+    switches := ""
+    flags := ""
+    flagset.VisitAll( func(f *flag.Flag) { 
+        name,_ := flag.UnquoteUsage(f)
+        if name != "" { name = "="+name }
+        if len(f.Name) == 1 { switches += " [ -"+f.Name+name+" ]" }
+        if len(f.Name) >  1 { flags += " [ -"+f.Name+name+" ]" }
+    })
+    ShowVersion()
+    fmt.Fprintf(os.Stderr,"\nUsage:\n")    
+    fmt.Fprintf(os.Stderr,"\n")
+    fmt.Fprintf(os.Stderr,"  %s %s %s%s%s\n",BUILD_NAME,cmd,mode,switches,flags)
+    fmt.Fprintf(os.Stderr,"\nFlags:\n")
+    flagset.PrintDefaults()
+    fmt.Fprintf(os.Stderr,"\n")
+}
 
 
 
@@ -263,24 +304,32 @@ func ShowHelp() {
     flag.CommandLine.VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
         if name != "" { name = "="+name }
-        if len(f.Name) >=  1 { flags +=    " [ -"+f.Name+name+" ]" }
+        if len(f.Name) >=  1 { flags +=    " [-"+f.Name+name+"]" }
     })
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
     fmt.Fprintf(os.Stderr,"  %s %s   ",BUILD_NAME,flags)
     for _,cmd := range cmds {
-        fmt.Fprintf(os.Stderr,"%s | ",cmd)
+        fmt.Fprintf(os.Stderr,"%s|",cmd)
     }
-    fmt.Fprintf(os.Stderr,"%s\n",Version)
+    fmt.Fprintf(os.Stderr,"    ")
+    for _,m := range conf.Modes {
+        fmt.Fprintf(os.Stderr,"%s|",m)
+    }
+    fmt.Fprintf(os.Stderr,"\n")
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if render.RENDERER_AVAILABLE {
         fmt.Fprintf(os.Stderr,"  %s    # %s\n",Read,"pipe stdin to display")
         fmt.Fprintf(os.Stderr,"  %s    # %s\n",Listen,"receive text and display")
     }
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to remote facade")
+//    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to remote facade")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Pipe,"pipe stdin to remote facade")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control remote facade")
     fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show facade info")
+    fmt.Fprintf(os.Stderr,"\nModes:\n")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.PAGER,"console pager")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.CLOUD,"wordcloud")
+    fmt.Fprintf(os.Stderr,"  %s    # %s\n",conf.SCROLL,"scroller")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
