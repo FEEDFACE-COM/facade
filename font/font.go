@@ -2,22 +2,29 @@
 package font
 
 import (
+    "fmt"
     log "../log"
 )
 
 
 type Font struct {
-    Config
+    face string
     //texture data etc    
 }
 
 
 func NewFont() *Font {
-    return &Font{Config: *NewConfig()}    
+    ret := &Font{}
+    ret.Configure( NewConfig() )
+    return ret
 }
 
 
 func (font *Font) Configure(config *Config) {
     log.Debug("configure font: %s",config.Describe())  
-    font.Config = *config  
+    font.face = config.Face
+}
+
+func (font *Font) Describe() string {
+    return fmt.Sprintf("font[%s]",font.face)
 }

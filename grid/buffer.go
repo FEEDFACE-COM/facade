@@ -155,7 +155,8 @@ func (buffer *Buffer) delHead() {
 
 
 func (buffer *Buffer) Configure(config *Config) {
-    log.Debug("configure buffer: %s",config.Describe())    
+    log.Debug("configure buffer: %s",config.Describe())
+    // add/del as needed
 }
 
 func (buffer *Buffer) Describe() string { return fmt.Sprintf("buffer[%d]",buffer.size) }

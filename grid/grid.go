@@ -7,8 +7,9 @@ import(
 )
 
 type Grid struct {
-    Config 
-    Buffer   
+    width uint
+    height uint
+    *Buffer   
 }
 
 
@@ -24,24 +25,25 @@ func (grid *Grid) Queue(text string) {
 func (grid *Grid) Configure(config *Config) {
     log.Debug("configure grid: %s",config.Describe())
     
-    if config.Width != grid.Config.Width {
-        grid.Config.Width = config.Width    
+    if config.Width != grid.width {
+        grid.width = config.Width    
     }
     
-    if config.Height != grid.Config.Height {
-        grid.Config.Height = config.Height
+    if config.Height != grid.height {
+        grid.height = config.Height
         grid.Buffer.Configure(config)    
     }
 }
 
 func NewGrid() *Grid {
-    config := NewConfig()
-    buffer := NewBuffer(config.Height)
-    return &Grid{Config: *config, Buffer: *buffer}
+    ret := &Grid{}
+    ret.Configure(NewConfig())
+    ret.Buffer = NewBuffer(ret.height)
+    return ret
 }
 
 func (grid *Grid) Describe() string {
-    ret := fmt.Sprintf("%s %s",grid.Config.Describe(),grid.Buffer.Describe())
+    ret := fmt.Sprintf("grid[%dx%d] %s",grid.width,grid.height,grid.Buffer.Describe())
     return ret
 }
 
