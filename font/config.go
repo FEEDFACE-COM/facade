@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func (config *Config) AddFlags(flags *flag.FlagSet) {
-    flags.StringVar(&config.Face,"font",config.Face,"use font `font`" )
+    flags.StringVar(&config.Face,"font",config.Face,"use fontface `font`" )
 }
 
 func NewConfig() *Config { return &Config{Face: "Monaco"} }

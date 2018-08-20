@@ -3,15 +3,10 @@ package grid
 
 import (
     "fmt"
-//    log "../log"
+    log "../log"
 )
 
 
-type PageDirection string
-const (
-    PageUp   PageDirection = "up"
-    PageDown PageDirection = "down"
-)
 
 
 type Buffer struct {
@@ -48,13 +43,28 @@ func NewBufferDebug(size uint) *Buffer {
 }
 
 
+
+func (buffer *Buffer) Queue(text string, fade float64) {
+    if buffer.tail.text == "" {
+        buffer.tail.text = text
+    } else {
+        buffer.addTail(text)
+        buffer.delHead()
+    }
+}
+
+
+
+
+
+
 func (buffer *Buffer) addTail(text string) {
     line := &Line{text: text}
     
-    if buffer.tail == nil || buffer.head == nil {
+    if buffer.tail == nil && buffer.head == nil {
         buffer.head = line
         buffer.tail = line
-        buffer.size += 1
+        buffer.size = 1
         return    
     }
     
@@ -64,27 +74,88 @@ func (buffer *Buffer) addTail(text string) {
     buffer.size += 1
 }
 
+
+func (buffer *Buffer) addHead(text string) {
+    line := &Line{text: text}
+    
+    if buffer.tail == nil && buffer.head == nil {
+        buffer.head = line
+        buffer.tail = line
+        buffer.size = 1   
+        return 
+    }
+    
+    line.next = buffer.head
+    buffer.head.prev = line
+    buffer.head = line
+    buffer.size += 1
+    
+}
+
+
+
+func (buffer *Buffer) delTail() {
+    if buffer.tail == nil { return }
+    
+    if buffer.tail == buffer.head {
+        ptr := buffer.tail
+        buffer.tail = nil
+        buffer.head = nil
+        buffer.size = 0
+        ptr.next = nil
+        ptr.prev = nil
+    }
+    
+    ptr := buffer.tail
+    
+    buffer.tail = buffer.tail.prev
+    buffer.tail.next = nil
+    buffer.size -= 1
+    
+    ptr.next = nil
+    ptr.prev = nil
+    
+}
+
 func (buffer *Buffer) delHead() {
     if buffer.head == nil { return }
+
+    if buffer.head == buffer.tail {
+        ptr := buffer.head
+        buffer.tail = nil
+        buffer.head = nil
+        buffer.size = 0    
+        ptr.next = nil
+        ptr.prev = nil
+    }
+
+
     ptr := buffer.head
 
-    buffer.head = ptr.next
+    buffer.head = buffer.head.next
     buffer.head.prev = nil
+    buffer.size -= 1        
     
     ptr.next = nil
     ptr.prev = nil
 
-    buffer.size -= 1        
 }
 
 
-func (buffer *Buffer) Queue(text string, fade float64) {
-    if buffer.tail.text == "" {
-        buffer.tail.text = text
-    } else {
-        buffer.addTail(text)
-        buffer.delHead()
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+func (buffer *Buffer) Configure(config *Config) {
+    log.Debug("configure buffer: %s",config.Describe())    
 }
 
 func (buffer *Buffer) Describe() string { return fmt.Sprintf("buffer[%d]",buffer.size) }

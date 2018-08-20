@@ -34,7 +34,7 @@ func NewRenderer() *Renderer {
 
 const DEBUG_CLOCK  = false
 const DEBUG_CONF   = true
-const DEBUG_TEXT   = true
+const DEBUG_TEXT   = false
 
 const DEBUG_FRAMES = 90
 
@@ -45,20 +45,30 @@ func (renderer *Renderer) Init() error {
         log.Fatal("could not initialize renderer: %s",err)    
     }
     
-    config := conf.NewConfig(conf.DEFAULT)
-    renderer.Configure(config)
+
+    //setup things    
+    renderer.mode = conf.DEFAULT
+    renderer.grid = grid.NewGrid()
+    renderer.font = font.NewFont()
+
     return err
 }
 
 
 func (renderer *Renderer) Configure(config *conf.Config) {
+    log.Debug("configure %s",config.Describe())
+    
+    if renderer.mode != config.Mode {
+        log.Debug("switch mode to %s",string(config.Mode))
+    }
+    
     renderer.mode = config.Mode
     switch (config.Mode) {
         case conf.GRID:
-            renderer.grid = grid.NewGrid()
+            renderer.grid.Configure(config.Grid)
     }
-    if renderer.font == nil {
-        renderer.font = font.NewFont()    
+    if config.Font != nil {
+        renderer.font.Configure(config.Font)        
     }
 }
 

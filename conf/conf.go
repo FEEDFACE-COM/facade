@@ -34,6 +34,7 @@ func NewConfig(mode Mode) *Config {
         case GRID:
             ret.Grid = grid.NewConfig()
     }
+    ret.Font = font.NewConfig()
     return ret
 }
 

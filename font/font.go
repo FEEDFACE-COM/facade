@@ -2,6 +2,7 @@
 package font
 
 import (
+    log "../log"
 )
 
 
@@ -16,3 +17,7 @@ func NewFont() *Font {
 }
 
 
+func (font *Font) Configure(config *Config) {
+    log.Debug("configure font: %s",config.Describe())  
+    font.Config = *config  
+}
