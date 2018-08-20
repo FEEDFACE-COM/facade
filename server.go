@@ -8,7 +8,7 @@ import (
     "bufio"
     "encoding/gob"
     log "./log"
-    proto "./proto"
+    conf "./conf"
 )
 
 
@@ -27,7 +27,7 @@ func NewServer(host string, confPort uint, textPort uint) (*Server) {
     return &Server{host:host, confPort: confPort, textPort: textPort} 
 }
 
-func (server *Server) ListenConf(confChan chan proto.Config) {
+func (server *Server) ListenConf(confChan chan conf.Config) {
     confListenStr := fmt.Sprintf("%s:%d",server.host,server.confPort)
     log.Debug("listen for config on %s",confListenStr) 
     confListener, err := net.Listen("tcp",confListenStr)
@@ -43,21 +43,21 @@ func (server *Server) ListenConf(confChan chan proto.Config) {
             continue
         }
         if DEBUG_ACCEPT {
-            log.Debug("accept conf %s",confConn.RemoteAddr().String())    
+            log.Debug("accept conf from %s",confConn.RemoteAddr().String())    
         }
         go server.ReceiveConf(confConn, confChan)
 
     }
 }
 
-func (server *Server) ListenText(textChan chan proto.Text) { 
+func (server *Server) ListenText(textChan chan conf.Text) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
     if err != nil {
         log.Fatal("fail listen on %s: %s",textListenStr,err)
     }
-    defer func() { log.Debug("stop listen text on %s",textListener.Addr().String()); textListener.Close() }()
+    defer func() { /*log.Debug("stop listen text on %s",textListener.Addr().String());*/ textListener.Close() }()
     log.Info("listening for text on %s",textListener.Addr().String()) 
     
     for {
@@ -67,7 +67,7 @@ func (server *Server) ListenText(textChan chan proto.Text) {
             continue
         }
         if DEBUG_ACCEPT {
-            log.Debug("accept text %s",textConn.RemoteAddr().String())    
+            log.Debug("accept text from %s",textConn.RemoteAddr().String())    
         }
         go server.ReceiveText(textConn, textChan)
 
@@ -75,10 +75,10 @@ func (server *Server) ListenText(textChan chan proto.Text) {
 }
 
 
-func (server *Server) ReceiveConf(confConn net.Conn, confChan chan proto.Config) {
-    defer func() { log.Debug("close conf %s",confConn.RemoteAddr().String()); confConn.Close() }()
+func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Config) {
+    defer func() { /*log.Debug("close conf %s",confConn.RemoteAddr().String());*/ confConn.Close() }()
     decoder := gob.NewDecoder(confConn)
-    config := &proto.Config{}
+    config := &conf.Config{}
     confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
     err := decoder.Decode(config)
     if err != nil {
@@ -86,21 +86,21 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan proto.Config)
         return
     }
     if DEBUG_RECV {
-        log.Debug("recv %s",config.Desc())
+        log.Debug("receive conf %s",config.Describe())
     }
     confChan <- *config
 }
 
-func (server *Server) ReceiveText(textConn net.Conn, textChan chan proto.Text) {
-    defer func() { log.Debug("close text %s",textConn.RemoteAddr().String()); textConn.Close() }()
+func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.Text) {
+    defer func() { /*log.Debug("close text %s",textConn.RemoteAddr().String());*/ textConn.Close() }()
     scanner := bufio.NewScanner(textConn)
     for scanner.Scan() {
         textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
         text := scanner.Text()
         if DEBUG_RECV {
-            log.Debug("recv %s",text)
+            log.Debug("receive text %s",text)
         }
-        textChan <- proto.Text(text)
+        textChan <- conf.Text(text)
     }
     err := scanner.Err()
     if err != nil {

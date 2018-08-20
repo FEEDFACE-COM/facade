@@ -8,12 +8,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-PROTOC_FILES=$(wildcard proto/*.proto)
-#SOURCE_FILES=$(shell go list -f '{{.GoFiles}}' . ./log ./render | tr -d '[]' | tr '\n' ' ') 
-#$(PROTOC_FILES:.proto=.pb.go)
-
 SOURCE_FILES=$(wildcard *.go */*.go)
-
 
 LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
 
@@ -38,7 +33,6 @@ info:
 	@echo ""
 	@echo "### Build Variables ###"
 	@echo " source     ${SOURCE_FILES}"
-	@echo " protoc     ${PROTOC_FILES}"
 	
 build: ${BUILD_PRODUCT}
 
@@ -56,10 +50,5 @@ ${BUILD_PRODUCT}: ${SOURCE_FILES}
 
 
 
-proto: $(PROTOC_FILES:.proto=.pb.go)
 
-proto/%.pb.go: proto/%.proto
-	protoc -I proto $^ --go_out=plugins=grpc:proto
-
-
-.PHONY: help info build clean get proto
+.PHONY: help info build clean get 

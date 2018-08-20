@@ -2,12 +2,17 @@
 package render
 
 import (
+    "fmt"
     "time"
     "sync"
     log "../log"
-    proto "../proto"
-    gfx "../gfx"
+    conf "../conf"
+    grid "../grid"
+    font "../font"
 )
+
+
+
 
 
 const RENDERER_AVAILABLE = true
@@ -15,9 +20,9 @@ const RENDERER_AVAILABLE = true
 const FRAME_RATE = 60.0
 
 type Renderer struct {
-    mode proto.Mode
-    pager *gfx.Pager
-    font *gfx.Font
+    mode conf.Mode
+    grid *grid.Grid
+    font *font.Font
     mutex *sync.Mutex
 }
 
@@ -28,8 +33,8 @@ func NewRenderer() *Renderer {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_CONF = true
-const DEBUG_TEXT = true
+const DEBUG_CONF   = true
+const DEBUG_TEXT   = true
 
 const DEBUG_FRAMES = 90
 
@@ -40,24 +45,20 @@ func (renderer *Renderer) Init() error {
         log.Fatal("could not initialize renderer: %s",err)    
     }
     
-    
-    config := proto.NewConfig(proto.PAGER)
-    renderer.Config(config)
+    config := conf.NewConfig(conf.DEFAULT)
+    renderer.Configure(config)
     return err
 }
 
 
-func (renderer *Renderer) Config(config *proto.Config) {
+func (renderer *Renderer) Configure(config *conf.Config) {
     renderer.mode = config.Mode
     switch (config.Mode) {
-        case proto.PAGER:
-            renderer.pager = gfx.NewPager(config.Pager)    
-    }
-    if config.Font != nil {
-        renderer.font = gfx.NewFont(config.Font)
+        case conf.GRID:
+            renderer.grid = grid.NewGrid()
     }
     if renderer.font == nil {
-        renderer.font = gfx.NewFont(proto.NewFont())    
+        renderer.font = font.NewFont()    
     }
 }
 
@@ -83,45 +84,42 @@ func (renderer *Renderer) Render() error {
 
 
         switch renderer.mode {
-            case proto.PAGER:
-                renderer.pager.Render()
+            case conf.GRID:
+                renderer.grid.Render()
+                
         }
 
 
         if now.frame % DEBUG_FRAMES == 0 {
             if DEBUG_CLOCK   {
                 fps := float64(now.frame - prev.frame) / (now.time - prev.time)
-                log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
+                log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Describe(),fps)
                 prev = now
             }
 
             if DEBUG_CONF {
-                str := string(renderer.mode)
-                str += " " + renderer.font.Desc()
+                str := fmt.Sprintf("mode[%s]",string(renderer.mode))
                 switch renderer.mode {
-                    case proto.PAGER:
-                        str += " " + renderer.pager.Desc()
+                    case conf.GRID:
+                        str += " " + renderer.grid.Describe()
                     }
+                str += " " + renderer.font.Describe()
                 log.Debug(str)
             }
             
             if DEBUG_TEXT {
-                log.Debug("%s\n%s",renderer.pager.Buffer().Desc(),renderer.pager.Buffer().Debug(gfx.PageDown))
+                str := ""
+                switch renderer.mode {
+                    case conf.GRID:
+                        str = renderer.grid.Buffer.Debug(grid.PageDown)
+                }    
+                if str != "" {
+                    log.Debug(str)
+                }
             }
-            
-            
-//            if DEBUG_RENDER {
-//                log.Debug("%s\n%s",renderer.Buffer().Desc(),renderer.Buffer().Debug(gfx.PageDown)) 
-//            }
-//            
-//            if DEBUG_GFX {
-//                if renderer.mode == Pager  { log.Debug(renderer.pager.Desc())  }
-//            }
-            
                 
             
         }
-
         renderer.mutex.Unlock()
         
         // wait for next frame
@@ -131,12 +129,12 @@ func (renderer *Renderer) Render() error {
 }
 
 
-func (renderer *Renderer) ReadText(textChan chan proto.Text) error {
+func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
     for {
         text := <-textChan
-        log.Debug("read %s",text)
-        renderer.mutex.Lock()        
-        renderer.pager.Buffer().Queue(string(text),1.0)
+//        log.Debug("read text: %s",text)
+        renderer.mutex.Lock()
+        renderer.grid.Queue( string(text) )
         renderer.mutex.Unlock()
     }
     return nil
@@ -144,12 +142,12 @@ func (renderer *Renderer) ReadText(textChan chan proto.Text) error {
 }
 
 
-func (renderer *Renderer) ReadConf(confChan chan proto.Config) error {
+func (renderer *Renderer) ReadConf(confChan chan conf.Config) error {
     for {
         config := <-confChan
-        log.Debug("read %s",config.Desc())    
+//        log.Debug("read config: %s",config.Describe())    
         renderer.mutex.Lock()
-        renderer.Config(&config)
+        renderer.Configure(&config)
         renderer.mutex.Unlock()
     }
     return nil

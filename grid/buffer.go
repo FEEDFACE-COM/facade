@@ -1,5 +1,5 @@
 
-package gfx
+package grid
 
 import (
     "fmt"
@@ -79,19 +79,15 @@ func (buffer *Buffer) delHead() {
 
 
 func (buffer *Buffer) Queue(text string, fade float64) {
-    if fade < 0.5 && buffer.size >= 2 && buffer.head.text == "" && buffer.head.next.text == "" {
-        buffer.head.text = text
-        buffer.twice = true
-    } else if buffer.head.text == "" {
-        buffer.head.text = text
+    if buffer.tail.text == "" {
+        buffer.tail.text = text
     } else {
         buffer.addTail(text)
         buffer.delHead()
     }
-//    log.Debug("queue %s",text)
 }
 
-func (buffer *Buffer) Desc() string { return fmt.Sprintf("buffer[%d]",buffer.size) }
+func (buffer *Buffer) Describe() string { return fmt.Sprintf("buffer[%d]",buffer.size) }
 
 func (buffer *Buffer) Debug(dir PageDirection) string {
     ret := ""

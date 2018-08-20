@@ -40,7 +40,7 @@ func InitClock() {
 func (clock *Clock) Tick() {
     prev := clock.time
     clock.frame += 1
-    clock.time = CLOCK_RATE *  float64( time.Now().Sub(startTime) ) / (1000*1000.*1000)
+    clock.time = CLOCK_RATE *  float64( time.Now().Sub(startTime) ) / (1000.*1000.*1000.)
     
     /***   x%y  ==  mod(x,y)  ==  x - y*floor(x/y)  ***/
     clock.cycle = clock.time - gfx.TAU * math.Floor(clock.time/gfx.TAU) // time % TAU
@@ -52,6 +52,6 @@ func (clock *Clock) Tick() {
     
 }
 
-func (clock *Clock) Desc() string {
+func (clock *Clock) Describe() string {
     return fmt.Sprintf("%7.2fs %4.2f↺ %4.2f⤢ %d#",clock.time,clock.cycle,clock.fader,clock.count)
 }

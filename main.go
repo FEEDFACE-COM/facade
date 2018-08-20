@@ -9,7 +9,7 @@ import (
     "os/signal"
     log "./log"
     render "./render"
-    proto "./proto"
+    conf "./conf"
 )
 
 
@@ -181,15 +181,20 @@ func main() {
     
     
     
-    var config *proto.Config = nil
+    var config *conf.Config = nil
     args := flags[cmd].Args()
     if len(args) < 1 {
+        if cmd == Conf { 
+            ShowCommandHelp(Conf,flags)
+            os.Exit(-2)
+        }
+            
     } else {
-        mode := proto.Mode(args[0])
+        mode := conf.Mode(args[0])
         switch (mode) {
             
-            case proto.PAGER:
-                config = proto.NewConfig(mode)
+            case conf.GRID:
+                config = conf.NewConfig(mode)
                 cflags := config.FlagSet()
                 cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
                 cflags.Parse( args[1:] )
@@ -215,11 +220,11 @@ func main() {
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
             if config == nil {
-                config = proto.NewConfig(proto.PAGER)
+                config = conf.NewConfig(conf.DEFAULT)
             }
             renderer.Init() 
-            renderer.Config(config)
-            texts := make(chan proto.Text)
+            renderer.Configure(config)
+            texts := make(chan conf.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
             renderer.Render()
@@ -228,12 +233,12 @@ func main() {
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             if config == nil {
-                config = proto.NewConfig(proto.PAGER)
+                config = conf.NewConfig(conf.DEFAULT)
             }
             renderer.Init() 
-            renderer.Config(config)
-            texts := make(chan proto.Text)
-            confs := make(chan proto.Config)
+            renderer.Configure(config)
+            texts := make(chan conf.Text)
+            confs := make(chan conf.Config)
             go server.ListenText(texts)
             go server.ListenConf(confs)
             go renderer.ReadText(texts)
@@ -261,7 +266,7 @@ func main() {
 }
 
 
-func ShowModeHelp(mode proto.Mode, cmd Command, flagset *flag.FlagSet) {
+func ShowModeHelp(mode conf.Mode, cmd Command, flagset *flag.FlagSet) {
     switches := ""
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
@@ -313,23 +318,22 @@ func ShowHelp() {
         fmt.Fprintf(os.Stderr,"%s|",cmd)
     }
     fmt.Fprintf(os.Stderr,"    ")
-    for _,m := range proto.Modes {
+    for _,m := range conf.Modes {
         fmt.Fprintf(os.Stderr,"%s|",m)
     }
     fmt.Fprintf(os.Stderr,"\n")
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if render.RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Read,"pipe stdin to display")
-        fmt.Fprintf(os.Stderr,"  %s    # %s\n",Listen,"receive text and display")
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Read,"pipe stdin to display")
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Listen,"receive text and display")
     }
-//    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Send,"send text to remote facade")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Pipe,"pipe stdin to remote facade")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Conf,"control remote facade")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",Version,"show facade info")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Pipe,"pipe stdin to remote facade")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Conf,"control remote facade")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Version,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.PAGER,"console pager")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.CLOUD,"wordcloud")
-    fmt.Fprintf(os.Stderr,"  %s    # %s\n",proto.SCROLL,"scroller")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.GRID,"a grid")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.CLOUD,"a cloud")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.SCROLL,"a scroller")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
