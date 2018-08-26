@@ -55,7 +55,7 @@ func (renderer *Renderer) Init() error {
 }
 
 
-func (renderer *Renderer) Configure(config *conf.Config) {
+func (renderer *Renderer) Configure(config *conf.Config) error {
     log.Debug("configure %s",config.Describe())
     
     if renderer.mode != config.Mode {

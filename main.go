@@ -14,33 +14,28 @@ import (
 
 
 const AUTHOR = 
-
-// "FACADE by FEEDFACE.COM"
-
-`   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
+`
+   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
   |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
-  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
+  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  . \_  \_/ |  |  
 `
 
-//`   _   _   _   _   _   _
-//  |_  |_| /   |_| | \ |_
-//  |   | | \_  | | |_/ |_  by FEEDFACE.COM
-//
-//`
 
-
-var BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE string
+var BUILD_NAME string     = "fcd"
+var BUILD_VERSION string  = "0.0.0"
+var BUILD_PLATFORM string = "os-arch"
+var BUILD_DATE string     = "1970-01-01"
 
 type Command string
 const (
-    Read    Command = "read"
-    Listen  Command = "recv"
-    Pipe    Command = "pipe"
-    Conf    Command = "conf"    
-    Version Command = "info"
-    Help    Command = "help"
+    READ    Command = "read"
+    RECV    Command = "recv"
+    PIPE    Command = "pipe"
+    CONF    Command = "conf"    
+    INFO    Command = "info"
+    HELP    Command = "help"
 )
-var cmds = []Command{Conf,Pipe}
+var cmds = []Command{CONF,PIPE}
 
 
 
@@ -76,29 +71,29 @@ func main() {
     flags := make(map[Command] *flag.FlagSet)
 
     if render.RENDERER_AVAILABLE {
-        cmds = append(cmds, Read)
-        cmds = append(cmds, Listen)
+        cmds = append(cmds, READ)
+        cmds = append(cmds, RECV)
     }
     
     for _,cmd := range cmds {
         flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
     }
 
-    for _,cmd := range []Command{Pipe} {
+    for _,cmd := range []Command{PIPE} {
         flags[cmd].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
     }
     
-    for _,cmd := range []Command{Pipe,Conf} {
+    for _,cmd := range []Command{PIPE,CONF} {
         flags[cmd].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
         flags[cmd].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
     if render.RENDERER_AVAILABLE {
-        flags[Listen].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
-        flags[Listen].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
-        flags[Listen].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
-        flags[Listen].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+        flags[RECV].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
+        flags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
+        flags[RECV].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
+        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
 
     all := []*flag.FlagSet{flag.CommandLine}
@@ -135,42 +130,42 @@ func main() {
     cmd := Command(flag.Args()[0])
     switch ( cmd ) {
 
-        case Read:
+        case READ:
             if !render.RENDERER_AVAILABLE {
                 ShowHelp()
                 os.Exit(-2)    
             }
-            flags[Read].Usage = func() { ShowCommandHelp(Read,flags) }
-            flags[Read].Parse( flag.Args()[1:] )
+            flags[READ].Usage = func() { ShowCommandHelp(READ,flags) }
+            flags[READ].Parse( flag.Args()[1:] )
             renderer = render.NewRenderer()
             scanner = NewScanner()
 
-        case Listen:
+        case RECV:
             if !render.RENDERER_AVAILABLE {
                 ShowHelp()
                 os.Exit(-2)    
             }
-            flags[Listen].Usage = func() { ShowCommandHelp(Listen,flags) }
-            flags[Listen].Parse( flag.Args()[1:] )
+            flags[RECV].Usage = func() { ShowCommandHelp(RECV,flags) }
+            flags[RECV].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
             renderer = render.NewRenderer()
 
-        case Pipe:
-            flags[Pipe].Usage = func() { ShowCommandHelp(Pipe,flags) }
-            flags[Pipe].Parse( flag.Args()[1:] )
+        case PIPE:
+            flags[PIPE].Usage = func() { ShowCommandHelp(PIPE,flags) }
+            flags[PIPE].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
             
-        case Conf:
-            flags[Conf].Usage = func() { ShowCommandHelp(Conf,flags) }
-            flags[Conf].Parse( flag.Args()[1:] )
+        case CONF:
+            flags[CONF].Usage = func() { ShowCommandHelp(CONF,flags) }
+            flags[CONF].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
-        case Version:
+        case INFO:
             ShowVersion()
             os.Exit(-2)
 
-        case Help:
+        case HELP:
             ShowHelp()
             os.Exit(-2)
 
@@ -184,8 +179,8 @@ func main() {
     var config *conf.Config = nil
     args := flags[cmd].Args()
     if len(args) < 1 {
-        if cmd == Conf { 
-            ShowCommandHelp(Conf,flags)
+        if cmd == CONF { 
+            ShowCommandHelp(CONF,flags)
             os.Exit(-2)
         }
             
@@ -216,7 +211,7 @@ func main() {
 
     switch ( cmd ) {
 
-        case Read:
+        case READ:
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
             if config == nil {
@@ -229,7 +224,7 @@ func main() {
             go renderer.ReadText(texts)
             renderer.Render()
 
-        case Listen:
+        case RECV:
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             if config == nil {
@@ -245,14 +240,14 @@ func main() {
             go renderer.ReadConf(confs)
             renderer.Render()
                     
-        case Pipe:
+        case PIPE:
             if client == nil { log.PANIC("client not available") }
             if config != nil {
                 client.SendConf(config)
             }
             client.ScanAndSendText()
             
-        case Conf:
+        case CONF:
             if client == nil { log.PANIC("client not available") }
             if config == nil { log.PANIC("config not available") }
             client.SendConf(config)
@@ -324,12 +319,12 @@ func ShowHelp() {
     fmt.Fprintf(os.Stderr,"\n")
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if render.RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Read,"pipe stdin to display")
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Listen,"receive text and display")
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",READ,"pipe stdin to display")
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",RECV,"receive text and display")
     }
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Pipe,"pipe stdin to remote facade")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Conf,"control remote facade")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",Version,"show facade info")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"pipe stdin to remote facade")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"control remote facade")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.GRID,"a grid")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.CLOUD,"a cloud")
