@@ -20,26 +20,26 @@ func NewRenderer() *Renderer {
 }
 
 func (renderer *Renderer) Init() error {
-    log.Fatal("RENDERER NOT AVAILABLE")  
+    log.PANIC("RENDERER NOT AVAILABLE")  
     return errors.New("RENDERER NOT AVAILABLE") 
 }
 
 func (renderer *Renderer) Configure(config *conf.Config) error {
-    log.Fatal("RENDERER NOT AVAILABLE")
+    log.PANIC("RENDERER NOT AVAILABLE")
     return errors.New("RENDERER NOT AVAILABLE")
 }
 
 func (renderer *Renderer) Render() error { 
-    log.Fatal("RENDERER NOT AVAILABLE")
+    log.PANIC("RENDERER NOT AVAILABLE")
     return errors.New("RENDERER NOT AVAILABLE")
 } 
 
 func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
-    log.Fatal("RENDERER NOT AVAILABLE")
+    log.PANIC("RENDERER NOT AVAILABLE")
     return errors.New("RENDERER NOT AVAILABLE")
 }
 
 func (renderer *Renderer) ReadConf(confChan chan conf.Config) error {
-    log.Fatal("RENDERER NOT AVAILABLE")
+    log.PANIC("RENDERER NOT AVAILABLE")
     return errors.New("RENDERER NOT AVAILABLE")
 }

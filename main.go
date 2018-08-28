@@ -7,6 +7,7 @@ import (
     "flag"
     "os"    
     "os/signal"
+    "runtime"
     log "./log"
     render "./render"
     conf "./conf"
@@ -41,7 +42,7 @@ var cmds = []Command{CONF,PIPE}
 
 var (
     textPort       uint     = 0xfcd
-    confPort       uint     = 0xfcdc
+    confPort       uint     = 0xfcc
     connectHost    string   = "localhost"
     connectTimeout float64  = 5.0
     listenHost     string   = "0.0.0.0"
@@ -206,38 +207,40 @@ func main() {
     
     
     
-        
-    log.Info(AUTHOR)
 
     switch ( cmd ) {
 
         case READ:
+            log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
             if config == nil {
                 config = conf.NewConfig(conf.DEFAULT)
             }
-            renderer.Init() 
-            renderer.Configure(config)
             texts := make(chan conf.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
+            runtime.LockOSThread()
+            renderer.Init() 
+            renderer.Configure(config)
             renderer.Render()
 
         case RECV:
+            log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             if config == nil {
                 config = conf.NewConfig(conf.DEFAULT)
             }
-            renderer.Init() 
-            renderer.Configure(config)
             texts := make(chan conf.Text)
             confs := make(chan conf.Config)
             go server.ListenText(texts)
             go server.ListenConf(confs)
             go renderer.ReadText(texts)
             go renderer.ReadConf(confs)
+            runtime.LockOSThread()
+            renderer.Init() 
+            renderer.Configure(config)
             renderer.Render()
                     
         case PIPE:
@@ -323,7 +326,7 @@ func ShowHelp() {
         fmt.Fprintf(os.Stderr,"  %6s    # %s\n",RECV,"receive text and display")
     }
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"pipe stdin to remote facade")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"control remote facade")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",CONF,"control remote facade")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.GRID,"a grid")

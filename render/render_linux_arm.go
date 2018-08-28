@@ -9,6 +9,8 @@ import (
     conf "../conf"
     grid "../grid"
     font "../font"
+    "src.feedface.com/gfx/piglet"
+    gl "src.feedface.com/gfx/piglet/gles2"
 )
 
 
@@ -33,7 +35,7 @@ func NewRenderer() *Renderer {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_CONF   = true
+const DEBUG_CONF   = false
 const DEBUG_TEXT   = false
 
 const DEBUG_FRAMES = 90
@@ -41,10 +43,26 @@ const DEBUG_FRAMES = 90
 func (renderer *Renderer) Init() error {
     var err error
     log.Debug("initializing renderer")
+    
+    err = piglet.CreateContext()
     if err != nil {
-        log.Fatal("could not initialize renderer: %s",err)    
+        log.PANIC("could not initialize renderer: %s",err)    
     }
     
+    width, height := piglet.GetDisplaySize()
+    log.Info("got display %dx%d",width,height)
+
+    piglet.MakeCurrent()
+
+    err = gl.InitWithProcAddrFunc( piglet.GetProcAddress )
+    if err != nil {
+        log.PANIC("could not init gles: %s",err)    
+    }
+    
+
+    log.Notice("got renderer %s %s", gl.GoStr(gl.GetString((gl.VENDOR))),gl.GoStr(gl.GetString((gl.RENDERER))));
+    log.Notice("got version %s %s", gl.GoStr(gl.GetString((gl.VERSION))),gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))));
+
 
     //setup things    
     renderer.mode = conf.DEFAULT
@@ -70,6 +88,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     if config.Font != nil {
         renderer.font.Configure(config.Font)        
     }
+    return nil
 }
 
 
@@ -90,6 +109,7 @@ func (renderer *Renderer) Render() error {
         //draw
         // TBD
         renderer.mutex.Lock()
+        piglet.MakeCurrent()
         
 
 
@@ -130,6 +150,7 @@ func (renderer *Renderer) Render() error {
                 
             
         }
+        piglet.SwapBuffers()
         renderer.mutex.Unlock()
         
         // wait for next frame

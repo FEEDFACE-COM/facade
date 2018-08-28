@@ -32,7 +32,7 @@ func (server *Server) ListenConf(confChan chan conf.Config) {
     log.Debug("listen for config on %s",confListenStr) 
     confListener, err := net.Listen("tcp",confListenStr)
     if err != nil {
-        log.Fatal("fail listen on %s: %s",confListenStr,err)
+        log.PANIC("fail listen on %s: %s",confListenStr,err)
     }
     defer func() { log.Debug("stop listen conf on %s",confListener.Addr().String()); confListener.Close() }()
     log.Info("listening for conf on %s",confListener.Addr().String()) 
@@ -55,7 +55,7 @@ func (server *Server) ListenText(textChan chan conf.Text) {
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
     if err != nil {
-        log.Fatal("fail listen on %s: %s",textListenStr,err)
+        log.PANIC("fail listen on %s: %s",textListenStr,err)
     }
     defer func() { /*log.Debug("stop listen text on %s",textListener.Addr().String());*/ textListener.Close() }()
     log.Info("listening for text on %s",textListener.Addr().String()) 
