@@ -154,6 +154,7 @@ func (renderer *Renderer) Render() error {
         renderer.mutex.Unlock()
         
         // wait for next frame
+        // FIXME, maybe dont wait as long??
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil

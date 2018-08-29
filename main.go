@@ -14,8 +14,7 @@ import (
 )
 
 
-const AUTHOR = 
-`
+const AUTHOR = `
    _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
   |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
   |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  . \_  \_/ |  |  
@@ -340,7 +339,7 @@ func ShowHelp() {
 
 func ShowVersion() {
     fmt.Printf(AUTHOR)
-    fmt.Fprintf(os.Stderr,"\n%s, version %s for %s, built %s\n",BUILD_NAME,BUILD_VERSION,BUILD_PLATFORM,BUILD_DATE)
+    fmt.Fprintf(os.Stderr,"\n%s version %s for %s, built %s\n",BUILD_NAME,BUILD_VERSION,BUILD_PLATFORM,BUILD_DATE)
 }    
     
 
