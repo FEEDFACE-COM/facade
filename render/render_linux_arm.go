@@ -103,6 +103,9 @@ func (renderer *Renderer) Render() error {
 
 
     log.Debug("renderer start")
+    gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+
+
     for {
         now.Tick()
 
@@ -111,6 +114,8 @@ func (renderer *Renderer) Render() error {
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
+        
+        gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
 
         switch renderer.mode {
