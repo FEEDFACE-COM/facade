@@ -28,6 +28,9 @@ var Modes = []Mode{GRID,CLOUD,SCROLL}
 
 var DEFAULT Mode = GRID
 
+
+var DIRECTORY = "/home/folkert/src/gfx/facade/assets/"
+
 func NewConfig(mode Mode) *Config {
     ret := &Config{Mode: mode}
     switch mode {
@@ -64,6 +67,7 @@ func (config *Config) Describe() string {
     if config.Font != nil {
         ret += " " + config.Font.Describe()
     }
+    ret += " [dir " + DIRECTORY + "]"
     return ret
 }
 
