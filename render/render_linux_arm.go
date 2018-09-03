@@ -46,7 +46,7 @@ func (renderer *Renderer) Init() error {
     
     err = piglet.CreateContext()
     if err != nil {
-        log.PANIC("could not initialize renderer: %s",err)    
+        log.PANIC("fail to initialize renderer: %s",err)    
     }
     
     width, height := piglet.GetDisplaySize()
@@ -56,7 +56,7 @@ func (renderer *Renderer) Init() error {
 
     err = gl.InitWithProcAddrFunc( piglet.GetProcAddress )
     if err != nil {
-        log.PANIC("could not init gles: %s",err)    
+        log.PANIC("fail to init GLES: %s",err)    
     }
     
 
