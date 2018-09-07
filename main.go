@@ -34,8 +34,9 @@ const (
     CONF    Command = "conf"    
     INFO    Command = "info"
     HELP    Command = "help"
+    TEST    Command = "test"
 )
-var cmds = []Command{CONF,PIPE}
+var cmds = []Command{CONF,PIPE,TEST}
 
 
 
@@ -95,6 +96,9 @@ func main() {
         flags[RECV].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
         flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
+    
+    
+
 
     all := []*flag.FlagSet{flag.CommandLine}
 //    for _,cmd := range cmds {
@@ -124,6 +128,7 @@ func main() {
     var server *Server
     var scanner *Scanner
     var renderer *render.Renderer
+    var tester *Tester
     
     
     
@@ -168,6 +173,12 @@ func main() {
         case HELP:
             ShowHelp()
             os.Exit(-2)
+            
+        
+        case TEST:
+            flags[TEST].Usage = func() {ShowCommandHelp(TEST,flags) }
+            flags[TEST].Parse( flag.Args()[1:] )
+            tester = NewTester()
 
         default:
             ShowHelp()
@@ -178,6 +189,7 @@ func main() {
     
     var config *conf.Config = nil
     args := flags[cmd].Args()
+    
     if len(args) < 1 {
         if cmd == CONF { 
             ShowCommandHelp(CONF,flags)
@@ -194,6 +206,7 @@ func main() {
                 cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
                 cflags.Parse( args[1:] )
             
+                        
             default:
                 ShowHelp()
                 os.Exit(-2)    
@@ -253,6 +266,13 @@ func main() {
             if client == nil { log.PANIC("client not available") }
             if config == nil { log.PANIC("config not available") }
             client.SendConf(config)
+
+
+        case TEST:
+            if tester == nil { log.PANIC("tester not available") }
+            tester.testCharMap(config)
+//            tester.testWordTex(config)
+//            tester.testFixed(config)
             
         default:
             log.PANIC("inconsistent command")
