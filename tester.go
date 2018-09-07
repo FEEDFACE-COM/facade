@@ -7,15 +7,25 @@ import (
     "bufio"
     "image/png"
     "image"
-//    "errors"
+    "errors"
     log "./log"
     conf "./conf"
     font "./font"
     "golang.org/x/image/math/fixed"
 )
 
-type Tester struct {}
+type Tester struct {font *font.Font}
 func NewTester() *Tester { return &Tester{} }
+
+
+func (tester *Tester) Configure(config *conf.Config) {
+    
+    tester.font = font.NewFont()
+    tester.font.Configure(config.Font,conf.DIRECTORY)
+    log.Info("got font %s",tester.font.Describe())
+    
+    
+}
 
 func mask(in fixed.Int26_6) int { return (0xffffffff & int(in)) }
 func str(s string, in fixed.Int26_6) string { return fmt.Sprintf("%s\t0x%08x\t%v\t %d ≤ %d ≤ %d",s,mask(in),in.String(),in.Floor(),in.Round(),in.Ceil()) }
@@ -52,45 +62,38 @@ func (tester *Tester) testFixed(config *conf.Config) error {
     return nil
 }
 
-func (tester *Tester) testCharMap(config *conf.Config) error {
+func (tester *Tester) testCharMap() error {
     
-    
-    fnt := font.NewFont()
-    fnt.Configure(config.Font,conf.DIRECTORY)
-    log.Info("got font %s",fnt.Describe())
-    
-    var charmap *font.GlyphMap
+    var charmap *font.GlyphTexture
     var err error
     
-    charmap, err = fnt.RenderGlyphMap()
+    charmap, err = tester.font.RenderGlyphTexture()
     if err != nil {
-        log.PANIC("fail to render glyphmap for %s: %s",fnt.Describe(),err)
+        log.PANIC("fail to render glyphmap for %s: %s",tester.font.Describe(),err)
     }
     saveIMG(charmap.Texture, "charmap")
     
     return nil    
 }
 
-//
-//func (tester *Tester) testWordTex(config *conf.Config) error {
-//    
-//    font := font.NewFont()
-//    font.Configure(config.Font,conf.DIRECTORY)
-//    log.Info("got font %s",font.Describe())
-//    
-//    text := "foobar"
-//    tex,err := font.GenerateTexture(text)
-//    
-//    if err != nil {
-//        log.Error("fail to generate texture for '%s': %s",text,err)
-//        return errors.New("fail to generate texture")     
-//    }
-//    
-//    saveIMG(tex, "charmap")
-//    
-//    return nil    
-//}
-//
+
+func (tester *Tester) testTextTex(str string) error {
+    
+    
+    var texttex *font.TextTexture
+    var err error
+    texttex,err = tester.font.RenderTextTexture(str)
+    
+    if err != nil {
+        log.Error("fail to generate texture for '%s': %s",str,err)
+        return errors.New("fail to generate texture")     
+    }
+    
+    saveIMG(texttex.Texture, "texttex")
+    
+    return nil    
+}
+
 
 
 

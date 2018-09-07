@@ -3,7 +3,7 @@ package main
 
 import (
     "fmt"
-//    "strings"
+    "strings"
     "flag"
     "os"    
     "os/signal"
@@ -188,6 +188,7 @@ func main() {
     
     
     var config *conf.Config = nil
+    var cflags *flag.FlagSet
     args := flags[cmd].Args()
     
     if len(args) < 1 {
@@ -202,10 +203,10 @@ func main() {
             
             case conf.GRID:
                 config = conf.NewConfig(mode)
-                cflags := config.FlagSet()
+                cflags = config.FlagSet()
                 cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
                 cflags.Parse( args[1:] )
-            
+
                         
             default:
                 ShowHelp()
@@ -270,9 +271,13 @@ func main() {
 
         case TEST:
             if tester == nil { log.PANIC("tester not available") }
-            tester.testCharMap(config)
-//            tester.testWordTex(config)
-//            tester.testFixed(config)
+            str := "FEEDFACE.COM"
+            if cflags.NArg() > 0 {
+                str = strings.Join(cflags.Args()," ")
+            }
+            tester.Configure(config)
+            tester.testCharMap()
+            tester.testTextTex(str)
             
         default:
             log.PANIC("inconsistent command")
