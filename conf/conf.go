@@ -4,13 +4,12 @@ package conf
 import (
     "fmt"
     "flag"
-    grid "../grid"
 )
 
 
 type Config struct {
     Mode Mode
-    Grid *grid.Config
+    Grid *GridConfig
     Font *FontConfig    
 }
 
@@ -38,7 +37,7 @@ func NewConfig(mode Mode) *Config {
     ret := &Config{Mode: mode}
     switch mode {
         case GRID:
-            ret.Grid = grid.NewConfig()
+            ret.Grid = NewGridConfig()
     }
     ret.Font = NewFontConfig()
     return ret

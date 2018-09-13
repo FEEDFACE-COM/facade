@@ -3,6 +3,7 @@ package grid
 
 import (
     "fmt"
+    conf "../conf"
     log "../log"
 )
 
@@ -154,7 +155,7 @@ func (buffer *Buffer) delHead() {
 
 
 
-func (buffer *Buffer) Configure(config *Config) {
+func (buffer *Buffer) Configure(config *GridConfig) {
     log.Debug("configure buffer: %s",config.Describe())
     // add/del as needed
 }
