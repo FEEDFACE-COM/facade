@@ -10,17 +10,17 @@ import (
     "errors"
     log "./log"
     conf "./conf"
-    font "./font"
+    gfx "./gfx"
     "golang.org/x/image/math/fixed"
 )
 
-type Tester struct {font *font.Font}
+type Tester struct {font *gfx.Font}
 func NewTester() *Tester { return &Tester{} }
 
 
 func (tester *Tester) Configure(config *conf.Config) {
     
-    tester.font = font.NewFont()
+    tester.font = gfx.NewFont()
     tester.font.Configure(config.Font,conf.DIRECTORY)
     log.Info("got font %s",tester.font.Describe())
     
@@ -64,7 +64,7 @@ func (tester *Tester) testFixed(config *conf.Config) error {
 
 func (tester *Tester) testCharMap() error {
     
-    var charmap *font.GlyphTexture
+    var charmap *gfx.GlyphTexture
     var err error
     
     charmap, err = tester.font.RenderGlyphTexture()
@@ -80,7 +80,7 @@ func (tester *Tester) testCharMap() error {
 func (tester *Tester) testTextTex(str string) error {
     
     
-    var texttex *font.TextTexture
+    var texttex *gfx.TextTexture
     var err error
     texttex,err = tester.font.RenderTextTexture(str)
     

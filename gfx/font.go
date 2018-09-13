@@ -1,5 +1,5 @@
 
-package font
+package gfx
 
 import (
     "fmt"
@@ -12,6 +12,7 @@ import (
     "github.com/golang/freetype"
     "github.com/golang/freetype/truetype"
     log "../log"
+    conf "../conf"
 )
 
 
@@ -56,7 +57,7 @@ func NewFont() *Font {
 }
 
 
-func (font *Font) Configure(config *Config, directory string) {
+func (font *Font) Configure(config *conf.FontConfig, directory string) {
     log.Debug("configure font: %s",config.Describe())
     err := font.loadFont(directory+config.Face)
     if err != nil {

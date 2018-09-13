@@ -5,15 +5,18 @@ import (
     "fmt"
     "flag"
     grid "../grid"
-    font "../font"    
 )
 
 
 type Config struct {
     Mode Mode
     Grid *grid.Config
-    Font *font.Config    
+    Font *FontConfig    
 }
+
+
+
+
 
 type Text string
 
@@ -37,7 +40,7 @@ func NewConfig(mode Mode) *Config {
         case GRID:
             ret.Grid = grid.NewConfig()
     }
-    ret.Font = font.NewConfig()
+    ret.Font = NewFontConfig()
     return ret
 }
 
