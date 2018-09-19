@@ -2,7 +2,7 @@
 package render
 
 import (
-    "fmt"
+//    "fmt"
     "time"
     "sync"
     log "../log"
@@ -22,6 +22,7 @@ const RENDERER_AVAILABLE = true
 const FRAME_RATE = 60.0
 
 type Renderer struct {
+    size struct{width int32; height int32}
     mode conf.Mode
     grid *grid.Grid
     font *gfx.Font
@@ -34,7 +35,7 @@ func NewRenderer() *Renderer {
     return ret
 }
 
-const DEBUG_CLOCK  = false
+const DEBUG_CLOCK  = true
 const DEBUG_CONF   = false
 const DEBUG_TEXT   = false
 
@@ -49,8 +50,10 @@ func (renderer *Renderer) Init() error {
         log.PANIC("fail to initialize renderer: %s",err)    
     }
     
-    width, height := piglet.GetDisplaySize()
-    log.Info("got display %dx%d",width,height)
+    w,h := piglet.GetDisplaySize()
+    renderer.size = struct{width int32; height int32} {int32(w),int32(h)}
+    log.Info("got display %dx%d",renderer.size.width,renderer.size.height)
+    
 
     piglet.MakeCurrent()
 
@@ -103,7 +106,9 @@ func (renderer *Renderer) Render() error {
 
 
     log.Debug("renderer start")
-    gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+//    gl.ClearColor(0x0, 0x0, 0x0, 1.0)
+    gl.ClearColor(0xFE,0xED,0xFA,0xCE)
+    gl.Viewport(0, 0, renderer.size.width,renderer.size.height)
 
 
     for {
@@ -115,6 +120,7 @@ func (renderer *Renderer) Render() error {
         piglet.MakeCurrent()
         
         
+        gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
 
@@ -131,28 +137,6 @@ func (renderer *Renderer) Render() error {
                 log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Describe(),fps)
                 prev = now
             }
-
-            if DEBUG_CONF {
-                str := fmt.Sprintf("mode[%s]",string(renderer.mode))
-                switch renderer.mode {
-                    case conf.GRID:
-                        str += " " + renderer.grid.Describe()
-                    }
-                str += " " + renderer.font.Describe()
-                log.Debug(str)
-            }
-            
-            if DEBUG_TEXT {
-                str := ""
-                switch renderer.mode {
-                    case conf.GRID:
-                        str = renderer.grid.Buffer.Debug(conf.PageDown)
-                }    
-                if str != "" {
-                    log.Debug(str)
-                }
-            }
-                
             
         }
         piglet.SwapBuffers()
