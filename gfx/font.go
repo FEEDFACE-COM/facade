@@ -8,7 +8,7 @@ import (
     "image"
     "image/draw"
     xfont "golang.org/x/image/font"
-    "golang.org/x/image/math/fixed"
+//    "golang.org/x/image/math/fixed"
     "github.com/golang/freetype"
     "github.com/golang/freetype/truetype"
     log "../log"
@@ -16,10 +16,6 @@ import (
 )
 
 
-//const FONT_SIZE = 72.0
-//const rowheight = 1.0
-//const FONT_DPI = 300.0
-//const maxwidth = 8192
 
 var foreground = image.White
 var background = image.Black
@@ -131,17 +127,17 @@ func (font *Font) findSizes(pointSize,dpi,rowSpacing float64) ([GlyphCols][Glyph
 
 
 
-            scale := fixed.I( 1 )
-            idx := font.font.Index( rune(c) )
-            hmetric := font.font.HMetric(scale,idx)
-            vmetric := font.font.VMetric(scale,idx)
+//            scale := fixed.I( 1 )
+//            idx := font.font.Index( rune(c) )
+//            hmetric := font.font.HMetric(scale,idx)
+//            vmetric := font.font.VMetric(scale,idx)
 //            log.Debug("glyph %c\twidth %v\theight %v",c,hmetric,vmetric)
 
 //            bounds := font.font.Bounds(scale)
 
-            magic := pointSize * dpi / 72.0
+//            magic := pointSize * dpi / 72.0
             
-            log.Debug("glyph %c at index %d has horizontal %v vertical %v\trenders %v\tmagic yields %5.2f",c,idx,hmetric,vmetric,dim.X,magic)
+//            log.Debug("glyph %c at index %d has horizontal %v vertical %v\trenders %v\tmagic yields %5.2f",c,idx,hmetric,vmetric,dim.X,magic)
 
 //            log.Debug("font scale %v bounds %v\t\tglyph %c\trenders %v\thorizontal %v\tvertical %v",scale,bounds,c,dim.X,hmetric,vmetric)
 
@@ -178,9 +174,9 @@ func (font *Font) RenderGlyphTexture() (*GlyphTexture, error) {
 
 
 
-    log.Debug("max is %v",max)
-    log.Debug("bounds is %v",font.font.Bounds( fixed.I(1<<6)))
-    log.Debug("%d funits per em",font.font.FUnitsPerEm())
+//    log.Debug("max is %v",max)
+//    log.Debug("bounds is %v",font.font.Bounds( fixed.I(1<<6)))
+//    log.Debug("%d funits per em",font.font.FUnitsPerEm())
 
     ret.Texture = image.NewRGBA( image.Rect(0,0,GlyphCols*ret.Width,2*GlyphRows*ret.Height) )
 
@@ -255,7 +251,7 @@ func (font *Font) RenderTextTexture(text string) (*TextTexture, error) {
     ret.Width = dim.X.Ceil() + dim.X.Ceil()/16
     ret.Height = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
 
-    log.Debug("got dimensions %dx%d for text '%s'",ret.Width,ret.Height,str)
+//    log.Debug("got dimensions %dx%d for text '%s'",ret.Width,ret.Height,str)
     
     ret.Texture = image.NewRGBA( image.Rect(0,0,ret.Width,ret.Height) )
     draw.Draw( ret.Texture, ret.Texture.Bounds(), background, image.ZP, draw.Src)

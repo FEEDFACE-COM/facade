@@ -195,7 +195,13 @@ func main() {
         if cmd == CONF { 
             ShowCommandHelp(CONF,flags)
             os.Exit(-2)
+        } else {
+            
+                modeflags.Usage = func() { ShowModeHelp(config.Mode,cmd,modeflags) }
+                modeflags.Parse( args[0:] )
+                
         }
+         
             
     } else {
         mode := conf.Mode(args[0])
@@ -207,6 +213,7 @@ func main() {
                 modeflags.Usage = func() { ShowModeHelp(conf.GRID,cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
+
                         
             default:
                 ShowHelp()
@@ -214,7 +221,6 @@ func main() {
         }
     }
         
-    
     
     
     

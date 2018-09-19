@@ -11,6 +11,7 @@ type FontConfig struct {
 }
 
 
+
 func (config *FontConfig) AddFlags(flags *flag.FlagSet) {
     flags.StringVar(&config.Face,"font",config.Face,"use fontface `font`" )
 }
