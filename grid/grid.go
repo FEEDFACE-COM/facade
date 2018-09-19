@@ -3,6 +3,7 @@ package grid
 
 import(
     "fmt"
+    conf "../conf"
     log "../log"
 )
 
@@ -22,7 +23,7 @@ func (grid *Grid) Queue(text string) {
     grid.Buffer.Queue(text, 1.0)
 }
 
-func (grid *Grid) Configure(config *Config) {
+func (grid *Grid) Configure(config *conf.GridConfig) {
     log.Debug("configure grid: %s",config.Describe())
     
     if config.Width != grid.width {
@@ -37,7 +38,7 @@ func (grid *Grid) Configure(config *Config) {
 
 func NewGrid() *Grid {
     ret := &Grid{}
-    ret.Configure(NewConfig())
+    ret.Configure(conf.NewGridConfig())
     ret.Buffer = NewBuffer(ret.height)
     return ret
 }

@@ -155,27 +155,27 @@ func (buffer *Buffer) delHead() {
 
 
 
-func (buffer *Buffer) Configure(config *GridConfig) {
+func (buffer *Buffer) Configure(config *conf.GridConfig) {
     log.Debug("configure buffer: %s",config.Describe())
     // add/del as needed
 }
 
 func (buffer *Buffer) Describe() string { return fmt.Sprintf("buffer[%d]",buffer.size) }
 
-func (buffer *Buffer) Debug(dir PageDirection) string {
+func (buffer *Buffer) Debug(dir conf.PageDirection) string {
     ret := ""
     var ptr *Line
     var idx uint
-    if dir == PageDown { ptr = buffer.head ; idx = 0 }
-    if dir == PageUp   { ptr = buffer.tail ; idx = buffer.size }
+    if dir == conf.PageDown { ptr = buffer.head ; idx = 0 }
+    if dir == conf.PageUp   { ptr = buffer.tail ; idx = buffer.size }
 
     for ptr != nil {
         h,t := " ", " "
         if ptr == buffer.head { h = "h" }
         if ptr == buffer.tail { t = "t" }
         ret = ret + fmt.Sprintf("#%02d %s%s %s\n",idx,h,t,ptr.text)
-        if dir == PageDown { ptr = ptr.next; idx = (idx + 1)   }
-        if dir == PageUp   { ptr = ptr.prev; idx = (idx - 1 + buffer.size) % buffer.size }
+        if dir == conf.PageDown { ptr = ptr.next; idx = (idx + 1)   }
+        if dir == conf.PageUp   { ptr = ptr.prev; idx = (idx - 1 + buffer.size) % buffer.size }
     }
     return ret
     

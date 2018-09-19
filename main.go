@@ -187,8 +187,8 @@ func main() {
     
     
     
-    var config *conf.Config = nil
-    var cflags *flag.FlagSet
+    var config *conf.Config = conf.NewConfig(conf.DEFAULT_MODE)
+    var modeflags *flag.FlagSet = config.FlagSet()
     args := flags[cmd].Args()
     
     if len(args) < 1 {
@@ -202,10 +202,10 @@ func main() {
         switch (mode) {
             
             case conf.GRID:
-                config = conf.NewConfig(mode)
-                cflags = config.FlagSet()
-                cflags.Usage = func() { ShowModeHelp(mode,cmd,cflags) }
-                cflags.Parse( args[1:] )
+                config = conf.NewConfig(conf.GRID)
+                modeflags = config.FlagSet()
+                modeflags.Usage = func() { ShowModeHelp(conf.GRID,cmd,modeflags) }
+                modeflags.Parse( args[1:] )
 
                         
             default:
@@ -227,9 +227,6 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            if config == nil {
-                config = conf.NewConfig(conf.DEFAULT)
-            }
             texts := make(chan conf.Text)
             go scanner.ScanText(texts)
             go renderer.ReadText(texts)
@@ -242,9 +239,6 @@ func main() {
             log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            if config == nil {
-                config = conf.NewConfig(conf.DEFAULT)
-            }
             texts := make(chan conf.Text)
             confs := make(chan conf.Config)
             go server.ListenText(texts)
@@ -272,8 +266,8 @@ func main() {
         case TEST:
             if tester == nil { log.PANIC("tester not available") }
             str := "FEEDFACE.COM"
-            if cflags.NArg() > 0 {
-                str = strings.Join(cflags.Args()," ")
+            if modeflags.NArg() > 0 {
+                str = strings.Join(modeflags.Args()," ")
             }
             tester.Configure(config)
             tester.testCharMap()

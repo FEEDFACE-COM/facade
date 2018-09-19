@@ -8,7 +8,7 @@ import (
     log "../log"
     conf "../conf"
     grid "../grid"
-    font "../font"
+    gfx "../gfx"
     "src.feedface.com/gfx/piglet"
     gl "src.feedface.com/gfx/piglet/gles2"
 )
@@ -24,7 +24,7 @@ const FRAME_RATE = 60.0
 type Renderer struct {
     mode conf.Mode
     grid *grid.Grid
-    font *font.Font
+    font *gfx.Font
     mutex *sync.Mutex
 }
 
@@ -65,9 +65,9 @@ func (renderer *Renderer) Init() error {
 
 
     //setup things    
-    renderer.mode = conf.DEFAULT
+    renderer.mode = conf.DEFAULT_MODE
     renderer.grid = grid.NewGrid()
-    renderer.font = font.NewFont()
+    renderer.font = gfx.NewFont()
 
     return err
 }
@@ -86,7 +86,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
             renderer.grid.Configure(config.Grid)
     }
     if config.Font != nil {
-        renderer.font.Configure(config.Font)        
+        renderer.font.Configure(config.Font,conf.DIRECTORY)
     }
     return nil
 }
@@ -146,7 +146,7 @@ func (renderer *Renderer) Render() error {
                 str := ""
                 switch renderer.mode {
                     case conf.GRID:
-                        str = renderer.grid.Buffer.Debug(grid.PageDown)
+                        str = renderer.grid.Buffer.Debug(conf.PageDown)
                 }    
                 if str != "" {
                     log.Debug(str)

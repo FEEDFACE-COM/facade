@@ -28,10 +28,10 @@ const (
 
 var Modes = []Mode{GRID,CLOUD,SCROLL}
 
-var DEFAULT Mode = GRID
+var DEFAULT_MODE Mode = GRID
 
 
-var DIRECTORY = "/Users/folkert/src/gfx/facade/asset/"
+var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
 
 func NewConfig(mode Mode) *Config {
     ret := &Config{Mode: mode}
