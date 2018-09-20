@@ -241,11 +241,10 @@ func main() {
             if scanner == nil { log.PANIC("scanner not available") }
             texts := make(chan conf.Text)
             go scanner.ScanText(texts)
-            go renderer.ReadText(texts)
+//            go renderer.ReadText(texts)
             runtime.LockOSThread()
-            renderer.Init() 
-            renderer.Configure(config)
-            renderer.Render()
+            renderer.Init(config) 
+            renderer.Render(nil, texts)
 
         case RECV:
             log.Info(AUTHOR)
@@ -255,12 +254,11 @@ func main() {
             confs := make(chan conf.Config)
             go server.ListenText(texts)
             go server.ListenConf(confs)
-            go renderer.ReadText(texts)
-            go renderer.ReadConf(confs)
+//            go renderer.ReadText(texts)
+//            go renderer.ReadConf(confs)
             runtime.LockOSThread()
-            renderer.Init() 
-            renderer.Configure(config)
-            renderer.Render()
+            renderer.Init(config) 
+            renderer.Render(confs, texts)
                     
         case PIPE:
             if client == nil { log.PANIC("client not available") }

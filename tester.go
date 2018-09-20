@@ -18,7 +18,7 @@ func NewTester() *Tester { return &Tester{} }
 
 func (tester *Tester) Configure(config *conf.Config) {
     
-    tester.font = gfx.NewFont()
+    tester.font = gfx.NewFont(nil)
     tester.font.Configure(config.Font,conf.DIRECTORY)
     log.Info("got font %s",tester.font.Desc())
     

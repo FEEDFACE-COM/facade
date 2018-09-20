@@ -23,30 +23,37 @@ const RENDERER_AVAILABLE = true
 
 const FRAME_RATE = 60.0
 
+const BUFFER_SIZE = 40
+
 type Renderer struct {
     size struct{width int32; height int32}
+
     mode conf.Mode
-//    buffer Buffer
-//    grid *Grid
+    grid *modes.Grid
     lines *modes.Lines
     font *gfx.Font
+
+    now Clock
+    buffer *Buffer
     mutex *sync.Mutex
 }
 
 func NewRenderer() *Renderer {
     ret := &Renderer{}
     ret.mutex = &sync.Mutex{}
+    ret.buffer = &Buffer{}
+    ret.buffer.Resize(BUFFER_SIZE)
     return ret
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_MODE   = false
+const DEBUG_MODE   = true
 const DEBUG_BUFFER = true
  
 
 const DEBUG_FRAMES = 90
 
-func (renderer *Renderer) Init() error {
+func (renderer *Renderer) Init(config *conf.Config) error {
     var err error
     log.Debug("initializing renderer")
     
@@ -73,16 +80,25 @@ func (renderer *Renderer) Init() error {
 
 
     //setup things    
-    renderer.mode = conf.DEFAULT_MODE
-//    renderer.grid = NewGrid()
-//    renderer.lines = NewLines()
-    renderer.font = gfx.NewFont()
+    renderer.mode = config.Mode
+    renderer.grid = modes.NewGrid(config.Grid)
+    renderer.lines = modes.NewLines(config.Line)
+    renderer.font = gfx.NewFont(config.Font)
+
+
+    InitClock()
+    renderer.now = Clock{frame: 0}
 
     return err
 }
 
 
 func (renderer *Renderer) Configure(config *conf.Config) error {
+    
+    if config == nil {
+        return nil
+    }
+    
     log.Debug("configure %s",config.Desc())
     
     if renderer.mode != config.Mode {
@@ -90,26 +106,19 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     }
     
     renderer.mode = config.Mode
-    if config.Font != nil {
-        renderer.font.Configure(config.Font,conf.DIRECTORY)
-    }
-//    switch (config.Mode) {
-//        case conf.GRID:
-//            renderer.grid.Configure(config.Grid)
-//        case conf.LINE:
-//            renderer.lines.Configure(config.Line)
-//    }
+    renderer.font.Configure(config.Font,conf.DIRECTORY)
+    renderer.lines.Configure(config.Line)
+    renderer.grid.Configure(config.Grid)
     return nil
 }
 
 
 
-func (renderer *Renderer) Render() error {
+func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
 
-    InitClock()
-
-    var now  Clock = Clock{frame: 0}
-    var prev Clock = Clock{frame: 0}
+    
+    var now *Clock = &renderer.now
+    var prev Clock = *now
     
 
 
@@ -123,11 +132,27 @@ func (renderer *Renderer) Render() error {
 
     for {
         now.Tick()
-
-        //draw
-        // TBD
+        
         renderer.mutex.Lock()
         piglet.MakeCurrent()
+        
+        
+        select {
+            case config := <-confChan:
+                log.Debug("conf: %s",config.Desc())
+                renderer.Configure(&config)
+            default:
+        }
+        
+        select {
+            case text := <-textChan:
+                log.Debug("read: %s",text)
+                renderer.buffer.Queue(renderer.now.Time(),text)
+                renderer.lines.Queue( string(text) )
+                renderer.grid.Queue( string(text) )
+            default:
+        }
+
         
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
@@ -149,17 +174,27 @@ func (renderer *Renderer) Render() error {
             if DEBUG_CLOCK   {
                 fps := float32(now.frame - prev.frame) / (now.time - prev.time)
                 log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
-                prev = now
+                prev = *now
             }
             
-//            if DEBUG_MODE {
-//                switch renderer.mode { 
-//                    case conf.LINE:
-//                        log.Debug( renderer.lines.Desc() )
-//                    case conf.GRID:
-//                        log.Debug( renderer.grid.Desc() )
-//                }
+//            if DEBUG_BUFFER {
+//                log.Debug("%5.1f %5.1f %s",renderer.now.Time(),now.Time(),renderer.buffer.Dump())    
 //            }
+            
+            if DEBUG_MODE {
+                switch renderer.mode { 
+                    case conf.LINE:
+                        log.Debug( renderer.lines.Desc() )
+                        if DEBUG_BUFFER {
+                            log.Debug( renderer.lines.Dump() )    
+                        }
+                    case conf.GRID:
+                        log.Debug( renderer.grid.Desc() )
+                        if DEBUG_BUFFER {
+                            log.Debug( renderer.grid.Dump() )    
+                        }
+                }
+            }
             
         }
         piglet.SwapBuffers()
@@ -178,7 +213,8 @@ func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
         text := <-textChan
         log.Debug("read: %s",text)
         renderer.mutex.Lock()
-//        renderer.buffer.Queue( )
+        renderer.buffer.Queue(renderer.now.Time(),text)
+//        renderer.lines.Queue(string(text))
 //        renderer.grid.Queue( string(text) )
 //        renderer.lines.Queue( string(text) )
         renderer.mutex.Unlock()

@@ -19,7 +19,7 @@ func NewRenderer() *Renderer {
     return &Renderer{} 
 }
 
-func (renderer *Renderer) Init() error {
+func (renderer *Renderer) Init(config *conf.Config) error {
     log.PANIC("RENDERER NOT AVAILABLE")  
     return errors.New("RENDERER NOT AVAILABLE") 
 }
@@ -29,7 +29,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     return errors.New("RENDERER NOT AVAILABLE")
 }
 
-func (renderer *Renderer) Render() error { 
+func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error { 
     log.PANIC("RENDERER NOT AVAILABLE")
     return errors.New("RENDERER NOT AVAILABLE")
 } 

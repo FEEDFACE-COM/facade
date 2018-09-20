@@ -36,6 +36,10 @@ func InitClock() {
     startTime = time.Now()
 }
 
+func (clock *Clock) Time() float32 {
+    return clock.time    
+}
+
 func (clock *Clock) Tick() {
     prev := clock.time
     clock.frame += 1

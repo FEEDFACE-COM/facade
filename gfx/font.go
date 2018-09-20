@@ -48,8 +48,12 @@ type TextTexture struct {
 }
 
 
-func NewFont() *Font {
-    return &Font{}
+func NewFont(config *conf.FontConfig) *Font {
+    ret := &Font{}
+    if config != nil {
+        ret.face = config.Face
+    }
+    return ret
 }
 
 
