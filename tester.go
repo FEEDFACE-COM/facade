@@ -20,7 +20,7 @@ func (tester *Tester) Configure(config *conf.Config) {
     
     tester.font = gfx.NewFont()
     tester.font.Configure(config.Font,conf.DIRECTORY)
-    log.Info("got font %s",tester.font.Describe())
+    log.Info("got font %s",tester.font.Desc())
     
     
 }
@@ -32,7 +32,7 @@ func (tester *Tester) testCharMap() error {
     
     charmap, err = tester.font.RenderGlyphTexture()
     if err != nil {
-        log.PANIC("fail to render glyphmap for %s: %s",tester.font.Describe(),err)
+        log.PANIC("fail to render glyphmap for %s: %s",tester.font.Desc(),err)
     }
     saveIMG(charmap.Texture, "charmap")
     

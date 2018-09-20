@@ -86,7 +86,7 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Config) 
         return
     }
     if DEBUG_RECV {
-        log.Debug("receive conf %s",config.Describe())
+        log.Debug("receive conf %s",config.Desc())
     }
     confChan <- *config
 }

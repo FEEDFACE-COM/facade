@@ -18,6 +18,6 @@ func (config *FontConfig) AddFlags(flags *flag.FlagSet) {
 
 func NewFontConfig() *FontConfig { return &FontConfig{Face: "Monaco"} }
 
-func (config *FontConfig) Describe() string { return fmt.Sprintf("font[%s]",config.Face) }
+func (config *FontConfig) Desc() string { return fmt.Sprintf("font[%s]",config.Face) }
 
 

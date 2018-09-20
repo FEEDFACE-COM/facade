@@ -22,7 +22,7 @@ func NewSet() *Set {
 
 
 func (set *Set) Desc() string { return fmt.Sprintf("set[%d]",len(set.items) ) }
-func (set *Set) Debug() string { 
+func (set *Set) Dump() string { 
     ret := ""
     for item := range set.items {
         ret = ret + " " +set.items[item].text    

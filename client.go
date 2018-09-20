@@ -59,7 +59,7 @@ func (client *Client) ScanAndSendText() {
 
 func (client *Client) SendConf(config *conf.Config) { 
     confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
-    log.Info("config %s",config.Describe())
+    log.Info("config %s",config.Desc())
     log.Info("connect to %s",confConnStr) 
     conn, err := net.Dial("tcp", confConnStr)
     if err != nil {
@@ -70,11 +70,11 @@ func (client *Client) SendConf(config *conf.Config) {
     enc := gob.NewEncoder(conn)
     err = enc.Encode( *config )
     if err != nil {
-        log.Error("fail to encode %s: %s",config.Describe(),err)
+        log.Error("fail to encode %s: %s",config.Desc(),err)
         return
     }
     if DEBUG_SEND {
-        log.Debug("send conf: %s",config.Describe())
+        log.Debug("send conf: %s",config.Desc())
     }
 }
 

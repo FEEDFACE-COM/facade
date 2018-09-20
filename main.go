@@ -213,6 +213,12 @@ func main() {
                 modeflags.Usage = func() { ShowModeHelp(conf.GRID,cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
+            case conf.LINE:
+                config = conf.NewConfig(conf.LINE)
+                modeflags = config.FlagSet()
+                modeflags.Usage = func() { ShowModeHelp(conf.LINE,cmd,modeflags) }
+                modeflags.Parse( args[1:] )
+
 
                         
             default:
@@ -354,8 +360,7 @@ func ShowHelp() {
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.GRID,"a grid")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.CLOUD,"a cloud")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.SCROLL,"a scroller")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.LINE,"lines")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")

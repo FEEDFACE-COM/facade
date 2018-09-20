@@ -32,7 +32,7 @@ func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
 
 }
 
-func (config *GridConfig) Describe() string { return fmt.Sprintf("grid[%dx%d]",config.Width,config.Height) }
+func (config *GridConfig) Desc() string { return fmt.Sprintf("grid[%dx%d]",config.Width,config.Height) }
 
 
 

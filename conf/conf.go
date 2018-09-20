@@ -10,6 +10,7 @@ import (
 type Config struct {
     Mode Mode
     Grid *GridConfig
+    Line *LineConfig
     Font *FontConfig    
 }
 
@@ -21,14 +22,15 @@ type Text string
 
 type Mode string
 const (
-    GRID   Mode = "grid"
-    CLOUD  Mode = "cloud"
-    SCROLL Mode = "scroll"    
+    GRID  Mode = "grid"
+    LINE  Mode = "line"
+    WORD  Mode = "word"
+    CHAR  Mode = "char"    
 )
 
-var Modes = []Mode{GRID,CLOUD,SCROLL}
+var Modes = []Mode{GRID,LINE}
 
-var DEFAULT_MODE Mode = GRID
+var DEFAULT_MODE Mode = LINE
 
 
 var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
@@ -38,6 +40,8 @@ func NewConfig(mode Mode) *Config {
     switch mode {
         case GRID:
             ret.Grid = NewGridConfig()
+        case LINE:
+            ret.Line = NewLineConfig()
     }
     ret.Font = NewFontConfig()
     return ret
@@ -50,6 +54,9 @@ func (config *Config) FlagSet() *flag.FlagSet {
     if config.Grid != nil {
         config.Grid.AddFlags(ret)    
     }
+    if config.Line != nil {
+        config.Line.AddFlags(ret)
+    }
     
     if config.Font != nil {
         config.Font.AddFlags(ret)    
@@ -61,15 +68,18 @@ func (config *Config) FlagSet() *flag.FlagSet {
     
     
 
-func (config *Config) Describe() string {
-    ret := fmt.Sprintf("conf[%s]",string(config.Mode))
+func (config *Config) Desc() string {
+    ret := fmt.Sprintf("conf[%s",string(config.Mode))
     if config.Grid != nil {
-        ret += " " + config.Grid.Describe()
+        ret += " " + config.Grid.Desc()
+    }
+    if config.Line != nil {
+        ret += " " + config.Line.Desc()
     }
     if config.Font != nil {
-        ret += " " + config.Font.Describe()
+        ret += " " + config.Font.Desc()
     }
-    ret += " [dir " + DIRECTORY + "]"
+    ret += "] [dir " + DIRECTORY + "]"
     return ret
 }
 

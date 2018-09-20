@@ -54,10 +54,10 @@ func NewFont() *Font {
 
 
 func (font *Font) Configure(config *conf.FontConfig, directory string) {
-    log.Debug("configure font: %s",config.Describe())
+    log.Debug("configure font: %s",config.Desc())
     err := font.loadFont(directory+config.Face)
     if err != nil {
-        log.Error("fail to config %s: %s",config.Describe(),err)
+        log.Error("fail to config %s: %s",config.Desc(),err)
         return
     }
     font.face = config.Face
@@ -212,7 +212,7 @@ func (font *Font) RenderGlyphTexture() (*GlyphTexture, error) {
         }
     }
     
-    log.Debug("rendered glyphs for %s",font.Describe())
+    log.Debug("rendered glyphs for %s",font.Desc())
     
     return ret,nil
     
@@ -261,7 +261,7 @@ func (font *Font) RenderTextTexture(text string) (*TextTexture, error) {
     ctx.SetClip(ret.Texture.Bounds())
     ctx.DrawString(str,freetype.Pt(ret.Width/32, 4*ret.Height/5))
     
-    log.Debug("rendered text '%s' for %s",ret.Text,font.Describe())
+    log.Debug("rendered text '%s' for %s",ret.Text,font.Desc())
     return ret,nil
         
 }
@@ -269,7 +269,7 @@ func (font *Font) RenderTextTexture(text string) (*TextTexture, error) {
 
 
 
-func (font *Font) Describe() string {
+func (font *Font) Desc() string {
     return fmt.Sprintf("font[%s]",font.face)
 }
 

@@ -1,5 +1,5 @@
 
-package grid
+package modes
 
 import(
     "fmt"
@@ -10,7 +10,7 @@ import(
 type Grid struct {
     width uint
     height uint
-    *Buffer   
+//    *Buffer   
 }
 
 
@@ -20,11 +20,11 @@ func (grid *Grid) Render() {
 }
 
 func (grid *Grid) Queue(text string) {
-    grid.Buffer.Queue(text, 1.0)
+//    grid.Buffer.Queue(text, 1.0)
 }
 
 func (grid *Grid) Configure(config *conf.GridConfig) {
-    log.Debug("configure grid: %s",config.Describe())
+    log.Debug("configure grid: %s",config.Desc())
     
     if config.Width != grid.width {
         grid.width = config.Width    
@@ -32,19 +32,19 @@ func (grid *Grid) Configure(config *conf.GridConfig) {
     
     if config.Height != grid.height {
         grid.height = config.Height
-        grid.Buffer.Configure(config)    
+//        grid.Buffer.Configure(config)    
     }
 }
 
-func NewGrid() *Grid {
-    ret := &Grid{}
-    ret.Configure(conf.NewGridConfig())
-    ret.Buffer = NewBuffer(ret.height)
+func NewGrid() Grid {
+    ret := Grid{}
+//    ret.Configure(conf.NewGridConfig())
+//    ret.Buffer = NewBuffer(ret.height)
     return ret
 }
 
-func (grid *Grid) Describe() string {
-    ret := fmt.Sprintf("grid[%dx%d] %s",grid.width,grid.height,grid.Buffer.Describe())
+func (grid *Grid) Desc() string {
+    ret := fmt.Sprintf("grid[%dx%d]",grid.width,grid.height)
     return ret
 }
 
