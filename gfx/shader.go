@@ -49,7 +49,7 @@ func (shader *Shader) Compile() {
 }
 
 
-var VERTEX_IDENTITY = `
+var IDENTITY_VERTEX = `
 uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 model;
@@ -64,7 +64,7 @@ void main() {
 
 
 
-var FRAGMENT_IDENTITY = `
+var IDENTITY_FRAGMENT = `
 uniform sampler2D tex;
 varying vec2 fragTexCoord;
 void main() {

@@ -34,6 +34,9 @@ func (texture *Texture) Close() {
     texture.texture = 0
 }
 
+func (texture *Texture) Bind() {
+    gl.BindTexture(gl.TEXTURE_2D, texture.texture)    
+}
 
 
 func (texture *Texture) LoadFile(path string) error {
@@ -59,7 +62,7 @@ func (texture *Texture) LoadFile(path string) error {
     return nil
 }
 
-func (texture *Texture) genTexture() error {
+func (texture *Texture) GenTexture() error {
     gl.GenTextures(1, &texture.texture)
     gl.ActiveTexture(gl.TEXTURE0)
     gl.BindTexture(gl.TEXTURE_2D, texture.texture)

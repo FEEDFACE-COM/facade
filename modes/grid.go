@@ -5,6 +5,7 @@ import(
     "fmt"
     conf "../conf"
     log "../log"
+    gl "src.feedface.com/gfx/piglet/gles2"
 )
 
 type Grid struct {
@@ -22,7 +23,7 @@ func (item *gridItem) Desc() string { return item.text }
 
 
 func (grid *Grid) Render() {
-    //opengl stuff    
+    gl.ClearColor(0xff,0x0,0x0,1.0)
 }
 
 func (grid *Grid) Queue(text string) {
