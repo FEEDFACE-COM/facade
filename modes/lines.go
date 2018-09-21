@@ -5,7 +5,7 @@ package modes
 
 import(
     "fmt"
-    "strings"
+//    "strings"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -17,20 +17,11 @@ type Lines struct {
     lineCount uint
     buffer Buffer 
     texture *gfx.Texture
-//    program  uint32
-    object uint32
-    vertexShader gfx.Shader
-    fragmentShader gfx.Shader
+    camera *gfx.Camera
     program uint32
-    projection mgl32.Mat4
-    projectionUniform int32
-    camera mgl32.Mat4
-    cameraUniform int32
     model mgl32.Mat4
     modelUniform int32
-    textureUniform int32
-    vertAttrib uint32
-    texCoordAttrib uint32
+    quad *gfx.Quad
 }
 
 
@@ -91,101 +82,68 @@ func (lines *Lines) Dump() string {
 }
 
 
-func (lines *Lines) newProgram() {
+func (lines *Lines) Init(camera *gfx.Camera) {
+    var err error
 
-    lines.fragmentShader = gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
-    lines.vertexShader = gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
+	lines.texture = gfx.NewTexture()
+	lines.texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
+	lines.texture.GenTexture()
+
+    fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
+    vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
     
-    
-    lines.fragmentShader.Compile()
-    lines.vertexShader.Compile()
+    err = fragment.Compile()
+    if err != nil {
+        log.Error("fail compile fragment: %v",err)
+    }
 
-    lines.program = gl.CreateProgram()
- 
-    gl.AttachShader( lines.program, lines.vertexShader.Shader )
-    gl.AttachShader( lines.program, lines.fragmentShader.Shader )
-    gl.LinkProgram( lines.program)
-    
-	var status int32
-	gl.GetProgramiv(lines.program, gl.LINK_STATUS, &status)
-	if status == gl.FALSE {
-		var logLength int32
-		gl.GetProgramiv(lines.program, gl.INFO_LOG_LENGTH, &logLength)
+    err = vertex.Compile()
+    if err != nil {
+        log.Error("fail compile vertex: %v",err)
+    }
 
-		logs := strings.Repeat("\x00", int(logLength+1))
-		gl.GetProgramInfoLog(lines.program, logLength, nil, gl.Str(logs))
+    lines.program, err = gfx.NewProgram(&vertex,&fragment)
 
-		log.Error("fail link program: %v", logs)
-	}
-    
-        
-}
+    if err != nil {
+        log.Error("fail new program: %v",err)    
+    }
 
-func (lines *Lines) Init() {
+	gl.UseProgram(lines.program)
 
-
-    lines.newProgram()
-
-    windowWidth := 1280
-    windowHeight := 960
-
-    
-	lines.projection = mgl32.Perspective(mgl32.DegToRad(45.0), float32(windowWidth)/float32(windowHeight), 0.1, 10.0)
-	lines.projectionUniform = gl.GetUniformLocation(lines.program, gl.Str("projection\x00"))
-	gl.UniformMatrix4fv(lines.projectionUniform, 1, false, &lines.projection[0])
-
-	lines.camera = mgl32.LookAtV(mgl32.Vec3{3, 3, 3}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
-	lines.cameraUniform = gl.GetUniformLocation(lines.program, gl.Str("camera\x00"))
-	gl.UniformMatrix4fv(lines.cameraUniform, 1, false, &lines.camera[0])
+	camera.Uniform(lines.program)
 
 	lines.model = mgl32.Ident4()
 	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-	lines.textureUniform = gl.GetUniformLocation(lines.program, gl.Str("tex\x00"))
-	gl.Uniform1i(lines.textureUniform, 0)
+    lines.texture.Uniform(lines.program)
 
+    lines.quad = gfx.NewQuad(lines.texture.Size.Width,lines.texture.Size.Height)
+    lines.quad.VertexAttribPointer(lines.program)
 
-
-    gl.GenBuffers(1,&lines.object)
-    gl.BindBuffer(gl.ARRAY_BUFFER, lines.object)
-    gl.BufferData(gl.ARRAY_BUFFER, len(quad)*4, gl.Ptr(quad), gl.STATIC_DRAW)
-
-
-	lines.vertAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vert\x00")))
-	gl.EnableVertexAttribArray(lines.vertAttrib) 
-	gl.VertexAttribPointer(lines.vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
-
-	lines.texCoordAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vertTexCoord\x00")))
-	gl.EnableVertexAttribArray(lines.texCoordAttrib)
-	gl.VertexAttribPointer(lines.texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
-
-
-
-    
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LESS)
-    
-
-    lines.texture = gfx.NewTexture()
-    lines.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
-    lines.texture.GenTexture()
     
 }
 
 
-func (lines *Lines) Render() {
+func (lines *Lines) Render(camera *gfx.Camera) {
 
     gl.ClearColor(0x00,0x80,0x80,1.0)
 
-	gl.UseProgram(lines.program)
+    lines.model = mgl32.Ident4()
+
+    gl.UseProgram(lines.program)
     gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
+
+
+
+    camera.Uniform(lines.program)
+
     gl.ActiveTexture(gl.TEXTURE0)
-    (*lines.texture).Bind()
-    gl.BindBuffer(gl.ARRAY_BUFFER, lines.object)
-    gl.DrawArrays(gl.TRIANGLES, 0, 2*3 )
-    
+    lines.texture.Bind()
+
+    gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
+
 
 }
 

@@ -4,6 +4,7 @@ package modes
 import(
     "fmt"
     conf "../conf"
+    gfx "../gfx"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
 )
@@ -22,13 +23,18 @@ func (item *gridItem) Desc() string { return item.text }
 
 
 
-func (grid *Grid) Render() {
+func (grid *Grid) Render(camera *gfx.Camera) {
     gl.ClearColor(0xff,0x0,0x0,1.0)
 }
 
 func (grid *Grid) Queue(text string) {
     newItem := gridItem{text: text}
     grid.buffer.Queue( &newItem )
+}
+
+
+func (grid *Grid) Init(camera *gfx.Camera) {
+    
 }
 
 func (grid *Grid) Configure(config *conf.GridConfig) {

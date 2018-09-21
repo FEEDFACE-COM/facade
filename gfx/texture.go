@@ -15,9 +15,12 @@ import (
 )
 
 type Texture struct {
+    Size struct{Width float32; Height float32}
+    
     path string
     rgba *image.RGBA
     texture uint32 
+    textureUniform int32
 }
 
 
@@ -32,6 +35,12 @@ func (texture *Texture) Close() {
         gl.DeleteTextures(1, &texture.texture)    
     }   
     texture.texture = 0
+}
+
+
+func (texture *Texture) Uniform(program uint32) {
+	texture.textureUniform = gl.GetUniformLocation(program, gl.Str("texture\x00"))
+	gl.Uniform1i(texture.textureUniform, 0)
 }
 
 func (texture *Texture) Bind() {
@@ -51,13 +60,17 @@ func (texture *Texture) LoadFile(path string) error {
         log.Error("fail decode %s: %s",path,err)
         return err
     }
-    
     texture.rgba = image.NewRGBA(img.Bounds())
     if texture.rgba.Stride != texture.rgba.Rect.Size().X * 4 {
         log.Error("fail rgba, unsupported stride")
         return errors.New("unsupported stride")    
     }
     draw.Draw(texture.rgba, texture.rgba.Bounds(), img, image.Point{0,0}, draw.Src)
+
+    texture.Size.Width = float32(texture.rgba.Rect.Size().X)
+    texture.Size.Height = float32(texture.rgba.Rect.Size().Y)
+
+    log.Debug("got tex %5.1fx%5.1f",texture.Size.Width,texture.Size.Height)
     
     return nil
 }

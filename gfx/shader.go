@@ -6,6 +6,7 @@ package gfx
 
 import (
     "strings"
+    "errors"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -24,7 +25,8 @@ func NewShader(name string, source string, shaderType uint32) Shader {
     return ret    
 }
 
-func (shader *Shader) Compile() {
+
+func (shader *Shader) Compile() error {
     log.Debug("shader compile %s",shader.Name)
     shader.Shader = gl.CreateShader(shader.ShaderType)
     
@@ -43,10 +45,41 @@ func (shader *Shader) Compile() {
         logs := strings.Repeat("\x00", int(logLength+1))
         gl.GetShaderInfoLog(shader.Shader, logLength, nil, gl.Str(logs))
         log.Error("fail compile shader %s: %s",shader.Name,logs)
+        return errors.New("fail compile shader")
     }
     
     
+    return nil
 }
+
+
+func NewProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
+	program := gl.CreateProgram()
+
+	gl.AttachShader(program, vertexShader.Shader)
+	gl.AttachShader(program, fragmentShader.Shader)
+	gl.LinkProgram(program)
+
+	var status int32
+	gl.GetProgramiv(program, gl.LINK_STATUS, &status)
+	if status == gl.FALSE {
+		var logLength int32
+		gl.GetProgramiv(program, gl.INFO_LOG_LENGTH, &logLength)
+
+		logs := strings.Repeat("\x00", int(logLength+1))
+		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(logs))
+
+		log.Error("fail link program: %v", logs)
+		return 0, errors.New("fail link shader")
+	}
+
+//	gl.DeleteShader(vertexShader)
+//	gl.DeleteShader(fragmentShader)
+
+	return program, nil
+    
+}
+
 
 
 var IDENTITY_VERTEX = `
@@ -65,10 +98,11 @@ void main() {
 
 
 var IDENTITY_FRAGMENT = `
-uniform sampler2D tex;
+uniform sampler2D texture;
 varying vec2 fragTexCoord;
 void main() {
-    gl_FragColor = texture2D(tex,fragTexCoord);
+    vec4 tex = texture2D(texture,fragTexCoord);
+    gl_FragColor = tex;
 }
 ` + "\x00"
 
