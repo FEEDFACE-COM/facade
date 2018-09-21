@@ -34,6 +34,10 @@ func (quad *Quad) VertexAttribPointer(program uint32) {
         
 }
 
+func (quad *Quad) Bind() { 
+    gl.BindBuffer(gl.ARRAY_BUFFER,quad.object) 
+}
+
 
 var quadVertices = []float32{
 	//  X, Y, Z, U, V

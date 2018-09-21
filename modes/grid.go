@@ -21,7 +21,9 @@ type gridItem struct {
 
 func (item *gridItem) Desc() string { return item.text }
 
+func (item *gridItem) Close() { log.Debug("close grid[%s]",item.text) }
 
+func (item *gridItem) Bind(uint32)  { return  }
 
 func (grid *Grid) Render(camera *gfx.Camera) {
     gl.ClearColor(0xff,0x0,0x0,1.0)

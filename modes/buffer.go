@@ -8,6 +8,8 @@ import(
 
 type BufferItem interface {
     Desc() string
+    Close()
+    Bind(uint32)
 }
         
 

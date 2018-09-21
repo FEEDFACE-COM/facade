@@ -158,7 +158,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
             case text := <-textChan:
                 log.Debug("read: %s",text)
                 renderer.buffer.Queue(renderer.now.Time(),text)
-                renderer.lines.Queue( string(text) )
+                renderer.lines.Queue( string(text), renderer.font )
                 renderer.grid.Queue( string(text) )
             default:
         }

@@ -16,24 +16,31 @@ import(
 type Lines struct {
     lineCount uint
     buffer Buffer 
-    texture *gfx.Texture
     camera *gfx.Camera
     program uint32
     model mgl32.Mat4
     modelUniform int32
-    quad *gfx.Quad
 }
 
 
 type lineItem struct {
-    text string
+    Text string
+    Texture *gfx.Texture
+    Quad *gfx.Quad
 }
 
-func (item *lineItem) Desc() string { return item.text }
+func (item *lineItem) Desc() string { return item.Text }
 
+func (item *lineItem) Close() { log.Debug("close line[%s]",item.Text) }
 
-func (lines *Lines) Queue(text string) {
-    newItem := lineItem{text: text}
+func (item *lineItem) Bind(program uint32)  { 
+    item.Texture.Bind()
+    item.Quad.Bind()
+    item.Quad.VertexAttribPointer(program)
+}
+
+func (lines *Lines) Queue(text string, font *gfx.Font) {
+    newItem := NewItem(text,font)
     lines.buffer.Queue( &newItem )
 }
 
@@ -61,19 +68,23 @@ func NewLines(config *conf.LineConfig) *Lines {
 
 func (lines *Lines) Desc() string {
     ret := fmt.Sprintf("lines[%d]",lines.lineCount)
-    ret += "\n>> "
-    for i:=uint(0);i<lines.lineCount;i++ {
-        item := lines.buffer.Item(i)
-        if item != nil { ret += (*item).Desc() }
-        ret += ","
+    item  := lines.buffer.Item(0)
+    if item != nil {
+        ret += " '" + (*item).Desc() + "'"
     }
-    ret += "\n<< "
-    for i:=uint(lines.lineCount);i>0;i-- {
-        item := lines.buffer.Item(i-1)
-        if item != nil { ret += (*item).Desc() }
-        ret += ","
-    }
-    ret += "\n"
+//    ret += "\n>> "
+//    for i:=uint(0);i<lines.lineCount;i++ {
+//        item := lines.buffer.Item(i)
+//        if item != nil { ret += (*item).Desc() }
+//        ret += ","
+//    }
+//    ret += "\n<< "
+//    for i:=uint(lines.lineCount);i>0;i-- {
+//        item := lines.buffer.Item(i-1)
+//        if item != nil { ret += (*item).Desc() }
+//        ret += ","
+//    }
+//    ret += "\n"
     return ret
 }
 
@@ -81,13 +92,24 @@ func (lines *Lines) Dump() string {
     return lines.buffer.Dump()
 }
 
+func NewItem(text string, font *gfx.Font) lineItem {
+    ret := lineItem{Text: text}
+    
+    ret.Texture = gfx.NewTexture()
+	ret.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
+	ret.Texture.GenTexture()
+    
+    ret.Quad = gfx.NewQuad(ret.Texture.Size.Width,ret.Texture.Size.Height)
+    
+    return ret
+}
 
 func (lines *Lines) Init(camera *gfx.Camera) {
     var err error
 
-	lines.texture = gfx.NewTexture()
-	lines.texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
-	lines.texture.GenTexture()
+//	lines.texture = gfx.NewTexture()
+//	lines.texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
+//	lines.texture.GenTexture()
 
     fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
     vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
@@ -116,10 +138,10 @@ func (lines *Lines) Init(camera *gfx.Camera) {
 	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-    lines.texture.Uniform(lines.program)
+//    lines.texture.Uniform(lines.program)
 
-    lines.quad = gfx.NewQuad(lines.texture.Size.Width,lines.texture.Size.Height)
-    lines.quad.VertexAttribPointer(lines.program)
+//    lines.quad = gfx.NewQuad(lines.texture.Size.Width,lines.texture.Size.Height)
+//    lines.quad.VertexAttribPointer(lines.program)
 
     
 }
@@ -134,15 +156,17 @@ func (lines *Lines) Render(camera *gfx.Camera) {
     gl.UseProgram(lines.program)
     gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-
-
-
     camera.Uniform(lines.program)
-
     gl.ActiveTexture(gl.TEXTURE0)
-    lines.texture.Bind()
 
-    gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
+    {
+        item  := lines.buffer.Item(lines.lineCount)
+        if item != nil {
+            (*item).Bind(lines.program)
+            gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
+        }
+    }
+
 
 
 }
