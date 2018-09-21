@@ -3,20 +3,20 @@ package modes
 
 import(
     "fmt"
+    gfx "../gfx"
     log "../log"
 )
 
-type BufferItem interface {
-    Desc() string
-    Close()
-    Bind(uint32)
+type Line struct {
+    Text string
+    Texture *gfx.Texture
 }
         
 
 type Buffer struct {
     count uint
     index uint
-    items []*BufferItem
+    items []*Line
 }
 
 
@@ -26,7 +26,7 @@ func NewBuffer(count uint) Buffer {
     if count == 0 { count = 1 }
     ret.count = count
     ret.index = 0
-    ret.items = make( []*BufferItem, ret.count )
+    ret.items = make( []*Line, ret.count )
     return ret    
 }
 
@@ -34,7 +34,7 @@ func NewBuffer(count uint) Buffer {
 func (buffer *Buffer) Resize(count uint) {
     log.Debug("%s resize(%d)",buffer.Desc(),count)
     if count == 0 { count = 1 }
-    newItems := make( []*BufferItem, count )
+    newItems := make( []*Line, count )
     var idx uint = 0
     for ; idx<count && idx<buffer.count; idx++ {
         oidx := buffer.count + buffer.index - idx -1 
@@ -46,12 +46,12 @@ func (buffer *Buffer) Resize(count uint) {
 }
 
 
-func (buffer *Buffer) Queue(newItem BufferItem) {
+func (buffer *Buffer) Queue(newItem Line) {
     buffer.items[ buffer.index ] = &newItem
     buffer.index = ( buffer.count + buffer.index + 1 ) % buffer.count
 }
 
-func (buffer *Buffer) Item(off uint) *BufferItem {
+func (buffer *Buffer) Item(off uint) *Line {
     return buffer.items[ (buffer.count+buffer.index+off) % buffer.count ]
 }
 

@@ -54,10 +54,27 @@ func (shader *Shader) Compile() error {
 
 
 func NewProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
+    var err error
 	program := gl.CreateProgram()
 
+
+    err = vertexShader.Compile()
+    if err != nil {
+        log.Error("fail compile vertex: %v",err)
+        return 0, errors.New("fail compile vertex")
+    }
 	gl.AttachShader(program, vertexShader.Shader)
+
+
+    err = fragmentShader.Compile()
+    if err != nil {
+        log.Error("fail compile fragment: %v",err)
+        return 0, errors.New("fail compile fragment")
+    }
 	gl.AttachShader(program, fragmentShader.Shader)
+
+    
+
 	gl.LinkProgram(program)
 
 	var status int32

@@ -17,9 +17,9 @@ type Quad struct {
 func NewQuad(width float32, height float32) *Quad {
     ret := &Quad{}
     gl.GenBuffers(1,&ret.object)
-    vrts := vertices(1.0,height/width)
+    vrts := QuadVertices(1.0,height/width)
 	gl.BindBuffer(gl.ARRAY_BUFFER, ret.object)
-	gl.BufferData(gl.ARRAY_BUFFER, len(quadVertices)*4, gl.Ptr(vrts), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vrts)*4, gl.Ptr(vrts), gl.STATIC_DRAW)
 	return ret
 }
 
@@ -39,22 +39,9 @@ func (quad *Quad) Bind() {
 }
 
 
-var quadVertices = []float32{
-	//  X, Y, Z, U, V
-
-//	// Front
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-    -1.0, -1.0, 0.0, 0.0, 1.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-    
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-     1.0,  1.0, 0.0, 1.0, 0.0,
-
-}
 
 
-func vertices(w,h float32) []float32 {
+func QuadVertices(w,h float32) []float32 {
     return []float32{
         
 

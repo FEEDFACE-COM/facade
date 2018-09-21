@@ -15,33 +15,60 @@ import(
 
 type Lines struct {
     lineCount uint
+
     buffer Buffer 
     camera *gfx.Camera
+
     program uint32
     model mgl32.Mat4
     modelUniform int32
+
+
+    object uint32
+    verts []float32
+
+    vertAttrib uint32
+    texCoordAttrib uint32
+
 }
 
 
-type lineItem struct {
-    Text string
-    Texture *gfx.Texture
-    Quad *gfx.Quad
+
+
+
+func (lines *Lines) setVBO() {
+    lines.verts = []float32{}
+//    lines.verts = append( lines.verts, gfx.QuadVertices(2.0,1.0)...)
+    for i:=uint(0);i<lines.lineCount;i++ {
+        item := lines.buffer.Item(i)
+        var w,h float32
+        if item == nil {
+            w,h = 0.0,0.0
+        } else {
+            w = item.Texture.Size.Width / item.Texture.Size.Height
+            h = item.Texture.Size.Height / item.Texture.Size.Height
+        }
+        lines.verts = append(lines.verts, gfx.QuadVertices(w,h)...   )
+    }
+    gl.BindBuffer(gl.ARRAY_BUFFER, lines.object)
+    gl.BufferData(gl.ARRAY_BUFFER, len(lines.verts)*4, gl.Ptr(lines.verts), gl.STATIC_DRAW)
 }
 
-func (item *lineItem) Desc() string { return item.Text }
+func (line *Line) Desc() string { return line.Text }
 
-func (item *lineItem) Close() { log.Debug("close line[%s]",item.Text) }
-
-func (item *lineItem) Bind(program uint32)  { 
-    item.Texture.Bind()
-    item.Quad.Bind()
-    item.Quad.VertexAttribPointer(program)
-}
+//func (line *Line) Close() { log.Debug("close line[%s]",line.Text) }
+//
+//func (line *Line) Bind(program uint32)  { 
+//    line.Texture.Bind()
+//    line.Quad.Bind()
+//    line.Quad.VertexAttribPointer(program)
+//}
 
 func (lines *Lines) Queue(text string, font *gfx.Font) {
-    newItem := NewItem(text,font)
-    lines.buffer.Queue( &newItem )
+    newLine := NewLine(text,font)
+    log.Debug("queue %s",text)
+    lines.buffer.Queue( newLine )
+    lines.setVBO()
 }
 
 func (lines *Lines) Configure(config *conf.LineConfig) {
@@ -52,6 +79,7 @@ func (lines *Lines) Configure(config *conf.LineConfig) {
     if config.LineCount != lines.lineCount {
         lines.lineCount = config.LineCount
         lines.buffer.Resize(config.LineCount)
+        lines.setVBO()
     }
     
 
@@ -92,14 +120,13 @@ func (lines *Lines) Dump() string {
     return lines.buffer.Dump()
 }
 
-func NewItem(text string, font *gfx.Font) lineItem {
-    ret := lineItem{Text: text}
+func NewLine(text string, font *gfx.Font) Line {
+    ret := Line{Text: text}
     
     ret.Texture = gfx.NewTexture()
 	ret.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
 	ret.Texture.GenTexture()
     
-    ret.Quad = gfx.NewQuad(ret.Texture.Size.Width,ret.Texture.Size.Height)
     
     return ret
 }
@@ -107,27 +134,18 @@ func NewItem(text string, font *gfx.Font) lineItem {
 func (lines *Lines) Init(camera *gfx.Camera) {
     var err error
 
-//	lines.texture = gfx.NewTexture()
-//	lines.texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
-//	lines.texture.GenTexture()
+    log.Debug("create vbo[%d]",lines.lineCount)
+    gl.GenBuffers(1,&lines.object)
+
+    lines.setVBO()
 
     fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
     vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
     
-    err = fragment.Compile()
-    if err != nil {
-        log.Error("fail compile fragment: %v",err)
-    }
-
-    err = vertex.Compile()
-    if err != nil {
-        log.Error("fail compile vertex: %v",err)
-    }
-
     lines.program, err = gfx.NewProgram(&vertex,&fragment)
-
     if err != nil {
         log.Error("fail new program: %v",err)    
+        return
     }
 
 	gl.UseProgram(lines.program)
@@ -138,10 +156,15 @@ func (lines *Lines) Init(camera *gfx.Camera) {
 	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-//    lines.texture.Uniform(lines.program)
 
-//    lines.quad = gfx.NewQuad(lines.texture.Size.Width,lines.texture.Size.Height)
-//    lines.quad.VertexAttribPointer(lines.program)
+	lines.vertAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vert\x00")))
+	gl.EnableVertexAttribArray(lines.vertAttrib) 
+	gl.VertexAttribPointer(lines.vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+
+	lines.texCoordAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vertTexCoord\x00")))
+	gl.EnableVertexAttribArray(lines.texCoordAttrib)
+	gl.VertexAttribPointer(lines.texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+
 
     
 }
@@ -159,32 +182,20 @@ func (lines *Lines) Render(camera *gfx.Camera) {
     camera.Uniform(lines.program)
     gl.ActiveTexture(gl.TEXTURE0)
 
-    {
-        item  := lines.buffer.Item(lines.lineCount)
-        if item != nil {
-            (*item).Bind(lines.program)
-            gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
-        }
+
+
+
+    line  := lines.buffer.Item(0)
+    if line != nil { 
+        line.Texture.Bind()
+        gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
+        gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
     }
 
 
 
 }
 
-
-var quad = []float32 { 
-// x, y, z, u, v    
-
-    
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-    -1.0, -1.0, 0.0, 0.0, 1.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-     
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-     1.0,  1.0, 0.0, 1.0, 0.0,    
-    
-}
 
 
 
