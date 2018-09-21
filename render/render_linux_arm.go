@@ -7,6 +7,7 @@ import (
 //    "fmt"
     "time"
     "sync"
+    "runtime"
     log "../log"
     conf "../conf"
     modes "../modes"
@@ -47,8 +48,9 @@ func NewRenderer() *Renderer {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_MODE   = true
-const DEBUG_BUFFER = true
+const DEBUG_MODE   = false
+const DEBUG_BUFFER = false
+const DEBUG_DIAG   = false
  
 
 const DEBUG_FRAMES = 90
@@ -85,6 +87,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.lines = modes.NewLines(config.Line)
     renderer.font = gfx.NewFont(config.Font)
 
+    renderer.font.Configure(config.Font,conf.DIRECTORY)
 
     InitClock()
     renderer.now = Clock{frame: 0}
@@ -124,7 +127,6 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
     gl.ClearColor(0xFE,0xED,0xFA,0xCE)
     gl.Viewport(0, 0, renderer.size.width,renderer.size.height)
 
-
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
@@ -135,8 +137,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.Enable(gl.CULL_FACE)
 //    gl.CullFace(gl.BACK)
 
-	camera := gfx.NewCamera( float32(renderer.size.width), float32(renderer.size.height) )
 
+	camera := gfx.NewCamera( float32(renderer.size.width), float32(renderer.size.height) )
     renderer.lines.Init(camera)
     renderer.grid.Init(camera)
 
@@ -146,27 +148,10 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
-        
-        select {
-            case config := <-confChan:
-                log.Debug("conf: %s",config.Desc())
-                renderer.Configure(&config)
-            default:
-        }
-        
-        select {
-            case text := <-textChan:
-                log.Debug("read: %s",text)
-                renderer.buffer.Queue(renderer.now.Time(),text)
-                renderer.lines.Queue( string(text), renderer.font )
-                renderer.grid.Queue( string(text) )
-            default:
-        }
-
+        renderer.ReadChannels(confChan,textChan)
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
-
 
         switch renderer.mode {
             case conf.GRID:
@@ -175,36 +160,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
                 renderer.lines.Render(camera)
         }
         
-        
+        if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev) }
 
-
-        if now.frame % DEBUG_FRAMES == 0 {
-            if DEBUG_CLOCK   {
-                fps := float32(now.frame - prev.frame) / (now.time - prev.time)
-                log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
-                prev = *now
-            }
-            
-//            if DEBUG_BUFFER {
-//                log.Debug("%5.1f %5.1f %s",renderer.now.Time(),now.Time(),renderer.buffer.Dump())    
-//            }
-            
-            if DEBUG_MODE {
-                switch renderer.mode { 
-                    case conf.LINE:
-                        log.Debug( renderer.lines.Desc() + " " +renderer.font.Desc() )
-                        if DEBUG_BUFFER {
-                            log.Debug( renderer.lines.Dump() )    
-                        }
-                    case conf.GRID:
-                        log.Debug( renderer.grid.Desc() + " " +renderer.font.Desc() )
-                        if DEBUG_BUFFER {
-                            log.Debug( renderer.grid.Dump() )    
-                        }
-                }
-            }
-            
-        }
         piglet.SwapBuffers()
         renderer.mutex.Unlock()
         
@@ -213,6 +170,70 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil
+}
+
+
+
+
+
+
+func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan conf.Text) {
+
+    select {
+        case config := <-confChan:
+            log.Debug("conf: %s",config.Desc())
+            renderer.Configure(&config)
+            log.Debug( renderer.lines.Dump() )
+            runtime.GC()
+        default:
+    }
+    
+    select {
+        case text := <-textChan:
+//                log.Debug("read: %s",text)
+//                renderer.buffer.Queue(renderer.now.Time(),text)
+            renderer.lines.Queue( string(text), renderer.font )
+            renderer.grid.Queue( string(text) )
+            log.Debug( renderer.lines.Dump() )
+            runtime.GC()
+        default:
+    }
+    
+}
+
+
+func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
+
+    if DEBUG_CLOCK   {
+        fps := float32(now.frame - prev.frame) / (now.time - prev.time)
+        log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
+        *prev = *now
+    }
+    
+    if DEBUG_DIAG {
+        log.Debug( MemUsage() )    
+    }
+    
+    
+    if DEBUG_BUFFER {
+//        log.Debug("%5.1f %5.1f %s",renderer.now.Time(),now.Time(),renderer.buffer.Dump())    
+        switch renderer.mode { 
+            case conf.LINE:
+                log.Debug( renderer.lines.Dump() )
+            case conf.GRID:
+                log.Debug( renderer.grid.Dump() )
+        } 
+    }
+    
+    if DEBUG_MODE {
+        switch renderer.mode { 
+            case conf.LINE:
+                log.Debug( renderer.lines.Desc() + " " +renderer.font.Desc() )
+            case conf.GRID:
+                log.Debug( renderer.grid.Desc() + " " +renderer.font.Desc() )
+        }
+    }
+    
 }
 
 

@@ -13,6 +13,8 @@ import(
     gl "src.feedface.com/gfx/piglet/gles2"
 )
 
+
+
 type Lines struct {
     lineCount uint
 
@@ -40,7 +42,7 @@ func (lines *Lines) setVBO() {
     lines.verts = []float32{}
 //    lines.verts = append( lines.verts, gfx.QuadVertices(2.0,1.0)...)
     for i:=uint(0);i<lines.lineCount;i++ {
-        item := lines.buffer.Item(i)
+        item := lines.buffer.Tail(i)
         var w,h float32
         if item == nil {
             w,h = 0.0,0.0
@@ -56,17 +58,10 @@ func (lines *Lines) setVBO() {
 
 func (line *Line) Desc() string { return line.Text }
 
-//func (line *Line) Close() { log.Debug("close line[%s]",line.Text) }
-//
-//func (line *Line) Bind(program uint32)  { 
-//    line.Texture.Bind()
-//    line.Quad.Bind()
-//    line.Quad.VertexAttribPointer(program)
-//}
 
 func (lines *Lines) Queue(text string, font *gfx.Font) {
+    log.Debug("queue text: %s",text)
     newLine := NewLine(text,font)
-    log.Debug("queue %s",text)
     lines.buffer.Queue( newLine )
     lines.setVBO()
 }
@@ -100,34 +95,38 @@ func (lines *Lines) Desc() string {
     if item != nil {
         ret += " '" + (*item).Desc() + "'"
     }
-//    ret += "\n>> "
-//    for i:=uint(0);i<lines.lineCount;i++ {
-//        item := lines.buffer.Item(i)
-//        if item != nil { ret += (*item).Desc() }
-//        ret += ","
-//    }
-//    ret += "\n<< "
-//    for i:=uint(lines.lineCount);i>0;i-- {
-//        item := lines.buffer.Item(i-1)
-//        if item != nil { ret += (*item).Desc() }
-//        ret += ","
-//    }
-//    ret += "\n"
     return ret
 }
 
 func (lines *Lines) Dump() string {
-    return lines.buffer.Dump()
+//    return lines.buffer.Dump()
+    return lines.dumpVBO()
 }
 
 func NewLine(text string, font *gfx.Font) Line {
+    //var err error
     ret := Line{Text: text}
     
     ret.Texture = gfx.NewTexture()
-	ret.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
+    
+    if text == "" {
+            ret.Texture.LoadEmpty()
+    } else {
+
+    //    log.Debug("begin render font")
+        rgba,err := font.RenderTextRGBA(ret.Text)
+        if err != nil {
+            log.Error("fail render text rgba: %s",err)
+            ret.Texture.LoadEmpty()
+        } else {
+            ret.Texture.LoadRGBA(rgba)
+        }
+        
+    }
+    
+//	ret.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
+//    ret.Texture.LoadEmpty()
 	ret.Texture.GenTexture()
-    
-    
     return ret
 }
 
@@ -170,27 +169,74 @@ func (lines *Lines) Init(camera *gfx.Camera) {
 }
 
 
+func (lines *Lines) dumpVBO() string {
+    ret := ""
+    t:=-1
+    for i:=0;i<len(lines.verts); i+=5 {
+        if (i)%(5 * 6)  == 0 {
+            ret += "\n"
+            t += 1    
+        }
+        ret += fmt.Sprintf("  #%02d x%5.1f y%5.1f z%5.1f  u%5.1f v%5.1f\n", t,
+            lines.verts[i], lines.verts[i+1], lines.verts[i+2], lines.verts[i+3], lines.verts[i+4])
+            
+    }
+    return ret    
+}
+
 func (lines *Lines) Render(camera *gfx.Camera) {
 
-    gl.ClearColor(0x00,0x80,0x80,1.0)
+    gl.ClearColor(0.23,0.23,0.23,1.0)
 
+    c := float32(lines.lineCount)  
+    z := 1./c
+//    d := 1.5/c
     lines.model = mgl32.Ident4()
+    lines.model = lines.model.Mul4( mgl32.Scale3D(z,z,z) )
+    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,c/2.+0.5,0.0) )
+    
 
     gl.UseProgram(lines.program)
-    gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
+//    gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
     camera.Uniform(lines.program)
     gl.ActiveTexture(gl.TEXTURE0)
 
 
+const DRAW_TEXT = true
+const DRAW_BOX = false
 
+//    log.Debug(lines.dumpVBO())
 
-    line  := lines.buffer.Item(0)
-    if line != nil { 
-        line.Texture.Bind()
-        gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
-        gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
+    tmp := "dump VBO:\n"
+    for i:=uint(0);i<lines.lineCount;i++ {
+        line  := lines.buffer.Tail(i)
+//        idx := lines.buffer.Index(i)    
+        lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,-1.0,0.0) )
+
+        if DRAW_TEXT {
+            if line != nil { 
+                tmp += line.Text + " "
+    //            log.Debug("got tex %5.0fx%5.0f",line.Texture.Size.Width,line.Texture.Size.Height)
+                gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
+                line.Texture.Bind()
+                gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
+                gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
+            } else { tmp += "XXX " }
+
+        }
+        if DRAW_BOX {
+            if line != nil {
+                gl.LineWidth(3.0)
+                gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
+                gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
+                gl.DrawArrays(gl.LINE_STRIP, 6, 2*3)
+            }
+        }    
+        
     }
+//    log.Debug("draw: %s",tmp)
+    
 
 
 

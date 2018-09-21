@@ -280,8 +280,10 @@ func main() {
                 str = strings.Join(modeflags.Args()," ")
             }
             tester.Configure(config)
-            tester.testCharMap()
-            tester.testTextTex(str)
+            test0,_ := tester.testCharMap()
+            test1,_ := tester.testTextTex(str)
+            SaveRGBA(test0,"charmap")
+            SaveRGBA(test1,"textext")
             
         default:
             log.PANIC("inconsistent command")

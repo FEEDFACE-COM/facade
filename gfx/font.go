@@ -17,8 +17,8 @@ import (
 
 
 
-var foreground = image.White
-var background = image.Black
+var foreground = image.Black
+var background = image.White
 //var background = image.Transparent
 
 const GlyphCols  = 0x10
@@ -26,9 +26,14 @@ const GlyphRows  = 0x10
 const GlyphCount = GlyphCols * GlyphRows
 
 
+const maxDimension = 8192
+
+
 type Font struct {
     face string
-    font *truetype.Font  
+    font *truetype.Font
+    context *freetype.Context
+    tmp *image.RGBA
 }
 
 
@@ -50,6 +55,7 @@ type TextTexture struct {
 
 func NewFont(config *conf.FontConfig) *Font {
     ret := &Font{}
+    ret.tmp = image.NewRGBA( image.Rect(0,0,maxDimension,maxDimension) )
     if config != nil {
         ret.face = config.Face
     }
@@ -72,7 +78,7 @@ func (font *Font) Configure(config *conf.FontConfig, directory string) {
 func (font *Font) loadFont(fontfile string) error {
     var data []byte 
     var err error
-    for _,ext := range []string{ ".ttc", ".ttf" } {
+    for _,ext := range []string{ ".ttc", ".ttf", ".TTC", ".TTF" } {
         data, err = ioutil.ReadFile(fontfile + ext )
         if err == nil {
             log.Debug("load font file %s",fontfile+ext)
@@ -88,6 +94,11 @@ func (font *Font) loadFont(fontfile string) error {
         log.Error("fail to parse font %s: %s",fontfile,err)
         return err
     }
+    
+    font.context = freetype.NewContext()
+    font.context.SetFont(font.font)
+    
+    
     return nil
 }
 
@@ -100,8 +111,7 @@ func (font *Font) findSizes(pointSize,dpi,rowSpacing float64) ([GlyphCols][Glyph
 
     tmp := image.NewRGBA( image.Rect(0,0,1024,1024) )
 
-    ctx := freetype.NewContext()
-    ctx.SetFont(font.font)
+    ctx := font.context
     ctx.SetDPI(dpi)
     ctx.SetFontSize(pointSize)
     ctx.SetHinting( xfont.HintingNone )
@@ -122,7 +132,7 @@ func (font *Font) findSizes(pointSize,dpi,rowSpacing float64) ([GlyphCols][Glyph
             }
             dim,err := ctx.DrawString(str, freetype.Pt(0,0))
             if err != nil {
-                log.Error("could not draw glyph 0x%02x for sizing: %s",c,err)
+//                log.Error("could not draw glyph 0x%02x for sizing: %s",c,err)
                 continue
             }
             widths[x][y] = dim.X.Ceil()
@@ -156,21 +166,55 @@ func (font *Font) findSizes(pointSize,dpi,rowSpacing float64) ([GlyphCols][Glyph
 }
 
 
+func (font *Font) RenderGlyphRGBA(width, height int, pointSize, rowSpacing,dpi float64) (*image.RGBA, error) {
+    if font.font == nil {
+        return nil, errors.New("NIL FONT")
+    }
+
+    ret := image.NewRGBA( image.Rect(0,0,GlyphCols*width,2*GlyphRows*height) )
+    draw.Draw( ret, ret.Bounds(), background, image.ZP, draw.Src)
+
+    ctx := font.context
+    ctx.SetDPI( dpi )
+    ctx.SetFontSize( pointSize )
+    ctx.SetHinting( xfont.HintingNone )
+    ctx.SetSrc( foreground )
+    ctx.SetDst(ret)
+    ctx.SetClip(ret.Bounds())
+
+    c := 0x00
+    for y:=0; y<GlyphRows; y++ {
+        
+        for x:=0; x<GlyphCols; x++ {
+            str := fmt.Sprintf("%c",rune(c))
+            if c < 0x20 || ( c >= 0x7f && c < 0xa0 ) {
+                str = " "
+            }
+
+            pos := freetype.Pt( x*width, 2*y*height+height)
+            ctx.DrawString(str,pos)
+            c += 0x1
+        }
+    }
+    log.Debug("rendered rgba map with %s",font.Desc())
+    ctx.SetDst(nil)
+    ctx.SetClip( image.Rect(0,0,0,0) )
+    return ret,nil
+    
+}
+
 func (font *Font) RenderGlyphTexture() (*GlyphTexture, error) {
-
-
     const (
         pointSize = 72.0
         rowSpacing = 1.0
         dpi = 144.0  
     )
 
+
     var ret *GlyphTexture = &GlyphTexture{}
     var max struct{w int; h int}
 
-    if font.font == nil {
-        return nil, errors.New("NIL FONT")
-    }
+    var err error
     
     ret.Widths,max = font.findSizes(pointSize,dpi,rowSpacing)
     ret.Width  = max.w
@@ -182,90 +226,77 @@ func (font *Font) RenderGlyphTexture() (*GlyphTexture, error) {
 //    log.Debug("bounds is %v",font.font.Bounds( fixed.I(1<<6)))
 //    log.Debug("%d funits per em",font.font.FUnitsPerEm())
 
-    ret.Texture = image.NewRGBA( image.Rect(0,0,GlyphCols*ret.Width,2*GlyphRows*ret.Height) )
-
-
-    draw.Draw( ret.Texture, ret.Texture.Bounds(), background, image.ZP, draw.Src)
-
-
-    ctx := freetype.NewContext()
-    ctx.SetFont(font.font)
-    ctx.SetDPI( dpi )
-    ctx.SetFontSize( pointSize )
-    ctx.SetHinting( xfont.HintingNone )
-    ctx.SetSrc( foreground )
-    ctx.SetDst(ret.Texture)
-    ctx.SetClip(ret.Texture.Bounds())
-    
-
-    
-    c := 0x00
-    for y:=0; y<GlyphRows; y++ {
-        
-        for x:=0; x<GlyphCols; x++ {
-            str := fmt.Sprintf("%c",rune(c))
-            if c < 0x20 || ( c >= 0x7f && c < 0xa0 ) {
-                str = " "
-            }
-
-
-
-            pos := freetype.Pt( x*ret.Width, 2*y*ret.Height+ret.Height)
-            ctx.DrawString(str,pos)
-            c += 0x1
-        }
+    ret.Texture, err = font.RenderGlyphRGBA(ret.Width,ret.Height,pointSize,rowSpacing,dpi)
+    if err != nil {
+        log.Error("fail render map rgba: %s",err)
+        return nil,err
     }
-    
-    log.Debug("rendered glyphs for %s",font.Desc())
+//    log.Debug("rendered glyphs for %s",font.Desc())
     
     return ret,nil
     
 }
 
-
-func (font *Font) RenderTextTexture(text string) (*TextTexture, error) {
-
+func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
+    
+    
     const (
         pointSize = 72.0
-        dpi = 300.0  
+        dpi = 144.0  
         rowSpacing = 1.25
-        maxDimension = 8192
     )
 
-    var ret *TextTexture = &TextTexture{Text: text}
 
     if font.font == nil {
         return nil, errors.New("NIL FONT")
     }
-    
-    tmp := image.NewRGBA( image.Rect(0,0,maxDimension,maxDimension) )
-    ctx := freetype.NewContext()
-    ctx.SetFont(font.font)
+
+
+
+
+    ctx := font.context
     ctx.SetDPI( dpi )
     ctx.SetFontSize( pointSize )
     ctx.SetHinting( xfont.HintingFull )
     ctx.SetSrc( foreground )
-    ctx.SetDst(tmp)
-    ctx.SetClip(tmp.Bounds())
-    
-    str := ret.Text
-    
-    dim,_ := ctx.DrawString(str,freetype.Pt(0,0) )
-    
-    ret.Width = dim.X.Ceil() + dim.X.Ceil()/16
-    ret.Height = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
+    ctx.SetDst(font.tmp)
+    ctx.SetClip(font.tmp.Bounds())
 
-//    log.Debug("got dimensions %dx%d for text '%s'",ret.Width,ret.Height,str)
+    dim,_ := ctx.DrawString(text,freetype.Pt(0,0) )
     
-    ret.Texture = image.NewRGBA( image.Rect(0,0,ret.Width,ret.Height) )
-    draw.Draw( ret.Texture, ret.Texture.Bounds(), background, image.ZP, draw.Src)
+    width := dim.X.Ceil() + dim.X.Ceil()/16
+    height := ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
+
+    ret := image.NewRGBA( image.Rect(0,0,width,height) )
+
+    draw.Draw( ret, ret.Bounds(), background, image.ZP, draw.Src)
+
+    ctx.SetDst(ret)
+    ctx.SetClip(ret.Bounds())
+    ctx.DrawString(text,freetype.Pt(width/32, 4*height/5))
+//    log.Debug("rendered '%s' with %s",text,font.Desc())
+
+    ctx.SetDst(nil)
+    ctx.SetClip( image.Rect(0,0,0,0) )
+    return ret,nil
+}
+
+
+func (font *Font) RenderTextTexture(text string) (*TextTexture, error) {
+
+
+    var ret *TextTexture = &TextTexture{Text: text}
+    var err error
+    ret.Texture, err = font.RenderTextRGBA(text)
+    if err != nil {
+        log.Error("fail render text rgba: %s",err)
+        return nil,err
+    }
+    ret.Width = ret.Texture.Rect.Size().X
+    ret.Height = ret.Texture.Rect.Size().Y
+    log.Debug("renderered %dx%d for text '%s'",ret.Width,ret.Height,ret.Text)
     
     
-    ctx.SetDst(ret.Texture)
-    ctx.SetClip(ret.Texture.Bounds())
-    ctx.DrawString(str,freetype.Pt(ret.Width/32, 4*ret.Height/5))
-    
-    log.Debug("rendered text '%s' for %s",ret.Text,font.Desc())
     return ret,nil
         
 }

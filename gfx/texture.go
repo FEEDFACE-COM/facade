@@ -17,7 +17,6 @@ import (
 type Texture struct {
     Size struct{Width float32; Height float32}
     
-    path string
     rgba *image.RGBA
     texture uint32 
     textureUniform int32
@@ -29,9 +28,8 @@ func NewTexture() *Texture {
 }
 
 func (texture *Texture) Close() {
-
-    log.Debug("~tex") 
     if texture.texture != 0 {
+//        log.Debug("-tex #%d",texture.texture)
         gl.DeleteTextures(1, &texture.texture)    
     }   
     texture.texture = 0
@@ -60,12 +58,26 @@ func (texture *Texture) LoadFile(path string) error {
         log.Error("fail decode %s: %s",path,err)
         return err
     }
-    texture.rgba = image.NewRGBA(img.Bounds())
+    
+    rgba := image.NewRGBA(img.Bounds())
+    draw.Draw(rgba, rgba.Bounds(), img, image.Point{0,0}, draw.Src)
+    err = texture.LoadRGBA(rgba)
+    return err
+}
+    
+func (texture *Texture) LoadEmpty() error {
+    empty := image.NewRGBA( image.Rect(0,0,2,2) )    
+    err := texture.LoadRGBA(empty)
+    return err
+}    
+    
+func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
+    texture.rgba = rgba
+    
     if texture.rgba.Stride != texture.rgba.Rect.Size().X * 4 {
         log.Error("fail rgba, unsupported stride")
         return errors.New("unsupported stride")    
     }
-    draw.Draw(texture.rgba, texture.rgba.Bounds(), img, image.Point{0,0}, draw.Src)
 
     texture.Size.Width = float32(texture.rgba.Rect.Size().X)
     texture.Size.Height = float32(texture.rgba.Rect.Size().Y)
@@ -93,6 +105,7 @@ func (texture *Texture) GenTexture() error {
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(texture.rgba.Pix) )
+//    log.Debug("+tex #%d",texture.texture)
     return nil
 }
 

@@ -6,7 +6,7 @@ import (
     "bufio"
     "image/png"
     "image"
-    "errors"
+//    "errors"
     log "./log"
     conf "./conf"
     gfx "./gfx"
@@ -25,22 +25,21 @@ func (tester *Tester) Configure(config *conf.Config) {
     
 }
 
-func (tester *Tester) testCharMap() error {
+func (tester *Tester) testCharMap() (*image.RGBA,error) {
     
     var charmap *gfx.GlyphTexture
     var err error
     
     charmap, err = tester.font.RenderGlyphTexture()
     if err != nil {
-        log.PANIC("fail to render glyphmap for %s: %s",tester.font.Desc(),err)
+        log.Error("fail to render glyphmap for %s: %s",tester.font.Desc(),err)
+        return nil,err
     }
-    saveIMG(charmap.Texture, "charmap")
-    
-    return nil    
+    return charmap.Texture, nil
 }
 
 
-func (tester *Tester) testTextTex(str string) error {
+func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
     
     
     var texttex *gfx.TextTexture
@@ -49,21 +48,23 @@ func (tester *Tester) testTextTex(str string) error {
     
     if err != nil {
         log.Error("fail to generate texture for '%s': %s",str,err)
-        return errors.New("fail to generate texture")     
+        return nil,err
     }
-    
-    saveIMG(texttex.Texture, "texttex")
-    
-    return nil    
+    return texttex.Texture, nil
 }
 
 
 
 
 
-func saveIMG(img *image.RGBA,outname string) {
+func SaveRGBA(img *image.RGBA,outname string)  {
 
-    var outPath = conf.DIRECTORY + outname + ".png"
+    var outPath = conf.DIRECTORY + "/out/" + outname + ".png"
+    
+    if img == nil {
+        log.Error("nil image not saved at "+outPath)
+        return 
+    }
     
     outFile, err := os.Create(outPath)
     if err != nil {
