@@ -1,5 +1,4 @@
 
-// +build linux,arm
 
 package gfx
 

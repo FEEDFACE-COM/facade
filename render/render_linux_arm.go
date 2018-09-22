@@ -24,7 +24,7 @@ const RENDERER_AVAILABLE = true
 
 const FRAME_RATE = 60.0
 
-const BUFFER_SIZE = 4
+const BUFFER_SIZE = 80
 
 type Renderer struct {
     size struct{width int32; height int32}
@@ -33,6 +33,7 @@ type Renderer struct {
     grid *modes.Grid
     lines *modes.Lines
     font *gfx.Font
+    camera *gfx.Camera
 
     now Clock
     buffer *gfx.Buffer
@@ -83,8 +84,9 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     //setup things    
     renderer.mode = config.Mode
     renderer.grid = modes.NewGrid(config.Grid)
-    renderer.lines = modes.NewLines(config.Line)
+    renderer.lines = modes.NewLines(config.Lines)
     renderer.font = gfx.NewFont(config.Font)
+    renderer.camera = gfx.NewCamera(config.Camera,float32(renderer.size.width),float32(renderer.size.height))
 
     renderer.font.Configure(config.Font,conf.DIRECTORY)
 
@@ -105,12 +107,13 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     
     if renderer.mode != config.Mode {
         log.Debug("switch mode to %s",string(config.Mode))
+        renderer.mode = config.Mode
     }
     
-    renderer.mode = config.Mode
     renderer.font.Configure(config.Font,conf.DIRECTORY)
-    renderer.lines.Configure(config.Line)
+    renderer.lines.Configure(config.Lines)
     renderer.grid.Configure(config.Grid)
+    renderer.camera.Configure(config.Camera)
     return nil
 }
 
@@ -137,9 +140,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
-	camera := gfx.NewCamera( float32(renderer.size.width), float32(renderer.size.height) )
-    renderer.lines.Init(camera)
-    renderer.grid.Init(camera)
+    renderer.lines.Init(renderer.camera)
+    renderer.grid.Init(renderer.camera)
 
     for {
         now.Tick()
@@ -154,9 +156,9 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render(camera)
-            case conf.LINE:
-                renderer.lines.Render(camera)
+                renderer.grid.Render(renderer.camera)
+            case conf.LINES:
+                renderer.lines.Render(renderer.camera)
         }
         
         if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev); prev = *now }
@@ -182,7 +184,7 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
         case config := <-confChan:
             log.Debug("conf: %s",config.Desc())
             renderer.Configure(&config)
-            log.Debug( renderer.lines.Dump() )
+//            log.Debug( renderer.lines.Dump() )
             runtime.GC()
         default:
     }
@@ -193,7 +195,7 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
             renderer.buffer.Queue( gfx.NewText(string(text)) )
             renderer.lines.Queue( string(text), renderer.font )
             renderer.grid.Queue( string(text) )
-            log.Debug( renderer.lines.Dump() )
+//            log.Debug( renderer.lines.Dump() )
             runtime.GC()
         default:
     }
@@ -214,18 +216,18 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     
     
     if DEBUG_BUFFER {
-        log.Debug(renderer.buffer.Dump())    
-//        switch renderer.mode { 
-//            case conf.LINE:
-//                log.Debug( renderer.lines.Dump() )
-//            case conf.GRID:
-//                log.Debug( renderer.grid.Dump() )
-//        } 
+//        log.Debug(renderer.buffer.Dump())    
+        switch renderer.mode { 
+            case conf.LINES:
+                log.Debug( renderer.lines.Dump() )
+            case conf.GRID:
+                log.Debug( renderer.grid.Dump() )
+        } 
     }
     
     if DEBUG_MODE {
         switch renderer.mode { 
-            case conf.LINE:
+            case conf.LINES:
                 log.Debug( renderer.lines.Desc() + " " +renderer.font.Desc() )
             case conf.GRID:
                 log.Debug( renderer.grid.Desc() + " " +renderer.font.Desc() )

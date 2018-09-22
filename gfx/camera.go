@@ -4,6 +4,8 @@
 package gfx
 
 import (
+    "fmt"
+    conf "../conf"
 //    log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
@@ -16,15 +18,17 @@ type Camera struct {
     camera mgl32.Mat4
     cameraUniform int32
     
-        
+    Width float32
+    Height float32
+    Isometric bool
 }
 
 
-func NewCamera(width,height float32) *Camera {
-    ret := &Camera{}
-    w := float32(width)
-    h := float32(height)
-    ratio := h/w
+func NewCamera(config *conf.CameraConfig, width,height float32) *Camera {
+    ret := &Camera{Width: width, Height: height}
+    ret.Isometric = config.Isometric
+
+    ratio := height/width
     
     l := float32(-1.)
     r := float32(1.)
@@ -33,10 +37,15 @@ func NewCamera(width,height float32) *Camera {
     n := float32(-4096.)
     f := float32(4096.)
     
-    ortho := mgl32.Ortho( l,r,b,t,n,f )
-    persp := mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
-    ret.projection = persp
-    ret.projection = ortho
+    orthographic := mgl32.Ortho( l,r,b,t,n,f )
+    perspective := mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
+    
+    if ret.Isometric {
+        ret.projection = orthographic
+    } else {
+        ret.projection = perspective
+    }
+        
     
     ret.camera = mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
     return ret
@@ -49,4 +58,16 @@ func (camera *Camera) Uniform(program uint32) {
 	camera.cameraUniform = gl.GetUniformLocation(program, gl.Str("camera\x00"))
 	gl.UniformMatrix4fv(camera.cameraUniform, 1, false, &camera.camera[0])
     
+}
+
+
+func (camera *Camera) Configure(config *conf.CameraConfig) {
+    
+}
+
+
+func (camera *Camera) Desc() string {
+    tmp := ""
+    if camera.Isometric { tmp = " iso" }
+    return fmt.Sprintf("camera[%5.0fx%5.0f%s]",camera.Width,camera.Height,tmp) 
 }

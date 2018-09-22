@@ -66,7 +66,7 @@ func (lines *Lines) Queue(text string, font *gfx.Font) {
     lines.setVBO()
 }
 
-func (lines *Lines) Configure(config *conf.LineConfig) {
+func (lines *Lines) Configure(config *conf.LinesConfig) {
     if config == nil {
         return
     }
@@ -80,9 +80,9 @@ func (lines *Lines) Configure(config *conf.LineConfig) {
 
 }
 
-func NewLines(config *conf.LineConfig) *Lines {
+func NewLines(config *conf.LinesConfig) *Lines {
     if config == nil {
-        config = conf.NewLineConfig()
+        config = conf.NewLinesConfig()
     }
     ret := &Lines{lineCount: config.LineCount}
     ret.buffer = gfx.NewBuffer(config.LineCount)
@@ -99,8 +99,8 @@ func (lines *Lines) Desc() string {
 }
 
 func (lines *Lines) Dump() string {
-//    return lines.buffer.Dump()
-    return lines.dumpVBO()
+    return lines.buffer.Dump()
+//   return lines.dumpVBO()
 }
 
 
@@ -177,8 +177,8 @@ func (lines *Lines) Render(camera *gfx.Camera) {
     gl.ActiveTexture(gl.TEXTURE0)
 
 
-const DRAW_TEXT = true
-const DRAW_BOX = false
+    const DRAW_TEXT = true
+    const DRAW_BOX = false
 
 //    log.Debug(lines.dumpVBO())
 
