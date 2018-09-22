@@ -24,7 +24,7 @@ const RENDERER_AVAILABLE = true
 
 const FRAME_RATE = 60.0
 
-const BUFFER_SIZE = 40
+const BUFFER_SIZE = 4
 
 type Renderer struct {
     size struct{width int32; height int32}
@@ -35,21 +35,20 @@ type Renderer struct {
     font *gfx.Font
 
     now Clock
-    buffer *Buffer
+    buffer *gfx.Buffer
     mutex *sync.Mutex
 }
 
 func NewRenderer() *Renderer {
     ret := &Renderer{}
     ret.mutex = &sync.Mutex{}
-    ret.buffer = &Buffer{}
-    ret.buffer.Resize(BUFFER_SIZE)
+    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
     return ret
 }
 
 const DEBUG_CLOCK  = false
 const DEBUG_MODE   = false
-const DEBUG_BUFFER = false
+const DEBUG_BUFFER = true
 const DEBUG_DIAG   = false
  
 
@@ -90,7 +89,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.font.Configure(config.Font,conf.DIRECTORY)
 
     InitClock()
-    renderer.now = Clock{frame: 0}
+    renderer.now = Clock{}
 
     return err
 }
@@ -160,7 +159,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
                 renderer.lines.Render(camera)
         }
         
-        if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev) }
+        if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev); prev = *now }
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()
@@ -191,7 +190,7 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
     select {
         case text := <-textChan:
 //                log.Debug("read: %s",text)
-//                renderer.buffer.Queue(renderer.now.Time(),text)
+            renderer.buffer.Queue( gfx.NewText(string(text)) )
             renderer.lines.Queue( string(text), renderer.font )
             renderer.grid.Queue( string(text) )
             log.Debug( renderer.lines.Dump() )
@@ -207,7 +206,6 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     if DEBUG_CLOCK   {
         fps := float32(now.frame - prev.frame) / (now.time - prev.time)
         log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
-        *prev = *now
     }
     
     if DEBUG_DIAG {
@@ -216,13 +214,13 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     
     
     if DEBUG_BUFFER {
-//        log.Debug("%5.1f %5.1f %s",renderer.now.Time(),now.Time(),renderer.buffer.Dump())    
-        switch renderer.mode { 
-            case conf.LINE:
-                log.Debug( renderer.lines.Dump() )
-            case conf.GRID:
-                log.Debug( renderer.grid.Dump() )
-        } 
+        log.Debug(renderer.buffer.Dump())    
+//        switch renderer.mode { 
+//            case conf.LINE:
+//                log.Debug( renderer.lines.Dump() )
+//            case conf.GRID:
+//                log.Debug( renderer.grid.Dump() )
+//        } 
     }
     
     if DEBUG_MODE {
@@ -241,8 +239,9 @@ func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
     for {
         text := <-textChan
         log.Debug("read: %s",text)
+        newText := gfx.NewText(string(text))
         renderer.mutex.Lock()
-        renderer.buffer.Queue(renderer.now.Time(),text)
+        renderer.buffer.Queue(newText)
 //        renderer.lines.Queue(string(text))
 //        renderer.grid.Queue( string(text) )
 //        renderer.lines.Queue( string(text) )

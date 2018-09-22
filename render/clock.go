@@ -1,4 +1,6 @@
 
+// +build linux,arm
+
 package render
 
 import (
@@ -47,7 +49,7 @@ func (clock *Clock) Tick() {
     
     /***   x%y  ==  mod(x,y)  ==  x - y*floor(x/y)  ***/
     clock.cycle = clock.time - math.TAU * math.Floor(clock.time/math.TAU) // time % TAU
-    clock.fader = clock.time - math.Floor(clock.time)                   // time % 1
+    clock.fader = clock.time - math.Floor(clock.time)                     // time % 1
     
     if math.Floor(clock.time) > math.Floor(prev) {
         clock.count += 1

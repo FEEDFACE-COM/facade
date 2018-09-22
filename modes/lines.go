@@ -18,7 +18,7 @@ import(
 type Lines struct {
     lineCount uint
 
-    buffer Buffer 
+    buffer *gfx.Buffer 
     camera *gfx.Camera
 
     program uint32
@@ -56,13 +56,13 @@ func (lines *Lines) setVBO() {
     gl.BufferData(gl.ARRAY_BUFFER, len(lines.verts)*4, gl.Ptr(lines.verts), gl.STATIC_DRAW)
 }
 
-func (line *Line) Desc() string { return line.Text }
 
 
 func (lines *Lines) Queue(text string, font *gfx.Font) {
     log.Debug("queue text: %s",text)
-    newLine := NewLine(text,font)
-    lines.buffer.Queue( newLine )
+    newText := gfx.NewText(text)
+    newText.RenderTexture(font)
+    lines.buffer.Queue( newText )
     lines.setVBO()
 }
 
@@ -85,7 +85,7 @@ func NewLines(config *conf.LineConfig) *Lines {
         config = conf.NewLineConfig()
     }
     ret := &Lines{lineCount: config.LineCount}
-    ret.buffer = NewBuffer(config.LineCount)
+    ret.buffer = gfx.NewBuffer(config.LineCount)
     return ret
 }
 
@@ -103,32 +103,6 @@ func (lines *Lines) Dump() string {
     return lines.dumpVBO()
 }
 
-func NewLine(text string, font *gfx.Font) Line {
-    //var err error
-    ret := Line{Text: text}
-    
-    ret.Texture = gfx.NewTexture()
-    
-    if text == "" {
-            ret.Texture.LoadEmpty()
-    } else {
-
-    //    log.Debug("begin render font")
-        rgba,err := font.RenderTextRGBA(ret.Text)
-        if err != nil {
-            log.Error("fail render text rgba: %s",err)
-            ret.Texture.LoadEmpty()
-        } else {
-            ret.Texture.LoadRGBA(rgba)
-        }
-        
-    }
-    
-//	ret.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
-//    ret.Texture.LoadEmpty()
-	ret.Texture.GenTexture()
-    return ret
-}
 
 func (lines *Lines) Init(camera *gfx.Camera) {
     var err error

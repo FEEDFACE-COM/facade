@@ -4,7 +4,7 @@
 package gfx
 
 import (
-    log "../log"
+//    log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
 )
@@ -35,13 +35,8 @@ func NewCamera(width,height float32) *Camera {
     
     ortho := mgl32.Ortho( l,r,b,t,n,f )
     persp := mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
+    ret.projection = persp
     ret.projection = ortho
-    log.Debug("orth\n%v",ortho)
-    log.Debug("persp\n%v",persp)
-    log.Debug("now\n%v",ret.projection)
-    
-    
-    
     
     ret.camera = mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
     return ret

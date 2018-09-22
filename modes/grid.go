@@ -12,7 +12,7 @@ import(
 type Grid struct {
     width uint
     height uint
-    buffer Buffer
+    buffer *gfx.Buffer
 }
 
 
@@ -22,8 +22,8 @@ func (grid *Grid) Render(camera *gfx.Camera) {
 }
 
 func (grid *Grid) Queue(text string) {
-    newLine := Line{Text: text}
-    grid.buffer.Queue( newLine )
+    newText := gfx.NewText(text)
+    grid.buffer.Queue( newText )
 }
 
 
@@ -52,7 +52,7 @@ func NewGrid(config *conf.GridConfig) *Grid {
         config = conf.NewGridConfig()
     }
     ret := &Grid{width: config.Width, height: config.Height}
-    ret.buffer = NewBuffer(config.Height)
+    ret.buffer = gfx.NewBuffer(config.Height)
     return ret
 }
 

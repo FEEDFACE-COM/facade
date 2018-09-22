@@ -1,16 +1,11 @@
 //
-package modes
+package gfx
 
 import(
     "fmt"
-    gfx "../gfx"
     log "../log"
 )
 
-type Line struct {
-    Text string
-    Texture *gfx.Texture
-}
         
 
 type Buffer struct {
@@ -18,22 +13,18 @@ type Buffer struct {
     index uint
     head  uint
     tail  uint
-    items []*Line
-}
-
-func (line *Line) Close() {
-    if line.Texture != nil { line.Texture.Close() }
+    items []*Text
 }
 
 
-func NewBuffer(count uint) Buffer {
-    ret := Buffer{}
+func NewBuffer(count uint) *Buffer {
+    ret := &Buffer{}
     if count == 0 { count = 1 }
     ret.count = count
     ret.index = 0
     ret.head = 0
     ret.tail = count-1
-    ret.items = make( []*Line, ret.count )
+    ret.items = make( []*Text, ret.count )
     return ret    
 }
 
@@ -41,7 +32,7 @@ func NewBuffer(count uint) Buffer {
 func (buffer *Buffer) Resize(count uint) {
     log.Debug("%s resize(%d)",buffer.Desc(),count)
     if count == 0 { count = 1 }
-    newItems := make( []*Line, count )
+    newItems := make( []*Text, count )
     var idx uint = 0
     for ; idx<count && idx<buffer.count; idx++ {
         oidx := buffer.count + buffer.index - idx -1 
@@ -62,29 +53,29 @@ func (buffer *Buffer) Resize(count uint) {
 
 
 
-func (buffer *Buffer) Queue(newItem Line) {
+func (buffer *Buffer) Queue(newItem *Text) {
     newIndex := (buffer.head)%buffer.count
     if buffer.items[newIndex] != nil {
         buffer.items[newIndex].Close()
     }
-    buffer.items[ newIndex ] = &newItem
+    buffer.items[ newIndex ] = newItem
     buffer.index = newIndex
     buffer.head = (buffer.head+1)%buffer.count
     buffer.tail = (buffer.tail+1)%buffer.count
 }
 
-func (buffer *Buffer) Item(off uint) *Line {
+func (buffer *Buffer) Item(off uint) *Text {
     return buffer.items[ (buffer.count+buffer.index+off) % buffer.count ]
 }
 
-func (buffer *Buffer) Tail(off uint) *Line {
+func (buffer *Buffer) Tail(off uint) *Text {
     idx := buffer.count + buffer.tail - off
     return buffer.items[idx % buffer.count]    
 }
 
 
 
-func (buffer *Buffer) Items() []*Line {
+func (buffer *Buffer) Items() []*Text {
     return buffer.items
 }
 
