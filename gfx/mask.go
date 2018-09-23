@@ -14,7 +14,7 @@ type Mask struct {
 
     Mask bool
 
-    program uint32
+    program *Program
     object uint32
 
     data []float32
@@ -44,11 +44,11 @@ func (mask *Mask) Render() {
         return
     }
 
-    gl.UseProgram(mask.program)
+    mask.program.Use()
     gl.BindBuffer(gl.ARRAY_BUFFER,mask.object)
     
-    _ = VertexAttribPointer(mask.program, VERTEX, 3, (3+2)*4, 0 )
-    _ = VertexAttribPointer(mask.program, TEXCOORD, 2, (3+2)*4, 3*4)
+    mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )
+    mask.program.VertexAttribPointer(TEXCOORD, 2, (3+2)*4, 3*4)
 
     gl.DrawArrays(gl.TRIANGLES, 0, 3*2 )
 
@@ -81,8 +81,9 @@ func (mask *Mask) Init() {
     frag := NewShader("frag",fragmentShader,gl.FRAGMENT_SHADER)
     if err = frag.Compile(); err != nil { log.Error("fail compile mask frag shader: %s",err) }
     
-    mask.program, err = CreateProgram(vert,frag)
-    if err != nil { log.Error("fail to creat program: %s",err) }
+    
+    mask.program = NewProgram("mask")
+    if err = mask.program.Create(vert,frag); err != nil { log.Error("fail to create program: %s",err) }
     
             
 

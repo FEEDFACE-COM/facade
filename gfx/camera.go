@@ -44,18 +44,15 @@ func NewCamera(config *conf.CameraConfig, width,height float32) *Camera {
     return ret
 }
 
-func (camera *Camera) Uniform(program uint32) {
-//	camera.projectionUniform = gl.GetUniformLocation(program, gl.Str("projection\x00"))
-//	gl.UniformMatrix4fv(camera.projectionUniform, 1, false, &camera.projection[0])
+func (camera *Camera) Uniform(program *Program) {
+//	
+//	
+//	camera.projectionUniform = UniformMatrix4fv(program, PROJECTION, 1, &camera.projection[0])
+//	camera.cameraUniform = UniformMatrix4fv(program, VIEW, 1, &camera.camera[0])
 	
 	
-	camera.projectionUniform = UniformMatrix4fv(program, PROJECTION, 1, &camera.projection[0])
-
-//	camera.cameraUniform = gl.GetUniformLocation(program, gl.Str("camera\x00"))
-//	gl.UniformMatrix4fv(camera.cameraUniform, 1, false, &camera.camera[0])
-	
-	
-	camera.cameraUniform = UniformMatrix4fv(program, VIEW, 1, &camera.camera[0])
+	camera.projectionUniform = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
+	camera.cameraUniform = program.UniformMatrix4fv(VIEW, 1, &camera.camera[0] )
     
 }
 

@@ -20,7 +20,7 @@ type Lines struct {
 
     buffer *gfx.Buffer 
 
-    program uint32
+    program *gfx.Program
     model mgl32.Mat4
 
 
@@ -83,6 +83,7 @@ func NewLines(config *conf.LinesConfig) *Lines {
     }
     ret := &Lines{lineCount: config.LineCount}
     ret.buffer = gfx.NewBuffer(config.LineCount)
+    ret.program = gfx.NewProgram("lines")
     return ret
 }
 
@@ -114,11 +115,8 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
     
     fragment.Compile()
     vertex.Compile()
-    lines.program, err = gfx.CreateProgram(vertex,fragment)
-    if err != nil {
-        log.Error("fail new program: %v",err)    
-        return
-    }
+    
+    if err = lines.program.Create(vertex,fragment); err != nil { log.Error("fail new program: %v",err) }
 
     lines.white = gfx.WhiteColor()
 
@@ -140,14 +138,17 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
     
 
     gl.ActiveTexture(gl.TEXTURE0)
-    gl.UseProgram(lines.program)
+    lines.program.Use()
     gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
 
 
     camera.Uniform(lines.program)
-    modelUniform := gfx.UniformMatrix4fv(lines.program, gfx.MODEL, 1, &lines.model[0] )
-    _ = gfx.VertexAttribPointer(lines.program,gfx.VERTEX,3,5*4,0)
-    _ = gfx.VertexAttribPointer(lines.program,gfx.TEXCOORD, 2, 5*4, 3*4)
+    
+    modelUniform := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &lines.model[0] )
+
+    lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
+    lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
+
 
 
     const DRAW_TEXT = true

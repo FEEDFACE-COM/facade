@@ -35,8 +35,8 @@ func (texture *Texture) Close() {
 }
 
 
-func (texture *Texture) Uniform(program uint32) {
-	texture.textureUniform = Uniform1i(program,TEXTURE,0)
+func (texture *Texture) Uniform(program *Program) {
+	texture.textureUniform = program.Uniform1i(TEXTURE,0)
 }
 
 func (texture *Texture) Bind() {

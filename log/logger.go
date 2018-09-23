@@ -4,6 +4,7 @@ package log
 import (
     "fmt"
     "os"
+    "errors"
 )
 
 type Verbosity uint
@@ -30,4 +31,5 @@ func   Error(format string, args ...interface{})  {                             
 func   PANIC(format string, args ...interface{})  {                                  fmt.Fprintf(os.Stderr,"FACADE PANIC: "+format+"\n", args...); os.Exit(2) } 
 
 
+func NewError(format string, args ...interface{}) error { return errors.New( fmt.Sprintf(format,args...) ) }
 

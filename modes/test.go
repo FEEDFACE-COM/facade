@@ -17,7 +17,7 @@ type Test struct {
     vert map[string]*gfx.Shader
     frag map[string]*gfx.Shader
 
-    program map[string]uint32
+    program map[string]*gfx.Program
 
     object map[string]uint32
 
@@ -62,7 +62,8 @@ void main() {
 func (test *Test) RenderAxis() {
     program := test.program["test"]
   
-    gl.UseProgram(program)
+  
+    program.Use()
 
     object := test.object["axis"]
 
@@ -80,15 +81,15 @@ func (test *Test) RenderAxis() {
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
     gl.BufferData(gl.ARRAY_BUFFER, len(axis)*4, gl.Ptr(axis), gl.STATIC_DRAW)
     
-    _ = gfx.VertexAttribPointer(program, gfx.VERTEX, 3, (3+4)*4, 0 )
-    _ = gfx.VertexAttribPointer(program, gfx.COLOR, 4, (3+4)*4, 3*4 )
+    
+    program.VertexAttribPointer(gfx.VERTEX, 3, (3+4)*4, 0 )
+    program.VertexAttribPointer(gfx.COLOR, 4, (3+4)*4, 3*4 )
     
     
     model := mgl32.Ident4()
     //	model = mgl32.Scale3D(0.25,0.25,0.25)
     
-    gfx.UniformMatrix4fv(program,gfx.MODEL,1,&model[0])
-  
+    program.UniformMatrix4fv(gfx.MODEL,1,&model[0])
   
     gl.LineWidth(4.0)    
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
@@ -114,7 +115,7 @@ func (test *Test) Init(camera *gfx.Camera) {
     test.camera = camera
 
     
-    test.program = map[string]uint32{}
+    test.program = map[string]*gfx.Program{}
     
     test.object = map[string]uint32{}
     for _,name := range []string{ "axis", "quad" } {
@@ -140,12 +141,9 @@ func (test *Test) Init(camera *gfx.Camera) {
     }
     
     var err error
-    if test.program["test"],err =  gfx.CreateProgram(test.vert["ident"],test.frag["ident"]); err != nil {
-        log.Error("fail to create test: %s",err)
-    }
-//    if test.program["mask"],err =  gfx.CreateProgram(test.vert["mask"],test.frag["mask"]); err != nil {
-//        log.Error("fail to create mask: %s",err)
-//    }
+    test.program["test"] = gfx.NewProgram("test");
+    err = test.program["test"].Create(test.vert["ident"],test.frag["ident"])
+    if err != nil { log.Error("fail to create test: %s",err) }
 
     
     
