@@ -40,22 +40,7 @@ void main() {
 }
 `,
 
-//
-//"mask":`
-//attribute vec2 vertTexCoord;
-//attribute vec3 vert;
-//attribute vec4 color;
-//
-//varying vec4 vertColor;
-//varying vec2 fragTexCoord;
-//
-//void main() {
-//    vertColor = color;
-//    fragTexCoord = vec2(vert.x,vert.y);
-//    gl_Position = vec4(vert,1);
-//}
-//
-//`,
+
 
 
 }
@@ -69,14 +54,6 @@ void main() {
 }
 `,
 
-//"mask":`
-//varying vec4 vertColor;
-//varying vec2 fragTexCoord;
-//void main() {
-//    gl_FragColor = vertColor;
-//}
-//`,
-//
 
 
 }
@@ -104,21 +81,11 @@ func (test *Test) RenderAxis() {
     gl.BufferData(gl.ARRAY_BUFFER, len(axis)*4, gl.Ptr(axis), gl.STATIC_DRAW)
     
     _ = gfx.VertexAttribPointer(program, gfx.VERTEX, 3, (3+4)*4, 0 )
-    
-//    vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
-//    gl.EnableVertexAttribArray(vertAttrib) 
-//    gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(0))
-
     _ = gfx.VertexAttribPointer(program, gfx.COLOR, 4, (3+4)*4, 3*4 )
     
-//    colorAttrib := uint32(gl.GetAttribLocation(program, gl.Str("color\x00")))
-//    gl.EnableVertexAttribArray(colorAttrib) 
-//    gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(3*4))
     
     model := mgl32.Ident4()
     //	model = mgl32.Scale3D(0.25,0.25,0.25)
-//    modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
-//    gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
     
     gfx.UniformMatrix4fv(program,gfx.MODEL,1,&model[0])
   

@@ -48,17 +48,7 @@ func (mask *Mask) Render() {
     gl.BindBuffer(gl.ARRAY_BUFFER,mask.object)
     
     _ = VertexAttribPointer(mask.program, VERTEX, 3, (3+2)*4, 0 )
-    
-//    vertAttrib := uint32(gl.GetAttribLocation(mask.program, gl.Str("vert\x00")))
-//    gl.EnableVertexAttribArray(vertAttrib) 
-//    gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, (3+2)*4, gl.PtrOffset(0))
-
-
     _ = VertexAttribPointer(mask.program, TEXCOORD, 2, (3+2)*4, 3*4)
-
-//    texCoordAttrib := uint32(gl.GetAttribLocation(mask.program, gl.Str("vertTexCoord\x00")))
-//    gl.EnableVertexAttribArray(texCoordAttrib) 
-//    gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, (3+2)*4, gl.PtrOffset(3*4))
 
     gl.DrawArrays(gl.TRIANGLES, 0, 3*2 )
 

@@ -29,7 +29,6 @@ func NewTexture() *Texture {
 
 func (texture *Texture) Close() {
     if texture.texture != 0 {
-//        log.Debug("-tex #%d",texture.texture)
         gl.DeleteTextures(1, &texture.texture)    
     }   
     texture.texture = 0
@@ -37,10 +36,7 @@ func (texture *Texture) Close() {
 
 
 func (texture *Texture) Uniform(program uint32) {
-	texture.textureUniform = gl.GetUniformLocation(program, gl.Str("texture\x00"))
-	gl.Uniform1i(texture.textureUniform, 0)
-
-//	texture.textureUniform = Uniform1i(program,TEXTURE,0)
+	texture.textureUniform = Uniform1i(program,TEXTURE,0)
 }
 
 func (texture *Texture) Bind() {

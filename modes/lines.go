@@ -22,7 +22,6 @@ type Lines struct {
 
     program uint32
     model mgl32.Mat4
-    modelUniform int32
 
 
     object uint32
@@ -123,10 +122,6 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
 
     lines.white = gfx.WhiteColor()
 
-//	gl.UseProgram(lines.program)
-
-
-    
 }
 
 
@@ -144,32 +139,15 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
 //    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,c/2.+0.5,0.0) )
     
 
+    gl.ActiveTexture(gl.TEXTURE0)
     gl.UseProgram(lines.program)
     gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
 
 
-    gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
-
     camera.Uniform(lines.program)
-    gl.ActiveTexture(gl.TEXTURE0)
-
-
-    lines.modelUniform = gfx.UniformMatrix4fv(lines.program, gfx.MODEL, 1, &lines.model[0] )
-
-//	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
-//	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
-
+    modelUniform := gfx.UniformMatrix4fv(lines.program, gfx.MODEL, 1, &lines.model[0] )
     _ = gfx.VertexAttribPointer(lines.program,gfx.VERTEX,3,5*4,0)
-
-//	vertAttrib := uint32(gl.GetAttribLocation(lines.program, gl.Str("vert\x00")))
-//	gl.EnableVertexAttribArray(vertAttrib) 
-//	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
-
     _ = gfx.VertexAttribPointer(lines.program,gfx.TEXCOORD, 2, 5*4, 3*4)
-
-//	texCoordAttrib := uint32(gl.GetAttribLocation(lines.program, gl.Str("vertTexCoord\x00")))
-//	gl.EnableVertexAttribArray(texCoordAttrib)
-//	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 
 
     const DRAW_TEXT = true
@@ -190,8 +168,7 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
     for i:=uint(0);i<lines.lineCount;i++ {
         line  := lines.buffer.Tail(i)
         lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
-
-        gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
+        gl.UniformMatrix4fv(modelUniform, 1, false, &lines.model[0])
         
         idx := int32(i* 2*3)
 
