@@ -154,6 +154,9 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
     renderer.mask.Init()
 
     for {
+        debug := now.frame % DEBUG_FRAMES == 0
+        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
+        
         now.Tick()
         
         renderer.mutex.Lock()
@@ -164,7 +167,6 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
-        debug := now.frame % DEBUG_FRAMES == 0
 
         switch renderer.mode {
             case conf.GRID:
@@ -185,6 +187,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         
         // wait for next frame
         // FIXME, maybe dont wait as long??
+
+        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("post render gl error: %s",gl.ErrorString(e)) }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil

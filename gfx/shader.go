@@ -49,7 +49,7 @@ func NewShader(name string, source string, shaderType uint32) *Shader {
 //    return ret
 //}
 
-func (shader *Shader) Compile() error {
+func (shader *Shader) CompileShader() error {
     log.Debug("shader compile %s",shader.Name)
     shader.Shader = gl.CreateShader(shader.ShaderType)
     
@@ -75,33 +75,6 @@ func (shader *Shader) Compile() error {
     return nil
 }
 
-
-func CreateProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
-
-	program := gl.CreateProgram()
-	gl.AttachShader(program, vertexShader.Shader)
-	gl.AttachShader(program, fragmentShader.Shader)
-	gl.LinkProgram(program)
-
-	var status int32
-	gl.GetProgramiv(program, gl.LINK_STATUS, &status)
-	if status == gl.FALSE {
-		var logLength int32
-		gl.GetProgramiv(program, gl.INFO_LOG_LENGTH, &logLength)
-
-		logs := strings.Repeat("\x00", int(logLength+1))
-		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(logs))
-
-		log.Error("fail link %s %s: %v", vertexShader.Name, fragmentShader.Name, logs)
-		return 0, errors.New("fail create program")
-	}
-
-	gl.DeleteShader(vertexShader.Shader)
-	gl.DeleteShader(fragmentShader.Shader)
-
-	return program, nil
-    
-}
 
 
 

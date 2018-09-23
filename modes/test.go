@@ -63,7 +63,7 @@ func (test *Test) RenderAxis() {
     program := test.program["test"]
   
   
-    program.Use()
+    program.UseProgram()
 
     object := test.object["axis"]
 
@@ -127,7 +127,7 @@ func (test *Test) Init(camera *gfx.Camera) {
     test.vert =  map[string]*gfx.Shader{}
     for name,src := range vertexShader {
         test.vert[name] = gfx.NewShader(name,src,gl.VERTEX_SHADER)
-        if err := test.vert[name].Compile() ; err != nil {
+        if err := test.vert[name].CompileShader() ; err != nil {
             log.Error("fail compile vertex shader %s: %s",name,err)
         }
     }
@@ -135,14 +135,14 @@ func (test *Test) Init(camera *gfx.Camera) {
     test.frag =  map[string]*gfx.Shader{}
     for name,src := range fragmentShader {
         test.frag[name] = gfx.NewShader(name,src,gl.FRAGMENT_SHADER)
-        if err := test.frag[name].Compile() ; err != nil {
+        if err := test.frag[name].CompileShader() ; err != nil {
             log.Error("fail compile fragment shader %s: %s",name,err)
         }
     }
     
     var err error
     test.program["test"] = gfx.NewProgram("test");
-    err = test.program["test"].Create(test.vert["ident"],test.frag["ident"])
+    err = test.program["test"].CreateProgram(test.vert["ident"],test.frag["ident"])
     if err != nil { log.Error("fail to create test: %s",err) }
 
     

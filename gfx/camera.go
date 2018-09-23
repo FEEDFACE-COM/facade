@@ -45,15 +45,8 @@ func NewCamera(config *conf.CameraConfig, width,height float32) *Camera {
 }
 
 func (camera *Camera) Uniform(program *Program) {
-//	
-//	
-//	camera.projectionUniform = UniformMatrix4fv(program, PROJECTION, 1, &camera.projection[0])
-//	camera.cameraUniform = UniformMatrix4fv(program, VIEW, 1, &camera.camera[0])
-	
-	
 	camera.projectionUniform = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
 	camera.cameraUniform = program.UniformMatrix4fv(VIEW, 1, &camera.camera[0] )
-    
 }
 
 

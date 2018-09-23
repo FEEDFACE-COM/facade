@@ -43,9 +43,9 @@ func NewProgram(name string) *Program {
     return ret
 }
 
-func (program *Program) Use() { gl.UseProgram(program.Program) }
+func (program *Program) UseProgram() { gl.UseProgram(program.Program) }
 
-func (program *Program) Create(vertShader, fragShader *Shader) error {
+func (program *Program) CreateProgram(vertShader, fragShader *Shader) error {
 
     //todo: cleanup if already present?
 

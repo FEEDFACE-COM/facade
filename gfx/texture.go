@@ -39,7 +39,7 @@ func (texture *Texture) Uniform(program *Program) {
 	texture.textureUniform = program.Uniform1i(TEXTURE,0)
 }
 
-func (texture *Texture) Bind() {
+func (texture *Texture) BindTexture() {
     gl.BindTexture(gl.TEXTURE_2D, texture.texture)    
 }
 

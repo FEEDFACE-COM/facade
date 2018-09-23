@@ -19,26 +19,22 @@ type Lines struct {
     lineCount uint
 
     buffer *gfx.Buffer 
-
     program *gfx.Program
-    model mgl32.Mat4
 
 
-    object uint32
-    verts []float32
+    object *gfx.Object
+    data []float32
 
     white *gfx.Texture
 
 }
 
 
-
-
-
-func (lines *Lines) setVBO() {
-    lines.verts = []float32{}
-//    lines.verts = append( lines.verts, gfx.QuadVertices(2.0,1.0)...)
+func (lines *Lines) Reform() {
+    lines.data = []float32{}
+    
     for i:=uint(0);i<lines.lineCount;i++ {
+
         item := lines.buffer.Tail(i)
         var w,h float32
         if item == nil {
@@ -47,11 +43,12 @@ func (lines *Lines) setVBO() {
             w = item.Texture.Size.Width / item.Texture.Size.Height
             h = item.Texture.Size.Height / item.Texture.Size.Height
         }
-        lines.verts = append(lines.verts, gfx.QuadVertices(w,h)...   )
+        lines.data = append(lines.data, gfx.QuadVertices(w,h)...   )
     }
-    gl.BindBuffer(gl.ARRAY_BUFFER, lines.object)
-    gl.BufferData(gl.ARRAY_BUFFER, len(lines.verts)*4, gl.Ptr(lines.verts), gl.STATIC_DRAW)
+    lines.object.BufferData(len(lines.data)*4,lines.data)
+
 }
+
 
 
 
@@ -60,8 +57,10 @@ func (lines *Lines) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     newText.RenderTexture(font)
     lines.buffer.Queue( newText )
-    lines.setVBO()
+    lines.Reform()
 }
+
+
 
 func (lines *Lines) Configure(config *conf.LinesConfig) {
     if config == nil {
@@ -71,11 +70,92 @@ func (lines *Lines) Configure(config *conf.LinesConfig) {
     if config.LineCount != lines.lineCount {
         lines.lineCount = config.LineCount
         lines.buffer.Resize(config.LineCount)
-        lines.setVBO()
+        lines.Reform()
     }
     
 
 }
+
+
+
+func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
+    var err error
+
+    log.Debug("create vbo[%d]",lines.lineCount)
+
+    lines.white = gfx.WhiteColor()
+    lines.object.Init()
+
+    lines.Reform()
+
+    fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
+    vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
+    
+    fragment.CompileShader()
+    vertex.CompileShader()
+
+
+    
+    if err = lines.program.CreateProgram(vertex,fragment); err != nil { log.Error("fail new program: %v",err) }
+
+
+}
+
+
+func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
+    
+
+    gl.ClearColor(0.0,0.0,0.0,1.0)
+
+    model := mgl32.Ident4()
+
+    gl.ActiveTexture(gl.TEXTURE0)
+    lines.program.UseProgram()
+    lines.object.BindBuffer()
+    camera.Uniform(lines.program)
+
+    lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
+    lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
+    modelUniform := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+    
+    var d float32 
+    if lines.lineCount % 2 == 0 {
+        d = float32( int(lines.lineCount/2) ) + 0.5
+    } else {
+        d = float32( int(lines.lineCount/2) ) + 1.0
+    }
+
+
+    model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
+    
+    for i:=uint(0);i<lines.lineCount;i++ {
+        line  := lines.buffer.Tail(i)
+
+        model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
+        gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+        
+        if true && line != nil {
+            line.Texture.BindTexture()
+            gl.DrawArrays(gl.TRIANGLES, int32(i* 2*3), 2*3)
+
+        }
+        if true && line != nil {
+            gl.LineWidth(3.0)
+            lines.white.BindTexture()
+            gl.DrawArrays(gl.LINE_STRIP, int32(i* 2*3), 2*3)
+        }    
+        
+    }
+    
+
+
+
+}
+
+
+
+
+
 
 func NewLines(config *conf.LinesConfig) *Lines {
     if config == nil {
@@ -84,6 +164,7 @@ func NewLines(config *conf.LinesConfig) *Lines {
     ret := &Lines{lineCount: config.LineCount}
     ret.buffer = gfx.NewBuffer(config.LineCount)
     ret.program = gfx.NewProgram("lines")
+    ret.object = gfx.NewObject("lines")
     return ret
 }
 
@@ -97,122 +178,15 @@ func (lines *Lines) Desc() string {
 }
 
 func (lines *Lines) Dump() string {
-    return lines.buffer.Dump()
-//   return lines.dumpVBO()
-}
-
-
-func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
-    var err error
-
-    log.Debug("create vbo[%d]",lines.lineCount)
-    gl.GenBuffers(1,&lines.object)
-
-    lines.setVBO()
-
-    fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
-    vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
     
-    fragment.Compile()
-    vertex.Compile()
-    
-    if err = lines.program.Create(vertex,fragment); err != nil { log.Error("fail new program: %v",err) }
-
-    lines.white = gfx.WhiteColor()
-
-}
-
-
-func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
-    
-    if debug { log.Debug(">render %s",gl.ErrorString( gl.GetError() ) ) } 
-
-    gl.ClearColor(0.0,0.0,0.0,1.0)
-
-    c := float32(lines.lineCount)  
-    z := 1./(0.3*c)
-//    d := 1.5/c
-    lines.model = mgl32.Ident4()
-    lines.model = lines.model.Mul4( mgl32.Scale3D(z,z,z) )
-//    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,c/2.+0.5,0.0) )
-    
-
-    gl.ActiveTexture(gl.TEXTURE0)
-    lines.program.Use()
-    gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
-
-
-    camera.Uniform(lines.program)
-    
-    modelUniform := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &lines.model[0] )
-
-    lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
-    lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
-
-
-
-    const DRAW_TEXT = true
-    const DRAW_BOX = false
-
-    if debug { log.Debug(lines.dumpVBO()) }
-
-    
-    var d float32 
-    if lines.lineCount % 2 == 0 {
-        d = float32( int(lines.lineCount/2) ) + 0.5
-    } else {
-        d = float32( int(lines.lineCount/2) ) + 1.0
-    }
-
-    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
-    
-    for i:=uint(0);i<lines.lineCount;i++ {
-        line  := lines.buffer.Tail(i)
-        lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
-        gl.UniformMatrix4fv(modelUniform, 1, false, &lines.model[0])
-        
-        idx := int32(i* 2*3)
-
-        if DRAW_TEXT && line != nil {
-//            if debug { log.Debug("got tex %.0fx%.0f",line.Texture.Size.Width,line.Texture.Size.Height) }
-//                gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
-            line.Texture.Bind()
-//                gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
-            gl.DrawArrays(gl.TRIANGLES, idx, 2*3)
-
-        }
-        if DRAW_BOX && line != nil {
-            gl.LineWidth(3.0)
-            lines.white.Bind()
-//            gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
-//            gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
-            gl.DrawArrays(gl.LINE_STRIP, idx, 2*3)
-        }    
-        
-    }
-    
-    if debug { log.Debug("<render %s",gl.ErrorString( gl.GetError() ) ) } 
-
-
-
-}
-
-
-
-
-
-func (lines *Lines) dumpVBO() string {
-    ret := ""
-    t:=-1
-    for i:=0;i<len(lines.verts); i+=5 {
-        if (i)%(5 * 6)  == 0 {
-            ret += "\n"
-            t += 1    
-        }
-        ret += fmt.Sprintf("  #%02d x%5.1f y%5.1f z%5.1f  u%5.1f v%5.1f\n", t,
-            lines.verts[i], lines.verts[i+1], lines.verts[i+2], lines.verts[i+3], lines.verts[i+4])
-            
+    ret := ""; t:=-1
+    for i:=0;i<len(lines.data); i+=5 {
+        if i%(5 * 6)  == 0 { ret += "\n"; t += 1 }
+        ret += fmt.Sprintf("  #%02d pos%v tex%v\n",t,lines.data[i:i+3],lines.data[i+3:i+5])
     }
     return ret    
 }
+
+
+
 

@@ -15,8 +15,8 @@ type Mask struct {
     Mask bool
 
     program *Program
-    object uint32
 
+    object *Object
     data []float32
     
     Width float32
@@ -44,8 +44,8 @@ func (mask *Mask) Render() {
         return
     }
 
-    mask.program.Use()
-    gl.BindBuffer(gl.ARRAY_BUFFER,mask.object)
+    mask.program.UseProgram()
+    mask.object.BindBuffer()
     
     mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )
     mask.program.VertexAttribPointer(TEXCOORD, 2, (3+2)*4, 3*4)
@@ -70,20 +70,20 @@ func (mask *Mask) Init() {
         -w/2.,  h/2., 0.0,    -u,  v,
     }
 
-    gl.GenBuffers(1,&mask.object)
-    gl.BindBuffer(gl.ARRAY_BUFFER,mask.object)
-    gl.BufferData(gl.ARRAY_BUFFER, len(mask.data)*4, gl.Ptr(mask.data), gl.STATIC_DRAW )
+    mask.object = NewObject("mask")
+    mask.object.Init()
+    mask.object.BufferData(len(mask.data)*4, mask.data)
+
     
     var err error
+
     vert := NewShader("vert",vertexShader,gl.VERTEX_SHADER)
-    if err = vert.Compile(); err != nil { log.Error("fail compile mask vertex shader: %s",err) }
-    
+    if err = vert.CompileShader(); err != nil { log.Error("fail compile mask vertex shader: %s",err) }
     frag := NewShader("frag",fragmentShader,gl.FRAGMENT_SHADER)
-    if err = frag.Compile(); err != nil { log.Error("fail compile mask frag shader: %s",err) }
-    
+    if err = frag.CompileShader(); err != nil { log.Error("fail compile mask frag shader: %s",err) }
     
     mask.program = NewProgram("mask")
-    if err = mask.program.Create(vert,frag); err != nil { log.Error("fail to create program: %s",err) }
+    if err = mask.program.CreateProgram(vert,frag); err != nil { log.Error("fail to create program: %s",err) }
     
             
 
