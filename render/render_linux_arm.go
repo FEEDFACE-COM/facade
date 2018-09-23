@@ -7,7 +7,7 @@ import (
 //    "fmt"
     "time"
     "sync"
-    "runtime"
+//    "runtime"
     log "../log"
     conf "../conf"
     modes "../modes"
@@ -32,8 +32,10 @@ type Renderer struct {
     mode conf.Mode
     grid *modes.Grid
     lines *modes.Lines
+    test *modes.Test
     font *gfx.Font
     camera *gfx.Camera
+    mask *gfx.Mask
 
     now Clock
     buffer *gfx.Buffer
@@ -85,8 +87,10 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.mode = config.Mode
     renderer.grid = modes.NewGrid(config.Grid)
     renderer.lines = modes.NewLines(config.Lines)
+    renderer.test = modes.NewTest(config.Test)
     renderer.font = gfx.NewFont(config.Font)
     renderer.camera = gfx.NewCamera(config.Camera,float32(renderer.size.width),float32(renderer.size.height))
+    renderer.mask = gfx.NewMask(config.Mask,float32(renderer.size.width),float32(renderer.size.height))
 
     renderer.font.Configure(config.Font,conf.DIRECTORY)
 
@@ -113,7 +117,10 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     renderer.font.Configure(config.Font,conf.DIRECTORY)
     renderer.lines.Configure(config.Lines)
     renderer.grid.Configure(config.Grid)
+    renderer.test.Configure(config.Test)
     renderer.camera.Configure(config.Camera)
+    renderer.mask.Configure(config.Mask)
+    log.Debug(renderer.camera.Desc())
     return nil
 }
 
@@ -140,8 +147,10 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
-    renderer.lines.Init(renderer.camera)
+    renderer.lines.Init(renderer.camera,renderer.font)
     renderer.grid.Init(renderer.camera)
+    renderer.test.Init(renderer.camera)
+    renderer.mask.Init()
 
     for {
         now.Tick()
@@ -156,10 +165,15 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render(renderer.camera)
+                renderer.grid.Render()
             case conf.LINES:
-                renderer.lines.Render(renderer.camera)
+                renderer.lines.Render( now.frame % DEBUG_FRAMES == 0 )
+            case conf.TEST:
+                renderer.test.Render()
         }
+        
+        gl.Disable(gl.DEPTH_TEST)
+        renderer.mask.Render()
         
         if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev); prev = *now }
 
@@ -182,21 +196,16 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
 
     select {
         case config := <-confChan:
-            log.Debug("conf: %s",config.Desc())
             renderer.Configure(&config)
-//            log.Debug( renderer.lines.Dump() )
-            runtime.GC()
         default:
     }
     
     select {
         case text := <-textChan:
-//                log.Debug("read: %s",text)
-            renderer.buffer.Queue( gfx.NewText(string(text)) )
+//            renderer.buffer.Queue( gfx.NewText(string(text)) )
             renderer.lines.Queue( string(text), renderer.font )
-            renderer.grid.Queue( string(text) )
-//            log.Debug( renderer.lines.Dump() )
-            runtime.GC()
+            renderer.grid.Queue(string(text))
+            renderer.test.Queue(string(text))
         default:
     }
     
@@ -236,49 +245,36 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     
 }
 
+//
+//func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
+//    for {
+//        text := <-textChan
+//        log.Debug("read: %s",text)
+//        newText := gfx.NewText(string(text))
+//        renderer.mutex.Lock()
+//        renderer.buffer.Queue(newText)
+////        renderer.lines.Queue(string(text))
+////        renderer.grid.Queue( string(text) )
+////        renderer.lines.Queue( string(text) )
+//        renderer.mutex.Unlock()
+//    }
+//    return nil
+//    
+//}
+//
+//
+//func (renderer *Renderer) ReadConf(confChan chan conf.Config) error {
+//    for {
+//        config := <-confChan
+//        log.Debug("conf: %s",config.Desc())    
+//        renderer.mutex.Lock()
+////        renderer.Configure(&config)
+//        renderer.mutex.Unlock()
+//    }
+//    return nil
+//}
+//
+//
 
-func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
-    for {
-        text := <-textChan
-        log.Debug("read: %s",text)
-        newText := gfx.NewText(string(text))
-        renderer.mutex.Lock()
-        renderer.buffer.Queue(newText)
-//        renderer.lines.Queue(string(text))
-//        renderer.grid.Queue( string(text) )
-//        renderer.lines.Queue( string(text) )
-        renderer.mutex.Unlock()
-    }
-    return nil
-    
-}
 
-
-func (renderer *Renderer) ReadConf(confChan chan conf.Config) error {
-    for {
-        config := <-confChan
-        log.Debug("conf: %s",config.Desc())    
-        renderer.mutex.Lock()
-//        renderer.Configure(&config)
-        renderer.mutex.Unlock()
-    }
-    return nil
-}
-
-
-
-
-var quadVertices = []float32{
-	//  X, Y, Z, U, V
-
-//	// Front
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-    -1.0, -1.0, 0.0, 0.0, 1.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-    
-    -1.0,  1.0, 0.0, 0.0, 0.0,
-     1.0, -1.0, 0.0, 1.0, 1.0,
-     1.0,  1.0, 0.0, 1.0, 0.0,
-
-}
 

@@ -13,11 +13,12 @@ type Grid struct {
     width uint
     height uint
     buffer *gfx.Buffer
+    camera *gfx.Camera
 }
 
 
 
-func (grid *Grid) Render(camera *gfx.Camera) {
+func (grid *Grid) Render() {
     gl.ClearColor(0xff,0x0,0x0,1.0)
 }
 
@@ -28,7 +29,7 @@ func (grid *Grid) Queue(text string) {
 
 
 func (grid *Grid) Init(camera *gfx.Camera) {
-    
+    grid.camera = camera
 }
 
 func (grid *Grid) Configure(config *conf.GridConfig) {
@@ -48,9 +49,7 @@ func (grid *Grid) Configure(config *conf.GridConfig) {
 }
 
 func NewGrid(config *conf.GridConfig) *Grid {
-    if config == nil {
-        config = conf.NewGridConfig()
-    }
+    if config == nil { config = conf.NewGridConfig() }
     ret := &Grid{width: config.Width, height: config.Height}
     ret.buffer = gfx.NewBuffer(config.Height)
     return ret

@@ -87,6 +87,18 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
     return nil
 }
 
+
+
+func WhiteColor() *Texture {
+    ret := NewTexture()
+    rgba := image.NewRGBA( image.Rect(0,0,2,2) )
+    draw.Draw( rgba, rgba.Bounds(), image.White, image.ZP, draw.Src )
+    ret.LoadRGBA(rgba)
+    ret.GenTexture()
+    return ret
+}
+
+
 func (texture *Texture) GenTexture() error {
     gl.GenTextures(1, &texture.texture)
     gl.ActiveTexture(gl.TEXTURE0)

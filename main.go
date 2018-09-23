@@ -43,7 +43,7 @@ var cmds = []Command{CONF,PIPE,TEST}
 var (
     textPort       uint     = 0xfcd
     confPort       uint     = 0xfcc
-    connectHost    string   = "localhost"
+    connectHost    string   = "fcd.hq.feedface.com"
     connectTimeout float64  = 5.0
     listenHost     string   = "0.0.0.0"
     daemonize      bool     = false

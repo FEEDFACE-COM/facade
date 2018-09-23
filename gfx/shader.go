@@ -20,8 +20,8 @@ type Shader struct {
 }
 
 
-func NewShader(name string, source string, shaderType uint32) Shader {
-    ret := Shader{Name: name, ShaderSource: source, ShaderType: shaderType}
+func NewShader(name string, source string, shaderType uint32) *Shader {
+    ret := &Shader{Name: name, ShaderSource: source, ShaderType: shaderType}
     return ret    
 }
 
@@ -30,7 +30,7 @@ func (shader *Shader) Compile() error {
     log.Debug("shader compile %s",shader.Name)
     shader.Shader = gl.CreateShader(shader.ShaderType)
     
-    sources, free := gl.Strs(shader.ShaderSource)
+    sources, free := gl.Strs(shader.ShaderSource+"\x00")
     gl.ShaderSource(shader.Shader, 1, sources, nil)
     free()
     gl.CompileShader(shader.Shader)
@@ -53,28 +53,11 @@ func (shader *Shader) Compile() error {
 }
 
 
-func NewProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
-    var err error
+func CreateProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
+
 	program := gl.CreateProgram()
-
-
-    err = vertexShader.Compile()
-    if err != nil {
-        log.Error("fail compile vertex: %v",err)
-        return 0, errors.New("fail compile vertex")
-    }
 	gl.AttachShader(program, vertexShader.Shader)
-
-
-    err = fragmentShader.Compile()
-    if err != nil {
-        log.Error("fail compile fragment: %v",err)
-        return 0, errors.New("fail compile fragment")
-    }
 	gl.AttachShader(program, fragmentShader.Shader)
-
-    
-
 	gl.LinkProgram(program)
 
 	var status int32
@@ -86,8 +69,8 @@ func NewProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error) {
 		logs := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(logs))
 
-		log.Error("fail link program: %v", logs)
-		return 0, errors.New("fail link shader")
+		log.Error("fail link %s %s: %v", vertexShader.Name, fragmentShader.Name, logs)
+		return 0, errors.New("fail create program")
 	}
 
 //	gl.DeleteShader(vertexShader)
@@ -110,7 +93,7 @@ void main() {
     fragTexCoord = vertTexCoord;
     gl_Position = projection * camera * model * vec4(vert, 1);
 }
-` + "\x00"
+` 
 
 
 
@@ -121,5 +104,5 @@ void main() {
     vec4 tex = texture2D(texture,fragTexCoord);
     gl_FragColor = tex;
 }
-` + "\x00"
+`
 

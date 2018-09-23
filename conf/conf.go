@@ -14,6 +14,7 @@ type Config struct {
     Test *TestConfig
     Font *FontConfig
     Camera *CameraConfig    
+    Mask *MaskConfig
 }
 
 
@@ -33,7 +34,7 @@ const (
 
 var Modes = []Mode{GRID,LINES,TEST}
 
-var DEFAULT_MODE Mode = LINES
+var DEFAULT_MODE Mode = TEST
 
 
 var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
@@ -45,6 +46,7 @@ func NewConfig(mode Mode) *Config {
     if mode == TEST  { ret.Test  = NewTestConfig() }
     ret.Font = NewFontConfig()
     ret.Camera = NewCameraConfig()
+    ret.Mask = NewMaskConfig()
     return ret
 }
 
@@ -56,6 +58,7 @@ func (config *Config) FlagSet() *flag.FlagSet {
     if config.Test   != nil { config.Test.AddFlags(ret) }
     if config.Font   != nil { config.Font.AddFlags(ret) }
     if config.Camera != nil { config.Camera.AddFlags(ret) }
+    if config.Mask   != nil { config.Mask.AddFlags(ret) }
     return ret
 }
 
@@ -68,6 +71,7 @@ func (config *Config) Desc() string {
     if config.Test   != nil { ret += " " + config.Test.Desc() }
     if config.Font   != nil { ret += " " + config.Font.Desc() }
     if config.Camera != nil { ret += " " + config.Camera.Desc() }
+    if config.Mask   != nil { ret += " " + config.Mask.Desc() }
     ret += "]"
     return ret
 }
