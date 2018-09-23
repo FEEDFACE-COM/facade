@@ -4,6 +4,18 @@ package gfx
 var FragmentShader = map[string]string{
 
 
+"color":`
+
+varying vec4 fragcolor;
+
+void main() {
+    gl_FragColor = fragcolor;
+}
+`,
+
+
+
+
 "ident":`
 uniform sampler2D texture;
 

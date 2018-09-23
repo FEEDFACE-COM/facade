@@ -170,11 +170,11 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render()
+                renderer.grid.Render(debug)
             case conf.LINES:
                 renderer.lines.Render( renderer.camera, renderer.font, debug )
             case conf.TEST:
-                renderer.test.Render()
+                renderer.test.Render(debug)
         }
         
         gl.Disable(gl.DEPTH_TEST)

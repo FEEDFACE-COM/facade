@@ -25,13 +25,8 @@ type Test struct {
 
 
 
-func (test *Test) RenderAxis() {
-    program := test.program["ident"]
-  
-    if program == nil {
-        log.Error("no program for axis")
-        return   
-    }
+func (test *Test) RenderAxis(debug bool) {
+    program := test.program["axis"]
   
     program.UseProgram()
 
@@ -74,10 +69,10 @@ func (test *Test) RenderAxis() {
 
 
 
-func (test *Test) Render() {
+func (test *Test) Render(debug bool) {
     gl.ClearColor(.5,.5,.5,1.)
     
-    if true { test.RenderAxis() }
+    if true { test.RenderAxis(debug) }
         
 }
 
@@ -98,13 +93,17 @@ func (test *Test) Init(camera *gfx.Camera) {
     
     var err error
     {
-        test.program["ident"] = gfx.NewProgram("ident")
+        test.program["axis"] = gfx.NewProgram("axis")
     
-        err = test.program["ident"].LoadShaders("ident", "ident")
-        if err != nil { log.Error("fail loading ident shaders: %s",err) }
+        err = test.program["axis"].LoadShaders("color", "color")
+        if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }
 
-        err = test.program["ident"].LinkProgram()
-        if err != nil { log.Error("fail test init: %s",err) }
+        err = test.program["axis"].LinkProgram()
+        if err != nil { log.Error("fail linking %s color shaders: %s","axis",err) }
+        
+        if test.program["axis"] == nil {
+            log.Error("fail Init!!")    
+        }
             
     }
     

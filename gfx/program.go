@@ -159,8 +159,8 @@ func (program *Program) LinkProgram() error {
         if strings.Contains(logs,"fragment shader") { src += "\n" + program.fragmentShader.Source }
 
 
-		log.Error("fail link program %s: %v%s", program.Name, logs,src)
-		return log.NewError("fail link shaders %s/%s:",program.vertexShader.Name,program.fragmentShader.Name)
+		log.Error("fail link program %s/%s: %s%s", program.vertexShader.Name,program.fragmentShader.Name, logs,src)
+		return log.NewError("fail link program %s/%s",program.vertexShader.Name,program.fragmentShader.Name)
 	}
 
 	gl.DeleteShader(program.vertexShader.Shader)

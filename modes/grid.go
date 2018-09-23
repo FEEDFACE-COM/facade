@@ -18,7 +18,7 @@ type Grid struct {
 
 
 
-func (grid *Grid) Render() {
+func (grid *Grid) Render(debug bool) {
     gl.ClearColor(0xff,0x0,0x0,1.0)
 }
 
