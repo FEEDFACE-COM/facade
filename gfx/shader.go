@@ -13,8 +13,8 @@ import (
 
 type Shader struct {
     Name string
-    ShaderSource string
-    ShaderType uint32
+    Source string
+    Type uint32
     Shader uint32
 }
 
@@ -23,7 +23,7 @@ type Shader struct {
 
 
 func NewShader(name string, source string, shaderType uint32) *Shader {
-    ret := &Shader{Name: name, ShaderSource: source, ShaderType: shaderType}
+    ret := &Shader{Name: name, Source: source, Type: shaderType}
     return ret    
 }
 
@@ -31,9 +31,9 @@ func NewShader(name string, source string, shaderType uint32) *Shader {
 
 
 func (shader *Shader) CompileShader() error {
-    shader.Shader = gl.CreateShader(shader.ShaderType)
+    shader.Shader = gl.CreateShader(shader.Type)
     
-    sources, free := gl.Strs(shader.ShaderSource+"\x00")
+    sources, free := gl.Strs(shader.Source+"\x00")
     gl.ShaderSource(shader.Shader, 1, sources, nil)
     free()
     gl.CompileShader(shader.Shader)

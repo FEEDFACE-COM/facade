@@ -48,7 +48,7 @@ func (program *Program) UseProgram() { gl.UseProgram(program.Program) }
 
 
 
-func loadShaderFile(shaderName string, shaderType uint32) (string, error) {
+func (program *Program) loadShaderFile(shaderName string, shaderType uint32) (string, error) {
     var data []byte
     var err error
     filePath := "/home/folkert/src/gfx/facade/shader/" + shaderName
@@ -62,7 +62,7 @@ func loadShaderFile(shaderName string, shaderType uint32) (string, error) {
         log.Error("fail read shader file %s: %s",filePath,err)
         return "", log.NewError("fail read shader file: %s",err)
     }
-
+    log.Debug("read shader file %s",filePath)
     return string(data), nil    
 }
 
@@ -71,13 +71,13 @@ func (program *Program) LoadVertexShader(vertName string) error {
     var src string    
     
     // try from file
-    src,err = loadShaderFile(vertName,gl.VERTEX_SHADER)
+    src,err = program.loadShaderFile(vertName,gl.VERTEX_SHADER)
     if err == nil { //success
         program.vertexShader = NewShader(vertName, src, gl.VERTEX_SHADER)    
-        log.Debug("load vertex shader %s from file",program.vertexShader.Name)
+//        log.Debug("load vertex shader %s from file",program.vertexShader.Name)
     } else if VertexShader[vertName] != "" {
         program.vertexShader = NewShader(vertName, VertexShader[vertName], gl.VERTEX_SHADER)
-        log.Debug("load vertex shader %s from map",program.vertexShader.Name)
+//        log.Debug("load vertex shader %s from map",program.vertexShader.Name)
     }
     
     if program.vertexShader == nil {
@@ -99,13 +99,13 @@ func (program *Program) LoadFragmentShader(fragName string) error {
     var src string    
     
     // try from file
-    src,err = loadShaderFile(fragName,gl.FRAGMENT_SHADER)
+    src,err = program.loadShaderFile(fragName,gl.FRAGMENT_SHADER)
     if err == nil { //success
         program.fragmentShader = NewShader(fragName, src, gl.FRAGMENT_SHADER)    
-        log.Debug("load fragment shader %s from file",program.fragmentShader.Name)
+//        log.Debug("load fragment shader %s from file",program.fragmentShader.Name)
     } else if FragmentShader[fragName] != "" {
         program.fragmentShader = NewShader(fragName, FragmentShader[fragName], gl.FRAGMENT_SHADER)
-        log.Debug("load fragment shader %s from map",program.fragmentShader.Name)
+//        log.Debug("load fragment shader %s from map",program.fragmentShader.Name)
     }
     
     if program.fragmentShader == nil {
@@ -131,6 +131,7 @@ func (program *Program) LoadShaders(vertName, fragName string) error {
 
 
 func (program *Program) LinkProgram() error {
+	var status int32
 
     //todo: cleanup if already present?
 
@@ -145,7 +146,6 @@ func (program *Program) LinkProgram() error {
 	gl.AttachShader(program.Program, program.fragmentShader.Shader)
 	gl.LinkProgram(program.Program)
 
-	var status int32
 	gl.GetProgramiv(program.Program, gl.LINK_STATUS, &status)
 	if status == gl.FALSE {
 		var logLength int32
@@ -154,8 +154,13 @@ func (program *Program) LinkProgram() error {
 		logs := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(program.Program, logLength, nil, gl.Str(logs))
 
-		log.Error("fail link %s %s: %v", program.vertexShader.Name, program.fragmentShader.Name, logs)
-		return log.NewError("fail link %s,%s:",program.vertexShader.Name, program.fragmentShader.Name)
+        src := ""
+        if strings.Contains(logs,"vertex shader")   { src += "\n" + program.vertexShader.Source }
+        if strings.Contains(logs,"fragment shader") { src += "\n" + program.fragmentShader.Source }
+
+
+		log.Error("fail link program %s: %v%s", program.Name, logs,src)
+		return log.NewError("fail link shaders %s/%s:",program.vertexShader.Name,program.fragmentShader.Name)
 	}
 
 	gl.DeleteShader(program.vertexShader.Shader)
@@ -190,7 +195,7 @@ func (program *Program) Uniform1i(name UniformName, value int32) int32 {
 func (program *Program) Desc() string {
     tmp := ""
     if program.vertexShader != nil { tmp += " " + program.vertexShader.Name }
-    if program.fragmentShader != nil { tmp += " " + program.fragmentShader.Name }
+    if program.fragmentShader != nil { tmp += "/" + program.fragmentShader.Name }
     return fmt.Sprintf("program[%s%s]",program.Name,tmp)
 }
 

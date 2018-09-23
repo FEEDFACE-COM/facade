@@ -9,8 +9,10 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+
 attribute vec3 vertex;
 attribute vec2 texcoord;
+attribute vec4asd color;
 
 varying vec2 fragcoord;
 

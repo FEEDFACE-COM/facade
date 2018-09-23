@@ -25,43 +25,13 @@ type Test struct {
 
 
 
-var vertexShader = map[string]string{
-
-"ident":`
-uniform mat4 projection;
-uniform mat4 camera;
-attribute vec3 vert;
-attribute vec4 color;
-varying vec4 vertColor;
-
-void main() {
-    vertColor = color;
-    gl_Position = projection * camera * vec4(vert,1);
-}
-`,
-
-
-
-
-}
-
-var fragmentShader = map[string]string{
-
-"ident":`
-varying vec4 vertColor;
-void main() {
-    gl_FragColor = vertColor;
-}
-`,
-
-
-
-}
-
-
 func (test *Test) RenderAxis() {
-    program := test.program["test"]
+    program := test.program["ident"]
   
+    if program == nil {
+        log.Error("no program for axis")
+        return   
+    }
   
     program.UseProgram()
 
@@ -80,16 +50,18 @@ func (test *Test) RenderAxis() {
     }
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
     gl.BufferData(gl.ARRAY_BUFFER, len(axis)*4, gl.Ptr(axis), gl.STATIC_DRAW)
+  
     
     
     program.VertexAttribPointer(gfx.VERTEX, 3, (3+4)*4, 0 )
-    program.VertexAttribPointer(gfx.COLOR, 4, (3+4)*4, 3*4 )
+    program.VertexAttribPointer(gfx.COLOR,  4, (3+4)*4, 3*4 )
     
     
     model := mgl32.Ident4()
     //	model = mgl32.Scale3D(0.25,0.25,0.25)
     
     program.UniformMatrix4fv(gfx.MODEL,1,&model[0])
+
   
     gl.LineWidth(4.0)    
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
@@ -132,7 +104,8 @@ func (test *Test) Init(camera *gfx.Camera) {
         if err != nil { log.Error("fail loading ident shaders: %s",err) }
 
         err = test.program["ident"].LinkProgram()
-        if err != nil { log.Error("fail linking program: %s",err) }
+        if err != nil { log.Error("fail test init: %s",err) }
+            
     }
     
 }
