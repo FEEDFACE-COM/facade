@@ -38,7 +38,7 @@ func (text *Text) RenderTexture(font *Font) {
         txt = text.Text[:MAX_LENGTH]
     }
     
-    text.Texture = NewTexture()
+    text.Texture = NewTexture("text")
     if text.Text == "" {
         text.Texture.LoadEmpty()
     } else {
@@ -49,7 +49,6 @@ func (text *Text) RenderTexture(font *Font) {
             text.Texture.LoadRGBA(rgba)    
         }
     }
-//	text.Texture.LoadFile("/home/folkert/src/gfx/facade/asset/FEEDFACE.COM.white.png")
-    text.Texture.GenTexture()
+    text.Texture.TexImage2D()
         
 }

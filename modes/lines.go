@@ -30,7 +30,7 @@ type Lines struct {
 }
 
 
-func (lines *Lines) Reform() {
+func (lines *Lines) generateData() {
     lines.data = []float32{}
     
     for i:=uint(0);i<lines.lineCount;i++ {
@@ -53,11 +53,11 @@ func (lines *Lines) Reform() {
 
 
 func (lines *Lines) Queue(text string, font *gfx.Font) {
-    log.Debug("queue text: %s",text)
     newText := gfx.NewText(text)
     newText.RenderTexture(font)
     lines.buffer.Queue( newText )
-    lines.Reform()
+    lines.generateData()
+    log.Debug("queued text: %s",text)
 }
 
 
@@ -66,12 +66,12 @@ func (lines *Lines) Configure(config *conf.LinesConfig) {
     if config == nil {
         return
     }
-    log.Debug("configure line: %s",config.Desc())
     if config.LineCount != lines.lineCount {
         lines.lineCount = config.LineCount
         lines.buffer.Resize(config.LineCount)
-        lines.Reform()
+        lines.generateData()
     }
+    log.Debug("configured line: %s",config.Desc())
     
 
 }
@@ -86,7 +86,7 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
     lines.white = gfx.WhiteColor()
     lines.object.Init()
 
-    lines.Reform()
+    lines.generateData()
 
 
     err = lines.program.LoadShaders("ident","ident")
@@ -130,12 +130,12 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
         model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
         gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
         
-        if true && line != nil {
+        if true && line != nil { //textures
             line.Texture.BindTexture()
             gl.DrawArrays(gl.TRIANGLES, int32(i* 2*3), 2*3)
 
         }
-        if true && line != nil {
+        if false && line != nil { //lines
             gl.LineWidth(3.0)
             lines.white.BindTexture()
             gl.DrawArrays(gl.LINE_STRIP, int32(i* 2*3), 2*3)
@@ -166,9 +166,8 @@ func NewLines(config *conf.LinesConfig) *Lines {
 
 func (lines *Lines) Desc() string {
     ret := fmt.Sprintf("lines[%d]",lines.lineCount)
-    item  := lines.buffer.Item(0)
-    if item != nil {
-        ret += " '" + (*item).Desc() + "'"
+    if lines.buffer.Tail(0) != nil {
+        ret += " '" + (*lines.buffer.Tail(0)).Desc() + "'"
     }
     return ret
 }

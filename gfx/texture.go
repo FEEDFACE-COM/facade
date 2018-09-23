@@ -15,6 +15,7 @@ import (
 )
 
 type Texture struct {
+    Name string
     Size struct{Width float32; Height float32}
     
     rgba *image.RGBA
@@ -23,8 +24,8 @@ type Texture struct {
 }
 
 
-func NewTexture() *Texture {
-    return &Texture{}    
+func NewTexture(name string) *Texture {
+    return &Texture{Name: name}    
 }
 
 func (texture *Texture) Close() {
@@ -88,16 +89,16 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
 
 
 func WhiteColor() *Texture {
-    ret := NewTexture()
+    ret := NewTexture("white")
     rgba := image.NewRGBA( image.Rect(0,0,2,2) )
     draw.Draw( rgba, rgba.Bounds(), image.White, image.ZP, draw.Src )
     ret.LoadRGBA(rgba)
-    ret.GenTexture()
+    ret.TexImage2D()
     return ret
 }
 
 
-func (texture *Texture) GenTexture() error {
+func (texture *Texture) TexImage2D() error {
     gl.GenTextures(1, &texture.texture)
     gl.ActiveTexture(gl.TEXTURE0)
     gl.BindTexture(gl.TEXTURE_2D, texture.texture)

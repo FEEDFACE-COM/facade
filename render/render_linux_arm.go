@@ -170,7 +170,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render(debug)
+                renderer.grid.Render(renderer.camera, debug)
             case conf.LINES:
                 renderer.lines.Render( renderer.camera, renderer.font, debug )
             case conf.TEST:
