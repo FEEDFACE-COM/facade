@@ -174,13 +174,13 @@ func (lines *Lines) Desc() string {
 }
 
 func (lines *Lines) Dump() string {
-    
-    ret := ""; t:=-1
-    for i:=0;i<len(lines.data); i+=5 {
-        if i%(5 * 6)  == 0 { ret += "\n"; t += 1 }
-        ret += fmt.Sprintf("  #%02d pos%v tex%v\n",t,lines.data[i:i+3],lines.data[i+3:i+5])
-    }
-    return ret    
+    return lines.buffer.Dump()   
+//    ret := ""; t:=-1
+//    for i:=0;i<len(lines.data); i+=5 {
+//        if i%(5 * 6)  == 0 { ret += "\n"; t += 1 }
+//        ret += fmt.Sprintf("  #%02d pos%v tex%v\n",t,lines.data[i:i+3],lines.data[i+3:i+5])
+//    }
+//    return ret    
 }
 
 

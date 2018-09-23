@@ -6,7 +6,6 @@ package gfx
 
 import (
     "strings"
-    "errors"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -32,7 +31,6 @@ func NewShader(name string, source string, shaderType uint32) *Shader {
 
 
 func (shader *Shader) CompileShader() error {
-    log.Debug("shader compile %s",shader.Name)
     shader.Shader = gl.CreateShader(shader.ShaderType)
     
     sources, free := gl.Strs(shader.ShaderSource+"\x00")
@@ -50,7 +48,7 @@ func (shader *Shader) CompileShader() error {
         logs := strings.Repeat("\x00", int(logLength+1))
         gl.GetShaderInfoLog(shader.Shader, logLength, nil, gl.Str(logs))
         log.Error("fail compile shader %s: %s",shader.Name,logs)
-        return errors.New("fail compile shader")
+        return log.NewError("fail compile shader %s: %s",shader.Name,logs)
     }
     
     
