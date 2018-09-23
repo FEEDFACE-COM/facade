@@ -2,6 +2,7 @@
 package main
 
 import (
+    "fmt"
     "os"
     "bufio"
     "image/png"
@@ -19,7 +20,8 @@ func NewTester() *Tester { return &Tester{} }
 func (tester *Tester) Configure(config *conf.Config) {
     
     tester.font = gfx.NewFont(nil)
-    tester.font.Configure(config.Font,conf.DIRECTORY)
+    tester.font.Configure(config.Font)
+    tester.font.Init(conf.DIRECTORY)
     log.Info("got font %s",tester.font.Desc())
     
     
@@ -27,34 +29,35 @@ func (tester *Tester) Configure(config *conf.Config) {
 
 func (tester *Tester) testCharMap() (*image.RGBA,error) {
     
-    var charmap *gfx.GlyphTexture
-    var err error
-    
-    charmap, err = tester.font.RenderGlyphTexture()
+    ret, err := tester.font.RenderGlyphRGBA()
     if err != nil {
         log.Error("fail to render glyphmap for %s: %s",tester.font.Desc(),err)
         return nil,err
     }
-    return charmap.Texture, nil
+    return ret, nil
 }
 
 
 func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
     
     
-    var texttex *gfx.TextTexture
-    var err error
-    texttex,err = tester.font.RenderTextTexture(str)
+    ret,err := tester.font.RenderTextRGBA(str)
     
     if err != nil {
         log.Error("fail to generate texture for '%s': %s",str,err)
         return nil,err
     }
-    return texttex.Texture, nil
+    return ret, nil
 }
 
 
 
+func (tester *Tester) Test(str string) {
+    test0,_ := tester.testCharMap()
+    test1,_ := tester.testTextTex(str)
+    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.font.Name))
+    SaveRGBA(test1,fmt.Sprintf("text-%s-%s",tester.font.Name,str))
+}
 
 
 func SaveRGBA(img *image.RGBA,outname string)  {

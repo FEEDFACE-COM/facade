@@ -92,7 +92,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.camera = gfx.NewCamera(config.Camera,float32(renderer.size.width),float32(renderer.size.height))
     renderer.mask = gfx.NewMask(config.Mask,float32(renderer.size.width),float32(renderer.size.height))
 
-    renderer.font.Configure(config.Font,conf.DIRECTORY)
+    renderer.font.Configure(config.Font)
 
     InitClock()
     renderer.now = Clock{}
@@ -114,7 +114,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
         renderer.mode = config.Mode
     }
     
-    renderer.font.Configure(config.Font,conf.DIRECTORY)
+    renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
     renderer.grid.Configure(config.Grid)
     renderer.test.Configure(config.Test)
@@ -147,6 +147,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
+    renderer.font.Init(conf.DIRECTORY)
     renderer.lines.Init(renderer.camera,renderer.font)
     renderer.grid.Init(renderer.camera)
     renderer.test.Init(renderer.camera)
