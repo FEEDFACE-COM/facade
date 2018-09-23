@@ -88,8 +88,8 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
 
     lines.Reform()
 
-    fragment := gfx.NewShader("identity",gfx.IDENTITY_FRAGMENT,gl.FRAGMENT_SHADER)
-    vertex := gfx.NewShader("identity",gfx.IDENTITY_VERTEX,gl.VERTEX_SHADER)
+    vertex := gfx.NewShader("identity",gfx.VertexShader["ident"],gl.VERTEX_SHADER)
+    fragment := gfx.NewShader("identity",gfx.FragmentShader["ident"],gl.FRAGMENT_SHADER)
     
     fragment.CompileShader()
     vertex.CompileShader()

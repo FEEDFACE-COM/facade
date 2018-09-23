@@ -77,33 +77,3 @@ func (shader *Shader) CompileShader() error {
 
 
 
-
-var IDENTITY_VERTEX = `
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-attribute vec3 vertex;
-attribute vec2 texcoord;
-
-varying vec2 fragcoord;
-
-void main() {
-    fragcoord = texcoord;
-    gl_Position = projection * view * model * vec4(vertex, 1);
-}
-` 
-
-
-
-var IDENTITY_FRAGMENT = `
-uniform sampler2D texture;
-
-varying vec2 fragcoord;
-
-void main() {
-    vec4 tex = texture2D(texture,fragcoord);
-    gl_FragColor = tex;
-}
-`
-
