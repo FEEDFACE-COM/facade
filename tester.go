@@ -29,7 +29,7 @@ func (tester *Tester) Configure(config *conf.Config) {
 
 func (tester *Tester) testCharMap() (*image.RGBA,error) {
     
-    ret, err := tester.font.RenderGlyphRGBA()
+    ret, err := tester.font.RenderMapRGBA()
     if err != nil {
         log.Error("fail to render glyphmap for %s: %s",tester.font.Desc(),err)
         return nil,err

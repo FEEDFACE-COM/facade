@@ -149,7 +149,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
     renderer.font.Init()
     renderer.lines.Init(renderer.camera,renderer.font)
-    renderer.grid.Init(renderer.camera)
+    renderer.grid.Init(renderer.camera,renderer.font)
     renderer.test.Init(renderer.camera)
     renderer.mask.Init()
 

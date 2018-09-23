@@ -52,10 +52,10 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
     }
     
     
-    if false {
+    if true {
         gl.LineWidth(3.0)
         grid.black.BindTexture()
-        gl.DrawArrays(gl.LINE_STRIP, 0, (2*3)*int32(grid.height*grid.width) )        
+        gl.DrawArrays(gl.LINES, 0, (2*3)*int32(grid.height*grid.width) )        
     }
     
     
@@ -95,7 +95,17 @@ func (grid *Grid) generateData() {
     
     for y := uint(0); y<grid.height; y++ {
         for x:=uint(0); x<grid.width; x++ {
-            grid.data = append(grid.data, gridVertices( float32(x),float32(y), w,h )... )
+            
+            var d float32
+            if grid.height % 2 == 0 {
+                d = 0.5
+            } else {
+                d = -0.5 
+            }
+            
+            xx := float32(x) - w * float32(grid.width)/2.  + d
+            yy := float32(y) - h * float32(grid.height)/2. + d
+            grid.data = append(grid.data, gridVertices( xx,yy, w,h )... )
         }
         
     }
@@ -108,15 +118,24 @@ func (grid *Grid) generateData() {
 
 
 
-func (grid *Grid) Init(camera *gfx.Camera) {
+func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
     log.Debug("create %s",grid.Desc())
 
 
-    err = grid.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
+//    err = grid.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
+
+    rgba, err := font.RenderMapRGBA()
     if err != nil {
-        log.Error("fail load grid file")
+        log.Error("fail render font map: %s",err)
     }
+    err = grid.texture.LoadRGBA(rgba)
+    if err != nil {
+        log.Error("fail load font map: %s",err)
+    }
+
+
+    
     grid.texture.TexImage2D()
     
     grid.black = gfx.BlackColor()

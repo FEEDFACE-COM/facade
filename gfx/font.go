@@ -22,8 +22,8 @@ var foreground = image.White
 var background = image.Black
 //var background = image.Transparent
 
-const GlyphCols  = 0x10
-const GlyphRows  = 0x10
+const GlyphCols  = 0x20
+const GlyphRows  = 0x08
 const GlyphCount = GlyphCols * GlyphRows
 
 
@@ -121,7 +121,7 @@ func (font *Font) Init() {
 
 
 
-func (font *Font) RenderGlyphRGBA() (*image.RGBA, error) {
+func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 
 //    const (
 //        pointSize = 72.0
@@ -198,11 +198,11 @@ func (font *Font) RenderGlyphRGBA() (*image.RGBA, error) {
 func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     
     
-//    const (
-//        pointSize = 72.0
-//        dpi = 144.0  
-//        rowSpacing = 1.25
-//    )
+    const (
+        pointSize = 72.0
+        dpi = 144.0  
+        rowSpacing = 1.25
+    )
 
     ctx := font.context
     ctx.SetDPI( dpi )
@@ -232,7 +232,7 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
 }
 
 const (
-    pointSize = 72.0
+    pointSize = 28.0
     dpi = 144.0  
     rowSpacing = 1.25
 )
