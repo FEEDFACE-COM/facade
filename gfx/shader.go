@@ -25,15 +25,15 @@ type UniformName string
 const (
     PROJECTION UniformName = "projection"
     MODEL      UniformName = "model"
-    VIEW       UniformName = "camera"
+    VIEW       UniformName = "view"
     TEXTURE    UniformName = "texture"
 )    
 
 type AttribName string
 const (
-    VERTEX     AttribName = "vert"    
+    VERTEX     AttribName = "vertex"    
     COLOR      AttribName = "color"    
-    TEXCOORD   AttribName = "vertTexCoord"
+    TEXCOORD   AttribName = "texcoord"
 )
 
 func NewShader(name string, source string, shaderType uint32) *Shader {
@@ -121,14 +121,17 @@ func CreateProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error)
 
 var IDENTITY_VERTEX = `
 uniform mat4 projection;
-uniform mat4 camera;
+uniform mat4 view;
 uniform mat4 model;
-attribute vec3 vert;
-attribute vec2 vertTexCoord;
-varying vec2 fragTexCoord;
+
+attribute vec3 vertex;
+attribute vec2 texcoord;
+
+varying vec2 fragcoord;
+
 void main() {
-    fragTexCoord = vertTexCoord;
-    gl_Position = projection * camera * model * vec4(vert, 1);
+    fragcoord = texcoord;
+    gl_Position = projection * view * model * vec4(vertex, 1);
 }
 ` 
 
@@ -136,9 +139,11 @@ void main() {
 
 var IDENTITY_FRAGMENT = `
 uniform sampler2D texture;
-varying vec2 fragTexCoord;
+
+varying vec2 fragcoord;
+
 void main() {
-    vec4 tex = texture2D(texture,fragTexCoord);
+    vec4 tex = texture2D(texture,fragcoord);
     gl_FragColor = tex;
 }
 `

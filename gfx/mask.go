@@ -89,24 +89,24 @@ func (mask *Mask) Init() {
 }
 
 const vertexShader = `
-attribute vec2 vertTexCoord;
-attribute vec3 vert;
+attribute vec2 texcoord;
+attribute vec3 vertex;
 attribute vec4 color;
 
-varying vec4 vertColor;
-varying vec2 fragTexCoord;
+varying vec4 fragcolor;
+varying vec2 fragcoord;
 
 void main() {
-    vertColor = vec4( vert, 1.0);
-    fragTexCoord = vertTexCoord;
-    gl_Position = vec4(vert,1);
+    fragcolor = vec4( vertex, 1.0);
+    fragcoord = texcoord;
+    gl_Position = vec4(vertex,1);
 }
 `
 
 
 const fragmentShader = `
-varying vec4 vertColor;
-varying vec2 fragTexCoord;
+varying vec4 fragcolor;
+varying vec2 fragcoord;
 
 float w = 0.005;
 
@@ -122,7 +122,7 @@ bool grid(vec2 pos) {
 
 void main() {
     vec4 col = vec4(0.0,0.0,0.0,0.0);
-    vec2 pos = fragTexCoord;
+    vec2 pos = fragcoord;
     
     if ( grid(pos) ) { col = vec4(1.,1.,1.,0.5); }
     
@@ -134,25 +134,5 @@ void main() {
 }
 `
 
-const foo = `
-bool test(vec2 pos) {
-    return false;
-}
-
-
-varying vec4 vertColor;
-varying vec2 fragTexCoord;
-void main() {
-    vec3 col = vec3(0.0,0.0,0.0);
-    vec2 pos = fragTexCoord;
-    if (pos.x >= 0.0 && pos.y >= 0.0) { col.g = 1.0; col.b = 1.0; }
-    if (pos.x >= 0.0 && pos.y <= 0.0) { col.g = 1.0;              }
-    if (pos.x <= 0.0 && pos.y >= 0.0) {              col.b = 1.0; }
-    if (pos.x <= 0.0 && pos.y <= 0.0) { col.g = 0.5; col.b = 0.5; }
-    float a = 0.5;
-    if ( abs(pos.x) < a && abs(pos.y) < a ) { col.r = 1.0; }
-    gl_FragColor = vec4(col,1.0);
-}
-`
 
 
