@@ -155,7 +155,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
     for {
         debug := now.frame % DEBUG_FRAMES == 0
-        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
+//        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
         now.Tick()
         

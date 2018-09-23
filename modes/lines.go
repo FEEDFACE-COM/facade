@@ -80,23 +80,19 @@ func (lines *Lines) Configure(config *conf.LinesConfig) {
 
 func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
+    log.Debug("create %s",lines.Desc())
 
-    log.Debug("create vbo[%d]",lines.lineCount)
 
     lines.white = gfx.WhiteColor()
     lines.object.Init()
 
     lines.Reform()
 
-    vertex := gfx.NewShader("identity",gfx.VertexShader["ident"],gl.VERTEX_SHADER)
-    fragment := gfx.NewShader("identity",gfx.FragmentShader["ident"],gl.FRAGMENT_SHADER)
-    
-    fragment.CompileShader()
-    vertex.CompileShader()
 
-
-    
-    if err = lines.program.CreateProgram(vertex,fragment); err != nil { log.Error("fail new program: %v",err) }
+    err = lines.program.LoadShaders("ident","ident")
+    if err != nil { log.Error("fail load lines shaders: %s",err) }
+    err = lines.program.LinkProgram(); 
+    if err != nil { log.Error("fail link lines program: %v",err) }
 
 
 }

@@ -45,11 +45,71 @@ func NewProgram(name string) *Program {
 
 func (program *Program) UseProgram() { gl.UseProgram(program.Program) }
 
-func (program *Program) CreateProgram(vertShader, fragShader *Shader) error {
+
+func (program *Program) LoadVertexShader(vertName string) error {
+    var err error
+    
+    // look up in maps
+    if VertexShader[vertName] != "" {
+        program.vertexShader = NewShader(vertName, VertexShader[vertName], gl.VERTEX_SHADER)
+        log.Debug("found vertex shader %s in map:\n%s",program.vertexShader.Name,program.vertexShader.ShaderSource)
+    }
+
+    if program.vertexShader == nil {
+        return log.NewError("unknown vertex shader in %s",vertName)
+    }
+
+    err = program.vertexShader.CompileShader()
+    if err != nil {
+        return log.NewError("fail compile vertex shader %s: %s",vertName,err)
+    }
+
+    return nil
+}    
+    
+    
+
+func (program *Program) LoadFragmentShader(fragName string) error {
+    var err error
+    
+    if FragmentShader[fragName] != "" {
+        program.fragmentShader = NewShader(fragName, FragmentShader[fragName], gl.FRAGMENT_SHADER)
+        log.Debug("found fragment shader %s in map:\n%s",program.fragmentShader.Name,program.fragmentShader.ShaderSource)
+    }
+
+
+    if program.fragmentShader == nil {
+        return log.NewError("unknown fragment shader in %s",fragName)
+    }
+    
+    err = program.fragmentShader.CompileShader()
+    if err != nil {
+        return log.NewError("fail compile fragment shader %s: %s",fragName,err)
+    }
+    
+    
+    return nil
+
+}
+
+func (program *Program) LoadShaders(vertName, fragName string) error {
+    var err error
+    err = program.LoadVertexShader(vertName)
+    if err != nil { return err }
+    err = program.LoadFragmentShader(fragName)
+    if err != nil { return err }
+    return nil
+}
+
+
+func (program *Program) LinkProgram() error {
 
     //todo: cleanup if already present?
 
-    program.vertexShader, program.fragmentShader = vertShader, fragShader
+    if program.vertexShader == nil || program.fragmentShader == nil {
+        return log.NewError("missing shader in %s",program.Name)
+    }
+
     
 
 	program.Program = gl.CreateProgram()

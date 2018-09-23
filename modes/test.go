@@ -124,28 +124,16 @@ func (test *Test) Init(camera *gfx.Camera) {
         test.object[name] = tmp
     }
     
-    test.vert =  map[string]*gfx.Shader{}
-    for name,src := range vertexShader {
-        test.vert[name] = gfx.NewShader(name,src,gl.VERTEX_SHADER)
-        if err := test.vert[name].CompileShader() ; err != nil {
-            log.Error("fail compile vertex shader %s: %s",name,err)
-        }
-    }
-    
-    test.frag =  map[string]*gfx.Shader{}
-    for name,src := range fragmentShader {
-        test.frag[name] = gfx.NewShader(name,src,gl.FRAGMENT_SHADER)
-        if err := test.frag[name].CompileShader() ; err != nil {
-            log.Error("fail compile fragment shader %s: %s",name,err)
-        }
-    }
-    
     var err error
-    test.program["test"] = gfx.NewProgram("test");
-    err = test.program["test"].CreateProgram(test.vert["ident"],test.frag["ident"])
-    if err != nil { log.Error("fail to create test: %s",err) }
-
+    {
+        test.program["ident"] = gfx.NewProgram("ident")
     
+        err = test.program["ident"].LoadShaders("ident", "ident")
+        if err != nil { log.Error("fail loading ident shaders: %s",err) }
+
+        err = test.program["ident"].LinkProgram()
+        if err != nil { log.Error("fail linking program: %s",err) }
+    }
     
 }
 

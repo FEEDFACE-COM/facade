@@ -74,18 +74,14 @@ func (mask *Mask) Init() {
     mask.object.Init()
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
-    
-    var err error
-
-    vert := NewShader("vert",VertexShader["mask"],gl.VERTEX_SHADER)
-    if err = vert.CompileShader(); err != nil { log.Error("fail compile mask vertex shader: %s",err) }
-    frag := NewShader("frag",FragmentShader["mask"],gl.FRAGMENT_SHADER)
-    if err = frag.CompileShader(); err != nil { log.Error("fail compile mask frag shader: %s",err) }
-    
+    var err error    
     mask.program = NewProgram("mask")
-    if err = mask.program.CreateProgram(vert,frag); err != nil { log.Error("fail to create program: %s",err) }
-    
-            
+
+    err = mask.program.LoadShaders("mask","mask")
+    if err != nil { log.Error("fail load mask shaders: %s",err) }
+
+    err = mask.program.LinkProgram(); 
+    if err != nil { log.Error("fail to link mask program: %s",err) }
 
 }
 
