@@ -16,7 +16,7 @@ func (config *MaskConfig) AddFlags(flags *flag.FlagSet) {
 }
 
 func NewMaskConfig() *MaskConfig { 
-    return &MaskConfig{Mask: true} 
+    return &MaskConfig{Mask: false} 
 }
 
 func (config *MaskConfig) Desc() string { return fmt.Sprintf("mask[]") }

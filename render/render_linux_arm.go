@@ -88,7 +88,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.grid = modes.NewGrid(config.Grid)
     renderer.lines = modes.NewLines(config.Lines)
     renderer.test = modes.NewTest(config.Test)
-    renderer.font = gfx.NewFont(config.Font)
+    renderer.font = gfx.NewFont(config.Font,conf.DIRECTORY)
     renderer.camera = gfx.NewCamera(config.Camera,float32(renderer.size.width),float32(renderer.size.height))
     renderer.mask = gfx.NewMask(config.Mask,float32(renderer.size.width),float32(renderer.size.height))
 
@@ -147,7 +147,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
-    renderer.font.Init(conf.DIRECTORY)
+    renderer.font.Init()
     renderer.lines.Init(renderer.camera,renderer.font)
     renderer.grid.Init(renderer.camera)
     renderer.test.Init(renderer.camera)
@@ -164,11 +164,13 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
+        debug := now.frame % DEBUG_FRAMES == 0
+
         switch renderer.mode {
             case conf.GRID:
                 renderer.grid.Render()
             case conf.LINES:
-                renderer.lines.Render( now.frame % DEBUG_FRAMES == 0 )
+                renderer.lines.Render( renderer.camera, renderer.font, debug )
             case conf.TEST:
                 renderer.test.Render()
         }
@@ -176,7 +178,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         gl.Disable(gl.DEPTH_TEST)
         renderer.mask.Render()
         
-        if now.frame % DEBUG_FRAMES == 0 { renderer.PrintDebug(now,&prev); prev = *now }
+        if debug { renderer.PrintDebug(now,&prev); prev = *now }
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()

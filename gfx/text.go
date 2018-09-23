@@ -24,19 +24,25 @@ func NewText(text string) *Text {
     return ret
 }
 
+const MAX_LENGTH = 20
 
 func (text *Text) RenderTexture(font *Font) {
 
     if text.Texture != nil { 
-        //REM, cleanup old, rerender!
+        //REM, cleanup old, then rerender!
         return; 
+    }
+    
+    txt := text.Text
+    if len(txt) > MAX_LENGTH {
+        txt = text.Text[:MAX_LENGTH]
     }
     
     text.Texture = NewTexture()
     if text.Text == "" {
         text.Texture.LoadEmpty()
     } else {
-        rgba, err := font.RenderTextRGBA(text.Text)
+        rgba, err := font.RenderTextRGBA(txt)
         if err != nil {
             
         } else {

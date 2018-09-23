@@ -19,8 +19,6 @@ type Lines struct {
     lineCount uint
 
     buffer *gfx.Buffer 
-    camera *gfx.Camera
-    font   *gfx.Font
 
     program uint32
     model mgl32.Mat4
@@ -108,8 +106,6 @@ func (lines *Lines) Dump() string {
 
 
 func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
-    lines.camera = camera
-    lines.font = font
     var err error
 
     log.Debug("create vbo[%d]",lines.lineCount)
@@ -131,23 +127,22 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
     lines.white = gfx.WhiteColor()
 
 //	gl.UseProgram(lines.program)
-//	lines.camera.Uniform(lines.program)
 
 
     
 }
 
 
-func (lines *Lines) Render(debug bool) {
+func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
 
-    gl.ClearColor(0.23,0.23,0.23,1.0)
+    gl.ClearColor(0.0,0.0,0.0,1.0)
 
     c := float32(lines.lineCount)  
-    z := 1./c
+    z := 1./(0.3*c)
 //    d := 1.5/c
     lines.model = mgl32.Ident4()
     lines.model = lines.model.Mul4( mgl32.Scale3D(z,z,z) )
-    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,c/2.+0.5,0.0) )
+//    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,c/2.+0.5,0.0) )
     
 
     gl.UseProgram(lines.program)
@@ -156,10 +151,9 @@ func (lines *Lines) Render(debug bool) {
 
     gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-    lines.camera.Uniform(lines.program)
+    camera.Uniform(lines.program)
     gl.ActiveTexture(gl.TEXTURE0)
 
-	lines.model = mgl32.Ident4()
 	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
@@ -174,32 +168,36 @@ func (lines *Lines) Render(debug bool) {
 
 
     const DRAW_TEXT = true
-    const DRAW_BOX = true
+    const DRAW_BOX = false
 
     if debug { log.Debug(lines.dumpVBO()) }
 
-    d := float32(lines.lineCount)/2.
-    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,d,0.0) )
+    
+    var d float32 
+    if lines.lineCount % 2 == 0 {
+        d = float32( int(lines.lineCount/2) ) + 0.5
+    } else {
+        d = float32( int(lines.lineCount/2) ) + 1.0
+    }
+
+    lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
     
     for i:=uint(0);i<lines.lineCount;i++ {
         line  := lines.buffer.Tail(i)
-        lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,-1.0,0.0) )
+        lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
         gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
         
         idx := int32(i* 2*3)
 
-        if DRAW_TEXT {
-            if line != nil { 
-                
-                if debug { log.Debug("got tex %.0fx%.0f",line.Texture.Size.Width,line.Texture.Size.Height) }
+        if DRAW_TEXT && line != nil {
+            if debug { log.Debug("got tex %.0fx%.0f",line.Texture.Size.Width,line.Texture.Size.Height) }
 //                gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
-                line.Texture.Bind()
+            line.Texture.Bind()
 //                gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
-                gl.DrawArrays(gl.TRIANGLES, idx, 2*3)
-            } 
+            gl.DrawArrays(gl.TRIANGLES, idx, 2*3)
 
         }
-        if DRAW_BOX {
+        if DRAW_BOX && line != nil {
             gl.LineWidth(3.0)
             lines.white.Bind()
 //            gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])

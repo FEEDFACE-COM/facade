@@ -18,8 +18,8 @@ import (
 
 
 
-var foreground = image.Black
-var background = image.White
+var foreground = image.White
+var background = image.Black
 //var background = image.Transparent
 
 const GlyphCols  = 0x10
@@ -32,9 +32,13 @@ const maxDimension = 8192
 
 type Font struct {
     Name string
+    directory string
+
     font *truetype.Font
     context *freetype.Context
     tmp *image.RGBA
+    max struct {w int; h int}
+    Widths [GlyphCols][GlyphRows]int
 }
 
 
@@ -54,19 +58,21 @@ type TextTexture struct {
 }
 
 
-func NewFont(config *conf.FontConfig) *Font {
-    ret := &Font{}
+func NewFont(config *conf.FontConfig, directory string) *Font {
+    ret := &Font{directory: directory}
     ret.tmp = image.NewRGBA( image.Rect(0,0,maxDimension,maxDimension) )
-    if config != nil {
-        ret.Name = config.Name
-    }
+    ret.Name = config.Name
     return ret
 }
 
 
 func (font *Font) Configure(config *conf.FontConfig) {
     log.Debug("configure font: %s",config.Desc())
-    font.Name = config.Name
+    
+    //regen?
+    if font.Name != config.Name || font.font == nil {
+        font.Name = config.Name
+    }
     
 }
 
@@ -99,35 +105,38 @@ func (font *Font) loadFont(fontfile string) error {
     return nil
 }
 
-func (font *Font) Init(directory string) {
-    err := font.loadFont(directory+font.Name)
+func (font *Font) Init() {
+    err := font.loadFont(font.directory+font.Name)
     if err != nil {
         log.Error("fail to load font %s: %s",font.Name,err)
         return
     }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
-        
+
+    font.Widths, font.max = font.findSizes()
+    log.Debug("init font[%s %dx%d]",font.Name,font.max.w,font.max.h)
 }
 
 
 
 func (font *Font) RenderGlyphRGBA() (*image.RGBA, error) {
 
-    const (
-        pointSize = 72.0
-        rowSpacing = 1.0
-        dpi = 144.0  
-    )
+//    const (
+//        pointSize = 72.0
+//        rowSpacing = 1.0
+//        dpi = 144.0  
+//    )
 
 
 //    var max struct{w int; h int}
 
 //    var err error
     
-    _,max := font.findSizes(pointSize,dpi,rowSpacing)
-    width  := max.w
-    height := max.h
+    
+//    _,max := font.findSizes(pointSize,dpi,rowSpacing)
+    width  := font.max.w
+    height := font.max.h
 
 
     ret := image.NewRGBA( image.Rect(0,0,GlyphCols*width,2*GlyphRows*height) )
@@ -188,11 +197,11 @@ func (font *Font) RenderGlyphRGBA() (*image.RGBA, error) {
 func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     
     
-    const (
-        pointSize = 72.0
-        dpi = 144.0  
-        rowSpacing = 1.25
-    )
+//    const (
+//        pointSize = 72.0
+//        dpi = 144.0  
+//        rowSpacing = 1.25
+//    )
 
     ctx := font.context
     ctx.SetDPI( dpi )
@@ -221,6 +230,11 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     return ret,nil
 }
 
+const (
+    pointSize = 72.0
+    dpi = 144.0  
+    rowSpacing = 1.25
+)
 
 
 
@@ -228,7 +242,7 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
 
 
 
-func (font *Font) findSizes(pointSize,dpi,rowSpacing float64) ([GlyphCols][GlyphRows]int, struct{w int; h int}) {
+func (font *Font) findSizes() ([GlyphCols][GlyphRows]int, struct{w int; h int}) {
     var widths [GlyphCols][GlyphRows]int    
     var max = struct {w int; h int} { 0, 0 }
 //    var max fixed.Point26_6 = freetype.Pt(0,0)
