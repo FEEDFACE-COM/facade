@@ -22,7 +22,7 @@ const (
 
 
 func NewGridConfig() *GridConfig {
-    return &GridConfig{Width: 16, Height: 8}
+    return &GridConfig{Width: 3, Height: 2}
 }
 
 

@@ -36,9 +36,9 @@ func (texture *Texture) Close() {
 }
 
 
-func (texture *Texture) Uniform(program *Program) {
-	texture.textureUniform = program.Uniform1i(TEXTURE,0)
-}
+//func (texture *Texture) Uniform(program *Program) {
+//	texture.textureUniform = program.Uniform1i(TEXTURE,0)
+//}
 
 func (texture *Texture) BindTexture() {
     gl.BindTexture(gl.TEXTURE_2D, texture.texture)    
@@ -61,6 +61,7 @@ func (texture *Texture) LoadFile(path string) error {
     rgba := image.NewRGBA(img.Bounds())
     draw.Draw(rgba, rgba.Bounds(), img, image.Point{0,0}, draw.Src)
     err = texture.LoadRGBA(rgba)
+    log.Debug("read texture file %s",path)
     return err
 }
     
@@ -92,6 +93,15 @@ func WhiteColor() *Texture {
     ret := NewTexture("white")
     rgba := image.NewRGBA( image.Rect(0,0,2,2) )
     draw.Draw( rgba, rgba.Bounds(), image.White, image.ZP, draw.Src )
+    ret.LoadRGBA(rgba)
+    ret.TexImage2D()
+    return ret
+}
+
+func BlackColor() *Texture {
+    ret := NewTexture("black")
+    rgba := image.NewRGBA( image.Rect(0,0,2,2) )
+    draw.Draw( rgba, rgba.Bounds(), image.Black, image.ZP, draw.Src )
     ret.LoadRGBA(rgba)
     ret.TexImage2D()
     return ret

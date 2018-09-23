@@ -3,6 +3,7 @@ package modes
 
 import(
     "fmt"
+	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
     log "../log"
@@ -12,6 +13,7 @@ import(
 type Grid struct {
     width uint
     height uint
+    
 
     buffer *gfx.Buffer
     
@@ -20,32 +22,40 @@ type Grid struct {
     object *gfx.Object
     data []float32
     
-    white *gfx.Texture
+    black *gfx.Texture
 }
 
 
 
 func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
-    gl.ClearColor(0.5,0.5,0.5,1.0)
-    
-    
+    gl.ClearColor(1.0,1.0,1.0,1.0)
     gl.ActiveTexture(gl.TEXTURE0)
+    
+
+    
     grid.program.UseProgram()
     grid.object.BindBuffer()
+    
+
+    model := mgl32.Ident4()
+    grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     camera.Uniform(grid.program)
+    grid.program.Uniform1i(gfx.TEXTURE,0)
     
     grid.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
     grid.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
     
+
+    if true {    
+        grid.texture.BindTexture()
+        gl.DrawArrays(gl.TRIANGLES, 0, (2*3)*int32(grid.height*grid.width)  )
+    }
     
-    grid.texture.BindTexture()
-    gl.DrawArrays(gl.TRIANGLES, 0, 2*3)
     
-    
-    if true {
+    if false {
         gl.LineWidth(3.0)
-        grid.white.BindTexture()
-        gl.DrawArrays(gl.LINE_STRIP, 0, 2*3)        
+        grid.black.BindTexture()
+        gl.DrawArrays(gl.LINE_STRIP, 0, (2*3)*int32(grid.height*grid.width) )        
     }
     
     
@@ -53,6 +63,75 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
 
 
 
+
+
+
+
+
+
+
+func gridVertices(x,y,w,h float32) []float32 {
+    return []float32{
+        
+        -w/2+x,  h/2+y, 0,            0,  0,
+        -w/2+x, -h/2+y, 0,            0,  1,
+         w/2+x, -h/2+y, 0,            1,  1,
+         w/2+x, -h/2+y, 0,            1,  1,
+         w/2+x,  h/2+y, 0,            1,  0,
+        -w/2+x,  h/2+y, 0,            0,  0,
+        
+    }
+    
+}
+
+
+
+
+
+func (grid *Grid) generateData() {
+    grid.data = []float32{}
+    
+    var w,h float32 = 1.0,1.0
+    
+    for y := uint(0); y<grid.height; y++ {
+        for x:=uint(0); x<grid.width; x++ {
+            grid.data = append(grid.data, gridVertices( float32(x),float32(y), w,h )... )
+        }
+        
+    }
+    
+    grid.data = append(grid.data, gfx.QuadVertices(w,h)...)
+    grid.object.BufferData(len(grid.data)*4,grid.data)
+    
+}
+
+
+
+
+func (grid *Grid) Init(camera *gfx.Camera) {
+    var err error
+    log.Debug("create %s",grid.Desc())
+
+
+    err = grid.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
+    if err != nil {
+        log.Error("fail load grid file")
+    }
+    grid.texture.TexImage2D()
+    
+    grid.black = gfx.BlackColor()
+    grid.object.Init()
+    
+    grid.generateData()
+
+    err = grid.program.LoadShaders("grid","grid")
+    if err != nil { log.Error("fail load grid shaders: %s",err) }
+    err = grid.program.LinkProgram(); 
+    if err != nil { log.Error("fail link grid program: %v",err) }
+
+    
+
+}
 
 
 
@@ -69,45 +148,6 @@ func (grid *Grid) Queue(text string) {
 
 
 
-
-
-
-
-
-
-
-
-func (grid *Grid) generateData() {
-    grid.data = []float32{}
-    
-    
-    grid.data = append(grid.data, gfx.QuadVertices(1.,1.)...)
-    grid.object.BufferData(len(grid.data)*4,grid.data)
-    
-}
-
-func (grid *Grid) Init(camera *gfx.Camera) {
-    var err error
-    log.Debug("create %s",grid.Desc())
-
-
-    err = grid.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
-    if err != nil {
-        log.Error("fail load grid file")
-    }
-    grid.white = gfx.WhiteColor()
-    grid.object.Init()
-    
-    grid.generateData()
-
-    err = grid.program.LoadShaders("grid","grid")
-    if err != nil { log.Error("fail load grid shaders: %s",err) }
-    err = grid.program.LinkProgram(); 
-    if err != nil { log.Error("fail link grid program: %v",err) }
-
-    
-
-}
 
 func (grid *Grid) Configure(config *conf.GridConfig) {
     if config == nil {
@@ -127,7 +167,9 @@ func (grid *Grid) Configure(config *conf.GridConfig) {
 }
 
 func NewGrid(config *conf.GridConfig) *Grid {
-    if config == nil { config = conf.NewGridConfig() }
+    if config == nil { 
+        config = conf.NewGridConfig() 
+    }
     ret := &Grid{width: config.Width, height: config.Height}
     ret.buffer = gfx.NewBuffer(config.Height)
     ret.program = gfx.NewProgram("grid")

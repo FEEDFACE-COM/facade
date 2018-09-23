@@ -102,6 +102,7 @@ func (font *Font) loadFont(fontfile string) error {
         log.Error("fail to parse font %s: %s",fontfile,err)
         return err
     }
+    log.Debug("read font file %s",fontfile)
     return nil
 }
 
