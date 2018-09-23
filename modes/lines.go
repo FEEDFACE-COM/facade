@@ -28,9 +28,6 @@ type Lines struct {
     object uint32
     verts []float32
 
-    vertAttrib uint32
-    texCoordAttrib uint32
-    
     white *gfx.Texture
 
 }
@@ -134,6 +131,8 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
 
 
 func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
+    
+    if debug { log.Debug(">render %s",gl.ErrorString( gl.GetError() ) ) } 
 
     gl.ClearColor(0.0,0.0,0.0,1.0)
 
@@ -154,17 +153,23 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
     camera.Uniform(lines.program)
     gl.ActiveTexture(gl.TEXTURE0)
 
-	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
-	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
+    lines.modelUniform = gfx.UniformMatrix4fv(lines.program, gfx.MODEL, 1, &lines.model[0] )
 
-	lines.vertAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vert\x00")))
-	gl.EnableVertexAttribArray(lines.vertAttrib) 
-	gl.VertexAttribPointer(lines.vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+//	lines.modelUniform = gl.GetUniformLocation(lines.program, gl.Str("model\x00"))
+//	gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
 
-	lines.texCoordAttrib = uint32(gl.GetAttribLocation(lines.program, gl.Str("vertTexCoord\x00")))
-	gl.EnableVertexAttribArray(lines.texCoordAttrib)
-	gl.VertexAttribPointer(lines.texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+    _ = gfx.VertexAttribPointer(lines.program,gfx.VERTEX,3,5*4,0)
+
+//	vertAttrib := uint32(gl.GetAttribLocation(lines.program, gl.Str("vert\x00")))
+//	gl.EnableVertexAttribArray(vertAttrib) 
+//	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+
+    _ = gfx.VertexAttribPointer(lines.program,gfx.TEXCOORD, 2, 5*4, 3*4)
+
+//	texCoordAttrib := uint32(gl.GetAttribLocation(lines.program, gl.Str("vertTexCoord\x00")))
+//	gl.EnableVertexAttribArray(texCoordAttrib)
+//	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 
 
     const DRAW_TEXT = true
@@ -185,12 +190,13 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
     for i:=uint(0);i<lines.lineCount;i++ {
         line  := lines.buffer.Tail(i)
         lines.model = lines.model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
+
         gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
         
         idx := int32(i* 2*3)
 
         if DRAW_TEXT && line != nil {
-            if debug { log.Debug("got tex %.0fx%.0f",line.Texture.Size.Width,line.Texture.Size.Height) }
+//            if debug { log.Debug("got tex %.0fx%.0f",line.Texture.Size.Width,line.Texture.Size.Height) }
 //                gl.UniformMatrix4fv(lines.modelUniform, 1, false, &lines.model[0])
             line.Texture.Bind()
 //                gl.BindBuffer(gl.ARRAY_BUFFER,lines.object) 
@@ -207,6 +213,7 @@ func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
         
     }
     
+    if debug { log.Debug("<render %s",gl.ErrorString( gl.GetError() ) ) } 
 
 
 

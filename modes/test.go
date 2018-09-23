@@ -103,18 +103,24 @@ func (test *Test) RenderAxis() {
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
     gl.BufferData(gl.ARRAY_BUFFER, len(axis)*4, gl.Ptr(axis), gl.STATIC_DRAW)
     
-    vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
-    gl.EnableVertexAttribArray(vertAttrib) 
-    gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(0))
+    _ = gfx.VertexAttribPointer(program, gfx.VERTEX, 3, (3+4)*4, 0 )
     
-    colorAttrib := uint32(gl.GetAttribLocation(program, gl.Str("color\x00")))
-    gl.EnableVertexAttribArray(colorAttrib) 
-    gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(3*4))
+//    vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
+//    gl.EnableVertexAttribArray(vertAttrib) 
+//    gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(0))
+
+    _ = gfx.VertexAttribPointer(program, gfx.COLOR, 4, (3+4)*4, 3*4 )
+    
+//    colorAttrib := uint32(gl.GetAttribLocation(program, gl.Str("color\x00")))
+//    gl.EnableVertexAttribArray(colorAttrib) 
+//    gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, (3+4)*4, gl.PtrOffset(3*4))
     
     model := mgl32.Ident4()
     //	model = mgl32.Scale3D(0.25,0.25,0.25)
-    modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
-    gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+//    modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
+//    gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+    
+    gfx.UniformMatrix4fv(program,gfx.MODEL,1,&model[0])
   
   
     gl.LineWidth(4.0)    
@@ -125,48 +131,13 @@ func (test *Test) RenderAxis() {
 }
 
 
-func (test *Test) RenderMask() {
-    object := test.object["quad"]
-    program := test.program["mask"]
-
-    gl.UseProgram(program)
-    test.camera.Uniform(program)    
-
-    var w float32 = 2.0
-    var h float32 = 2.0
-    var mask []float32 = gfx.QuadVertices(w,h)
-//        var mask []float32 = []float32{
-//            0.0, 0.0, 0.0,     1.0, 00, 1.0, 1.0,
-//            0.0,   h, 0.0,     1.0, 00, 1.0, 1.0,
-//              w,   h, 0.0,     1.0, 00, 1.0, 1.0,
-//              w,   h, 0.0,     1.0, 00, 1.0, 1.0,
-//              w, 0.0, 0.0,     1.0, 00, 1.0, 1.0,              
-//            0.0, 0.0, 0.0,     1.0, 00, 1.0, 1.0,
-//        }
-    gl.BindBuffer(gl.ARRAY_BUFFER,object) 
-    gl.BufferData(gl.ARRAY_BUFFER, len(mask)*4, gl.Ptr(mask), gl.STATIC_DRAW)
-
-    vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
-    gl.EnableVertexAttribArray(vertAttrib) 
-    gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, (3+2)*4, gl.PtrOffset(0))
-
-
-    gl.LineWidth(4.0)   
-    gl.BindBuffer(gl.ARRAY_BUFFER,object) 
-    gl.DrawArrays(gl.TRIANGLES, 0, 3*2 )
-}
-
 
 
 
 func (test *Test) Render() {
     gl.ClearColor(.5,.5,.5,1.)
     
-
-        
-    
     if true { test.RenderAxis() }
-    if false { test.RenderMask() }
         
 }
 

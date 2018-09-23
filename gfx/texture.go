@@ -39,6 +39,8 @@ func (texture *Texture) Close() {
 func (texture *Texture) Uniform(program uint32) {
 	texture.textureUniform = gl.GetUniformLocation(program, gl.Str("texture\x00"))
 	gl.Uniform1i(texture.textureUniform, 0)
+
+//	texture.textureUniform = Uniform1i(program,TEXTURE,0)
 }
 
 func (texture *Texture) Bind() {

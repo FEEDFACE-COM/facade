@@ -20,11 +20,48 @@ type Shader struct {
 }
 
 
+
+type UniformName string
+const (
+    PROJECTION UniformName = "projection"
+    MODEL      UniformName = "model"
+    VIEW       UniformName = "camera"
+    TEXTURE    UniformName = "texture"
+)    
+
+type AttribName string
+const (
+    VERTEX     AttribName = "vert"    
+    COLOR      AttribName = "color"    
+    TEXCOORD   AttribName = "vertTexCoord"
+)
+
 func NewShader(name string, source string, shaderType uint32) *Shader {
     ret := &Shader{Name: name, ShaderSource: source, ShaderType: shaderType}
     return ret    
 }
 
+
+
+func VertexAttribPointer(program uint32, name AttribName, size int32, stride int32, offset int) uint32 {
+    ret := uint32( gl.GetAttribLocation(program, gl.Str(string(name)+"\x00")) )
+    gl.EnableVertexAttribArray(ret)
+    gl.VertexAttribPointer(ret, size, gl.FLOAT, false, stride, gl.PtrOffset(offset) )
+    return ret
+}
+
+
+func UniformMatrix4fv(program uint32, name UniformName, count int32, value *float32) int32 {
+    ret := gl.GetUniformLocation(program, gl.Str(string(name)+"\x00") )
+    gl.UniformMatrix4fv(ret, count, false, value)
+    return ret
+}
+
+func Uniform1i(program uint32, name UniformName, value int32) int32 {
+    ret := gl.GetUniformLocation(program, gl.Str(string(name)+"\x00") )
+    gl.Uniform1i(ret, value)
+    return ret
+}
 
 func (shader *Shader) Compile() error {
     log.Debug("shader compile %s",shader.Name)
@@ -73,8 +110,8 @@ func CreateProgram(vertexShader *Shader, fragmentShader *Shader) (uint32, error)
 		return 0, errors.New("fail create program")
 	}
 
-//	gl.DeleteShader(vertexShader)
-//	gl.DeleteShader(fragmentShader)
+	gl.DeleteShader(vertexShader.Shader)
+	gl.DeleteShader(fragmentShader.Shader)
 
 	return program, nil
     
