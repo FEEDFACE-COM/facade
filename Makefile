@@ -8,7 +8,10 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-SOURCE_FILES=$(wildcard *.go */*.go)
+SOURCE_FILES=$(wildcard *.go */*.go) gfx/fragmentShader.go gfx/vertexShader.go
+SHADER_FILES=$(wildcard shader/*.vert shader/*.frag)
+
+
 
 LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
 
@@ -33,6 +36,7 @@ info:
 	@echo ""
 	@echo "### Build Variables ###"
 	@echo " source     ${SOURCE_FILES}"
+	@echo " shader     ${SHADER_FILES}"
 	
 build: ${BUILD_PRODUCT}
 
@@ -45,10 +49,39 @@ clean:
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
-${BUILD_PRODUCT}: ${SOURCE_FILES}
+${BUILD_PRODUCT}: ${SOURCE_FILES} ${SHADER_FILES}
 	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
+
+
+gfx/fragmentShader.go: shader/*.frag
+	echo "" >|$@
+	echo "// +build linux,arm" >>$@
+	echo "package gfx" >>$@
+	echo "var FragmentShader = map[string]string{" >>$@
+	for src in shader/*.frag; do \
+      name=$$(basename $$src | cut -d. -f -1); \
+      echo "\n\n\"$${name}\":\`";\
+      cat $$src; \
+      echo "\`,\n\n"; \
+    done >>$@
+	echo "}" >>$@
+	
+	
+gfx/vertexShader.go: shader/*.vert
+	echo "" >|$@
+	echo "// +build linux,arm" >>$@
+	echo "package gfx" >>$@
+	echo "var VertexShader = map[string]string{" >>$@
+	for src in shader/*.vert; do \
+      name=$$(basename $$src | cut -d. -f -1); \
+      echo "\n\n\"$${name}\":\`";\
+      cat $$src; \
+      echo "\`,\n\n"; \
+    done >>$@
+	echo "}" >>$@
 
 
 
 
 .PHONY: help info build clean get 
+
