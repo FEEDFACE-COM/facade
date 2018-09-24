@@ -23,12 +23,13 @@ type Grid struct {
     data []float32
     
     black *gfx.Texture
+    white *gfx.Texture
 }
 
 
 
 func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
-    gl.ClearColor(1.0,1.0,1.0,1.0)
+    gl.ClearColor(0,0,0,1)
     gl.ActiveTexture(gl.TEXTURE0)
     
 
@@ -36,14 +37,29 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
     grid.program.UseProgram()
     grid.object.BindBuffer()
     
+    
+    
+    gridSize := mgl32.Vec2{ 
+        float32(grid.width)/2.  - 0.5 ,
+        float32(grid.height)/2. - 0.5 ,
+    }
+    grid.program.Uniform2fv(gfx.GRIDSIZE, 1, &gridSize[0] );
+    
+    tileSize := mgl32.Vec2{
+        1.0,
+        1.0,    
+    }
+    grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
     model := mgl32.Ident4()
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
+    grid.program.VertexAttribPointer(gfx.VERTEX,3,(3+2+2+2)*4,0)
+    grid.program.VertexAttribPointer(gfx.GRIDCOORD,2,(3+2+2+2)*4,(3)*4)
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,2,(3+2+2+2)*4,(3+2)*4)
+    grid.program.VertexAttribPointer(gfx.TEXOFFSET,2,(3+2+2+2)*4,(3+2+2)*4)
     
 
     if true {    
@@ -52,9 +68,9 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
     }
     
     
-    if true {
+    if false {
         gl.LineWidth(3.0)
-        grid.black.BindTexture()
+        grid.white.BindTexture()
         gl.DrawArrays(gl.LINES, 0, (2*3)*int32(grid.height*grid.width) )        
     }
     
@@ -70,47 +86,62 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
 
 
 
-func gridVertices(x,y,w,h float32) []float32 {
+func gridVertices(size,gridcoord,tilesize,offset mgl32.Vec2) []float32 {
+    w, h := size[0], size[1]
+    x, y := gridcoord[0], gridcoord[1]
+    tw, th := tilesize[0], tilesize[1]
+    offx,offy := offset[0],offset[1]
     return []float32{
-        
-        -w/2+x,  h/2+y, 0,            0,  0,
-        -w/2+x, -h/2+y, 0,            0,  1,
-         w/2+x, -h/2+y, 0,            1,  1,
-         w/2+x, -h/2+y, 0,            1,  1,
-         w/2+x,  h/2+y, 0,            1,  0,
-        -w/2+x,  h/2+y, 0,            0,  0,
+        -w/2,  h/2, 0,            x, y,        0,  0,       offx, offy,
+        -w/2, -h/2, 0,            x, y,        0, th,       offx, offy,
+         w/2, -h/2, 0,            x, y,       tw, th,       offx, offy,
+         w/2, -h/2, 0,            x, y,       tw, th,       offx, offy,
+         w/2,  h/2, 0,            x, y,       tw,  0,       offx, offy,
+        -w/2,  h/2, 0,            x, y,        0,  0,       offx, offy,
         
     }
     
 }
 
 
+func getOffset(chr byte) mgl32.Vec2 {
+    cols := byte(gfx.GlyphCols)
+//    rows:= byte(gfx.GlyphRows)
 
+    col := chr % cols
+    row := chr / cols
+    return mgl32.Vec2{
+        float32(col),
+        float32(row),
+        
+    }
+}
 
 
 func (grid *Grid) generateData() {
+    log.Debug("grid generate data") 
     grid.data = []float32{}
     
-    var w,h float32 = 1.0,1.0
     
     for y := uint(0); y<grid.height; y++ {
+        line  := grid.buffer.Tail(y)
+
         for x:=uint(0); x<grid.width; x++ {
-            
-            var d float32
-            if grid.height % 2 == 0 {
-                d = 0.5
-            } else {
-                d = -0.5 
-            }
-            
-            xx := float32(x) - w * float32(grid.width)/2.  + d
-            yy := float32(y) - h * float32(grid.height)/2. + d
-            grid.data = append(grid.data, gridVertices( xx,yy, w,h )... )
+            chr := byte(' ')
+            if line != nil && int(x) < len(line.Text) {
+                chr = line.Text[x]
+            }    
+
+            size := mgl32.Vec2{1, 1}
+            gridcoord := mgl32.Vec2{float32(x),float32(y)}
+            tilesize := mgl32.Vec2{  1, 1 }
+            offset := getOffset( byte(chr) )
+            grid.data = append(grid.data, gridVertices(size,gridcoord,tilesize,offset)... )
+
         }
+            
         
     }
-    
-    grid.data = append(grid.data, gfx.QuadVertices(w,h)...)
     grid.object.BufferData(len(grid.data)*4,grid.data)
     
 }
@@ -139,6 +170,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.texture.TexImage2D()
     
     grid.black = gfx.BlackColor()
+    grid.white = gfx.WhiteColor()
     grid.object.Init()
     
     grid.generateData()
@@ -181,6 +213,8 @@ func (grid *Grid) Configure(config *conf.GridConfig) {
         grid.height = config.Height
         grid.buffer.Resize(config.Height)    
     }
+
+    grid.generateData()
 
     log.Debug("configured grid: %s",config.Desc())
 }

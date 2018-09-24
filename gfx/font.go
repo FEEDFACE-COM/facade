@@ -157,7 +157,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
         for x:=0; x<GlyphCols; x++ {
             str := fmt.Sprintf("%c",rune(c))
             if c < 0x20 || ( c >= 0x7f && c < 0xa0 ) {
-                str = " "
+                str = "X"
             }
 
             pos := freetype.Pt( x*width, 2*y*height+height)
@@ -268,7 +268,7 @@ func (font *Font) findSizes() ([GlyphCols][GlyphRows]int, struct{w int; h int}) 
         for x:=0; x<GlyphCols; x++ {
             str := fmt.Sprintf("%c",rune(c))
             if c < 0x020 || ( c>= 0x7f && c < 0xa0) {
-                str = " "
+                str = "X"
             }
             dim,err := ctx.DrawString(str, freetype.Pt(0,0))
             if err != nil {

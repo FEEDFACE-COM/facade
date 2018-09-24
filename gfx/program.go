@@ -13,21 +13,6 @@ import (
     
 )
 
-type UniformName string
-const (
-    PROJECTION UniformName = "projection"
-    MODEL      UniformName = "model"
-    VIEW       UniformName = "view"
-    TEXTURE    UniformName = "texture"
-)    
-
-type AttribName string
-const (
-    VERTEX     AttribName = "vertex"    
-    COLOR      AttribName = "color"    
-    TEXCOORD   AttribName = "texcoord"
-)
-
 
 type Program struct {
     Name string
@@ -185,6 +170,19 @@ func (program *Program) UniformMatrix4fv(name UniformName, count int32, value *f
     gl.UniformMatrix4fv(ret, count, false, value)
     return ret
 }
+
+func (program *Program) Uniform2f(name UniformName, value0, value1 float32) int32 {
+    ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    gl.Uniform2f(ret, value0, value1)
+    return ret
+}
+
+func (program *Program) Uniform2fv(name UniformName, count int32, value *float32) int32 {
+    ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    gl.Uniform2fv(ret,count, value)
+    return ret
+}
+
 
 func (program *Program) Uniform1i(name UniformName, value int32) int32 {
     ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )

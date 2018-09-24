@@ -19,6 +19,26 @@ type Shader struct {
 }
 
 
+type UniformName string
+const (
+    PROJECTION UniformName = "projection"
+    MODEL      UniformName = "model"
+    VIEW       UniformName = "view"
+    TEXTURE    UniformName = "texture"
+    GRIDSIZE   UniformName = "gridsize"
+    TILESIZE   UniformName = "tilesize"
+)    
+
+type AttribName string
+const (
+    VERTEX     AttribName = "vertex"    
+    COLOR      AttribName = "color"    
+    TEXCOORD   AttribName = "texcoord"
+    GRIDCOORD  AttribName = "gridcoord"
+    TEXOFFSET  AttribName = "texoffset"
+)
+
+
 
 
 
