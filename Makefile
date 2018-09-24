@@ -8,7 +8,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-SOURCE_FILES=$(wildcard *.go */*.go) gfx/fragmentShader.go gfx/vertexShader.go
+SOURCE_FILES=$(wildcard *.go */*.go) gfx/shaderFragment.go gfx/shaderVertex.go
 SHADER_FILES=$(wildcard shader/*.vert shader/*.frag)
 
 
@@ -44,7 +44,7 @@ get:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} 
+	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} gfx/shaderFragment.go gfx/shaderVertex.go
 
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
@@ -53,7 +53,7 @@ ${BUILD_PRODUCT}: ${SOURCE_FILES} ${SHADER_FILES}
 	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
 
-gfx/fragmentShader.go: shader/*.frag
+gfx/shaderFragment.go: shader/*.frag
 	echo "" >|$@
 	echo "// +build linux,arm" >>$@
 	echo "package gfx" >>$@
@@ -67,7 +67,7 @@ gfx/fragmentShader.go: shader/*.frag
 	echo "}" >>$@
 	
 	
-gfx/vertexShader.go: shader/*.vert
+gfx/shaderVertex.go: shader/*.vert
 	echo "" >|$@
 	echo "// +build linux,arm" >>$@
 	echo "package gfx" >>$@

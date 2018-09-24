@@ -82,8 +82,6 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
     texture.Size.Width = float32(texture.rgba.Rect.Size().X)
     texture.Size.Height = float32(texture.rgba.Rect.Size().Y)
 
-    log.Debug("got tex %5.1fx%5.1f",texture.Size.Width,texture.Size.Height)
-    
     return nil
 }
 

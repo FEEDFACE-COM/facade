@@ -16,8 +16,8 @@ type Camera struct {
     projection mgl32.Mat4
     projectionUniform int32
     
-    camera mgl32.Mat4
-    cameraUniform int32
+    view mgl32.Mat4
+    viewUniform int32
     
     Width float32
     Height float32
@@ -49,22 +49,23 @@ func NewCamera(config *conf.CameraConfig, width,height float32) *Camera {
 
 func (camera *Camera) Uniform(program *Program) {
 	camera.projectionUniform = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
-	camera.cameraUniform = program.UniformMatrix4fv(VIEW, 1, &camera.camera[0] )
+	camera.viewUniform = program.UniformMatrix4fv(VIEW, 1, &camera.view[0] )
 }
 
 
 func (camera *Camera) Configure(config *conf.CameraConfig) {
     log.Debug("config cam : %s",config.Desc())
-    camera.camera = mgl32.Ident4()
+    camera.Zoom = float32(config.Zoom)
+    camera.view = mgl32.Ident4()
     camera.Isometric = config.Isometric
     if camera.Isometric {
         camera.projection = orthographic(camera.Width, camera.Height)
-        camera.camera = camera.camera.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
-        camera.camera = camera.camera.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     } else {
         camera.projection = perspective(camera.Width, camera.Height)
-//        camera.camera = camera.camera.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
-        camera.camera = camera.camera.Mul4( mgl32.LookAtV(mgl32.Vec3{camera.Zoom,camera.Zoom,camera.Zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+//        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{camera.Zoom,camera.Zoom,camera.Zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     }
     
 

@@ -4,7 +4,7 @@
 package render
 
 import (
-//    "fmt"
+    "fmt"
     "time"
     "sync"
 //    "runtime"
@@ -36,10 +36,13 @@ type Renderer struct {
     font *gfx.Font
     camera *gfx.Camera
     mask *gfx.Mask
+    
+    axis *gfx.Axis
 
     now Clock
     buffer *gfx.Buffer
     mutex *sync.Mutex
+    debug bool
 }
 
 func NewRenderer() *Renderer {
@@ -85,6 +88,9 @@ func (renderer *Renderer) Init(config *conf.Config) error {
 
     //setup things    
     renderer.mode = config.Mode
+    renderer.debug = config.Debug
+    renderer.axis = &gfx.Axis{}
+    
     renderer.grid = modes.NewGrid(config.Grid)
     renderer.lines = modes.NewLines(config.Lines)
     renderer.test = modes.NewTest(config.Test)
@@ -113,6 +119,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
         log.Debug("switch mode to %s",string(config.Mode))
         renderer.mode = config.Mode
     }
+    renderer.debug = config.Debug
     
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
@@ -120,11 +127,15 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     renderer.test.Configure(config.Test)
     renderer.camera.Configure(config.Camera)
     renderer.mask.Configure(config.Mask)
-    log.Debug(renderer.camera.Desc())
     return nil
 }
 
-
+func (renderer *Renderer) Desc() string {
+    tmp := ""
+    if renderer.debug { tmp = " DEBUG" }
+    ret := fmt.Sprintf("renderer[%s%s]",renderer.mode,tmp)    
+    return ret
+}
 
 func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
 
@@ -133,7 +144,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
     var prev Clock = *now
 
     log.Debug("renderer start")
-    gl.ClearColor(0xFE,0xED,0xFA,0xCE)
+    gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, renderer.size.width,renderer.size.height)
 
 	gl.Enable(gl.DEPTH_TEST)
@@ -147,15 +158,19 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
+    renderer.axis.Init()
     renderer.font.Init()
     renderer.lines.Init(renderer.camera,renderer.font)
     renderer.grid.Init(renderer.camera,renderer.font)
-    renderer.test.Init(renderer.camera)
+    renderer.test.Init(renderer.camera,renderer.font)
     renderer.mask.Init()
 
     for {
-        debug := now.frame % DEBUG_FRAMES == 0
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
+        
+        verbose := now.frame % DEBUG_FRAMES == 0
+        
+        if verbose { log.Debug("render %s",renderer.Desc()) }
         
         now.Tick()
         
@@ -170,17 +185,18 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render(renderer.camera, debug)
+                renderer.grid.Render(renderer.camera, renderer.debug, verbose )
             case conf.LINES:
-                renderer.lines.Render( renderer.camera, renderer.font, debug )
+                renderer.lines.Render(renderer.camera, renderer.debug, verbose )
             case conf.TEST:
-                renderer.test.Render(debug)
+                renderer.test.Render(renderer.camera, renderer.debug, verbose)
         }
-        
+      
         gl.Disable(gl.DEPTH_TEST)
         renderer.mask.Render()
+        if renderer.debug {renderer.axis.Render(renderer.camera) }
         
-        if debug { renderer.PrintDebug(now,&prev); prev = *now }
+        if verbose { renderer.PrintDebug(now,&prev); prev = *now }
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()
@@ -188,7 +204,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         // wait for next frame
         // FIXME, maybe dont wait as long??
 
-        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("post render gl error: %s",gl.ErrorString(e)) }
+        if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil

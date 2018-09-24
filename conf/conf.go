@@ -15,6 +15,7 @@ type Config struct {
     Font *FontConfig
     Camera *CameraConfig    
     Mask *MaskConfig
+    Debug bool
 }
 
 
@@ -44,9 +45,10 @@ func NewConfig(mode Mode) *Config {
     if mode == GRID  { ret.Grid  = NewGridConfig() }
     if mode == LINES { ret.Lines = NewLinesConfig() }
     if mode == TEST  { ret.Test  = NewTestConfig() }
-    ret.Font = NewFontConfig()
+    ret.Font =   NewFontConfig()
     ret.Camera = NewCameraConfig()
-    ret.Mask = NewMaskConfig()
+    ret.Mask =   NewMaskConfig()
+//˚    ret.Debug = true
     return ret
 }
 
@@ -59,6 +61,7 @@ func (config *Config) FlagSet() *flag.FlagSet {
     if config.Font   != nil { config.Font.AddFlags(ret) }
     if config.Camera != nil { config.Camera.AddFlags(ret) }
     if config.Mask   != nil { config.Mask.AddFlags(ret) }
+    ret.BoolVar(&config.Debug,"D",config.Debug,"Draw Debug" )
     return ret
 }
 
@@ -72,6 +75,7 @@ func (config *Config) Desc() string {
     if config.Font   != nil { ret += " " + config.Font.Desc() }
     if config.Camera != nil { ret += " " + config.Camera.Desc() }
     if config.Mask   != nil { ret += " " + config.Mask.Desc() }
+    if config.Debug { ret += " DEBUG" }
     ret += "]"
     return ret
 }

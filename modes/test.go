@@ -69,7 +69,7 @@ func (test *Test) RenderAxis(debug bool) {
 
 
 
-func (test *Test) Render(debug bool) {
+func (test *Test) Render(camera *gfx.Camera, debug, verbose bool) {
     gl.ClearColor(.5,.5,.5,1.)
     
     if true { test.RenderAxis(debug) }
@@ -77,7 +77,7 @@ func (test *Test) Render(debug bool) {
 }
 
 
-func (test *Test) Init(camera *gfx.Camera) {
+func (test *Test) Init(camera *gfx.Camera, font *gfx.Font) {
 
     test.camera = camera
 

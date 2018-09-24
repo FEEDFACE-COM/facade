@@ -98,7 +98,7 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
 }
 
 
-func (lines *Lines) Render(camera *gfx.Camera, font *gfx.Font, debug bool) {
+func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     
 
     gl.ClearColor(0.0,0.0,0.0,1.0)

@@ -28,7 +28,7 @@ type Grid struct {
 
 
 
-func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
+func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     gl.ClearColor(0,0,0,1)
     gl.ActiveTexture(gl.TEXTURE0)
     
@@ -61,17 +61,22 @@ func (grid *Grid) Render(camera *gfx.Camera, debug bool) {
     grid.program.VertexAttribPointer(gfx.TEXCOORD,2,(3+2+2+2)*4,(3+2)*4)
     grid.program.VertexAttribPointer(gfx.TEXOFFSET,2,(3+2+2+2)*4,(3+2+2)*4)
     
+    count := (2*3)*int32(grid.height*grid.width)
 
     if true {    
+        if (verbose) { log.Debug("draw triangles") }
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, 0, (2*3)*int32(grid.height*grid.width)  )
+        gl.DrawArrays(gl.TRIANGLES, 0, count  )
     }
     
-    
-    if false {
+
+    if debug {
+        if (verbose) { log.Debug("draw lines") }
         gl.LineWidth(3.0)
         grid.white.BindTexture()
-        gl.DrawArrays(gl.LINES, 0, (2*3)*int32(grid.height*grid.width) )        
+        for i:=0; i<int(grid.height*grid.width); i++ {
+            gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
+        }
     }
     
     
