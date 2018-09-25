@@ -40,9 +40,16 @@ const DEBUG_FONT = false
 func GetFont(config *conf.FontConfig, directory string) *Font {
     if fonts[config.Name] == nil {
         fonts[config.Name] = NewFont(config, directory)
+        err := fonts[config.Name].loadFont(directory+config.Name)
+        if err != nil {
+            log.Error("fail to load font %s: %s",config.Name,err)
+        } 
+        
+        log.Debug("CREATE NEW FONT!!")
     } 
     return fonts[config.Name]
     //note, its' still leaking tho!
+    
 }
 
 
@@ -69,6 +76,8 @@ func (font *Font) MaxSize() Size {
 func NewFont(config *conf.FontConfig, directory string) *Font {
     ret := &Font{config: *config, directory: directory}
     ret.scratch = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
+    
+    log.Debug("FAT NEW SCRATCH")
     return ret
 }
 
@@ -116,11 +125,11 @@ func (font *Font) loadFont(fontfile string) error {
 }
 
 func (font *Font) Init() {
-    err := font.loadFont(font.directory+font.config.Name)
-    if err != nil {
-        log.Error("fail to load font %s: %s",font.config.Name,err)
-        return
-    }
+//    err := font.loadFont(font.directory+font.config.Name)
+//    if err != nil {
+//        log.Error("fail to load font %s: %s",font.config.Name,err)
+//        return
+//    }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
 
@@ -310,15 +319,13 @@ func (font *Font) findSizes() ([GlyphCols][GlyphRows]Size, struct{w,h int}) {
     var size [GlyphCols][GlyphRows]Size
     var max struct{w,h int} 
 
-    scratch := image.NewRGBA( image.Rect(0,0,1024,1024) )
-
     ctx := font.context
     ctx.SetDPI(dpi)
     ctx.SetFontSize(pointSize)
     ctx.SetHinting( xfont.HintingNone )
     ctx.SetSrc(image.White)
-    ctx.SetDst(scratch)
-    ctx.SetClip(scratch.Bounds())
+    ctx.SetDst(font.scratch)
+    ctx.SetClip(image.Rect(0,0,1024,1024))
     
     max.h = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
     

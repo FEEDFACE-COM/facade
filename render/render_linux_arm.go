@@ -52,10 +52,10 @@ func NewRenderer() *Renderer {
     return ret
 }
 
-const DEBUG_CLOCK  = true
+const DEBUG_CLOCK  = false
 const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
-const DEBUG_DIAG   = false
+const DEBUG_DIAG   = true
  
 
 const DEBUG_FRAMES = 90
@@ -93,7 +93,6 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.grid = modes.NewGrid(config.Grid)
     renderer.lines = modes.NewLines(config.Lines)
     renderer.test = modes.NewTest(config.Test)
-    renderer.font = gfx.NewFont(config.Font,conf.DIRECTORY)
     renderer.font = gfx.GetFont(config.Font,conf.DIRECTORY)
     renderer.camera = gfx.NewCamera(config.Camera,renderer.screen)
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
@@ -122,7 +121,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     renderer.config = *config
     
     if config.Font != nil {
-        newFont := gfx.NewFont(config.Font, conf.DIRECTORY)
+        newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
         newFont.Init()
         oldFont := renderer.font
         renderer.font = newFont

@@ -26,6 +26,7 @@ type Grid struct {
 }
 
 
+DEBUG_GRID = false
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
     gl.ClearColor(0,0,0,1)
@@ -118,7 +119,8 @@ func (grid *Grid) generateData(font *gfx.Font) {
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
             
-            chr := byte('#')
+            chr := byte(' ')
+            if DEBUG_GRID { chr = byte("#") }
             if line != nil && int(c) < len(line.Text) {
                 chr = line.Text[c]
             }    
