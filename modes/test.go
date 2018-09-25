@@ -114,7 +114,7 @@ func (test *Test) Init(camera *gfx.Camera, font *gfx.Font) {
 
 
 func (test *Test) Queue(text string) {
-    log.Debug("test %s",text);    
+//    log.Debug("test %s",text);    
 }
 
 

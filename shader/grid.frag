@@ -15,12 +15,15 @@ void main() {
 
     vec4 col = texture2D(texture, tex);
 
-    
-    if (true && pos.x == 0.0 && pos.y == 0.0 ) {
+
+
+
+    bool debug = false;    
+    if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
         col.g += 0.5;
     }
 
-    if (true && pos.x == 1.0 && pos.y == 1.0 ) {
+    if (debug && pos.x == 1.0 && pos.y == 1.0 ) {
         col.b += 0.5;
     }
     

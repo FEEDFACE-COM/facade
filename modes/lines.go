@@ -57,7 +57,7 @@ func (lines *Lines) Queue(text string, font *gfx.Font) {
     newText.RenderTexture(font)
     lines.buffer.Queue( newText )
     lines.generateData()
-    log.Debug("queued text: %s",text)
+//    log.Debug("queued text: %s",text)
 }
 
 

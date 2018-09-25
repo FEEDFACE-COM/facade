@@ -19,10 +19,12 @@ import (
 )
 
 
+var fonts = map[string]*Font {}
+
 
 var foreground = image.White
-var background = image.NewUniform( color.RGBA{R: 0, G: 255, B: 255, A: 255} )
-//image.Transparent
+//var background = image.NewUniform( color.RGBA{R: 0, G: 255, B: 255, A: 255} )
+var background = image.Transparent
 
 const GlyphCols  = 0x20
 const GlyphRows  = 0x08
@@ -30,6 +32,19 @@ const GlyphCount = GlyphCols * GlyphRows
 
 
 const scratchSize = 8192
+
+
+const DEBUG_FONT = false
+
+
+func GetFont(config *conf.FontConfig, directory string) *Font {
+    if fonts[config.Name] == nil {
+        fonts[config.Name] = NewFont(config, directory)
+    } 
+    return fonts[config.Name]
+    //note, its' still leaking tho!
+}
+
 
 
 type Font struct {
@@ -127,7 +142,6 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 //        dpi = 144.0  
 //    )
 
-    debug := true
 
 
     width := font.max.w
@@ -138,7 +152,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     imageHeight := GlyphRows*height
 
     back := background
-    if debug {
+    if DEBUG_FONT {
         back = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
     }
         
@@ -159,7 +173,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     var c byte
 
     c = 0x00
-    for y:=0; debug && y<GlyphRows; y++ {
+    for y:=0; DEBUG_FONT && y<GlyphRows; y++ {
         
         for x:=0; x<GlyphCols; x++ {
             
@@ -207,7 +221,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
             pos := freetype.Pt( x*width, y*height + height - magic_offset)
             
             ctx.SetSrc( foreground )
-            if debug && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
+            if DEBUG_FONT && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
                 r,g,b,_ := foreground.RGBA()
                 back := color.RGBA{255 - uint8(r), 255-uint8(g), 255 - uint8(b), 255}
                 ctx.SetSrc( image.NewUniform( back ) )
@@ -223,7 +237,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
 
-    if debug {
+    if DEBUG_FONT {
         log.Debug("rendered map %s   %dx%d glyphs in %dx%d img",font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
     }
     return ret,nil
@@ -273,8 +287,7 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
     
-    debug := false
-    if debug {
+    if DEBUG_FONT {
         log.Debug("rendered '%s' %s   %dx%d glyphs in %dx%d img",text[0:min(len(text),8)],font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
     }
     

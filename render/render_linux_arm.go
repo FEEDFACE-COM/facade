@@ -52,7 +52,7 @@ func NewRenderer() *Renderer {
     return ret
 }
 
-const DEBUG_CLOCK  = false
+const DEBUG_CLOCK  = true
 const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
@@ -94,6 +94,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.lines = modes.NewLines(config.Lines)
     renderer.test = modes.NewTest(config.Test)
     renderer.font = gfx.NewFont(config.Font,conf.DIRECTORY)
+    renderer.font = gfx.GetFont(config.Font,conf.DIRECTORY)
     renderer.camera = gfx.NewCamera(config.Camera,renderer.screen)
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 

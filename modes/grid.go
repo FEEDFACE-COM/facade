@@ -2,7 +2,7 @@
 package modes
 
 import(
-    "fmt"
+//    "fmt"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -64,11 +64,13 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     }
 
     if debug {
+        gl.Disable(gl.DEPTH_TEST)
         gl.LineWidth(3.0)
         grid.white.BindTexture()
         for i:=0; i<int(count); i++ {
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
+        gl.Enable(gl.DEPTH_TEST)
     }
     
     
@@ -107,7 +109,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-    tmp := ""
+//    tmp := ""
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
@@ -140,11 +142,11 @@ func (grid *Grid) generateData(font *gfx.Font) {
 
             grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
 
-            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
         } 
-        tmp += "\n"
+//        tmp += "\n"
     }
-    log.Debug(tmp)
+//    log.Debug(tmp)
     grid.object.BufferData(len(grid.data)*4,grid.data)
 }
 
@@ -212,7 +214,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     grid.buffer.Queue( newText )
     grid.generateData(font)
-    log.Debug("queued text: %s",text)
+//    log.Debug("queued text: %s",text)
 }
 
 
