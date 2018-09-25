@@ -114,6 +114,8 @@ func (font *Font) Init() {
 }
 
 func (font *Font) Close() { // do me do me 
+    
+
 }
 
 

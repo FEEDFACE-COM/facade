@@ -2,7 +2,7 @@
 package modes
 
 import(
-//    "fmt"
+    "fmt"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -79,35 +79,25 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 
 
-//func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float32 {
-func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point) []float32 {
+func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point, maxSize gfx.Size) []float32 {
     
     w, h := size.W, size.H
     x, y := float32(tileCoord.X), float32(tileCoord.Y)
-//    tw, th := /*size.W * */float32(1./(gfx.GlyphCols)),  /*size.H * */float32(1./(gfx.GlyphRows))
-
-//    r := glyphSize.W / glyphSize.H
-//    r = float32(1.)
     
     tw, th := 1./float32(gfx.GlyphCols)  , 1./float32(gfx.GlyphRows)
-    
-//    tw = tw * (glyphSize.W / glyphSize.H) 
-    
-    
-//    tw = tw - 0.1;
-    
-//    tw, th := (glyphSize.W / glyphSize.H) /float32(gfx.GlyphCols)  , 1./float32(gfx.GlyphRows)    
+    if true {
+        tw = glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
+    }
     
     offx, offy := texOffset.X, texOffset.Y
-    left := float32(0)
     return []float32{
             //vertex                       //texcoords        // coordinates
-        -w/2 + left,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
-        -w/2 + left, -h/2, 0,                0 +offx, th + offy,      x, y,    
-         w/2 + left, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2 + left, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2 + left,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
-        -w/2 + left,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+        -w/2, -h/2, 0,                0 +offx, th + offy,      x, y,    
+         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
+        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
         
     }
     
@@ -117,7 +107,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-//    tmp := ""
+    tmp := ""
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
@@ -135,6 +125,9 @@ func (grid *Grid) generateData(font *gfx.Font) {
             glyphCoord := getGlyphCoord( byte(chr) )
             glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
 
+
+            maxSize := font.MaxSize()
+
             size := gfx.Size{
                 W: glyphSize.W / glyphSize.H,
                 H: glyphSize.H / glyphSize.H,
@@ -145,14 +138,13 @@ func (grid *Grid) generateData(font *gfx.Font) {
                 Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
             }
 
-            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset)... )
+            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
 
-//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
-//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
         } 
-//        tmp += "\n"
+        tmp += "\n"
     }
-//    log.Debug(tmp)
+    log.Debug(tmp)
     grid.object.BufferData(len(grid.data)*4,grid.data)
 }
 
