@@ -175,18 +175,10 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     log.Debug("create %s",grid.Desc())
 
 
-    rgba, err := font.RenderMapRGBA()
-    if err != nil {
-        log.Error("fail render font map: %s",err)
-    }
-    err = grid.texture.LoadRGBA(rgba)
-    if err != nil {
-        log.Error("fail load font map: %s",err)
-    }
 
-
-    
-    grid.texture.TexImage2D()
+    grid.texture.Init()
+    grid.RenderMap(font)
+    grid.texture.TexImage()
     
     grid.black = gfx.BlackColor()
     grid.white = gfx.WhiteColor()
@@ -202,6 +194,24 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     
 
 }
+
+
+func (grid *Grid) RenderMap(font *gfx.Font) error {
+
+    rgba, err := font.RenderMapRGBA()
+    if err != nil {
+        log.Error("fail render font map: %s",err)
+        return log.NewError("fail render font map: %s",err)
+    }
+    err = grid.texture.LoadRGBA(rgba)
+    if err != nil {
+        log.Error("fail load font map: %s",err)
+        return log.NewError("fail to load font map: %s",err)
+    }
+    return nil
+}
+
+
 
 
 
@@ -227,6 +237,12 @@ func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
     if config.Width != grid.config.Width || config.Height != grid.config.Height {
         grid.config = *config
         grid.buffer.Resize(grid.config.Height)    
+    }
+
+
+    if true {
+        grid.RenderMap(font)
+        grid.texture.TexImage()
     }
 
     grid.generateData(font)

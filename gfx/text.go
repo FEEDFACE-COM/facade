@@ -49,6 +49,6 @@ func (text *Text) RenderTexture(font *Font) {
             text.Texture.LoadRGBA(rgba)    
         }
     }
-    text.Texture.TexImage2D()
+    text.Texture.TexImage()
         
 }

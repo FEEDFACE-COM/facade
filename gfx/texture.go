@@ -28,21 +28,7 @@ func NewTexture(name string) *Texture {
     return &Texture{Name: name}    
 }
 
-func (texture *Texture) Close() {
-    if texture.texture != 0 {
-        gl.DeleteTextures(1, &texture.texture)    
-    }   
-    texture.texture = 0
-}
 
-
-//func (texture *Texture) Uniform(program *Program) {
-//	texture.textureUniform = program.Uniform1i(TEXTURE,0)
-//}
-
-func (texture *Texture) BindTexture() {
-    gl.BindTexture(gl.TEXTURE_2D, texture.texture)    
-}
 
 
 func (texture *Texture) LoadFile(path string) error {
@@ -92,7 +78,7 @@ func WhiteColor() *Texture {
     rgba := image.NewRGBA( image.Rect(0,0,2,2) )
     draw.Draw( rgba, rgba.Bounds(), image.White, image.ZP, draw.Src )
     ret.LoadRGBA(rgba)
-    ret.TexImage2D()
+    ret.TexImage()
     return ret
 }
 
@@ -101,13 +87,29 @@ func BlackColor() *Texture {
     rgba := image.NewRGBA( image.Rect(0,0,2,2) )
     draw.Draw( rgba, rgba.Bounds(), image.Black, image.ZP, draw.Src )
     ret.LoadRGBA(rgba)
-    ret.TexImage2D()
+    ret.TexImage()
     return ret
 }
 
-
-func (texture *Texture) TexImage2D() error {
+func (texture *Texture) Init() {
     gl.GenTextures(1, &texture.texture)
+    gl.ActiveTexture(gl.TEXTURE0)
+}
+
+
+func (texture *Texture) BindTexture() { 
+    gl.BindTexture(gl.TEXTURE_2D, texture.texture) 
+}
+
+
+func (texture *Texture) Close() {
+    if texture.texture != 0 {
+        gl.DeleteTextures(1, &texture.texture)
+        texture.texture = 0
+    }
+}
+
+func (texture *Texture) TexImage() error {
     gl.ActiveTexture(gl.TEXTURE0)
     gl.BindTexture(gl.TEXTURE_2D, texture.texture)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -127,5 +129,6 @@ func (texture *Texture) TexImage2D() error {
 //    log.Debug("+tex #%d",texture.texture)
     return nil
 }
+
 
 
