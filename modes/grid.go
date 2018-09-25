@@ -12,9 +12,7 @@ import(
 
 
 type Grid struct {
-    width uint
-    height uint
-    
+    config conf.GridConfig    
 
     buffer *gfx.Buffer
     
@@ -41,7 +39,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     
-    tileCount := mgl32.Vec2{ float32(grid.width),float32(grid.height), }
+    tileCount := mgl32.Vec2{ float32(grid.config.Width),float32(grid.config.Height), }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
 //    tileSize := mgl32.Vec2{ 34./70., 70./70. }
@@ -58,17 +56,17 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4)
     grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4)
     
-    count := (2*3)*int32(grid.height*grid.width)
+    count := int32(grid.config.Width*grid.config.Height)
 
     if true {    
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, 0, count  )
+        gl.DrawArrays(gl.TRIANGLES, 0, count*(2*3)  )
     }
 
     if debug {
         gl.LineWidth(3.0)
         grid.white.BindTexture()
-        for i:=0; i<int(grid.height*grid.width); i++ {
+        for i:=0; i<int(count); i++ {
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
     }
@@ -120,7 +118,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
     tmp := ""
-    w,h := int(grid.width), int(grid.height)
+    w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
         
@@ -237,16 +235,16 @@ func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
         return
     }
     
-    if config.Width != grid.width {
-        grid.width = config.Width    
-    }
-    
-    if config.Height != grid.height {
-        grid.height = config.Height
-        grid.buffer.Resize(config.Height)    
-    }
-
-    grid.generateData(font)
+//    if config.Width != grid.width {
+//        grid.width = config.Width    
+//    }
+//    
+//    if config.Height != grid.height {
+//        grid.height = config.Height
+//        grid.buffer.Resize(config.Height)    
+//    }
+//
+//    grid.generateData(font)
 
     log.Debug("configured grid: %s",config.Desc())
 }
@@ -255,7 +253,7 @@ func NewGrid(config *conf.GridConfig) *Grid {
     if config == nil { 
         config = conf.NewGridConfig() 
     }
-    ret := &Grid{width: config.Width, height: config.Height}
+    ret := &Grid{config: *config}
     ret.buffer = gfx.NewBuffer(config.Height)
     ret.program = gfx.NewProgram("grid")
     ret.object = gfx.NewObject("grid")
@@ -264,7 +262,7 @@ func NewGrid(config *conf.GridConfig) *Grid {
 }
 
 func (grid *Grid) Desc() string {
-    ret := fmt.Sprintf("grid[%dx%d]",grid.width,grid.height)
+    ret := grid.config.Desc()
     if grid.buffer.Tail(0) != nil {
         ret += " '" + (*grid.buffer.Tail(0)).Desc() + "'"
     }

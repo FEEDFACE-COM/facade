@@ -38,8 +38,8 @@ func perspective(width,height float32) mgl32.Mat4 {
     return mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
 }
 
-func NewCamera(config *conf.CameraConfig, width,height float32) *Camera {
-    ret := &Camera{Width: width, Height: height}
+func NewCamera(config *conf.CameraConfig, screen Size) *Camera {
+    ret := &Camera{Width: screen.W, Height: screen.H}
     ret.Isometric = config.Isometric
     ret.Zoom = float32(config.Zoom)
     

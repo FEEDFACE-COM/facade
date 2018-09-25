@@ -27,7 +27,7 @@ const FRAME_RATE = 60.0
 const BUFFER_SIZE = 80
 
 type Renderer struct {
-    size struct{width int32; height int32}
+    screen gfx.Size
 
     mode conf.Mode
     grid *modes.Grid
@@ -70,8 +70,8 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     }
     
     w,h := piglet.GetDisplaySize()
-    renderer.size = struct{width int32; height int32} {int32(w),int32(h)}
-    log.Info("got display %dx%d",renderer.size.width,renderer.size.height)
+    renderer.screen = gfx.Size{float32(w),float32(h)}
+    log.Info("got screen %s",renderer.screen.Desc())
     
 
     piglet.MakeCurrent()
@@ -95,8 +95,8 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.lines = modes.NewLines(config.Lines)
     renderer.test = modes.NewTest(config.Test)
     renderer.font = gfx.NewFont(config.Font,conf.DIRECTORY)
-    renderer.camera = gfx.NewCamera(config.Camera,float32(renderer.size.width),float32(renderer.size.height))
-    renderer.mask = gfx.NewMask(config.Mask,float32(renderer.size.width),float32(renderer.size.height))
+    renderer.camera = gfx.NewCamera(config.Camera,renderer.screen)
+    renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 
     renderer.font.Configure(config.Font)
 
@@ -145,7 +145,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
     log.Debug("renderer start")
     gl.ClearColor(0.5,0.5,0.5,1)
-    gl.Viewport(0, 0, renderer.size.width,renderer.size.height)
+    gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
 
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)

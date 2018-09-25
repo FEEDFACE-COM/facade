@@ -24,8 +24,8 @@ type Mask struct {
     
 }
 
-func NewMask(config *conf.MaskConfig, width, height float32) *Mask {
-    ret := &Mask{Width: width, Height: height}
+func NewMask(config *conf.MaskConfig, screen Size) *Mask {
+    ret := &Mask{Width: screen.W, Height: screen.H}
     ret.Configure(config)
     return ret
 }
