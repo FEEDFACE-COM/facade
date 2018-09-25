@@ -4,7 +4,6 @@
 package gfx
 
 import (
-    "fmt"
     log "../log"
     conf "../conf"
 //    log "../log"
@@ -13,6 +12,9 @@ import (
 )
 
 type Camera struct {
+    
+    config conf.CameraConfig
+    
     projection mgl32.Mat4
     projectionUniform int32
     
@@ -21,8 +23,6 @@ type Camera struct {
     
     Width float32
     Height float32
-    Isometric bool
-    Zoom float32
 }
 
 
@@ -39,10 +39,7 @@ func perspective(width,height float32) mgl32.Mat4 {
 }
 
 func NewCamera(config *conf.CameraConfig, screen Size) *Camera {
-    ret := &Camera{Width: screen.W, Height: screen.H}
-    ret.Isometric = config.Isometric
-    ret.Zoom = float32(config.Zoom)
-    
+    ret := &Camera{config: *config, Width: screen.W, Height: screen.H}
     ret.Configure(config)
     return ret
 }
@@ -54,29 +51,25 @@ func (camera *Camera) Uniform(program *Program) {
 
 
 func (camera *Camera) Configure(config *conf.CameraConfig) {
+
     log.Debug("config cam : %s",config.Desc())
-    camera.Zoom = float32(config.Zoom)
+    camera.config = *config
     camera.view = mgl32.Ident4()
-    camera.Isometric = config.Isometric
-    if camera.Isometric {
+
+    zoom := float32(camera.config.Zoom)
+    if camera.config.Isometric {
         camera.projection = orthographic(camera.Width, camera.Height)
-        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     } else {
         camera.projection = perspective(camera.Width, camera.Height)
-//        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.Zoom, camera.Zoom, camera.Zoom ) )
-        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{camera.Zoom,camera.Zoom,camera.Zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+//        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{zoom,zoom,zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     }
     
 
 }
 
 
-func (camera *Camera) Desc() string {
-    ret := ""
-    tmp := "ppv"
-    if camera.Isometric { tmp = " iso" }
-    ret += fmt.Sprintf("camera[%.0fx%.0f%s %.2f]",camera.Width,camera.Height,tmp,camera.Zoom) 
-//    ret += fmt.Sprintf("\n%v",camera.projection)
-    return ret
-}
+func (camera *Camera) Desc() string { return camera.config.Desc() }
+

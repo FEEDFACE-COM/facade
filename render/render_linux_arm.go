@@ -98,6 +98,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 
     renderer.font.Configure(config.Font)
+    
 
     InitClock()
     renderer.now = Clock{}

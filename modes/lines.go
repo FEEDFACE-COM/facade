@@ -4,7 +4,7 @@
 package modes
 
 import(
-    "fmt"
+//    "fmt"
 //    "strings"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
@@ -16,7 +16,7 @@ import(
 
 
 type Lines struct {
-    lineCount uint
+    config conf.LinesConfig
 
     buffer *gfx.Buffer 
     program *gfx.Program
@@ -33,7 +33,7 @@ type Lines struct {
 func (lines *Lines) generateData() {
     lines.data = []float32{}
     
-    for i:=uint(0);i<lines.lineCount;i++ {
+    for i:=uint(0);i<lines.config.Height;i++ {
 
         item := lines.buffer.Tail(i)
         var w,h float32
@@ -66,9 +66,9 @@ func (lines *Lines) Configure(config *conf.LinesConfig) {
     if config == nil {
         return
     }
-    if config.LineCount != lines.lineCount {
-        lines.lineCount = config.LineCount
-        lines.buffer.Resize(config.LineCount)
+    if config.Height != lines.config.Height {
+        lines.config = *config
+        lines.buffer.Resize(config.Height)
         lines.generateData()
     }
     log.Debug("configured line: %s",config.Desc())
@@ -115,16 +115,16 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     modelUniform := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     var d float32 
-    if lines.lineCount % 2 == 0 {
-        d = float32( int(lines.lineCount/2) ) + 0.5
+    if lines.config.Height % 2 == 0 {
+        d = float32( int(lines.config.Height/2) ) + 0.5
     } else {
-        d = float32( int(lines.lineCount/2) ) + 1.0
+        d = float32( int(lines.config.Height/2) ) + 1.0
     }
 
 
     model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
     
-    for i:=uint(0);i<lines.lineCount;i++ {
+    for i:=uint(0);i<lines.config.Height;i++ {
         line  := lines.buffer.Tail(i)
 
         model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
@@ -157,29 +157,21 @@ func NewLines(config *conf.LinesConfig) *Lines {
     if config == nil {
         config = conf.NewLinesConfig()
     }
-    ret := &Lines{lineCount: config.LineCount}
-    ret.buffer = gfx.NewBuffer(config.LineCount)
+    ret := &Lines{config: *config}
+    ret.buffer = gfx.NewBuffer(config.Height)
     ret.program = gfx.NewProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret
 }
 
-func (lines *Lines) Desc() string {
-    ret := fmt.Sprintf("lines[%d]",lines.lineCount)
+func (lines *Lines) Desc() string { return lines.config.Desc() }
+
+func (lines *Lines) Dump() string {
+    ret := lines.config.Desc()
     if lines.buffer.Tail(0) != nil {
         ret += " '" + (*lines.buffer.Tail(0)).Desc() + "'"
     }
-    return ret
-}
-
-func (lines *Lines) Dump() string {
     return lines.buffer.Dump()   
-//    ret := ""; t:=-1
-//    for i:=0;i<len(lines.data); i+=5 {
-//        if i%(5 * 6)  == 0 { ret += "\n"; t += 1 }
-//        ret += fmt.Sprintf("  #%02d pos%v tex%v\n",t,lines.data[i:i+3],lines.data[i+3:i+5])
-//    }
-//    return ret    
 }
 
 
