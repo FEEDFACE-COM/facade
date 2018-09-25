@@ -59,6 +59,8 @@ func NewFont(config *conf.FontConfig, directory string) *Font {
 
 
 func (font *Font) Configure(config *conf.FontConfig) {
+    if config == nil { return }
+    
     log.Debug("configure font: %s",config.Desc())
     
     //regenerate here?

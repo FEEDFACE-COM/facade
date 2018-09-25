@@ -51,6 +51,7 @@ func (camera *Camera) Uniform(program *Program) {
 
 
 func (camera *Camera) Configure(config *conf.CameraConfig) {
+    if config == nil { return }
 
     log.Debug("config cam : %s",config.Desc())
     camera.config = *config

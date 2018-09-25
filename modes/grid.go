@@ -224,16 +224,12 @@ func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
         return
     }
     
-//    if config.Width != grid.width {
-//        grid.width = config.Width    
-//    }
-//    
-//    if config.Height != grid.height {
-//        grid.height = config.Height
-//        grid.buffer.Resize(config.Height)    
-//    }
-//
-//    grid.generateData(font)
+    if config.Width != grid.config.Width || config.Height != grid.config.Height {
+        grid.config = *config
+        grid.buffer.Resize(grid.config.Height)    
+    }
+
+    grid.generateData(font)
 
     log.Debug("configured grid: %s",config.Desc())
 }

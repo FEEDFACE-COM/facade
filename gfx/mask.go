@@ -30,7 +30,12 @@ func NewMask(config *conf.MaskConfig, screen Size) *Mask {
 
 
 func (mask *Mask) Configure(config *conf.MaskConfig) {
-    //??
+    if config == nil { return }
+    
+    log.Debug("config mask: %s",config.Desc())
+    mask.config = *config
+    
+    
 }
 
 func (mask *Mask) Desc() string { return mask.config.Desc() }

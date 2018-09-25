@@ -115,11 +115,10 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     
     log.Debug("configure %s",config.Desc())
     
-//    if renderer.mode != config.Mode {
-//        log.Debug("switch mode to %s",string(config.Mode))
-//        renderer.mode = config.Mode
-//    }
-//    renderer.debug = config.Debug
+    if renderer.config.Mode != config.Mode {
+        log.Debug("switch mode %s",string(config.Mode))
+    }
+    renderer.config = *config
     
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)

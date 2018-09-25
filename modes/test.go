@@ -12,7 +12,7 @@ import(
 
 type Test struct {
     
-    config conf.Config
+    config conf.TestConfig
     
     camera *gfx.Camera
 
@@ -122,7 +122,7 @@ func (test *Test) Queue(text string) {
 
 
 func (test *Test) Configure(config *conf.TestConfig) {
-    test.config = *config
+    if config == nil { return }
 }
 
 func NewTest(config *conf.TestConfig) *Test {
