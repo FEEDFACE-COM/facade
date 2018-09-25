@@ -15,12 +15,12 @@ import (
     gfx "./gfx"
 )
 
-type Tester struct {font *gfx.Font}
+type Tester struct {font *gfx.Font; name string}
 func NewTester() *Tester { return &Tester{} }
 
 
 func (tester *Tester) Configure(config *conf.Config) {
-    
+    tester.name = config.Font.Name
     tester.font = gfx.NewFont(config.Font,conf.DIRECTORY)
     tester.font.Configure(config.Font)
     tester.font.Init()
@@ -57,8 +57,8 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 func (tester *Tester) Test(str string) {
     test0,_ := tester.testCharMap()
     test1,_ := tester.testTextTex(str)
-    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.font.Name))
-    SaveRGBA(test1,fmt.Sprintf("text-%s-%s",tester.font.Name,str))
+    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.name))
+    SaveRGBA(test1,fmt.Sprintf("text-%s-%s",tester.name,str))
 }
 
 

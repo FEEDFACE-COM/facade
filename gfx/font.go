@@ -33,7 +33,8 @@ const maxDimension = 8192
 
 
 type Font struct {
-    Name string
+    config conf.FontConfig
+
     directory string
 
     font *truetype.Font
@@ -51,9 +52,8 @@ func (font *Font) MaxSize() Size {
 
 
 func NewFont(config *conf.FontConfig, directory string) *Font {
-    ret := &Font{directory: directory}
+    ret := &Font{config: *config, directory: directory}
     ret.tmp = image.NewRGBA( image.Rect(0,0,maxDimension,maxDimension) )
-    ret.Name = config.Name
     return ret
 }
 
@@ -61,17 +61,17 @@ func NewFont(config *conf.FontConfig, directory string) *Font {
 func (font *Font) Configure(config *conf.FontConfig) {
     log.Debug("configure font: %s",config.Desc())
     
-    //regen?
-    if font.Name != config.Name || font.font == nil {
-        font.Name = config.Name
+    //regenerate here?
+    
+    
+    if font.config.Name != config.Name || font.font == nil {
+        font.config = *config
     }
     
 }
 
 
-func (font *Font) Desc() string {
-    return fmt.Sprintf("font[%s]",font.Name)
-}
+func (font *Font) Desc() string { return font.config.Desc() }
 
 
 
@@ -99,16 +99,16 @@ func (font *Font) loadFont(fontfile string) error {
 }
 
 func (font *Font) Init() {
-    err := font.loadFont(font.directory+font.Name)
+    err := font.loadFont(font.directory+font.config.Name)
     if err != nil {
-        log.Error("fail to load font %s: %s",font.Name,err)
+        log.Error("fail to load font %s: %s",font.config.Name,err)
         return
     }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
 
     font.Size, font.max = font.findSizes()
-    log.Debug("init font[%s %dx%d]",font.Name,font.max.w,font.max.h)
+    log.Debug("init font[%s %dx%d]",font.config.Name,font.max.w,font.max.h)
 }
 
 

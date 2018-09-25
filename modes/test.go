@@ -12,6 +12,8 @@ import(
 
 type Test struct {
     
+    config conf.Config
+    
     camera *gfx.Camera
 
     vert map[string]*gfx.Shader
@@ -119,7 +121,9 @@ func (test *Test) Queue(text string) {
 
 
 
-func (test *Test) Configure(config *conf.TestConfig) {}
+func (test *Test) Configure(config *conf.TestConfig) {
+    test.config = *config
+}
 
 func NewTest(config *conf.TestConfig) *Test {
     ret := &Test{}
@@ -127,6 +131,6 @@ func NewTest(config *conf.TestConfig) *Test {
 }
 
 
-func (test *Test) Desc() string { return "test[]" }
-func (test *Test) Dump() string { return "test[]" }
+func (test *Test) Desc() string { return test.config.Desc() }
+func (test *Test) Dump() string { return test.config.Desc() }
 
