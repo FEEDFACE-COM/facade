@@ -29,7 +29,8 @@ const BUFFER_SIZE = 80
 type Renderer struct {
     screen gfx.Size
 
-    mode conf.Mode
+    config conf.Config
+
     grid *modes.Grid
     lines *modes.Lines
     test *modes.Test
@@ -42,7 +43,6 @@ type Renderer struct {
     now Clock
     buffer *gfx.Buffer
     mutex *sync.Mutex
-    debug bool
 }
 
 func NewRenderer() *Renderer {
@@ -86,9 +86,8 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     log.Debug("got version %s %s", gl.GoStr(gl.GetString((gl.VERSION))),gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))));
 
 
-    //setup things    
-    renderer.mode = config.Mode
-    renderer.debug = config.Debug
+    //setup things 
+    renderer.config = *config   
     renderer.axis = &gfx.Axis{}
     
     renderer.grid = modes.NewGrid(config.Grid)
@@ -115,11 +114,11 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     
     log.Debug("configure %s",config.Desc())
     
-    if renderer.mode != config.Mode {
-        log.Debug("switch mode to %s",string(config.Mode))
-        renderer.mode = config.Mode
-    }
-    renderer.debug = config.Debug
+//    if renderer.mode != config.Mode {
+//        log.Debug("switch mode to %s",string(config.Mode))
+//        renderer.mode = config.Mode
+//    }
+//    renderer.debug = config.Debug
     
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
@@ -130,11 +129,8 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     return nil
 }
 
-func (renderer *Renderer) Desc() string {
-    tmp := ""
-    if renderer.debug { tmp = " DEBUG" }
-    ret := fmt.Sprintf("renderer[%s%s]",renderer.mode,tmp)    
-    return ret
+func (renderer *Renderer) Desc() string { 
+    return fmt.Sprintf("renderer[%s %s]",renderer.screen,renderer.config)
 }
 
 func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
@@ -183,18 +179,18 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
 
-        switch renderer.mode {
+        switch renderer.config.Mode {
             case conf.GRID:
-                renderer.grid.Render(renderer.camera, renderer.font, renderer.debug, verbose )
+                renderer.grid.Render(renderer.camera, renderer.font, renderer.config.Debug, verbose )
             case conf.LINES:
-                renderer.lines.Render(renderer.camera, renderer.debug, verbose )
+                renderer.lines.Render(renderer.camera, renderer.config.Debug, verbose )
             case conf.TEST:
-                renderer.test.Render(renderer.camera, renderer.debug, verbose)
+                renderer.test.Render(renderer.camera, renderer.config.Debug, verbose)
         }
       
         gl.Disable(gl.DEPTH_TEST)
         renderer.mask.Render()
-        if renderer.debug {renderer.axis.Render(renderer.camera) }
+        if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
         
         if verbose { renderer.PrintDebug(now,&prev); prev = *now }
 
@@ -249,7 +245,7 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     
     if DEBUG_BUFFER {
 //        log.Debug(renderer.buffer.Dump())    
-        switch renderer.mode { 
+        switch renderer.config.Mode { 
             case conf.LINES:
                 log.Debug( renderer.lines.Dump() )
             case conf.GRID:
@@ -258,7 +254,7 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     }
     
     if DEBUG_MODE {
-        switch renderer.mode { 
+        switch renderer.config.Mode { 
             case conf.LINES:
                 log.Debug( renderer.lines.Desc() + " " +renderer.font.Desc() )
             case conf.GRID:

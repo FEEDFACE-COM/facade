@@ -28,8 +28,8 @@ type Grid struct {
 
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
-//    gl.ClearColor(0,0,0,1)
-    gl.ClearColor(0.5,0.5,0.5,1.)
+    gl.ClearColor(0,0,0,1)
+//    gl.ClearColor(0.5,0.5,0.5,1.)
     gl.ActiveTexture(gl.TEXTURE0)
     
 
