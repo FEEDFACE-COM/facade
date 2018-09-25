@@ -135,7 +135,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     ctx.SetClip(ret.Bounds())
 
 
-    debug := true
+    debug := false
 
 
     FACTOR := 1

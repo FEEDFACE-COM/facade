@@ -51,27 +51,15 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
-    glyphCount := mgl32.Vec2{
-        float32(gfx.GlyphCols),
-        float32(gfx.GlyphRows),
-    }
-    grid.program.Uniform2fv(gfx.GLYPHCOUNT, 1, &glyphCount[0] );
-    
-    glyphSize := mgl32.Vec2{
-        float32(1.),
-        float32(1.),    
-    }
-    grid.program.Uniform2fv(gfx.GLYPHSIZE, 1, &glyphSize[0] );
 
-        model := mgl32.Ident4()
-        grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
-        camera.Uniform(grid.program)
-        grid.program.Uniform1i(gfx.TEXTURE,0)
-        
-        grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2+2)*4,  0*4)
-        grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2+2)*4, (3)*4)
-        grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2+2)*4, (3+2)*4)
-//        grid.program.VertexAttribPointer(gfx.GLYPHCOORD,2, (3+2+2+2)*4, (3+2+2)*4)
+    model := mgl32.Ident4()
+    grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+    camera.Uniform(grid.program)
+    grid.program.Uniform1i(gfx.TEXTURE,0)
+    
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4,  0*4)
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4)
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4)
 //    
     count := (2*3)*int32(grid.height*grid.width)
 
@@ -80,7 +68,6 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
         grid.texture.BindTexture()
         gl.DrawArrays(gl.TRIANGLES, 0, count  )
     }
-    
 
     if debug {
         if (verbose) { log.Debug("draw lines") }
@@ -99,24 +86,19 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
 
 
 
-
-
-
-
-func gridVertices(size,tileCoord,texCoord,texOffset,glyphCoord struct{x,y float32}) []float32 {
+func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float32 {
     w, h := size.x, size.y
     x, y := tileCoord.x, tileCoord.y
     tw, th := texCoord.x, texCoord.y
     offx, offy := texOffset.x, texOffset.y
-    gx,gy := glyphCoord.x, glyphCoord.y
     return []float32{
-               //vertices         //coords    //tex cords   // tex offset  
-        -w/2,  h/2, 0,            x, y,        0 +offx,  0 + offy,       gx, gy,
-        -w/2, -h/2, 0,            x, y,        0 +offx, th + offy,       gx, gy,
-         w/2, -h/2, 0,            x, y,       tw +offx, th + offy,       gx, gy,
-         w/2, -h/2, 0,            x, y,       tw +offx, th + offy,       gx, gy,
-         w/2,  h/2, 0,            x, y,       tw +offx,  0 + offy,       gx, gy,
-        -w/2,  h/2, 0,            x, y,        0 +offx,  0 + offy,       gx, gy,
+            //vertex                       //texcoords        // coordinates
+        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+        -w/2, -h/2, 0,                0 +offx, th + offy,      x, y,    
+         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
+        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
         
     }
     
@@ -137,7 +119,6 @@ func (grid *Grid) generateData() {
         
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
-//			tmp += fmt.Sprintf("%2d/%2d  ",x,y)
             
             chr := byte('#')
             if line != nil && int(c) < len(line.Text) {
@@ -147,7 +128,6 @@ func (grid *Grid) generateData() {
                 x: float32(x),
                 y: float32(y),
             }
-//			tmp += fmt.Sprintf("%2.f/%+2.f  ",tileCoord.x,tileCoord.y)
             
             size := struct{x,y float32}{x: 1., y: 1. }
             texCoord := struct{x,y float32}{  
@@ -156,15 +136,13 @@ func (grid *Grid) generateData() {
             }
             
             glyphCoord := getGlyphCoord( byte(chr) )
-            
             texOffset := struct{x,y float32}{
                 x: glyphCoord.x / (gfx.GlyphCols),
                 y: glyphCoord.y / (gfx.GlyphRows),
             }
 			tmp += fmt.Sprintf("%c  %4.1f/%4.1f",chr,texOffset.x,texOffset.y)
 //			tmp += fmt.Sprintf("%2.f/%+2.f  ",glyphCoord.x,glyphCoord.y)
-            grid.data = append(grid.data, gridVertices(size,tileCoord,texCoord,texOffset,glyphCoord)... )
-//            tmp += fmt.Sprintf("%.0f/%.0f  ",glyphCoord.x,glyphCoord.y)
+            grid.data = append(grid.data, gridVertices(size,tileCoord,texCoord,texOffset)... )
         } 
         tmp += "\n"
     }
