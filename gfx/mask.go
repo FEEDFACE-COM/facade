@@ -12,8 +12,7 @@ import(
 
 type Mask struct {
 
-    Mask bool
-
+    config conf.MaskConfig
     program *Program
 
     object *Object
@@ -25,22 +24,21 @@ type Mask struct {
 }
 
 func NewMask(config *conf.MaskConfig, screen Size) *Mask {
-    ret := &Mask{Width: screen.W, Height: screen.H}
-    ret.Configure(config)
+    ret := &Mask{config: *config, Width: screen.W, Height: screen.H}
     return ret
 }
 
 
 func (mask *Mask) Configure(config *conf.MaskConfig) {
-    mask.Mask = config.Mask
+    //??
 }
 
-func (mask *Mask) Desc() string { return "mask[]" }
+func (mask *Mask) Desc() string { return mask.config.Desc() }
 
 
 func (mask *Mask) Render() {
 
-    if !mask.Mask {
+    if !mask.config.Mask {
         return
     }
 
