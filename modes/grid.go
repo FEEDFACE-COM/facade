@@ -2,7 +2,7 @@
 package modes
 
 import(
-    "fmt"
+//    "fmt"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -117,13 +117,12 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-    tmp := ""
+//    tmp := ""
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
         
         line  := grid.buffer.Tail(uint(r))
-//        totalWidth := float32(0)
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
             
@@ -131,39 +130,29 @@ func (grid *Grid) generateData(font *gfx.Font) {
             if line != nil && int(c) < len(line.Text) {
                 chr = line.Text[c]
             }    
+
             tileCoord := gfx.Coord{X: x, Y:y}
-
-
-            
             glyphCoord := getGlyphCoord( byte(chr) )
-            
             glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
 
-
-            
-
             size := gfx.Size{
-//                W: 34./70. ,
-//                H: 70./70. ,
-//                W: font.MaxSize().W / font.MaxSize().H ,
-//                H: font.MaxSize().H / font.MaxSize().H ,
                 W: glyphSize.W / glyphSize.H,
                 H: glyphSize.H / glyphSize.H,
             }
-
             
             texOffset := gfx.Point{
                 X: float32(glyphCoord.X) / (gfx.GlyphCols),
                 Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
             }
+
             grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset)... )
-//            totalWidth += float32(font.Size[r][c].W)
+
 //            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
-            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
         } 
-        tmp += "\n"
+//        tmp += "\n"
     }
-    log.Debug(tmp)
+//    log.Debug(tmp)
     grid.object.BufferData(len(grid.data)*4,grid.data)
 }
 
