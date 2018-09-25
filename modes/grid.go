@@ -88,9 +88,17 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     x, y := float32(tileCoord.X), float32(tileCoord.Y)
 //    tw, th := /*size.W * */float32(1./(gfx.GlyphCols)),  /*size.H * */float32(1./(gfx.GlyphRows))
 
-    r := glyphSize.W / glyphSize.H
-    r = float32(1.)
-    tw, th := 1./float32(gfx.GlyphCols) * r , 1./float32(gfx.GlyphRows)
+//    r := glyphSize.W / glyphSize.H
+//    r = float32(1.)
+    
+    tw, th := 1./float32(gfx.GlyphCols)  , 1./float32(gfx.GlyphRows)
+    
+//    tw = tw * (glyphSize.W / glyphSize.H) 
+    
+    
+//    tw = tw - 0.1;
+    
+//    tw, th := (glyphSize.W / glyphSize.H) /float32(gfx.GlyphCols)  , 1./float32(gfx.GlyphRows)    
     
     offx, offy := texOffset.X, texOffset.Y
     left := float32(0)
@@ -139,8 +147,10 @@ func (grid *Grid) generateData(font *gfx.Font) {
             size := gfx.Size{
 //                W: 34./70. ,
 //                H: 70./70. ,
-                W: font.MaxSize().W / font.MaxSize().H ,
-                H: font.MaxSize().H / font.MaxSize().H ,
+//                W: font.MaxSize().W / font.MaxSize().H ,
+//                H: font.MaxSize().H / font.MaxSize().H ,
+                W: glyphSize.W / glyphSize.H,
+                H: glyphSize.H / glyphSize.H,
             }
 
             
