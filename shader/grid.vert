@@ -12,7 +12,6 @@ attribute vec2 tileCoord;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
-bool debug = false;
 
 void main() {
     vTexCoord = texcoord;

@@ -10,6 +10,21 @@ import(
     gl "src.feedface.com/gfx/piglet/gles2"
 )
 
+type Coord struct {
+    x int
+    y int    
+}
+
+type Size struct {
+    w float32
+    h float32  
+}
+
+type Point struct {
+    x float32
+    y float32    
+}
+
 type Grid struct {
     width uint
     height uint
@@ -86,10 +101,13 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
 
 
 
-func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float32 {
-    w, h := size.x, size.y
-    x, y := tileCoord.x, tileCoord.y
-    tw, th := texCoord.x, texCoord.y
+//func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float32 {
+func gridVertices(size Size, tileCoord Coord, texOffset Point) []float32 {
+    
+    w, h := size.w, size.h
+    x, y := float32(tileCoord.x), float32(tileCoord.y)
+    tw, th := float32(1./(gfx.GlyphCols)),  float32(1./(gfx.GlyphRows))
+    
     offx, offy := texOffset.x, texOffset.y
     return []float32{
             //vertex                       //texcoords        // coordinates
@@ -107,10 +125,8 @@ func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float
 
 
 func (grid *Grid) generateData() {
-    log.Debug("grid generate data") 
     grid.data = []float32{}
     
-    tmp := ""
     w,h := int(grid.width), int(grid.height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
@@ -124,43 +140,32 @@ func (grid *Grid) generateData() {
             if line != nil && int(c) < len(line.Text) {
                 chr = line.Text[c]
             }    
-            tileCoord := struct{x,y float32}{
-                x: float32(x),
-                y: float32(y),
-            }
-            
-            size := struct{x,y float32}{x: 1., y: 1. }
-            texCoord := struct{x,y float32}{  
-                1./(gfx.GlyphCols),  
-                1./(gfx.GlyphRows),
-            }
+            tileCoord := Coord{x: x, y:y}
+
+            size := Size{w: 1., h: 1. }
             
             glyphCoord := getGlyphCoord( byte(chr) )
-            texOffset := struct{x,y float32}{
-                x: glyphCoord.x / (gfx.GlyphCols),
-                y: glyphCoord.y / (gfx.GlyphRows),
+            texOffset := Point{
+                x: float32(glyphCoord.x) / (gfx.GlyphCols),
+                y: float32(glyphCoord.y) / (gfx.GlyphRows),
             }
-			tmp += fmt.Sprintf("%c  %4.1f/%4.1f",chr,texOffset.x,texOffset.y)
-//			tmp += fmt.Sprintf("%2.f/%+2.f  ",glyphCoord.x,glyphCoord.y)
-            grid.data = append(grid.data, gridVertices(size,tileCoord,texCoord,texOffset)... )
+            grid.data = append(grid.data, gridVertices(size,tileCoord,texOffset)... )
         } 
-        tmp += "\n"
     }
             
     grid.object.BufferData(len(grid.data)*4,grid.data)
-    log.Debug("grid %dx%d coords:\n%s",w,h,tmp)
 }
 
 
 
-func getGlyphCoord(chr byte) struct{x,y float32} {
+func getGlyphCoord(chr byte) Coord {
     cols := byte(gfx.GlyphCols)
 
     col := chr % cols
     row := chr / cols
-    return struct{x,y float32}{
-        x: float32(col),
-        y: float32(row),
+    return Coord{
+        x: int(col),
+        y: int(row),
     }
 }
 
