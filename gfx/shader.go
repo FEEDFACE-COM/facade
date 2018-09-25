@@ -51,7 +51,6 @@ func NewShader(name string, source string, shaderType uint32) *Shader {
 
 
 
-
 func (shader *Shader) CompileShader() error {
     shader.Shader = gl.CreateShader(shader.Type)
     

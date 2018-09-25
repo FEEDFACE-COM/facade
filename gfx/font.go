@@ -90,7 +90,7 @@ func (font *Font) loadFont(fontfile string) error {
         log.Error("fail to parse font %s: %s",fontfile,err)
         return err
     }
-    log.Debug("read font file %s",fontfile)
+//    log.Debug("read font file %s",fontfile)
     return nil
 }
 
@@ -123,7 +123,10 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     height := font.max.h
 
 
-    ret := image.NewRGBA( image.Rect(0,0,GlyphCols*width,GlyphRows*height) )
+    imageWidth := GlyphCols*width 
+    imageHeight := GlyphRows*height
+
+    ret := image.NewRGBA( image.Rect(0,0,imageWidth,imageHeight) )
     draw.Draw( ret, ret.Bounds(), image.Transparent, image.ZP, draw.Src)
 
     ctx := font.context
@@ -138,7 +141,6 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     debug := true
 
 
-    FACTOR := 1
     var c byte
 
     c = 0x00
@@ -147,7 +149,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
         for x:=0; x<GlyphCols; x++ {
             
             
-            pos := freetype.Pt( x*width, FACTOR*y*height+height)
+            pos := freetype.Pt( x*width, y*height+height)
 
 //            p := []int{ pos.X.Floor(), pos.Y.Floor() }
             min := []int{ pos.X.Floor(), pos.Y.Floor()-height  }
@@ -183,7 +185,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
                 str = "X"
             }
             ctx.SetSrc( foreground )
-            pos := freetype.Pt( x*width, FACTOR*y*height+height)
+            pos := freetype.Pt( x*width, y*height + height - height/5.)
             
             if (y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) {
                 ctx.SetSrc( background )
@@ -196,16 +198,20 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     
     
     
-    log.Debug("rendered rgba map with %s",font.Desc())
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
+
+    log.Debug("rendered map %s   %dx%d glyphs in %dx%d img",font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
     return ret,nil
     
 }
 
 
 
-
+func min(a,b int) int { 
+    if a < b { return a }
+    return b 
+}
 
 func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     
@@ -215,6 +221,8 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
         dpi = 144.0  
         rowSpacing = 1.25
     )
+    
+    
 
     ctx := font.context
     ctx.SetDPI( dpi )
@@ -226,20 +234,24 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
 
     dim,_ := ctx.DrawString(text,freetype.Pt(0,0) )
     
-    width := dim.X.Ceil() + dim.X.Ceil()/16
-    height := ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
+    imageWidth := dim.X.Ceil() + dim.X.Ceil()/16
+    imageHeight := ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
 
-    ret := image.NewRGBA( image.Rect(0,0,width,height) )
+
+    ret := image.NewRGBA( image.Rect(0,0,imageWidth,imageHeight) )
 
     draw.Draw( ret, ret.Bounds(), background, image.ZP, draw.Src)
 
     ctx.SetDst(ret)
     ctx.SetClip(ret.Bounds())
-    ctx.DrawString(text,freetype.Pt(width/32, 4*height/5))
-//    log.Debug("rendered '%s' with %s",text,font.Desc())
+    ctx.DrawString(text,freetype.Pt(imageWidth/32, 4*imageHeight/5))
 
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
+    
+    
+    log.Debug("rendered '%s' %s   %dx%d glyphs in %dx%d img",text[0:min(len(text),8)],font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
+    
     return ret,nil
 }
 

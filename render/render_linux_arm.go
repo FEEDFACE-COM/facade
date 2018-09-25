@@ -54,7 +54,7 @@ func NewRenderer() *Renderer {
 
 const DEBUG_CLOCK  = false
 const DEBUG_MODE   = false
-const DEBUG_BUFFER = true
+const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
  
 
@@ -170,7 +170,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         
         verbose := now.frame % DEBUG_FRAMES == 0
         
-        if verbose { log.Debug("render %s",renderer.Desc()) }
+//        if verbose { log.Debug("render %s",renderer.Desc()) }
         
         now.Tick()
         

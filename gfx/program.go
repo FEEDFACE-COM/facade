@@ -47,7 +47,7 @@ func (program *Program) loadShaderFile(shaderName string, shaderType uint32) (st
         log.Error("fail read shader file %s: %s",filePath,err)
         return "", log.NewError("fail read shader file: %s",err)
     }
-    log.Debug("read shader file %s",filePath)
+//    log.Debug("read shader file %s",filePath)
     return string(data), nil    
 }
 

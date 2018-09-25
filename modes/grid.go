@@ -54,16 +54,10 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     
     
     
-    tileCount := mgl32.Vec2{ 
-        float32(grid.width),
-        float32(grid.height),
-    }
+    tileCount := mgl32.Vec2{ float32(grid.width),float32(grid.height), }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
-    tileSize := mgl32.Vec2{
-        1.0,
-        1.0,    
-    }
+    tileSize := mgl32.Vec2{1.0,1.0}
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
 
@@ -75,17 +69,15 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4,  0*4)
     grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4)
     grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4)
-//    
+    
     count := (2*3)*int32(grid.height*grid.width)
 
     if true {    
-        if (verbose) { log.Debug("draw triangles") }
         grid.texture.BindTexture()
         gl.DrawArrays(gl.TRIANGLES, 0, count  )
     }
 
     if debug {
-        if (verbose) { log.Debug("draw lines") }
         gl.LineWidth(3.0)
         grid.white.BindTexture()
         for i:=0; i<int(grid.height*grid.width); i++ {

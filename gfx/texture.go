@@ -61,7 +61,7 @@ func (texture *Texture) LoadFile(path string) error {
     rgba := image.NewRGBA(img.Bounds())
     draw.Draw(rgba, rgba.Bounds(), img, image.Point{0,0}, draw.Src)
     err = texture.LoadRGBA(rgba)
-    log.Debug("read texture file %s",path)
+//    log.Debug("read texture file %s",path)
     return err
 }
     
