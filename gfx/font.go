@@ -44,8 +44,6 @@ func GetFont(config *conf.FontConfig, directory string) *Font {
         if err != nil {
             log.Error("fail to load font %s: %s",config.Name,err)
         } 
-        
-        log.Debug("CREATE NEW FONT!!")
     } 
     return fonts[config.Name]
     //note, its' still leaking tho!
@@ -76,8 +74,6 @@ func (font *Font) MaxSize() Size {
 func NewFont(config *conf.FontConfig, directory string) *Font {
     ret := &Font{config: *config, directory: directory}
     ret.scratch = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
-    
-    log.Debug("FAT NEW SCRATCH")
     return ret
 }
 
@@ -138,8 +134,10 @@ func (font *Font) Init() {
 }
 
 func (font *Font) Close() { // do me do me 
-    
-
+//    font.scratch = nil
+//    font.context = nil
+//    font.font = nil
+//    font.config.Name = "+" + font.config.Name
 }
 
 

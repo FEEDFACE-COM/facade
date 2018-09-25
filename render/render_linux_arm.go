@@ -123,9 +123,11 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     if config.Font != nil {
         newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
         newFont.Init()
-        oldFont := renderer.font
+        renderer.font.Close()
+        renderer.font = nil
+//        oldFont := renderer.font
         renderer.font = newFont
-        oldFont.Close()
+//        oldFont.Close()
     }
     
     

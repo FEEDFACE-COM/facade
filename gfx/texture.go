@@ -59,6 +59,10 @@ func (texture *Texture) LoadEmpty() error {
     
 func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
     texture.rgba = rgba
+
+    //should copy rgba, not point, into the 'loaded' picture here!
+
+
     
     if texture.rgba.Stride != texture.rgba.Rect.Size().X * 4 {
         log.Error("fail rgba, unsupported stride")
