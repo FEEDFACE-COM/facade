@@ -16,8 +16,12 @@ void main() {
     vec4 col = texture2D(texture, tex);
 
     
-    if (false && pos.x == 0.0 && pos.y == 0.0 ) {
-        col.r += 0.5;
+    if (true && pos.x == 0.0 && pos.y == 0.0 ) {
+        col.g += 0.5;
+    }
+
+    if (true && pos.x == 1.0 && pos.y == 1.0 ) {
+        col.b += 0.5;
     }
     
     gl_FragColor = vec4(col.rgb,1.0);

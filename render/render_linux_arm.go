@@ -123,7 +123,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
-    renderer.grid.Configure(config.Grid)
+    renderer.grid.Configure(config.Grid,renderer.font)
     renderer.test.Configure(config.Test)
     renderer.camera.Configure(config.Camera)
     renderer.mask.Configure(config.Mask)
@@ -185,7 +185,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
         switch renderer.mode {
             case conf.GRID:
-                renderer.grid.Render(renderer.camera, renderer.debug, verbose )
+                renderer.grid.Render(renderer.camera, renderer.font, renderer.debug, verbose )
             case conf.LINES:
                 renderer.lines.Render(renderer.camera, renderer.debug, verbose )
             case conf.TEST:
@@ -227,7 +227,7 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
         case text := <-textChan:
 //            renderer.buffer.Queue( gfx.NewText(string(text)) )
             renderer.lines.Queue( string(text), renderer.font )
-            renderer.grid.Queue(string(text))
+            renderer.grid.Queue(string(text), renderer.font)
             renderer.test.Queue(string(text))
         default:
     }

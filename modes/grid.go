@@ -10,20 +10,6 @@ import(
     gl "src.feedface.com/gfx/piglet/gles2"
 )
 
-type Coord struct {
-    x int
-    y int    
-}
-
-type Size struct {
-    w float32
-    h float32  
-}
-
-type Point struct {
-    x float32
-    y float32    
-}
 
 type Grid struct {
     width uint
@@ -43,8 +29,9 @@ type Grid struct {
 
 
 
-func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
-    gl.ClearColor(0,0,0,1)
+func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
+//    gl.ClearColor(0,0,0,1)
+    gl.ClearColor(0.5,0.5,0.5,1.)
     gl.ActiveTexture(gl.TEXTURE0)
     
 
@@ -57,7 +44,8 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     tileCount := mgl32.Vec2{ float32(grid.width),float32(grid.height), }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
-    tileSize := mgl32.Vec2{1.0,1.0}
+//    tileSize := mgl32.Vec2{ 34./70., 70./70. }
+    tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
 
@@ -94,21 +82,26 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
 
 
 //func gridVertices(size,tileCoord,texCoord,texOffset struct{x,y float32}) []float32 {
-func gridVertices(size Size, tileCoord Coord, texOffset Point) []float32 {
+func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point) []float32 {
     
-    w, h := size.w, size.h
-    x, y := float32(tileCoord.x), float32(tileCoord.y)
-    tw, th := float32(1./(gfx.GlyphCols)),  float32(1./(gfx.GlyphRows))
+    w, h := size.W, size.H
+    x, y := float32(tileCoord.X), float32(tileCoord.Y)
+//    tw, th := /*size.W * */float32(1./(gfx.GlyphCols)),  /*size.H * */float32(1./(gfx.GlyphRows))
+
+    r := glyphSize.W / glyphSize.H
+    r = float32(1.)
+    tw, th := 1./float32(gfx.GlyphCols) * r , 1./float32(gfx.GlyphRows)
     
-    offx, offy := texOffset.x, texOffset.y
+    offx, offy := texOffset.X, texOffset.Y
+    left := float32(0)
     return []float32{
             //vertex                       //texcoords        // coordinates
-        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
-        -w/2, -h/2, 0,                0 +offx, th + offy,      x, y,    
-         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
-        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+        -w/2 + left,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+        -w/2 + left, -h/2, 0,                0 +offx, th + offy,      x, y,    
+         w/2 + left, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2 + left, -h/2, 0,               tw +offx, th + offy,      x, y,    
+         w/2 + left,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
+        -w/2 + left,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
         
     }
     
@@ -116,15 +109,15 @@ func gridVertices(size Size, tileCoord Coord, texOffset Point) []float32 {
 
 
 
-func (grid *Grid) generateData() {
+func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-    
+    tmp := ""
     w,h := int(grid.width), int(grid.height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
         
         line  := grid.buffer.Tail(uint(r))
-        
+//        totalWidth := float32(0)
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
             
@@ -132,32 +125,50 @@ func (grid *Grid) generateData() {
             if line != nil && int(c) < len(line.Text) {
                 chr = line.Text[c]
             }    
-            tileCoord := Coord{x: x, y:y}
+            tileCoord := gfx.Coord{X: x, Y:y}
 
-            size := Size{w: 1., h: 1. }
+
             
             glyphCoord := getGlyphCoord( byte(chr) )
-            texOffset := Point{
-                x: float32(glyphCoord.x) / (gfx.GlyphCols),
-                y: float32(glyphCoord.y) / (gfx.GlyphRows),
-            }
-            grid.data = append(grid.data, gridVertices(size,tileCoord,texOffset)... )
-        } 
-    }
             
+            glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
+
+
+            
+
+            size := gfx.Size{
+//                W: 34./70. ,
+//                H: 70./70. ,
+                W: font.MaxSize().W / font.MaxSize().H ,
+                H: font.MaxSize().H / font.MaxSize().H ,
+            }
+
+            
+            texOffset := gfx.Point{
+                X: float32(glyphCoord.X) / (gfx.GlyphCols),
+                Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
+            }
+            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset)... )
+//            totalWidth += float32(font.Size[r][c].W)
+//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+        } 
+        tmp += "\n"
+    }
+    log.Debug(tmp)
     grid.object.BufferData(len(grid.data)*4,grid.data)
 }
 
 
 
-func getGlyphCoord(chr byte) Coord {
+func getGlyphCoord(chr byte) gfx.Coord {
     cols := byte(gfx.GlyphCols)
 
     col := chr % cols
     row := chr / cols
-    return Coord{
-        x: int(col),
-        y: int(row),
+    return gfx.Coord{
+        X: int(col),
+        Y: int(row),
     }
 }
 
@@ -166,8 +177,6 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
     log.Debug("create %s",grid.Desc())
 
-
-//    err = grid.texture.LoadFile("/home/folkert/src/gfx/facade/asset/test.png")
 
     rgba, err := font.RenderMapRGBA()
     if err != nil {
@@ -186,7 +195,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.white = gfx.WhiteColor()
     grid.object.Init()
     
-    grid.generateData()
+    grid.generateData(font)
 
     err = grid.program.LoadShaders("grid","grid")
     if err != nil { log.Error("fail load grid shaders: %s",err) }
@@ -200,10 +209,10 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
 
 
 
-func (grid *Grid) Queue(text string) {
+func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     grid.buffer.Queue( newText )
-    grid.generateData()
+    grid.generateData(font)
     log.Debug("queued text: %s",text)
 }
 
@@ -213,7 +222,7 @@ func (grid *Grid) Queue(text string) {
 
 
 
-func (grid *Grid) Configure(config *conf.GridConfig) {
+func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
     if config == nil {
         return
     }
@@ -227,7 +236,7 @@ func (grid *Grid) Configure(config *conf.GridConfig) {
         grid.buffer.Resize(config.Height)    
     }
 
-    grid.generateData()
+    grid.generateData(font)
 
     log.Debug("configured grid: %s",config.Desc())
 }
