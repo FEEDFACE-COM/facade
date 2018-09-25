@@ -39,28 +39,40 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
     
     
     
-    gridSize := mgl32.Vec2{ 
-        float32(grid.width)/2.  - 0.5 ,
-        float32(grid.height)/2. - 0.5 ,
+    tileCount := mgl32.Vec2{ 
+        float32(grid.width),
+        float32(grid.height),
     }
-    grid.program.Uniform2fv(gfx.GRIDSIZE, 1, &gridSize[0] );
+    grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
     tileSize := mgl32.Vec2{
         1.0,
         1.0,    
     }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
+    
+    glyphCount := mgl32.Vec2{
+        float32(gfx.GlyphCols),
+        float32(gfx.GlyphRows),
+    }
+    grid.program.Uniform2fv(gfx.GLYPHCOUNT, 1, &glyphCount[0] );
+    
+    glyphSize := mgl32.Vec2{
+        float32(1.),
+        float32(1.),    
+    }
+    grid.program.Uniform2fv(gfx.GLYPHSIZE, 1, &glyphSize[0] );
 
-    model := mgl32.Ident4()
-    grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
-    camera.Uniform(grid.program)
-    grid.program.Uniform1i(gfx.TEXTURE,0)
-    
-    grid.program.VertexAttribPointer(gfx.VERTEX,3,(3+2+2+2)*4,0)
-    grid.program.VertexAttribPointer(gfx.GRIDCOORD,2,(3+2+2+2)*4,(3)*4)
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,2,(3+2+2+2)*4,(3+2)*4)
-    grid.program.VertexAttribPointer(gfx.TEXOFFSET,2,(3+2+2+2)*4,(3+2+2)*4)
-    
+        model := mgl32.Ident4()
+        grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+        camera.Uniform(grid.program)
+        grid.program.Uniform1i(gfx.TEXTURE,0)
+        
+        grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2+2)*4,  0*4)
+        grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2+2)*4, (3)*4)
+        grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2+2)*4, (3+2)*4)
+//        grid.program.VertexAttribPointer(gfx.GLYPHCOORD,2, (3+2+2+2)*4, (3+2+2)*4)
+//    
     count := (2*3)*int32(grid.height*grid.width)
 
     if true {    
@@ -91,67 +103,88 @@ func (grid *Grid) Render(camera *gfx.Camera, debug, verbose bool) {
 
 
 
-func gridVertices(size,gridcoord,tilesize,offset mgl32.Vec2) []float32 {
-    w, h := size[0], size[1]
-    x, y := gridcoord[0], gridcoord[1]
-    tw, th := tilesize[0], tilesize[1]
-    offx,offy := offset[0],offset[1]
+func gridVertices(size,tileCoord,texCoord,texOffset,glyphCoord struct{x,y float32}) []float32 {
+    w, h := size.x, size.y
+    x, y := tileCoord.x, tileCoord.y
+    tw, th := texCoord.x, texCoord.y
+    offx, offy := texOffset.x, texOffset.y
+    gx,gy := glyphCoord.x, glyphCoord.y
     return []float32{
-        -w/2,  h/2, 0,            x, y,        0,  0,       offx, offy,
-        -w/2, -h/2, 0,            x, y,        0, th,       offx, offy,
-         w/2, -h/2, 0,            x, y,       tw, th,       offx, offy,
-         w/2, -h/2, 0,            x, y,       tw, th,       offx, offy,
-         w/2,  h/2, 0,            x, y,       tw,  0,       offx, offy,
-        -w/2,  h/2, 0,            x, y,        0,  0,       offx, offy,
+               //vertices         //coords    //tex cords   // tex offset  
+        -w/2,  h/2, 0,            x, y,        0 +offx,  0 + offy,       gx, gy,
+        -w/2, -h/2, 0,            x, y,        0 +offx, th + offy,       gx, gy,
+         w/2, -h/2, 0,            x, y,       tw +offx, th + offy,       gx, gy,
+         w/2, -h/2, 0,            x, y,       tw +offx, th + offy,       gx, gy,
+         w/2,  h/2, 0,            x, y,       tw +offx,  0 + offy,       gx, gy,
+        -w/2,  h/2, 0,            x, y,        0 +offx,  0 + offy,       gx, gy,
         
     }
     
 }
 
-
-func getOffset(chr byte) mgl32.Vec2 {
-    cols := byte(gfx.GlyphCols)
-//    rows:= byte(gfx.GlyphRows)
-
-    col := chr % cols
-    row := chr / cols
-    return mgl32.Vec2{
-        float32(col),
-        float32(row),
-        
-    }
-}
 
 
 func (grid *Grid) generateData() {
     log.Debug("grid generate data") 
     grid.data = []float32{}
     
-    
-    for y := uint(0); y<grid.height; y++ {
-        line  := grid.buffer.Tail(y)
-
-        for x:=uint(0); x<grid.width; x++ {
-            chr := byte(' ')
-            if line != nil && int(x) < len(line.Text) {
-                chr = line.Text[x]
-            }    
-
-            size := mgl32.Vec2{1, 1}
-            gridcoord := mgl32.Vec2{float32(x),float32(y)}
-            tilesize := mgl32.Vec2{  1, 1 }
-            offset := getOffset( byte(chr) )
-            grid.data = append(grid.data, gridVertices(size,gridcoord,tilesize,offset)... )
-
-        }
-            
+    tmp := ""
+    w,h := int(grid.width), int(grid.height)
+    for r:=0; r<h; r++ {
+        y:= -1 * (r-h/2)
         
+        line  := grid.buffer.Tail(uint(r))
+        
+        for c:=0; c<w; c++ {
+            x:= c-w/2 + (1-w%2)
+//			tmp += fmt.Sprintf("%2d/%2d  ",x,y)
+            
+            chr := byte('#')
+            if line != nil && int(c) < len(line.Text) {
+                chr = line.Text[c]
+            }    
+            tileCoord := struct{x,y float32}{
+                x: float32(x),
+                y: float32(y),
+            }
+//			tmp += fmt.Sprintf("%2.f/%+2.f  ",tileCoord.x,tileCoord.y)
+            
+            size := struct{x,y float32}{x: 1., y: 1. }
+            texCoord := struct{x,y float32}{  
+                1./(gfx.GlyphCols),  
+                1./(gfx.GlyphRows),
+            }
+            
+            glyphCoord := getGlyphCoord( byte(chr) )
+            
+            texOffset := struct{x,y float32}{
+                x: glyphCoord.x / (gfx.GlyphCols),
+                y: glyphCoord.y / (gfx.GlyphRows),
+            }
+			tmp += fmt.Sprintf("%c  %4.1f/%4.1f",chr,texOffset.x,texOffset.y)
+//			tmp += fmt.Sprintf("%2.f/%+2.f  ",glyphCoord.x,glyphCoord.y)
+            grid.data = append(grid.data, gridVertices(size,tileCoord,texCoord,texOffset,glyphCoord)... )
+//            tmp += fmt.Sprintf("%.0f/%.0f  ",glyphCoord.x,glyphCoord.y)
+        } 
+        tmp += "\n"
     }
+            
     grid.object.BufferData(len(grid.data)*4,grid.data)
-    
+    log.Debug("grid %dx%d coords:\n%s",w,h,tmp)
 }
 
 
+
+func getGlyphCoord(chr byte) struct{x,y float32} {
+    cols := byte(gfx.GlyphCols)
+
+    col := chr % cols
+    row := chr / cols
+    return struct{x,y float32}{
+        x: float32(col),
+        y: float32(row),
+    }
+}
 
 
 func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {

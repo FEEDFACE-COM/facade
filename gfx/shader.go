@@ -25,8 +25,10 @@ const (
     MODEL      UniformName = "model"
     VIEW       UniformName = "view"
     TEXTURE    UniformName = "texture"
-    GRIDSIZE   UniformName = "gridsize"
-    TILESIZE   UniformName = "tilesize"
+    TILECOUNT  UniformName = "tileCount"
+    TILESIZE   UniformName = "tileSize"
+    GLYPHCOUNT UniformName = "glyphCount"
+    GLYPHSIZE  UniformName = "glyphSize"
 )    
 
 type AttribName string
@@ -34,8 +36,8 @@ const (
     VERTEX     AttribName = "vertex"    
     COLOR      AttribName = "color"    
     TEXCOORD   AttribName = "texcoord"
-    GRIDCOORD  AttribName = "gridcoord"
-    TEXOFFSET  AttribName = "texoffset"
+    TILECOORD  AttribName = "tileCoord"
+    GLYPHCOORD AttribName = "glyphCoord"
 )
 
 
