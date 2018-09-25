@@ -120,6 +120,15 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     }
     renderer.config = *config
     
+    if config.Font != nil {
+        newFont := gfx.NewFont(config.Font, conf.DIRECTORY)
+        newFont.Init()
+        oldFont := renderer.font
+        renderer.font = newFont
+        oldFont.Close()
+    }
+    
+    
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
     renderer.grid.Configure(config.Grid,renderer.font)
