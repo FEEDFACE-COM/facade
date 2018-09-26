@@ -81,16 +81,11 @@ void main() {
 
 "mask":`
 
-varying vec4 vFragColor;
-varying vec2 vFragCoord;
-
-float w = 0.005;
-
-
+varying vec2 vTexCoord;
 varying float vDebugFlag;
 
-
 bool DEBUG = vDebugFlag > 0.0;
+float w = 0.005;
 
 bool grid(vec2 pos) {
 
@@ -102,17 +97,17 @@ bool grid(vec2 pos) {
     return false;
 }
 
+
 void main() {
-    vec4 col = vec4(0.0,0.0,0.0,0.0);
-    vec2 pos = vFragCoord;
-    
+
+    vec2 pos = vTexCoord;
+    vec4 col = vec4(0.0,0.0,0.0,1.0);
+
     if ( grid(pos) ) { col = vec4(1.,1.,1.,0.5); }
-    
     if ( pos.y > 0.0 && pos.y < 1.0 && abs(pos.x) <= w ) { col = vec4(0.,1.,0.,1.); }
     if ( pos.x > 0.0 && pos.x < 1.0 && abs(pos.y) <= w ) { col = vec4(1.,0.,0.,1.); }
-
-    gl_FragColor = col;
-
+       
+    gl_FragColor = vec4(col.rgb,1.0);
 }
 `,
 
