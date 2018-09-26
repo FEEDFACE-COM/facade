@@ -5,7 +5,7 @@ uniform mat4 model;
 uniform vec2 tileSize;
 uniform vec2 tileCount;
 
-uniform vec2 debugFlag;
+uniform float debugFlag;
 
 attribute vec3 vertex;
 attribute vec2 texcoord;
@@ -14,7 +14,7 @@ attribute vec2 tileCoord;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
-varying vec2 vDebugFlag;
+varying float vDebugFlag;
 
 void main() {
     vTexCoord = texcoord;
@@ -25,7 +25,6 @@ void main() {
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
     
-    if (debugFlag.x == 0.0) { pos.x += 0.1; }
     
     if (mod(tileCount.x, 2.0) != 1.0 ) {
         pos.x -= tileSize.x/2.;

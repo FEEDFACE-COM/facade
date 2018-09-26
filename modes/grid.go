@@ -30,7 +30,6 @@ const DEBUG_GRID = false
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
     gl.ClearColor(0,0,0,1)
-//    gl.ClearColor(0.5,0.5,0.5,1.)
     gl.ActiveTexture(gl.TEXTURE0)
     
 
@@ -46,11 +45,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
-    
-    debugFlag := mgl32.Vec2{0.0, 0.0}
-    if debug { debugFlag[0] = 1.0 }
-    grid.program.Uniform2fv(gfx.DEBUGFLAG, 1, &debugFlag[0] );
-
 
     model := mgl32.Ident4()
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )

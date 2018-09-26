@@ -24,7 +24,7 @@ uniform sampler2D texture;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
-varying vec2 vDebugFlag;
+varying float vDebugFlag;
 
 
 bool debug = false;
@@ -42,16 +42,22 @@ void main() {
 
     bool debug = false; 
     
-    if ( debugFlag.x > 0.0 ) {
+    if ( vDebugFlag > 0.0 ) {
         debug = true;
     }
        
     if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
+        col.r += 0.5;
+        col.g += 0.5;
+        col.b += 0.5;
+    }
+
+    if (debug && pos.x == 0.0  ) {
         col.g += 0.5;
     }
 
-    if (debug && pos.x == 1.0 && pos.y == 1.0 ) {
-        col.b += 0.5;
+    if (debug && pos.y == 0.0  ) {
+        col.r += 0.5;
     }
     
     gl_FragColor = vec4(col.rgb,1.0);

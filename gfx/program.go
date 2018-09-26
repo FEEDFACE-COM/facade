@@ -20,6 +20,8 @@ type Program struct {
     Program uint32
     vertexShader *Shader
     fragmentShader *Shader
+    debugFlag float32
+    broken bool
 }
 
 
@@ -29,7 +31,13 @@ func NewProgram(name string) *Program {
     return ret
 }
 
-func (program *Program) UseProgram() { gl.UseProgram(program.Program) }
+func (program *Program) UseProgram(debug bool) { 
+    gl.UseProgram(program.Program) 
+    if debug {
+        program.debugFlag = float32(1)
+        program.Uniform1f(DEBUGFLAG, program.debugFlag)
+    }
+}
 
 
 
@@ -121,6 +129,7 @@ func (program *Program) LinkProgram() error {
     //todo: cleanup if already present?
 
     if program.vertexShader == nil || program.fragmentShader == nil {
+        program.broken = true
         return log.NewError("missing shader in %s",program.Name)
     }
 
@@ -144,6 +153,7 @@ func (program *Program) LinkProgram() error {
         if strings.Contains(logs,"fragment shader") { src += "\n" + program.fragmentShader.Source }
 
 
+        program.broken = true
 		log.Error("fail link program %s/%s: %s%s", program.vertexShader.Name,program.fragmentShader.Name, logs,src)
 		return log.NewError("fail link program %s/%s",program.vertexShader.Name,program.fragmentShader.Name)
 	}
@@ -159,33 +169,71 @@ func (program *Program) LinkProgram() error {
 
 func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) uint32 {
     ret := uint32( gl.GetAttribLocation(program.Program, gl.Str(string(name)+"\x00")) )
+    if ret < 0 {
+        log.Debug("no vertexattrib %s: %d",name,ret)
+        return ret;
+    }
     gl.EnableVertexAttribArray(ret)
     gl.VertexAttribPointer(ret, size, gl.FLOAT, false, stride, gl.PtrOffset(offset) )
     return ret
 }
 
 
-func (program *Program) UniformMatrix4fv(name UniformName, count int32, value *float32) int32 {
+func (program *Program) uniformLocation(name UniformName) int32 {
     ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    if ret < 0 { 
+        log.Debug("fail get uniform location %s program %s: %d",name,program.Name,ret)
+    }
+    return ret;
+}
+
+func (program *Program) UniformMatrix4fv(name UniformName, count int32, value *float32) int32 {
+    if program.broken { return -1 }
+    ret := program.uniformLocation(name)
+    if ret <= 0 {
+        return ret;
+    }
     gl.UniformMatrix4fv(ret, count, false, value)
     return ret
 }
 
+
 func (program *Program) Uniform2f(name UniformName, value0, value1 float32) int32 {
-    ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    if program.broken { return -1 }
+    ret := program.uniformLocation(name)
+    if ret <= 0 {
+        return ret;
+    }
     gl.Uniform2f(ret, value0, value1)
     return ret
 }
 
 func (program *Program) Uniform2fv(name UniformName, count int32, value *float32) int32 {
-    ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    if program.broken { return -1 }
+    ret := program.uniformLocation(name)
+    if ret <= 0 {
+        return ret;
+    }
     gl.Uniform2fv(ret,count, value)
     return ret
 }
 
+func (program *Program) Uniform1f(name UniformName, value float32) int32 {
+    if program.broken { return -1 }
+    ret := program.uniformLocation(name)
+    if ret <= 0 {
+        return ret;
+    }
+    gl.Uniform1f(ret, value)
+    return ret
+}
 
 func (program *Program) Uniform1i(name UniformName, value int32) int32 {
-    ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
+    if program.broken { return -1 }
+    ret := program.uniformLocation(name)
+    if ret <= 0 {
+        return ret;
+    }
     gl.Uniform1i(ret, value)
     return ret
 }
@@ -196,4 +244,5 @@ func (program *Program) Desc() string {
     if program.fragmentShader != nil { tmp += "/" + program.fragmentShader.Name }
     return fmt.Sprintf("program[%s%s]",program.Name,tmp)
 }
+
 
