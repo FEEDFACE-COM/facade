@@ -98,7 +98,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 
     renderer.font.Configure(config.Font)
-    
+    renderer.camera.Configure(config.Camera)
 
     InitClock()
     renderer.now = Clock{}
@@ -166,12 +166,13 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 //    gl.CullFace(gl.BACK)
 
 
-    renderer.axis.Init()
     renderer.font.Init()
-    renderer.lines.Init(renderer.camera,renderer.font)
+    renderer.camera.Init()
     renderer.grid.Init(renderer.camera,renderer.font)
+    renderer.lines.Init(renderer.camera,renderer.font)
     renderer.test.Init(renderer.camera,renderer.font)
     renderer.mask.Init()
+    renderer.axis.Init()
 
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }

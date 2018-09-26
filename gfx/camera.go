@@ -40,13 +40,17 @@ func perspective(width,height float32) mgl32.Mat4 {
 
 func NewCamera(config *conf.CameraConfig, screen Size) *Camera {
     ret := &Camera{config: *config, Width: screen.W, Height: screen.H}
-    ret.Configure(config)
     return ret
 }
 
 func (camera *Camera) Uniform(program *Program) {
 	camera.projectionUniform = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
 	camera.viewUniform = program.UniformMatrix4fv(VIEW, 1, &camera.view[0] )
+}
+
+
+func (camera *Camera) Init() {
+    camera.Configure(&camera.config)    
 }
 
 

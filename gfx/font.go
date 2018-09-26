@@ -81,14 +81,10 @@ func NewFont(config *conf.FontConfig, directory string) *Font {
 func (font *Font) Configure(config *conf.FontConfig) {
     if config == nil { return }
     
+//    if font.config.Name != config.Name || font.font == nil {
     log.Debug("config %s -> %s",font.Desc(),config.Desc())
-    
-    //regenerate here?
-    
-    
-    if font.config.Name != config.Name || font.font == nil {
-        font.config = *config
-    }
+    font.config = *config
+//    }
     
 }
 
@@ -100,10 +96,10 @@ func (font *Font) Desc() string { return font.config.Desc() }
 func (font *Font) loadFont(fontfile string) error {
     var data []byte 
     var err error
-    for _,ext := range []string{ ".ttc", ".ttf", ".TTC", ".TTF" } {
+    var ext string
+    for _,ext = range []string{ ".ttc", ".ttf", ".TTC", ".TTF" } {
         data, err = ioutil.ReadFile(fontfile + ext )
         if err == nil {
-            log.Debug("load font file %s",fontfile+ext)
             break   
         }
     }
@@ -116,7 +112,7 @@ func (font *Font) loadFont(fontfile string) error {
         log.Error("fail to parse font %s: %s",fontfile,err)
         return err
     }
-//    log.Debug("read font file %s",fontfile)
+    log.Debug("load font file %s",fontfile+ext)
     return nil
 }
 
