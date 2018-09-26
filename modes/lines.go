@@ -106,7 +106,7 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     model := mgl32.Ident4()
 
     gl.ActiveTexture(gl.TEXTURE0)
-    lines.program.UseProgram()
+    lines.program.UseProgram(debug)
     lines.object.BindBuffer()
     camera.Uniform(lines.program)
 

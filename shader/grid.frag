@@ -1,8 +1,9 @@
 uniform sampler2D texture;
 
-
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
+
+varying vec2 vDebugFlag;
 
 
 bool debug = false;
@@ -18,7 +19,12 @@ void main() {
 
 
 
-    bool debug = false;    
+    bool debug = false; 
+    
+    if ( vDebugFlag.x > 0.0 ) {
+        debug = true;
+    }
+       
     if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
         col.g += 0.5;
     }

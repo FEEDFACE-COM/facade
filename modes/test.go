@@ -30,7 +30,7 @@ type Test struct {
 func (test *Test) RenderAxis(debug bool) {
     program := test.program["axis"]
   
-    program.UseProgram()
+    program.UseProgram(debug)
 
     object := test.object["axis"]
 

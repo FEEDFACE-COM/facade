@@ -3,6 +3,9 @@ varying vec2 fragcoord;
 
 float w = 0.005;
 
+uniform vec2 debugFlag;
+
+
 bool grid(vec2 pos) {
 
     for (float d = -2.0; d<=2.0; d+=0.5) {

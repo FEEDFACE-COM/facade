@@ -22,7 +22,7 @@ type Axis struct {
 
 func (axis *Axis) Render(camera *Camera) {
 
-    axis.program.UseProgram()
+    axis.program.UseProgram(false)
     axis.object.BindBuffer()
     camera.Uniform(axis.program)
     

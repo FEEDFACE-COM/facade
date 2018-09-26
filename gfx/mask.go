@@ -47,7 +47,7 @@ func (mask *Mask) Render() {
         return
     }
 
-    mask.program.UseProgram()
+    mask.program.UseProgram(false)
     mask.object.BindBuffer()
     
     mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )

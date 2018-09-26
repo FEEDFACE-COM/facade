@@ -8,6 +8,8 @@ var FragmentShader = map[string]string{
 
 varying vec4 fragcolor;
 
+uniform vec2 debugFlag;
+
 void main() {
     gl_FragColor = fragcolor;
 }
@@ -19,9 +21,10 @@ void main() {
 "grid":`
 uniform sampler2D texture;
 
-
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
+
+varying vec2 vDebugFlag;
 
 
 bool debug = false;
@@ -37,7 +40,12 @@ void main() {
 
 
 
-    bool debug = false;    
+    bool debug = false; 
+    
+    if ( debugFlag.x > 0.0 ) {
+        debug = true;
+    }
+       
     if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
         col.g += 0.5;
     }
@@ -58,6 +66,8 @@ uniform sampler2D texture;
 
 varying vec2 fragcoord;
 
+uniform vec2 debugFlag;
+
 void main() {
     vec4 tex = texture2D(texture,fragcoord);
     gl_FragColor = tex;
@@ -72,6 +82,9 @@ varying vec4 fragcolor;
 varying vec2 fragcoord;
 
 float w = 0.005;
+
+uniform vec2 debugFlag;
+
 
 bool grid(vec2 pos) {
 

@@ -21,6 +21,7 @@ type Shader struct {
 
 type UniformName string
 const (
+    DEBUGFLAG  UniformName = "debugFlag"
     PROJECTION UniformName = "projection"
     MODEL      UniformName = "model"
     VIEW       UniformName = "view"

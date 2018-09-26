@@ -7,6 +7,8 @@ attribute vec2 texcoord;
 
 varying vec2 fragcoord;
 
+uniform vec2 debugFlag;
+
 void main() {
     fragcoord = texcoord;
     gl_Position = projection * view * model * vec4(vertex, 1);

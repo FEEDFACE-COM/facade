@@ -35,7 +35,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
 
     
-    grid.program.UseProgram()
+    grid.program.UseProgram(debug)
     grid.object.BindBuffer()
     
     
@@ -43,10 +43,14 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileCount := mgl32.Vec2{ float32(grid.config.Width),float32(grid.config.Height), }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
-//    tileSize := mgl32.Vec2{ 34./70., 70./70. }
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
+    
+    debugFlag := mgl32.Vec2{0.0, 0.0}
+    if debug { debugFlag[0] = 1.0 }
+    grid.program.Uniform2fv(gfx.DEBUGFLAG, 1, &debugFlag[0] );
+
 
     model := mgl32.Ident4()
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
@@ -65,13 +69,11 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     }
 
     if debug {
-        gl.Disable(gl.DEPTH_TEST)
         gl.LineWidth(3.0)
         grid.white.BindTexture()
         for i:=0; i<int(count); i++ {
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
-        gl.Enable(gl.DEPTH_TEST)
     }
     
     
