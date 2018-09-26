@@ -66,24 +66,30 @@ func (buffer *Buffer) Queue(newItem *Text) {
     buffer.tail = (buffer.tail+1)%buffer.count
 }
 
-func (buffer *Buffer) Item(off uint) *Text {
-    return buffer.items[ (buffer.count+buffer.index+off) % buffer.count ]
-}
+//func (buffer *Buffer) Item(off uint) *Text {
+//    return buffer.items[ (buffer.count+buffer.index+off) % buffer.count ]
+//}
 
 func (buffer *Buffer) Tail(off uint) *Text {
     idx := buffer.count + buffer.tail - off
     return buffer.items[idx % buffer.count]    
 }
 
-
-
-func (buffer *Buffer) Items() []*Text {
-    return buffer.items
+func (buffer *Buffer) Head(off uint) *Text {
+    idx := buffer.count + buffer.head + off
+    return buffer.items[idx % buffer.count]    
 }
 
-func (buffer *Buffer) Index(off uint) uint {
-    return (buffer.count+buffer.index+off) % buffer.count
-}
+
+
+
+//func (buffer *Buffer) Items() []*Text {
+//    return buffer.items
+//}
+
+//func (buffer *Buffer) Index(off uint) uint {
+//    return (buffer.count+buffer.index+off) % buffer.count
+//}
 
 func (buffer *Buffer) Desc() string { 
     ret := fmt.Sprintf("buffer[%d]",buffer.count)

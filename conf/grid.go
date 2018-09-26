@@ -11,14 +11,8 @@ import (
 type GridConfig struct {
     Width uint
     Height uint
+    Downward bool
 }
-
-
-type PageDirection string
-const (
-    PageUp   PageDirection = "up"
-    PageDown PageDirection = "down"
-)
 
 
 func NewGridConfig() *GridConfig {
@@ -29,10 +23,17 @@ func NewGridConfig() *GridConfig {
 func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
     flags.UintVar(&config.Width,"w",config.Width,"grid width")
     flags.UintVar(&config.Height,"h",config.Height,"grid height")
+    flags.BoolVar(&config.Downward,"d",config.Downward,"downward")
 
 }
 
-func (config *GridConfig) Desc() string { return fmt.Sprintf("grid[%dx%d]",config.Width,config.Height) }
+func (config *GridConfig) Desc() string { 
+//    tmp := "↑"
+//    if config.Downward {
+//        tmp = "↓"
+//    }
+    return fmt.Sprintf("grid[%dx%d ↓↓↓↓]",config.Width,config.Height) 
+}
 
 
 

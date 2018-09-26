@@ -111,8 +111,14 @@ func (grid *Grid) generateData(font *gfx.Font) {
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
-        
-        line  := grid.buffer.Tail(uint(r))
+
+        var line *gfx.Text
+        if grid.config.Downward {
+            line  = grid.buffer.Head(uint(r))
+        } else {
+            line  = grid.buffer.Tail(uint(r))
+        }        
+
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
             

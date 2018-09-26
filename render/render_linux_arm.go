@@ -54,8 +54,8 @@ func NewRenderer() *Renderer {
 
 const DEBUG_CLOCK  = false
 const DEBUG_MODE   = false
-const DEBUG_BUFFER = false
-const DEBUG_DIAG   = true
+const DEBUG_BUFFER = true
+const DEBUG_DIAG   = false
  
 
 const DEBUG_FRAMES = 90
@@ -110,6 +110,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
 func (renderer *Renderer) Configure(config *conf.Config) error {
     
     if config == nil {
+        log.Error("renderer config nil")
         return nil
     }
     
@@ -233,6 +234,7 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
     select {
         case text := <-textChan:
 //            renderer.buffer.Queue( gfx.NewText(string(text)) )
+            log.Debug("queue %s",text)
             renderer.lines.Queue( string(text), renderer.font )
             renderer.grid.Queue(string(text), renderer.font)
             renderer.test.Queue(string(text))
