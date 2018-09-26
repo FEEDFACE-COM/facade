@@ -21,6 +21,7 @@ void main() {
 
 
 "grid":`
+
 uniform sampler2D texture;
 
 varying vec2 vTexCoord;
@@ -36,23 +37,10 @@ void main() {
     vec2 pos = vTileCoord;
     vec2 tex = vTexCoord;
 
-
     vec4 col = texture2D(texture, tex);
-
-       
-    if (DEBUG && pos.x == 0.0 && pos.y == 0.0 ) {
-        col.r += 0.5;
-        col.g += 0.5;
-        col.b += 0.5;
-    }
-
-    if (DEBUG && pos.x == 0.0  ) {
-        col.g += 0.5;
-    }
-
-    if (DEBUG && pos.y == 0.0  ) {
-        col.r += 0.5;
-    }
+    if (DEBUG) {
+        col = vec4(1.0,1.0,1.0,1.0);
+    } 
     
     gl_FragColor = vec4(col.rgb,1.0);
 }

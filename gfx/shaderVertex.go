@@ -59,7 +59,6 @@ void main() {
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
     
-    
     if (mod(tileCount.x, 2.0) != 1.0 ) {
         pos.x -= tileSize.x/2.;
         pos.y -= tileSize.y/2.;    

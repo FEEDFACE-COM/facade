@@ -81,7 +81,7 @@ func NewFont(config *conf.FontConfig, directory string) *Font {
 func (font *Font) Configure(config *conf.FontConfig) {
     if config == nil { return }
     
-    log.Debug("configure font: %s",config.Desc())
+    log.Debug("configure %s -> %s",font.Desc(),config.Desc())
     
     //regenerate here?
     
@@ -121,11 +121,6 @@ func (font *Font) loadFont(fontfile string) error {
 }
 
 func (font *Font) Init() {
-//    err := font.loadFont(font.directory+font.config.Name)
-//    if err != nil {
-//        log.Error("fail to load font %s: %s",font.config.Name,err)
-//        return
-//    }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
 

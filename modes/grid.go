@@ -51,23 +51,25 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4,  0*4)
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4)
-    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4)
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+3+2+2+2)*4,  (0)*4)
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+3+2+2+2)*4, (3+3)*4)
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+3+2+2+2)*4, (3+3+2+2)*4)
     
     count := int32(grid.config.Width*grid.config.Height)
 
-    if true {    
+    if !debug {    
         grid.texture.BindTexture()
         gl.DrawArrays(gl.TRIANGLES, 0, count*(2*3)  )
     }
 
     if debug {
         gl.LineWidth(3.0)
+//        gl.Disable(gl.DEPTH_TEST)
         grid.white.BindTexture()
         for i:=0; i<int(count); i++ {
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
+//        gl.Enable(gl.DEPTH_TEST)
     }
     
     
@@ -82,21 +84,20 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     
     w, h := size.W, size.H
     x, y := float32(tileCoord.X), float32(tileCoord.Y)
+    ox, oy := texOffset.X, texOffset.Y
+
+    twF := 1./float32(gfx.GlyphCols)  
+    th := 1./float32(gfx.GlyphRows)
+    tw := glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
     
-    tw, th := 1./float32(gfx.GlyphCols)  , 1./float32(gfx.GlyphRows)
-    if true {
-        tw = glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
-    }
-    
-    offx, offy := texOffset.X, texOffset.Y
     return []float32{
-            //vertex                       //texcoords        // coordinates
-        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
-        -w/2, -h/2, 0,                0 +offx, th + offy,      x, y,    
-         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2, -h/2, 0,               tw +offx, th + offy,      x, y,    
-         w/2,  h/2, 0,               tw +offx,  0 + offy,      x, y,    
-        -w/2,  h/2, 0,                0 +offx,  0 + offy,      x, y,    
+            //vertex         //vertex fixed      //texcoords   //texcoords fixed        // coordinates
+        -w/2,  h/2, 0,      -1/2,  1/2, 0,           0+ox,  0+oy,           0+ox,  0+oy,           x, y,    
+        -w/2, -h/2, 0,      -1/2, -1/2, 0,           0+ox, th+oy,          0 +ox, th+oy,           x, y,    
+         w/2, -h/2, 0,       1/2, -1/2, 0,          tw+ox, th+oy,         twF+ox, th+oy,           x, y,    
+         w/2, -h/2, 0,       1/2, -1/2, 0,          tw+ox, th+oy,         twF+ox, th+oy,           x, y,    
+         w/2,  h/2, 0,       1/2,  1/2, 0,          tw+ox,  0+oy,         twF+ox,  0+oy,           x, y,    
+        -w/2,  h/2, 0,      -1/2,  1/2, 0,           0+ox,  0+oy,           0+ox,  0+oy,           x, y,    
         
     }
     
@@ -225,6 +226,7 @@ func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
     if config == nil {
         return
     }
+    log.Debug("config %s -> %s",grid.Desc(),config.Desc())
     
     if config.Width != grid.config.Width || config.Height != grid.config.Height {
         grid.config = *config
@@ -239,7 +241,6 @@ func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
 
     grid.generateData(font)
 
-    log.Debug("configured grid: %s",config.Desc())
 }
 
 func NewGrid(config *conf.GridConfig) *Grid {

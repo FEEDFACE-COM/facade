@@ -53,7 +53,7 @@ func (camera *Camera) Uniform(program *Program) {
 func (camera *Camera) Configure(config *conf.CameraConfig) {
     if config == nil { return }
 
-    log.Debug("config cam : %s",config.Desc())
+    log.Debug("config %s -> %s",camera.Desc(),config.Desc())
     camera.config = *config
     camera.view = mgl32.Ident4()
 
@@ -67,7 +67,6 @@ func (camera *Camera) Configure(config *conf.CameraConfig) {
 //        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{zoom,zoom,zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     }
-    
 
 }
 
