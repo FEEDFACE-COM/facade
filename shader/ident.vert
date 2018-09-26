@@ -2,14 +2,17 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+uniform float debugFlag;
+
 attribute vec3 vertex;
-attribute vec2 texcoord;
+attribute vec2 texCoord;
 
-varying vec2 fragcoord;
+varying vec2 vFragCoord;
+varying float vDebugFlag;
 
-uniform vec2 debugFlag;
+bool DEBUG = debugFlag > 0.0;
 
 void main() {
-    fragcoord = texcoord;
+    vFragCoord = texCoord;
     gl_Position = projection * view * model * vec4(vertex, 1);
 }

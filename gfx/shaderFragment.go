@@ -6,12 +6,14 @@ var FragmentShader = map[string]string{
 
 "color":`
 
-varying vec4 fragcolor;
 
-uniform vec2 debugFlag;
+varying float vDebugFlag;
+varying vec4 vFragColor;
+
+bool DEBUG = vDebugFlag > 0.0;
 
 void main() {
-    gl_FragColor = fragcolor;
+    gl_FragColor = vFragColor;
 }
 `,
 
@@ -26,8 +28,8 @@ varying vec2 vTileCoord;
 
 varying float vDebugFlag;
 
+bool DEBUG = vDebugFlag > 0.0;
 
-bool debug = false;
 
 void main() {
 
@@ -37,26 +39,18 @@ void main() {
 
     vec4 col = texture2D(texture, tex);
 
-
-
-
-    bool debug = false; 
-    
-    if ( vDebugFlag > 0.0 ) {
-        debug = true;
-    }
        
-    if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
+    if (DEBUG && pos.x == 0.0 && pos.y == 0.0 ) {
         col.r += 0.5;
         col.g += 0.5;
         col.b += 0.5;
     }
 
-    if (debug && pos.x == 0.0  ) {
+    if (DEBUG && pos.x == 0.0  ) {
         col.g += 0.5;
     }
 
-    if (debug && pos.y == 0.0  ) {
+    if (DEBUG && pos.y == 0.0  ) {
         col.r += 0.5;
     }
     
@@ -70,12 +64,14 @@ void main() {
 "ident":`
 uniform sampler2D texture;
 
-varying vec2 fragcoord;
+varying vec2 vFragCoord;
+varying float vDebugFlag;
 
-uniform vec2 debugFlag;
+bool DEBUG = vDebugFlag > 0.0;
+
 
 void main() {
-    vec4 tex = texture2D(texture,fragcoord);
+    vec4 tex = texture2D(texture,vFragCoord);
     gl_FragColor = tex;
 }
 `,
@@ -84,13 +80,17 @@ void main() {
 
 
 "mask":`
-varying vec4 fragcolor;
-varying vec2 fragcoord;
+
+varying vec4 vFragColor;
+varying vec2 vFragCoord;
 
 float w = 0.005;
 
-uniform vec2 debugFlag;
 
+varying float vDebugFlag;
+
+
+bool DEBUG = vDebugFlag > 0.0;
 
 bool grid(vec2 pos) {
 
@@ -104,7 +104,7 @@ bool grid(vec2 pos) {
 
 void main() {
     vec4 col = vec4(0.0,0.0,0.0,0.0);
-    vec2 pos = fragcoord;
+    vec2 pos = vFragCoord;
     
     if ( grid(pos) ) { col = vec4(1.,1.,1.,0.5); }
     

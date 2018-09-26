@@ -16,6 +16,9 @@ varying vec2 vTileCoord;
 
 varying float vDebugFlag;
 
+bool DEBUG = debugFlag > 0.0;
+
+
 void main() {
     vTexCoord = texcoord;
     vTileCoord = tileCoord;

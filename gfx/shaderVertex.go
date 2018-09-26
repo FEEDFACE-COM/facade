@@ -9,15 +9,18 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+uniform float debugFlag;
+
 attribute vec3 vertex;
 attribute vec4 color;
 
-varying vec4 fragcolor;
+varying vec4  vFragColor;
+varying float vDebugFlag;
 
-uniform vec2 debugFlag;
 
 void main() {
-    fragcolor = color;
+    vFragColor = color;
+    vDebugFlag = debugFlag;
     gl_Position = projection * view * model * vec4(vertex, 1);
 }
 `,
@@ -43,6 +46,9 @@ varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
 varying float vDebugFlag;
+
+bool DEBUG = debugFlag > 0.0;
+
 
 void main() {
     vTexCoord = texcoord;
@@ -71,15 +77,18 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+uniform float debugFlag;
+
 attribute vec3 vertex;
-attribute vec2 texcoord;
+attribute vec2 texCoord;
 
-varying vec2 fragcoord;
+varying vec2 vFragCoord;
+varying float vDebugFlag;
 
-uniform vec2 debugFlag;
+bool DEBUG = debugFlag > 0.0;
 
 void main() {
-    fragcoord = texcoord;
+    vFragCoord = texCoord;
     gl_Position = projection * view * model * vec4(vertex, 1);
 }
 `,
@@ -88,19 +97,26 @@ void main() {
 
 
 "mask":`
-attribute vec2 texcoord;
+
+uniform vec2 fragCoord;
+uniform float debugFlag;
+
+attribute vec2 texCoord;
 attribute vec3 vertex;
 attribute vec4 color;
 
-varying vec4 fragcolor;
-varying vec2 fragcoord;
 
-uniform vec2 debugFlag;
+varying vec4 vFragColor;
+varying vec2 vFragCoord;
+varying float vDebugFlag;
 
+
+bool DEBUG = debugFlag > 0.0;
 
 void main() {
-    fragcolor = vec4( vertex, 1.0);
-    fragcoord = texcoord;
+    vFragColor = vec4( vertex, 1.0);
+    vFragCoord = texCoord;
+    vDebugFlag = debugFlag;
     gl_Position = vec4(vertex,1);
 }
 `,

@@ -1,10 +1,14 @@
-varying vec4 fragcolor;
-varying vec2 fragcoord;
+
+varying vec4 vFragColor;
+varying vec2 vFragCoord;
 
 float w = 0.005;
 
-uniform vec2 debugFlag;
 
+varying float vDebugFlag;
+
+
+bool DEBUG = vDebugFlag > 0.0;
 
 bool grid(vec2 pos) {
 
@@ -18,7 +22,7 @@ bool grid(vec2 pos) {
 
 void main() {
     vec4 col = vec4(0.0,0.0,0.0,0.0);
-    vec2 pos = fragcoord;
+    vec2 pos = vFragCoord;
     
     if ( grid(pos) ) { col = vec4(1.,1.,1.,0.5); }
     

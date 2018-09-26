@@ -5,8 +5,8 @@ varying vec2 vTileCoord;
 
 varying float vDebugFlag;
 
+bool DEBUG = vDebugFlag > 0.0;
 
-bool debug = false;
 
 void main() {
 
@@ -16,26 +16,18 @@ void main() {
 
     vec4 col = texture2D(texture, tex);
 
-
-
-
-    bool debug = false; 
-    
-    if ( vDebugFlag > 0.0 ) {
-        debug = true;
-    }
        
-    if (debug && pos.x == 0.0 && pos.y == 0.0 ) {
+    if (DEBUG && pos.x == 0.0 && pos.y == 0.0 ) {
         col.r += 0.5;
         col.g += 0.5;
         col.b += 0.5;
     }
 
-    if (debug && pos.x == 0.0  ) {
+    if (DEBUG && pos.x == 0.0  ) {
         col.g += 0.5;
     }
 
-    if (debug && pos.y == 0.0  ) {
+    if (DEBUG && pos.y == 0.0  ) {
         col.r += 0.5;
     }
     
