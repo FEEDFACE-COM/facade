@@ -168,9 +168,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 
 
 
-    var c byte
-
-    c = 0x00
+    var c byte = 0x00
     for y:=0; DEBUG_FONT && y<GlyphRows; y++ {
         
         for x:=0; x<GlyphCols; x++ {
@@ -210,10 +208,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
         
         for x:=0; x<GlyphCols; x++ {
             
-            str := fmt.Sprintf("%c",rune(c))
-            if c < 0x20 || ( c >= 0x7f && c < 0xa0 ) {
-                str = "X"
-            }
+            str := font.stringForByte(c)
             
             magic_offset := height/5. // this should really come from the font geometrics
             pos := freetype.Pt( x*width, y*height + height - magic_offset)
@@ -242,6 +237,16 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     
 }
 
+func (font *Font) stringForByte(b byte) string {
+        if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
+            return "X"
+        }
+        if font.config.Name == "OCRAEXT" && b == 0xB7 {
+            log.Debug("special-case ocraext '%c'",b)
+            return " "
+        }
+        return fmt.Sprintf("%c",rune(b))    
+}
 
 
 func min(a,b int) int { 
@@ -318,18 +323,16 @@ func (font *Font) findSizes() ([GlyphCols][GlyphRows]Size, struct{w,h int}) {
     
     max.h = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
     
-    c := 0x00
+    var c byte = 0x00
     for y:=0; y<GlyphRows; y++ {
         
 
         for x:=0; x<GlyphCols; x++ {
-            str := fmt.Sprintf("%c",rune(c))
-            if c < 0x020 || ( c>= 0x7f && c < 0xa0) {
-                str = "X"
-            }
+            
+            str := font.stringForByte(c)
             dim,err := ctx.DrawString(str, freetype.Pt(0,0))
             if err != nil {
-//                log.Error("could not draw glyph 0x%02x for sizing: %s",c,err)
+                log.Error("could not draw glyph 0x%02x for sizing: %s",c,err)
                 continue
             }
             size[x][y].W = float32(dim.X.Ceil())
