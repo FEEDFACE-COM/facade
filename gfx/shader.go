@@ -28,8 +28,6 @@ const (
     TEXTURE    UniformName = "texture"
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
-    GLYPHCOUNT UniformName = "glyphCount"
-    GLYPHSIZE  UniformName = "glyphSize"
 )    
 
 type AttribName string
@@ -38,7 +36,7 @@ const (
     COLOR      AttribName = "color"    
     TEXCOORD   AttribName = "texcoord"
     TILECOORD  AttribName = "tileCoord"
-    GLYPHCOORD AttribName = "glyphCoord"
+    TOTALWIDTH AttribName = "totalWidth"
 )
 
 

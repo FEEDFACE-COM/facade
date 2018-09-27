@@ -5,6 +5,7 @@ package render
 
 import (
     "fmt"
+    "strings"
     "time"
     "sync"
 //    "runtime"
@@ -146,7 +147,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
 }
 
 func (renderer *Renderer) Desc() string { 
-    return fmt.Sprintf("renderer[%s]",renderer.screen.Desc())
+    return fmt.Sprintf("renderer[%dx%d]",int(renderer.screen.W),int(renderer.screen.H))
 }
 
 func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
@@ -181,7 +182,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("coord",renderer.font)
+    renderer.grid.FillTest("alpha",renderer.font)
 
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
@@ -246,8 +247,9 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
     }
     
     select {
-        case text := <-textChan:
+        case txt := <-textChan:
 //            renderer.buffer.Queue( gfx.NewText(string(text)) )
+            text := fun(string(txt))
             log.Debug("queue %s",text)
             renderer.lines.Queue( string(text), renderer.font )
             renderer.grid.Queue(string(text), renderer.font)
@@ -255,6 +257,14 @@ func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan 
         default:
     }
     
+}
+
+
+func fun(in string) string {
+    const TABWIDTH = 8
+    ret := in    
+    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
+    return ret
 }
 
 

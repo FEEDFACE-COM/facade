@@ -168,15 +168,15 @@ func (program *Program) LinkProgram() error {
 }
 
 
-func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) uint32 {
-    ret := uint32( gl.GetAttribLocation(program.Program, gl.Str(string(name)+"\x00")) )
+func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) {
+    ret := gl.GetAttribLocation(program.Program, gl.Str(string(name)+"\x00")) 
     if ret < 0 {
-        log.Debug("no vertexattrib %s: %d",name,ret)
-        return ret;
+//        log.Debug("no vertexattrib %s: %d",name,ret)
+        return;
     }
-    gl.EnableVertexAttribArray(ret)
-    gl.VertexAttribPointer(ret, size, gl.FLOAT, false, stride, gl.PtrOffset(offset) )
-    return ret
+    gl.EnableVertexAttribArray( uint32(ret) )
+    gl.VertexAttribPointer( uint32(ret), size, gl.FLOAT, false, stride, gl.PtrOffset(offset) )
+    return
 }
 
 
