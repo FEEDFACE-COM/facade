@@ -142,7 +142,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
 }
 
 func (renderer *Renderer) Desc() string { 
-    return fmt.Sprintf("renderer[%s %s]",renderer.screen,renderer.config)
+    return fmt.Sprintf("renderer[%s]",renderer.screen.Desc())
 }
 
 func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
@@ -173,6 +173,9 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
     renderer.test.Init(renderer.camera,renderer.font)
     renderer.mask.Init()
     renderer.axis.Init()
+
+
+    renderer.grid.FillTest("coord",renderer.font)
 
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
@@ -206,6 +209,10 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
         
         if verbose { renderer.PrintDebug(now,&prev); prev = *now }
+
+        if verbose {
+            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
+        }    
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()

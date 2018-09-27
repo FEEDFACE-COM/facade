@@ -16,7 +16,7 @@ type GridConfig struct {
 
 
 func NewGridConfig() *GridConfig {
-    return &GridConfig{Width: 3, Height: 2}
+    return &GridConfig{Width: 5, Height: 2}
 }
 
 
@@ -28,11 +28,11 @@ func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
 }
 
 func (config *GridConfig) Desc() string { 
-//    tmp := "↑"
-//    if config.Downward {
-//        tmp = "↓"
-//    }
-    return fmt.Sprintf("grid[%dx%d ↓↓↓↓]",config.Width,config.Height) 
+    tmp := "↑"
+    if config.Downward {
+        tmp = "↓"
+    }
+    return fmt.Sprintf("grid[%dx%d %s]",config.Width,config.Height,tmp) 
 }
 
 

@@ -2,7 +2,7 @@
 package modes
 
 import(
-//    "fmt"
+    "fmt"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -47,9 +47,31 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
 
     model := mgl32.Ident4()
-    grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
+    
+    
+    scale := float32( 1.0 )
+    var autoScale = true
+    if autoScale {
+//        goldenSize := gfx.Size{W: 23., H: 8.}
+//        goldenScale := float32(0.25)
+        goldenSize := gfx.Size{W:23., H: 8.}
+        goldenScale := float32(0.25)
+        
+        sx := goldenSize.W / float32(grid.config.Width)
+        sy := goldenSize.H / float32(grid.config.Height)
+        
+        if sx < sy { 
+            scale = sx * goldenScale
+        } else { 
+            scale = sy * goldenScale
+        }
+                
+    }
+    
+    model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
+    grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+3+2+2+2)*4,  (0)*4)
     grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+3+2+2+2)*4, (3+3)*4)
@@ -64,19 +86,39 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     if debug {
         gl.LineWidth(3.0)
-//        gl.Disable(gl.DEPTH_TEST)
         grid.white.BindTexture()
         for i:=0; i<int(count); i++ {
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
-//        gl.Enable(gl.DEPTH_TEST)
     }
-    
-    
+
+    if verbose {
+        log.Debug("got scale %5.2f for %s %s",scale,grid.Desc(),font.Desc())    
+    }
 }
 
 
 
+func (grid *Grid) FillTest(test string, font *gfx.Font) {
+    if test == "coord" {
+        w,h := int(grid.config.Width), int(grid.config.Height)
+        for r:=0; r<h; r++ {
+            line := ""
+            for c:=0; c<w; c++ {
+                d := "."
+                if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
+                if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
+                if c % 5 == 0 && r % 5 == 0 { d = "#" }
+
+                line += fmt.Sprintf("%s",d)        
+            }
+        grid.Queue(line,font)
+        }
+        
+        
+    }    
+    
+}
 
 
 
@@ -114,9 +156,9 @@ func (grid *Grid) generateData(font *gfx.Font) {
 
         var line *gfx.Text
         if grid.config.Downward {
-            line  = grid.buffer.Head(uint(r))
-        } else {
             line  = grid.buffer.Tail(uint(r))
+        } else {
+            line  = grid.buffer.Head(uint(r))
         }        
 
         for c:=0; c<w; c++ {
@@ -171,8 +213,6 @@ func getGlyphCoord(chr byte) gfx.Coord {
 
 func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
-    log.Debug("create %s",grid.Desc())
-
 
 
     grid.texture.Init()
@@ -263,9 +303,6 @@ func NewGrid(config *conf.GridConfig) *Grid {
 
 func (grid *Grid) Desc() string {
     ret := grid.config.Desc()
-    if grid.buffer.Tail(0) != nil {
-        ret += " '" + (*grid.buffer.Tail(0)).Desc() + "'"
-    }
     return ret
 }
 

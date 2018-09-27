@@ -27,7 +27,7 @@ type Camera struct {
 
 
 func orthographic(width,height float32) mgl32.Mat4 {
-    const F = 5.
+    const F = 2.
     var w float32 = F * (width/height) /2.
     var h float32 = F * (height/height) /2.
     var l float32 = F * 1000. /2.

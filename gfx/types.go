@@ -14,6 +14,13 @@ type Coord struct {
     Y int    
 }
 
+
+func (d *Dim) Desc() string { return fmt.Sprintf("%dx%d",d.W,d.H) }
+type Dim struct {
+    W int
+    H int
+}
+
 func (s *Size) Desc() string { return fmt.Sprintf("%5.1fx%5.1f",s.W,s.H) }
 type Size struct {
     W float32
