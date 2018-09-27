@@ -20,9 +20,8 @@ type Config struct {
 
 
 
+type RawText string
 
-
-type Text string
 
 type Mode string
 const (

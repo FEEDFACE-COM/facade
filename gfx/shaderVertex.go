@@ -54,7 +54,7 @@ varying float vDebugFlag;
 bool DEBUG = debugFlag > 0.0;
 
 
-bool TOTAL = true;
+bool TOTAL = false;
 
 void main() {
     vTexCoord = texcoord;
@@ -75,7 +75,7 @@ void main() {
         pos.x += totalWidth;
         pos.x -= tileSize.x * (tileCount.x/2.);
         pos.y += tileCoord.y * tileSize.y;
-//        if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
+        if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x += tileSize.x/2.; }
         if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
     }
     

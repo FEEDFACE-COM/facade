@@ -245,9 +245,10 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            texts := make(chan conf.Text)
-            go scanner.ScanText(texts)
-//            go renderer.ReadText(texts)
+            rawTexts := make(chan conf.RawText)
+            texts := make(chan string)
+            go scanner.ScanText(rawTexts)
+            go renderer.ProcessText(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
             renderer.Render(nil, texts)
@@ -256,12 +257,14 @@ func main() {
             log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            texts := make(chan conf.Text)
+            rawConfs := make(chan conf.Config)
+            rawTexts := make(chan conf.RawText)
             confs := make(chan conf.Config)
-            go server.ListenText(texts)
-            go server.ListenConf(confs)
-//            go renderer.ReadText(texts)
-//            go renderer.ReadConf(confs)
+            texts := make(chan string)
+            go server.ListenConf(rawConfs)
+            go server.ListenText(rawTexts)
+            go renderer.ProcessConf(rawConfs,confs)
+            go renderer.ProcessText(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
             renderer.Render(confs, texts)

@@ -21,11 +21,11 @@ func NewScanner() *Scanner {
 }
 
 
-func (scanner *Scanner) ScanText(textChan chan conf.Text) {
+func (scanner *Scanner) ScanText(textChan chan conf.RawText) {
     for scanner.scanner.Scan() {
         text := scanner.scanner.Text()
 //        log.Debug("scan  %s",text)
-        textChan <- conf.Text(text)
+        textChan <- conf.RawText(text)
     }    
     err := scanner.scanner.Err()
     if err != nil {

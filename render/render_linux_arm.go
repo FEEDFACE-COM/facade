@@ -63,7 +63,7 @@ const DEBUG_FRAMES = 90
 
 func (renderer *Renderer) Init(config *conf.Config) error {
     var err error
-    log.Debug("initializing renderer")
+    log.Debug("init %s",renderer.Desc())
     
     err = piglet.CreateContext()
     if err != nil {
@@ -115,7 +115,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     
     if config == nil { log.Error("renderer config nil") ;return nil }
     
-    log.Debug("configure %s",config.Desc())
+    log.Debug("conf %s",config.Desc())
     
     
     old := renderer.config
@@ -146,17 +146,13 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     return nil
 }
 
-func (renderer *Renderer) Desc() string { 
-    return fmt.Sprintf("renderer[%dx%d]",int(renderer.screen.W),int(renderer.screen.H))
-}
 
-func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.Text) error {
+func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string) error {
 
     
     var now *Clock = &renderer.now
     var prev Clock = *now
 
-    log.Debug("renderer start")
     gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
 
@@ -184,6 +180,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 
     renderer.grid.FillTest("alpha",renderer.font)
 
+    log.Debug("renderer start")
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
@@ -196,7 +193,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
-        renderer.ReadChannels(confChan,textChan)
+        renderer.QueueTexts(textChan)
+        renderer.QueueConfs(confChan)
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
@@ -234,38 +232,40 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
 }
 
 
-
-
-
-
-func (renderer *Renderer) ReadChannels(confChan chan conf.Config, textChan chan conf.Text) {
+func (renderer *Renderer) QueueTexts(textChan chan string) {
 
     select {
-        case config := <-confChan:
-            renderer.Configure(&config)
+        case text := <-textChan:
+            
+            renderer.lines.Queue(text, renderer.font )
+            renderer.grid.Queue(text, renderer.font)
+            renderer.test.Queue(text)
+        
         default:
-    }
-    
-    select {
-        case txt := <-textChan:
-//            renderer.buffer.Queue( gfx.NewText(string(text)) )
-            text := fun(string(txt))
-            log.Debug("queue %s",text)
-            renderer.lines.Queue( string(text), renderer.font )
-            renderer.grid.Queue(string(text), renderer.font)
-            renderer.test.Queue(string(text))
-        default:
+            //nop    
     }
     
 }
 
 
-func fun(in string) string {
-    const TABWIDTH = 8
-    ret := in    
-    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
-    return ret
+
+func (renderer *Renderer) QueueConfs(confChan chan conf.Config) {
+    
+    select {
+        case conf := <-confChan:
+        
+            renderer.Configure(&conf)
+        
+        
+        default:
+            //nop    
+    }    
 }
+
+
+
+
+
 
 
 func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
@@ -319,18 +319,60 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
 //}
 //
 //
-//func (renderer *Renderer) ReadConf(confChan chan conf.Config) error {
-//    for {
-//        config := <-confChan
-//        log.Debug("conf: %s",config.Desc())    
-//        renderer.mutex.Lock()
-////        renderer.Configure(&config)
-//        renderer.mutex.Unlock()
-//    }
-//    return nil
-//}
-//
-//
 
+
+func (renderer *Renderer) SanitizeText(raw conf.RawText) string {
+    const TABWIDTH = 8
+    ret := string(raw)
+    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
+    return ret
+}
+
+func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan string) error {
+
+    for {
+        rawText := <-rawChan
+
+        log.Debug("process raw text: %s",string(rawText))
+        text := renderer.SanitizeText(rawText)
+        
+        renderer.mutex.Lock()
+        renderer.buffer.Queue( gfx.NewText(text) )
+        renderer.mutex.Unlock()
+        
+        textChan <- text
+        
+    }
+    return nil    
+    
+}
+
+func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
+    ret := raw
+    return ret
+}
+
+
+func (renderer *Renderer) ProcessConf(rawChan chan conf.Config, confChan chan conf.Config) error {
+    for {
+        rawConf := <-rawChan
+        log.Debug("process raw conf: %s",rawConf.Desc())
+        conf := renderer.SanitizeConfig(rawConf)
+
+        renderer.mutex.Lock()
+        // prep some stuff i guess?
+        renderer.mutex.Unlock()
+        
+        confChan <- conf
+
+    }
+    return nil
+}
+
+
+
+func (renderer *Renderer) Desc() string { 
+    return fmt.Sprintf("renderer[%dx%d]",int(renderer.screen.W),int(renderer.screen.H))
+}
 
 

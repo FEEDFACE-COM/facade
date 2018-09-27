@@ -122,7 +122,7 @@ func (grid *Grid) FillTest(test string, font *gfx.Font) {
         
     } else if test == "alpha" {
         w,h := int(grid.config.Width), int(grid.config.Height)
-        alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?"
+        alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
         s := 0
         for r:=0; r<h; r++ {
             line := alpha[s%len(alpha):(s+w)%len(alpha)]
@@ -212,7 +212,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
 //        tmp += "\n"
     }
 //    log.Debug(tmp)
-    grid.object.BufferData(len(grid.data)*4,grid.data)
+    grid.object.BufferData( len(grid.data)*4,grid.data )
 }
 
 
@@ -232,7 +232,10 @@ func getGlyphCoord(chr byte) gfx.Coord {
 func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
 
-    log.Debug("create %s",grid.Desc())
+    grid.config = grid.autoWidth(grid.config,camera,font)
+    
+
+    log.Debug("init %s",grid.Desc())
     grid.texture.Init()
     grid.RenderMap(font)
     grid.texture.TexImage()
@@ -282,22 +285,28 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 
 
-
+func (grid *Grid) autoWidth(config conf.GridConfig, camera *gfx.Camera, font *gfx.Font) conf.GridConfig {
+    ret := config
+    if config.Width == 0 {
+        w := camera.Ratio() / font.Ratio() * float32(config.Height)
+        if config.Height == 1 { w = 5. }
+        ret.Width = uint(w)
+        log.Debug("autowidth %s -> %s",config.Desc(),ret.Desc())
+    } 
+    if ret.Width == 0 { ret.Width = 5 }    
+    return ret
+}
 
 
 
 func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *gfx.Font) {
     if config == nil { return }
 
-    const autoScale = true //scale width to fill screen of height
-    if autoScale {
-        log.Debug("force width %d for height %d",grid.config.Width,grid.config.Height)
-        w := camera.Ratio() / font.Ratio() * float32(config.Height)
-        config.Width = uint(w)
-    }
+    autoConf := grid.autoWidth(*config,camera,font)
+    config = &autoConf
 
     if *config == grid.config { return }
-
+    
 
     
     log.Debug("config %s -> %s",grid.Desc(),config.Desc())
