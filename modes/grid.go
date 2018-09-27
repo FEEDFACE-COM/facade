@@ -22,6 +22,8 @@ type Grid struct {
     object *gfx.Object
     data []float32
     
+    scroller *gfx.Scroller
+    
     black *gfx.Texture
     white *gfx.Texture
 }
@@ -46,8 +48,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
-
-    model := mgl32.Ident4()
+    grid.scroller.Uniform(grid.program)
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
     
@@ -72,6 +73,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
                 
     }
     
+    model := mgl32.Ident4()
     model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
@@ -95,10 +97,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
             gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
         }
     }
-
-    if verbose {
-//        log.Debug("got scale %5.2f for %s %s",scale,grid.Desc(),font.Desc())    
-    }
+//    if verbose { log.Debug( grid.scroller.Desc() ) }
 }
 
 
@@ -229,7 +228,7 @@ func getGlyphCoord(chr byte) gfx.Coord {
 }
 
 
-func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
+func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
     var err error
 
     grid.config = grid.autoWidth(grid.config,camera,font)
@@ -240,8 +239,10 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.RenderMap(font)
     grid.texture.TexImage()
     
+
     grid.black = gfx.BlackColor()
     grid.white = gfx.WhiteColor()
+
     grid.object.Init()
     
     grid.generateData(font)
@@ -251,7 +252,14 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }
 
-    
+
+    grid.scroller.Init(now)
+    grid.scroller.Timer.Fun = func(){ 
+//        newText:=gfx.NewText("trigger")
+        grid.buffer.Queue(nil)
+        grid.generateData(font)
+//        log.Debug("trigger %s",font.Desc()) 
+    }
 
 }
 
@@ -314,7 +322,11 @@ func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *g
     log.Debug("config %s -> %s",grid.Desc(),config.Desc())
     old := grid.config
     grid.config = *config
-    
+
+    if config.Scroll != old.Scroll || config.Speed != old.Speed {
+        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))    
+    }
+        
     if config.Height != old.Height {
         grid.buffer.Resize(grid.config.Height)    
         log.Debug(grid.buffer.Dump())
@@ -324,6 +336,9 @@ func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *g
         grid.RenderMap(font)
         grid.texture.TexImage()
     }
+
+
+
 
     grid.generateData(font)
 
@@ -338,6 +353,11 @@ func NewGrid(config *conf.GridConfig) *Grid {
     ret.program = gfx.NewProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
+    ret.scroller = gfx.NewScroller(config.Scroll,float32(config.Speed))
+    if ret.config.Downward {
+        ret.scroller.Speed *= -1.;
+    } else {
+    }
     return ret
 }
 

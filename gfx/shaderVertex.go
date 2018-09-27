@@ -36,6 +36,8 @@ uniform mat4 model;
 uniform vec2 tileSize;
 uniform vec2 tileCount;
 
+uniform float scroller;
+
 uniform float debugFlag;
 
 attribute vec3 vertex;
@@ -62,7 +64,8 @@ void main() {
     vDebugFlag = debugFlag;
     
     vec4 pos = vec4(vertex,1);
-    
+
+    pos.y += scroller;    
     
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);

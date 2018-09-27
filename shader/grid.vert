@@ -5,6 +5,7 @@ uniform mat4 model;
 uniform vec2 tileSize;
 uniform vec2 tileCount;
 
+uniform float scroller;
 uniform float debugFlag;
 
 attribute vec3 vertex;
@@ -16,7 +17,9 @@ attribute float totalWidth;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
+
 varying float vDebugFlag;
+varying float vScroller;
 
 
 
@@ -29,9 +32,11 @@ void main() {
     vTexCoord = texcoord;
     vTileCoord = tileCoord;
     vDebugFlag = debugFlag;
+    vScroller = scroller;
     
     vec4 pos = vec4(vertex,1);
-    
+
+    pos.y += vScroller;    
     
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);

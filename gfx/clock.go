@@ -7,7 +7,6 @@ import (
     "time"
     "fmt"
     log "../log"
-    math "../math32"
 )
 
 const DEBUG_FRAMES = 90
@@ -18,9 +17,6 @@ var startTime time.Time
 type Clock struct {
     frame uint
     time  float32
-    count uint    // increases monotonously once per second
-    fader float32 // ramps from 0..1 once per second
-    cycle float32 // cycles through 0..2π once per second
     
     timers []*Timer
 }
@@ -64,27 +60,16 @@ func (clock *Clock) Delta(prev Clock) float32 {
 
 func (clock *Clock) Tick() {
     
-    
-    prev := clock.time
     clock.frame += 1
     clock.time = CLOCK_RATE *  float32( time.Now().Sub(startTime) ) / (1000.*1000.*1000.)
     
-    /***   x%y  ==  mod(x,y)  ==  x - y*floor(x/y)  ***/
-    clock.cycle = clock.time - math.TAU * math.Floor(clock.time/math.TAU) // time % TAU
-    clock.fader = clock.time - math.Floor(clock.time)                     // time % 1
     
-    if math.Floor(clock.time) > math.Floor(prev) {
-        clock.count += 1
-    }
-    
-
     for _,timer := range( clock.timers ) {
         trigger := (*timer).Update(clock.time)
         if trigger {
-            log.Debug("trigger %s",timer.Desc())
+//            log.Debug("trigger %s",timer.Desc())
         }
     }
-    
     
     
 }

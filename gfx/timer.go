@@ -43,6 +43,8 @@ func (timer *Timer) Close() {
 }
 
 
+
+
 func (timer *Timer) Update(now float32) bool {
     t := now - timer.start
     d := timer.duration
@@ -64,5 +66,5 @@ func (timer *Timer) Update(now float32) bool {
 
 
 func (timer *Timer) Desc() string { 
-    return fmt.Sprintf("timer[%s %4.2f↺ %4.2f⤢ %d#]",timer.Name,timer.Cycle,timer.Fader,timer.Count)
+    return fmt.Sprintf("t[%s %4.2f↺ %4.2f⤢ %d#]",timer.Name,timer.Cycle,timer.Fader,timer.Count)
 }

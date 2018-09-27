@@ -28,6 +28,7 @@ const (
     TEXTURE    UniformName = "texture"
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
+    SCROLLER   UniformName = "scroller"
 )    
 
 type AttribName string
