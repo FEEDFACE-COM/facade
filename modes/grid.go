@@ -54,18 +54,22 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     scale := float32( 1.0 )
     var autoScale = true
     if autoScale {
-//        goldenSize := gfx.Size{W: 23., H: 8.}
-//        goldenScale := float32(0.25)
-        goldenSize := gfx.Size{W:23., H: 8.}
-        goldenScale := float32(0.25)
+
+        fontRatio := font.Ratio()
+        screenRatio := camera.Ratio()
         
-        sx := goldenSize.W / float32(grid.config.Width)
-        sy := goldenSize.H / float32(grid.config.Height)
+        ratio := screenRatio / fontRatio
+//        ratio := float32(29./8.)
+
+
         
-        if sx < sy { 
-            scale = sx * goldenScale
+        scaleWidth :=  ratio * 2. / float32(grid.config.Width) 
+        scaleHeight :=      2. / float32(grid.config.Height)
+        
+        if scaleWidth < scaleHeight { 
+            scale = scaleWidth
         } else { 
-            scale = sy * goldenScale
+            scale = scaleHeight
         }
                 
     }

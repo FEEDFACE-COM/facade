@@ -20,9 +20,8 @@ type Camera struct {
     
     view mgl32.Mat4
     viewUniform int32
-    
-    Width float32
-    Height float32
+
+    size Size    
 }
 
 
@@ -38,8 +37,11 @@ func perspective(width,height float32) mgl32.Mat4 {
     return mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
 }
 
+func (camera *Camera) Ratio() float32 { return camera.size.W / camera.size.H }
+    
+
 func NewCamera(config *conf.CameraConfig, screen Size) *Camera {
-    ret := &Camera{config: *config, Width: screen.W, Height: screen.H}
+    ret := &Camera{config: *config, size: screen}
     return ret
 }
 
@@ -63,11 +65,11 @@ func (camera *Camera) Configure(config *conf.CameraConfig) {
 
     zoom := float32(camera.config.Zoom)
     if camera.config.Isometric {
-        camera.projection = orthographic(camera.Width, camera.Height)
+        camera.projection = orthographic(camera.size.W, camera.size.H)
         camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     } else {
-        camera.projection = perspective(camera.Width, camera.Height)
+        camera.projection = perspective(camera.size.W, camera.size.H)
 //        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{zoom,zoom,zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
     }

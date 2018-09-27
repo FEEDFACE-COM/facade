@@ -65,6 +65,8 @@ type Font struct {
 }
 
 
+func (font *Font) Ratio() float32 { return float32(font.max.w) / float32(font.max.h) }
+
 func (font *Font) MaxSize() Size {
     return Size{W: float32(font.max.w), H: float32(font.max.h)}    
 }
