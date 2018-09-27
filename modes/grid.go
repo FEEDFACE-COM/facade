@@ -75,9 +75,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+3+2+2+2)*4,   (0)*4 )
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+3+2+2+2)*4, (3+3)*4 )
-    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+3+2+2+2)*4, (3+3+2+2)*4 )
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4, (0)*4 )
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4 )
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4 )
     
     count := int32(grid.config.Width*grid.config.Height)
 
@@ -130,18 +130,17 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     x, y := float32(tileCoord.X), float32(tileCoord.Y)
     ox, oy := texOffset.X, texOffset.Y
 
-    twF := 1./float32(gfx.GlyphCols)  
     th := 1./float32(gfx.GlyphRows)
     tw := glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
     
     return []float32{
-            //vertex         //vertex fixed      //texcoords   //texcoords fixed        // coordinates
-        -w/2,  h/2, 0,      -1/2,  1/2, 0,           0+ox,  0+oy,           0+ox,  0+oy,           x, y,    
-        -w/2, -h/2, 0,      -1/2, -1/2, 0,           0+ox, th+oy,          0 +ox, th+oy,           x, y,    
-         w/2, -h/2, 0,       1/2, -1/2, 0,          tw+ox, th+oy,         twF+ox, th+oy,           x, y,    
-         w/2, -h/2, 0,       1/2, -1/2, 0,          tw+ox, th+oy,         twF+ox, th+oy,           x, y,    
-         w/2,  h/2, 0,       1/2,  1/2, 0,          tw+ox,  0+oy,         twF+ox,  0+oy,           x, y,    
-        -w/2,  h/2, 0,      -1/2,  1/2, 0,           0+ox,  0+oy,           0+ox,  0+oy,           x, y,    
+            //vertex          //texcoords        // coordinates
+        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,    
+        -w/2, -h/2, 0,                 0+ox, th+oy,      x, y,    
+         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,    
+         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,    
+         w/2,  h/2, 0,                tw+ox,  0+oy,      x, y,    
+        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,    
         
     }
     
