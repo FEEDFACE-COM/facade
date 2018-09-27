@@ -58,11 +58,12 @@ func (camera *Camera) Init() {
 
 func (camera *Camera) Configure(config *conf.CameraConfig) {
     if config == nil { return }
+//    if *config == camera.config { return }
 
     log.Debug("config %s -> %s",camera.Desc(),config.Desc())
     camera.config = *config
-    camera.view = mgl32.Ident4()
 
+    camera.view = mgl32.Ident4()
     zoom := float32(camera.config.Zoom)
     if camera.config.Isometric {
         camera.projection = orthographic(camera.size.W, camera.size.H)

@@ -81,8 +81,8 @@ func NewFont(config *conf.FontConfig, directory string) *Font {
 
 func (font *Font) Configure(config *conf.FontConfig) {
     if config == nil { return }
+    if *config == font.config { return }
     
-//    if font.config.Name != config.Name || font.font == nil {
     log.Debug("config %s -> %s",font.Desc(),config.Desc())
     font.config = *config
 //    }

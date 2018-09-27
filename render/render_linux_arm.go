@@ -89,16 +89,19 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     //setup things 
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
-    
-    renderer.grid = modes.NewGrid(config.Grid)
-    renderer.lines = modes.NewLines(config.Lines)
-    renderer.test = modes.NewTest(config.Test)
+
     renderer.font = gfx.GetFont(config.Font,conf.DIRECTORY)
     renderer.camera = gfx.NewCamera(config.Camera,renderer.screen)
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 
     renderer.font.Configure(config.Font)
     renderer.camera.Configure(config.Camera)
+
+    
+    renderer.grid = modes.NewGrid(config.Grid)
+    renderer.lines = modes.NewLines(config.Lines)
+    renderer.test = modes.NewTest(config.Test)
+
 
     InitClock()
     renderer.now = Clock{}
@@ -109,32 +112,33 @@ func (renderer *Renderer) Init(config *conf.Config) error {
 
 func (renderer *Renderer) Configure(config *conf.Config) error {
     
-    if config == nil {
-        log.Error("renderer config nil")
-        return nil
-    }
+    if config == nil { log.Error("renderer config nil") ;return nil }
     
     log.Debug("configure %s",config.Desc())
     
-    if renderer.config.Mode != config.Mode {
+    
+    old := renderer.config
+
+    renderer.config = *config
+    if renderer.config.Mode != old.Mode {
         log.Debug("switch mode %s",string(config.Mode))
     }
-    renderer.config = *config
     
-    if config.Font != nil {
+    if config.Font != nil && config.Font != old.Font {
+        log.Debug("get new font..!")
         newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
         newFont.Init()
-        renderer.font.Close()
-        renderer.font = nil
-//        oldFont := renderer.font
+
+        oldFont := renderer.font
         renderer.font = newFont
-//        oldFont.Close()
+
+        oldFont.Close() //still, leaks?
     }
     
     
     renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
-    renderer.grid.Configure(config.Grid,renderer.font)
+    renderer.grid.Configure(config.Grid,renderer.camera,renderer.font)
     renderer.test.Configure(config.Test)
     renderer.camera.Configure(config.Camera)
     renderer.mask.Configure(config.Mask)
@@ -174,6 +178,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan conf.T
     renderer.mask.Init()
     renderer.axis.Init()
 
+
+    renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
     renderer.grid.FillTest("coord",renderer.font)
 

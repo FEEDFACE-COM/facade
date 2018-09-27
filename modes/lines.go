@@ -63,16 +63,17 @@ func (lines *Lines) Queue(text string, font *gfx.Font) {
 
 
 func (lines *Lines) Configure(config *conf.LinesConfig) {
-    if config == nil {
-        return
-    }
-    if config.Height != lines.config.Height {
-        lines.config = *config
+    if config == nil { return }
+    if *config == lines.config { return}
+    
+    old := lines.config
+    lines.config = *config
+    log.Debug("config %s",config.Desc())
+    
+    if config.Height != old.Height {
         lines.buffer.Resize(config.Height)
         lines.generateData()
     }
-    log.Debug("configured line: %s",config.Desc())
-    
 
 }
 

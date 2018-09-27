@@ -3,6 +3,7 @@ package modes
 
 import(
     "fmt"
+//    "math"
 	"github.com/go-gl/mathgl/mgl32"    
     conf "../conf"
     gfx "../gfx"
@@ -52,16 +53,13 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     scale := float32( 1.0 )
-    var autoScale = true
+    const autoScale = true //scale model to fit screen
     if autoScale {
 
         fontRatio := font.Ratio()
         screenRatio := camera.Ratio()
         
         ratio := screenRatio / fontRatio
-//        ratio := float32(29./8.)
-
-
         
         scaleWidth :=  ratio * 2. / float32(grid.config.Width) 
         scaleHeight :=      2. / float32(grid.config.Height)
@@ -77,9 +75,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+3+2+2+2)*4,  (0)*4)
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+3+2+2+2)*4, (3+3)*4)
-    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+3+2+2+2)*4, (3+3+2+2)*4)
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+3+2+2+2)*4,   (0)*4 )
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+3+2+2+2)*4, (3+3)*4 )
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+3+2+2+2)*4, (3+3+2+2)*4 )
     
     count := int32(grid.config.Width*grid.config.Height)
 
@@ -272,17 +270,27 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 
 
-func (grid *Grid) Configure(config *conf.GridConfig, font *gfx.Font) {
-    if config == nil {
-        return
-    }
-    log.Debug("config %s -> %s",grid.Desc(),config.Desc())
-    
-    if config.Width != grid.config.Width || config.Height != grid.config.Height {
-        grid.config = *config
-        grid.buffer.Resize(grid.config.Height)    
+func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *gfx.Font) {
+    if config == nil { return }
+
+    const autoScale = true //scale width to fill screen of height
+    if autoScale {
+        log.Debug("force width %d for height %d",grid.config.Width,grid.config.Height)
+        w := camera.Ratio() / font.Ratio() * float32(config.Height)
+        config.Width = uint(w)
     }
 
+    if *config == grid.config { return }
+
+
+    
+    log.Debug("config %s -> %s",grid.Desc(),config.Desc())
+    old := grid.config
+    grid.config = *config
+    
+    if config.Height != old.Height {
+        grid.buffer.Resize(grid.config.Height)    
+    }
 
     if true {
         grid.RenderMap(font)

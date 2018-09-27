@@ -21,7 +21,7 @@ func NewGridConfig() *GridConfig {
 
 
 func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
-    flags.UintVar(&config.Width,"w",config.Width,"grid width")
+//    flags.UintVar(&config.Width,"w",config.Width,"grid width")
     flags.UintVar(&config.Height,"h",config.Height,"grid height")
     flags.BoolVar(&config.Downward,"d",config.Downward,"downward")
 

@@ -32,7 +32,7 @@ func NewBuffer(count uint) *Buffer {
 
 
 func (buffer *Buffer) Resize(count uint) {
-    log.Debug("%s resize(%d)",buffer.Desc(),count)
+    log.Debug("resize %s -> %d",buffer.Desc(),count)
     if count == 0 { count = 1 }
     newItems := make( []*Text, count )
     var idx uint = 0
