@@ -1,7 +1,7 @@
 
 // +build linux,arm
 
-package render
+package gfx
 
 import (
     "time"   
@@ -9,7 +9,7 @@ import (
     math "../math32"
 )
 
-
+const DEBUG_FRAMES = 90
 const CLOCK_RATE = 1.0
 
 var startTime time.Time
@@ -42,6 +42,15 @@ func (clock *Clock) Time() float32 {
     return clock.time    
 }
 
+
+func (clock *Clock) DebugFrame() bool { return clock.frame % DEBUG_FRAMES == 0 }
+
+func (clock *Clock) Delta(prev Clock) float32 { 
+    return float32(clock.frame - prev.frame) / (clock.time-prev.time) 
+}
+
+
+
 func (clock *Clock) Tick() {
     prev := clock.time
     clock.frame += 1
@@ -58,5 +67,5 @@ func (clock *Clock) Tick() {
 }
 
 func (clock *Clock) Desc() string {
-    return fmt.Sprintf("%7.2fs %4.2f↺ %4.2f⤢ %d#",clock.time,clock.cycle,clock.fader,clock.count)
+    return fmt.Sprintf("frame #%05d 7.2fs  %4.2f↺ %4.2f⤢ %d#",clock.frame,clock.time,clock.cycle,clock.fader,clock.count)
 }

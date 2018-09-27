@@ -41,7 +41,7 @@ type Renderer struct {
     
     axis *gfx.Axis
 
-    now Clock
+    now gfx.Clock
     buffer *gfx.Buffer
     mutex *sync.Mutex
 }
@@ -59,7 +59,6 @@ const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
  
 
-const DEBUG_FRAMES = 90
 
 func (renderer *Renderer) Init(config *conf.Config) error {
     var err error
@@ -104,8 +103,8 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.test = modes.NewTest(config.Test)
 
 
-    InitClock()
-    renderer.now = Clock{}
+    gfx.InitClock()
+    renderer.now = gfx.Clock{}
 
     return err
 }
@@ -150,8 +149,8 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
 func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string) error {
 
     
-    var now *Clock = &renderer.now
-    var prev Clock = *now
+    var now *gfx.Clock = &renderer.now
+    var prev gfx.Clock = *now
 
     gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
@@ -184,11 +183,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
-        verbose := now.frame % DEBUG_FRAMES == 0
-        if verbose { renderer.PrintDebug(now,&prev); prev = *now }
-        
-                
-//        if verbose { log.Debug("render %s",renderer.Desc()) }
+        verbose := now.DebugFrame()
         
         now.Tick()
         
@@ -215,7 +210,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         renderer.mask.Render()
         if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
         
-        if verbose { renderer.PrintDebug(now,&prev); prev = *now }
+        if verbose { renderer.PrintDebug(*now,prev); prev = *now }
 
 //        if verbose {
 //            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
@@ -271,11 +266,10 @@ func (renderer *Renderer) QueueConfs(confChan chan conf.Config) {
 
 
 
-func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
+func (renderer *Renderer) PrintDebug(now gfx.Clock, prev gfx.Clock) {
 
     if DEBUG_CLOCK   {
-        fps := float32(now.frame - prev.frame) / (now.time - prev.time)
-        log.Debug("frame %05d %s    %4.1ffps",now.frame,now.Desc(),fps)
+        log.Debug("%s    %4.1ffps",now.Desc(),now.Delta(prev))
     }
     
     if DEBUG_DIAG {
