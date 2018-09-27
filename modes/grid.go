@@ -280,6 +280,8 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     grid.buffer.Queue( newText )
     grid.generateData(font)
+    
+    log.Debug(grid.buffer.Dump())
 //    log.Debug("queued text: %s",text)
 }
 
@@ -315,6 +317,7 @@ func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *g
     
     if config.Height != old.Height {
         grid.buffer.Resize(grid.config.Height)    
+        log.Debug(grid.buffer.Dump())
     }
 
     if true {

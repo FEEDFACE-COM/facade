@@ -301,7 +301,7 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
             case conf.GRID:
                 tmp = renderer.grid.Desc()
         }
-        log.Debug("draw %s %s %s %s ",renderer.Desc(),tmp,renderer.camera.Desc(),renderer.font.Desc())    
+        log.Debug("%s %s %s %s ",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.Desc())    
     }
     
 }

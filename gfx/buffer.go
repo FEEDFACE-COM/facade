@@ -56,10 +56,17 @@ func (buffer *Buffer) Resize(newCount uint) {
             }
         }
 
-    } else {
+    } else if newCount > buffer.count {
+        
+        // copy all items
+        d := newCount - buffer.count
         for idx:= uint(0); idx<buffer.count; idx++ {
-            newItems[idx] = buffer.items[idx]
-        }        
+            newItems[ (idx+d) % newCount ] = buffer.items[idx]
+        } 
+
+    
+    } else {
+        //nop
     }
 
     
@@ -122,11 +129,12 @@ func (buffer *Buffer) Desc() string {
 
 func (buffer *Buffer) Dump() string {
     ret := ""
+    
     for i:= uint(0);i<buffer.count;i++ {
         idx := ( i ) % buffer.count 
         item := buffer.items[ idx ]
 
-        s0 := fmt.Sprintf("%d", ((buffer.head+idx)%buffer.count)%10)
+        s0 := fmt.Sprintf("%d", ((idx-buffer.head)%buffer.count)%10)
         s1 := fmt.Sprintf("%d", ((buffer.count+buffer.tail-idx)%buffer.count)%10)
         s2 := ""
         
