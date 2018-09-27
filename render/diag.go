@@ -19,5 +19,9 @@ func MemUsage() string {
     
 }
 
+func StartGC() {
+    runtime.GC()    
+}
+
 
 func mib(bits uint64) float64 { return float64(bits) / (1024.*1024) }

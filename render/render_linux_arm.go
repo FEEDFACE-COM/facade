@@ -54,8 +54,8 @@ func NewRenderer() *Renderer {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_MODE   = false
-const DEBUG_BUFFER = true
+const DEBUG_MODE   = true
+const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
  
 
@@ -122,11 +122,11 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
 
     renderer.config = *config
     if renderer.config.Mode != old.Mode {
-        log.Debug("switch mode %s",string(config.Mode))
+        log.Debug("switch mode -> %s",string(config.Mode))
     }
     
     if config.Font != nil && config.Font != old.Font {
-        log.Debug("get new font..!")
+        log.Debug("switch font -> %s",string(config.Font.Name))
         newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
         newFont.Init()
 
@@ -178,14 +178,16 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("alpha",renderer.font)
+    renderer.grid.FillTest("coord",renderer.font)
 
     log.Debug("renderer start")
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
         verbose := now.frame % DEBUG_FRAMES == 0
+        if verbose { renderer.PrintDebug(now,&prev); prev = *now }
         
+                
 //        if verbose { log.Debug("render %s",renderer.Desc()) }
         
         now.Tick()
@@ -215,9 +217,9 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         
         if verbose { renderer.PrintDebug(now,&prev); prev = *now }
 
-        if verbose {
-            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
-        }    
+//        if verbose {
+//            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
+//        }    
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()
@@ -226,6 +228,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         // FIXME, maybe dont wait as long??
 
         if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
+//        StartGC()
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil
@@ -291,12 +294,14 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
     }
     
     if DEBUG_MODE {
+            tmp := ""
         switch renderer.config.Mode { 
             case conf.LINES:
-                log.Debug( renderer.lines.Desc() + " " +renderer.font.Desc() )
+                tmp = renderer.lines.Desc()
             case conf.GRID:
-                log.Debug( renderer.grid.Desc() + " " +renderer.font.Desc() )
+                tmp = renderer.grid.Desc()
         }
+        log.Debug("draw %s %s %s %s ",renderer.Desc(),tmp,renderer.camera.Desc(),renderer.font.Desc())    
     }
     
 }
