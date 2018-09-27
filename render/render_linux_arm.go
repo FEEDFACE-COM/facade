@@ -302,23 +302,6 @@ func (renderer *Renderer) PrintDebug(now *Clock, prev *Clock) {
 }
 
 //
-//func (renderer *Renderer) ReadText(textChan chan conf.Text) error {
-//    for {
-//        text := <-textChan
-//        log.Debug("read: %s",text)
-//        newText := gfx.NewText(string(text))
-//        renderer.mutex.Lock()
-//        renderer.buffer.Queue(newText)
-////        renderer.lines.Queue(string(text))
-////        renderer.grid.Queue( string(text) )
-////        renderer.lines.Queue( string(text) )
-//        renderer.mutex.Unlock()
-//    }
-//    return nil
-//    
-//}
-//
-//
 
 
 func (renderer *Renderer) SanitizeText(raw conf.RawText) string {
@@ -327,6 +310,15 @@ func (renderer *Renderer) SanitizeText(raw conf.RawText) string {
     ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
     return ret
 }
+
+
+func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
+    ret := raw
+    return ret
+}
+
+
+
 
 func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan string) error {
 
@@ -346,12 +338,6 @@ func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan s
     return nil    
     
 }
-
-func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
-    ret := raw
-    return ret
-}
-
 
 func (renderer *Renderer) ProcessConf(rawChan chan conf.Config, confChan chan conf.Config) error {
     for {

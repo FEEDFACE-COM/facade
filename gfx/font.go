@@ -91,10 +91,11 @@ func (font *Font) Configure(config *conf.FontConfig) {
 
 
 func (font *Font) Desc() string { 
-    tw,th := font.MaxSize().W, font.MaxSize().H
-    mw, mh := font.MaxSize().W * GlyphCols, font.MaxSize().H * GlyphRows
-    gw, gh := GlyphCols, GlyphRows
-    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
+//    tw,th := font.MaxSize().W, font.MaxSize().H
+//    mw, mh := font.MaxSize().W * GlyphCols, font.MaxSize().H * GlyphRows
+//    gw, gh := GlyphCols, GlyphRows
+//    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
+    return fmt.Sprintf("font[%s %.2f]",font.config.Name,font.Ratio())
 }
 
 
