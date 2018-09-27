@@ -54,7 +54,7 @@ func NewRenderer() *Renderer {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_MODE   = true
+const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
  
@@ -179,13 +179,16 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
 
     renderer.grid.FillTest("coord",renderer.font)
 
+
+
+    timer := gfx.NewTimer(now,3.0)
+    now.Tick()
     log.Debug("renderer start")
     for {
 //        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
         verbose := now.DebugFrame()
-        
-        now.Tick()
+        if verbose { log.Debug("%s    %s",now.Desc(),timer.Desc()) }
         
         renderer.mutex.Lock()
         piglet.MakeCurrent()
@@ -224,6 +227,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
 
         if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
 //        StartGC()
+        now.Tick()
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
     }
     return nil
