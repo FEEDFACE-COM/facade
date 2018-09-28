@@ -7,7 +7,6 @@ package gfx
 import (
     "strings"
     "fmt"
-    "io/ioutil"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -42,85 +41,22 @@ func (program *Program) UseProgram(debug bool) {
 
 
 
-func (program *Program) loadShaderFile(shaderName string, shaderType uint32) (string, error) {
-    var data []byte
-    var err error
-    filePath := "/home/folkert/src/gfx/facade/shader/" + shaderName
-    switch (shaderType) {
-        case gl.VERTEX_SHADER: filePath += ".vert"
-        case gl.FRAGMENT_SHADER: filePath += ".frag"
-        default: return "", log.NewError("unknown shadertype %d for file %s",shaderType,shaderName)    
-    }
-    data, err = ioutil.ReadFile(filePath)
-    if err != nil {
-        log.Error("fail read shader file %s: %s",filePath,err)
-        return "", log.NewError("fail read shader file: %s",err)
-    }
-//    log.Debug("read shader file %s",filePath)
-    return string(data), nil    
-}
-
-func (program *Program) LoadVertexShader(vertName string) error {
-    var err error
-    var src string    
-    
-    // try from file
-    src,err = program.loadShaderFile(vertName,gl.VERTEX_SHADER)
-    if err == nil { //success
-        program.vertexShader = NewShader(vertName, src, gl.VERTEX_SHADER)    
-//        log.Debug("load vertex shader %s from file",program.vertexShader.Name)
-    } else if VertexShader[vertName] != "" {
-        program.vertexShader = NewShader(vertName, VertexShader[vertName], gl.VERTEX_SHADER)
-//        log.Debug("load vertex shader %s from map",program.vertexShader.Name)
-    }
-    
-    if program.vertexShader == nil {
-        return log.NewError("unknown vertex shader in %s",vertName)
-    }
-
-    err = program.vertexShader.CompileShader()
-    if err != nil {
-        return log.NewError("fail compile vertex shader %s: %s",vertName,err)
-    }
-
-    return nil
-}    
-    
-    
-
-func (program *Program) LoadFragmentShader(fragName string) error {
-    var err error
-    var src string    
-    
-    // try from file
-    src,err = program.loadShaderFile(fragName,gl.FRAGMENT_SHADER)
-    if err == nil { //success
-        program.fragmentShader = NewShader(fragName, src, gl.FRAGMENT_SHADER)    
-//        log.Debug("load fragment shader %s from file",program.fragmentShader.Name)
-    } else if FragmentShader[fragName] != "" {
-        program.fragmentShader = NewShader(fragName, FragmentShader[fragName], gl.FRAGMENT_SHADER)
-//        log.Debug("load fragment shader %s from map",program.fragmentShader.Name)
-    }
-    
-    if program.fragmentShader == nil {
-        return log.NewError("unknown fragment shader in %s",fragName)
-    }
-
-    err = program.fragmentShader.CompileShader()
-    if err != nil {
-        return log.NewError("fail compile fragment shader %s: %s",fragName,err)
-    }
-
-    return nil
-}
 
 func (program *Program) LoadShaders(vertName, fragName string) error {
     var err error
-    err = program.LoadVertexShader(vertName)
-    if err != nil { return err }
-    err = program.LoadFragmentShader(fragName)
-    if err != nil { return err }
+    program.vertexShader, err = GetShader(vertName,gl.VERTEX_SHADER)
+    if err != nil { return log.NewError("fail to get shader: %s",err) }
+    err = program.vertexShader.CompileShader()
+    if err != nil { return log.NewError("fail to compile shader: %s",err) }
+    
+    
+    program.fragmentShader, err = GetShader(fragName,gl.FRAGMENT_SHADER)
+    if err != nil { return log.NewError("fail to get shader: %s",err) }
+    err = program.fragmentShader.CompileShader()
+    if err != nil { return log.NewError("fail to compile shader: %s",err) }
+    
     return nil
+    
 }
 
 

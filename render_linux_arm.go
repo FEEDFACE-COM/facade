@@ -70,6 +70,8 @@ func (renderer *Renderer) Init(config *facade.Config) error {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
     
+    gfx.SetShaderDirectory(renderer.directory)
+    
     err = piglet.CreateContext()
     if err != nil {
         log.PANIC("fail to initialize renderer: %s",err)    
@@ -112,7 +114,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.test = facade.NewTest(config.Test)
 
 
-    gfx.InitClock()
+    gfx.StartClock()
     renderer.now = gfx.Clock{}
 
     return err

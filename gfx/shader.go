@@ -6,6 +6,7 @@ package gfx
 
 import (
     "strings"
+    "io/ioutil"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -41,6 +42,54 @@ const (
     TOTALWIDTH AttribName = "totalWidth"
 )
 
+var shaderDirectory string
+
+func SetShaderDirectory(directory string) { shaderDirectory = directory }
+
+func loadShaderFile(shaderName string, shaderType uint32) (string, error) {
+    var data []byte
+    var err error
+    ext := ""
+    switch (shaderType) {
+        case gl.VERTEX_SHADER:   ext = ".vert"
+        case gl.FRAGMENT_SHADER: ext = ".frag"
+    }
+    filePath := shaderDirectory + shaderName + ext
+    data, err = ioutil.ReadFile(filePath)
+    if err != nil {
+        log.Error("fail read shader file %s: %s",filePath,err)
+        return "", log.NewError("fail read shader file: %s",err)
+    }
+    log.Debug("read shader file %s",filePath)
+    return string(data), nil    
+}
+
+func GetShader(name string, shaderType uint32) (*Shader,error) {
+    var ret *Shader = nil
+    src, err := loadShaderFile(name, shaderType)
+    if err == nil {
+        
+        ret = NewShader(name, src, shaderType)
+        //TODO: register callback
+        return ret,nil
+        
+    } else {
+        src := ""
+        switch (shaderType) {
+            case gl.VERTEX_SHADER:   src = VertexShader[name]
+            case gl.FRAGMENT_SHADER: src = FragmentShader[name]
+        }
+        
+        if src == "" {
+            return nil, log.NewError("fail get shader %s from file and map",name)
+        }
+        
+        ret := NewShader(name, src, shaderType)
+        return ret,nil
+    }
+    
+    
+}
 
 
 

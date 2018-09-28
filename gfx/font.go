@@ -5,13 +5,11 @@ package gfx
 
 import (
     "fmt"
-//    "errors"
     "io/ioutil"
     "image"
     "image/color"
     "image/draw"
     xfont "golang.org/x/image/font"
-//    "golang.org/x/image/math/fixed"
     "github.com/golang/freetype"
     "github.com/golang/freetype/truetype"
     log "../log"
@@ -22,7 +20,6 @@ var fonts = map[string]*Font {}
 
 
 var foreground = image.White
-//var background = image.NewUniform( color.RGBA{R: 0, G: 255, B: 255, A: 255} )
 var background = image.Transparent
 
 const GlyphCols  = 0x20

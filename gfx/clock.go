@@ -33,7 +33,7 @@ func (clock *Clock) Reset() {
     clock.time = 0.0
 }
 
-func InitClock() {
+func StartClock() {
     startTime = time.Now()
 }
 
