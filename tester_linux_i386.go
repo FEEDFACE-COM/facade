@@ -22,7 +22,8 @@ func NewTester(directory string) *Tester { return &Tester{directory: directory} 
 func (tester *Tester) Configure(config *facade.Config) {
     tester.name = config.Font.Name
     var err error
-    tester.font,err = gfx.GetFont(config.Font,tester.directory)
+    gfx.SetFontDirectory(tester.directory)
+    tester.font,err = gfx.GetFont(config.Font)
     if err != nil {
         log.PANIC("fail loading font %s: %s",config.Font.Name,err)
     }

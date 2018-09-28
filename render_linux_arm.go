@@ -71,6 +71,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     }
     
     gfx.SetShaderDirectory(renderer.directory)
+    gfx.SetFontDirectory(renderer.directory)
     
     err = piglet.CreateContext()
     if err != nil {
@@ -98,7 +99,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
 
-    renderer.font,err = gfx.GetFont(config.Font, renderer.directory)
+    renderer.font,err = gfx.GetFont(config.Font)
     if err != nil {
         log.PANIC("no default font: %s",err)    
     }
@@ -136,7 +137,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     }
     
     if config.Font != nil && config.Font != old.Font {
-        newFont,err := gfx.GetFont(config.Font, renderer.directory)
+        newFont,err := gfx.GetFont(config.Font)
         if err == nil {
             log.Debug("switch font -> %s",string(config.Font.Name))
             newFont.Init()

@@ -33,10 +33,15 @@ const scratchSize = 8192
 const DEBUG_FONT = false
 
 
-func GetFont(config *FontConfig, directory string) (*Font,error) {
+var fontDirectory string
+func SetFontDirectory(directory string) { fontDirectory = directory }
+
+
+
+func GetFont(config *FontConfig) (*Font,error) {
     if fonts[config.Name] == nil {
-        tmp := NewFont(config, directory)
-        err := tmp.loadFont(directory+config.Name)
+        tmp := NewFont(config)
+        err := tmp.loadFont(fontDirectory+config.Name)
         if err != nil {
             fonts[config.Name] = nil
             log.Error("fail to load font %s: %s",config.Name,err)
@@ -54,8 +59,6 @@ func GetFont(config *FontConfig, directory string) (*Font,error) {
 type Font struct {
     config FontConfig
 
-    directory string
-
     font *truetype.Font
     context *freetype.Context
     scratch *image.RGBA
@@ -71,8 +74,8 @@ func (font *Font) MaxSize() Size {
 }
 
 
-func NewFont(config *FontConfig, directory string) *Font {
-    ret := &Font{config: *config, directory: directory}
+func NewFont(config *FontConfig) *Font {
+    ret := &Font{config: *config}
     ret.scratch = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
     return ret
 }
