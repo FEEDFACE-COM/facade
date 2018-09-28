@@ -9,6 +9,7 @@ import (
     "encoding/gob"
     log "./log"
     conf "./conf"
+    render "./render"
 )
 
 
@@ -50,7 +51,7 @@ func (server *Server) ListenConf(confChan chan conf.Config) {
     }
 }
 
-func (server *Server) ListenText(textChan chan conf.RawText) { 
+func (server *Server) ListenText(textChan chan render.RawText) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
@@ -91,7 +92,7 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan conf.Config) 
     confChan <- *config
 }
 
-func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.RawText) {
+func (server *Server) ReceiveText(textConn net.Conn, textChan chan render.RawText) {
     defer func() { /*log.Debug("close text %s",textConn.RemoteAddr().String());*/ textConn.Close() }()
     scanner := bufio.NewScanner(textConn)
     for scanner.Scan() {
@@ -100,7 +101,7 @@ func (server *Server) ReceiveText(textConn net.Conn, textChan chan conf.RawText)
         if DEBUG_RECV {
             log.Debug("receive text %s",text)
         }
-        textChan <- conf.RawText(text)
+        textChan <- render.RawText(text)
     }
     err := scanner.Err()
     if err != nil {

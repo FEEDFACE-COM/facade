@@ -90,7 +90,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
 
-    renderer.font,err = gfx.GetFont(config.Font,conf.DIRECTORY)
+    renderer.font,err = gfx.GetFont(config.Font,facade.DIRECTORY)
     if err != nil {
         log.PANIC("no default font: %s",err)    
     }
@@ -128,7 +128,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     }
     
     if config.Font != nil && config.Font != old.Font {
-        newFont,err := gfx.GetFont(config.Font, conf.DIRECTORY)
+        newFont,err := gfx.GetFont(config.Font, facade.DIRECTORY)
         if err == nil {
             log.Debug("switch font -> %s",string(config.Font.Name))
             newFont.Init()
@@ -201,12 +201,12 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
 
-        switch renderer.config.Mode {
-            case conf.GRID:
+        switch facade.Mode(renderer.config.Mode) {
+            case facade.GRID:
                 renderer.grid.Render(renderer.camera, renderer.font, renderer.config.Debug, verbose )
-            case conf.LINES:
+            case facade.LINES:
                 renderer.lines.Render(renderer.camera, renderer.config.Debug, verbose )
-            case conf.TEST:
+            case facade.TEST:
                 renderer.test.Render(renderer.camera, renderer.config.Debug, verbose)
         }
       
@@ -283,20 +283,20 @@ func (renderer *Renderer) PrintDebug(now gfx.Clock, prev gfx.Clock) {
     
     if DEBUG_BUFFER {
 //        log.Debug(renderer.buffer.Dump())    
-        switch renderer.config.Mode { 
-            case conf.LINES:
+        switch facade.Mode(renderer.config.Mode) { 
+            case facade.LINES:
                 log.Debug( renderer.lines.Dump() )
-            case conf.GRID:
+            case facade.GRID:
                 log.Debug( renderer.grid.Dump() )
         } 
     }
     
     if DEBUG_MODE {
             tmp := ""
-        switch renderer.config.Mode { 
-            case conf.LINES:
+        switch facade.Mode(renderer.config.Mode) { 
+            case facade.LINES:
                 tmp = renderer.lines.Desc()
-            case conf.GRID:
+            case facade.GRID:
                 tmp = renderer.grid.Desc()
         }
         log.Debug("%s %s %s %s ",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.Desc())    
@@ -307,7 +307,7 @@ func (renderer *Renderer) PrintDebug(now gfx.Clock, prev gfx.Clock) {
 //
 
 
-func (renderer *Renderer) SanitizeText(raw conf.RawText) string {
+func (renderer *Renderer) SanitizeText(raw RawText) string {
     const TABWIDTH = 8
     ret := string(raw)
     ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
@@ -323,7 +323,7 @@ func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
 
 
 
-func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan string) error {
+func (renderer *Renderer) ProcessText(rawChan chan RawText, textChan chan string) error {
 
     for {
         rawText := <-rawChan

@@ -10,6 +10,7 @@ import (
     "runtime"
     log "./log"
     render "./render"
+    facade "./facade"
     conf "./conf"
 )
 
@@ -17,7 +18,7 @@ import (
 const AUTHOR = `
    _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
   |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
-  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  . \_  \_/ |  |  
+  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
 `
 
 
@@ -187,7 +188,7 @@ func main() {
     
     
     
-    var config *conf.Config = conf.NewConfig(conf.DEFAULT_MODE)
+    var config *conf.Config = conf.NewConfig(string(facade.DEFAULT_MODE))
     var modeflags *flag.FlagSet = config.FlagSet()
     args := flags[cmd].Args()
     
@@ -197,32 +198,32 @@ func main() {
             os.Exit(-2)
         } else {
             
-                modeflags.Usage = func() { ShowModeHelp(config.Mode,cmd,modeflags) }
+                modeflags.Usage = func() { ShowModeHelp(facade.Mode(config.Mode),cmd,modeflags) }
                 modeflags.Parse( args[0:] )
                 
         }
          
             
     } else {
-        mode := conf.Mode(args[0])
-        switch (mode) {
+        mode := args[0]
+        switch facade.Mode(mode) {
             
-            case conf.GRID:
-                config = conf.NewConfig(conf.GRID)
+            case facade.GRID:
+                config = conf.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(conf.GRID,cmd,modeflags) }
+                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
-            case conf.LINES:
-                config = conf.NewConfig(conf.LINES)
+            case facade.LINES:
+                config = conf.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(conf.LINES,cmd,modeflags) }
+                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
-            case conf.TEST:
-                config = conf.NewConfig(conf.TEST)
+            case facade.TEST:
+                config = conf.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(conf.TEST,cmd,modeflags) }
+                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
 
@@ -245,7 +246,7 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            rawTexts := make(chan conf.RawText)
+            rawTexts := make(chan render.RawText)
             texts := make(chan string)
             go scanner.ScanText(rawTexts)
             go renderer.ProcessText(rawTexts,texts)
@@ -258,7 +259,7 @@ func main() {
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             rawConfs := make(chan conf.Config)
-            rawTexts := make(chan conf.RawText)
+            rawTexts := make(chan render.RawText)
             confs := make(chan conf.Config)
             texts := make(chan string)
             go server.ListenConf(rawConfs)
@@ -300,7 +301,7 @@ func main() {
 }
 
 
-func ShowModeHelp(mode conf.Mode, cmd Command, flagset *flag.FlagSet) {
+func ShowModeHelp(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
     switches := ""
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
@@ -352,7 +353,7 @@ func ShowHelp() {
         fmt.Fprintf(os.Stderr,"%s|",cmd)
     }
     fmt.Fprintf(os.Stderr,"    ")
-    for _,m := range conf.Modes {
+    for _,m := range facade.Modes {
         fmt.Fprintf(os.Stderr,"%s|",m)
     }
     fmt.Fprintf(os.Stderr,"\n")
@@ -365,8 +366,8 @@ func ShowHelp() {
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",CONF,"control remote facade")
     fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show facade info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.GRID,"a grid")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",conf.LINES,"lines")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.GRID,"a grid")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.LINES,"lines")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")

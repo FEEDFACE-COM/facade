@@ -13,6 +13,7 @@ import (
     log "./log"
     conf "./conf"
     gfx "./gfx"
+    facade "./facade"
 )
 
 type Tester struct {font *gfx.Font; name string}
@@ -22,7 +23,7 @@ func NewTester() *Tester { return &Tester{} }
 func (tester *Tester) Configure(config *conf.Config) {
     tester.name = config.Font.Name
     var err error
-    tester.font,err = gfx.GetFont(config.Font,conf.DIRECTORY)
+    tester.font,err = gfx.GetFont(config.Font,facade.DIRECTORY)
     if err != nil {
         log.PANIC("fail loading font %s: %s",config.Font.Name,err)
     }
@@ -68,7 +69,7 @@ func (tester *Tester) Test(str string) {
 
 func SaveRGBA(img *image.RGBA,outname string)  {
 
-    var outPath = conf.DIRECTORY + "/out/" + outname + ".png"
+    var outPath = facade.DIRECTORY + "/out/" + outname + ".png"
     
     if img == nil {
         log.Error("nil image not saved at "+outPath)

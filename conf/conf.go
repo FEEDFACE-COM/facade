@@ -9,7 +9,7 @@ import (
 
 
 type Config struct {
-    Mode Mode
+    Mode string//facade.Mode
     Grid *GridConfig
     Lines *LinesConfig
     Test *TestConfig
@@ -21,30 +21,19 @@ type Config struct {
 
 
 
-type RawText string
 
 
-type Mode string
-const (
-    GRID  Mode = "grid"
-    LINES Mode = "lines"
-    WORD  Mode = "word"
-    CHAR  Mode = "char"   
-    TEST  Mode = "test" 
-)
-
-var Modes = []Mode{GRID,LINES,TEST}
-
-var DEFAULT_MODE Mode = TEST
 
 
-var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
 
-func NewConfig(mode Mode) *Config {
+func NewConfig(mode string) *Config {
     ret := &Config{Mode: mode}
-    if mode == GRID  { ret.Grid  = NewGridConfig() }
-    if mode == LINES { ret.Lines = NewLinesConfig() }
-    if mode == TEST  { ret.Test  = NewTestConfig() }
+//    if mode == GRID  { ret.Grid  = NewGridConfig() }
+//    if mode == LINES { ret.Lines = NewLinesConfig() }
+//    if mode == TEST  { ret.Test  = NewTestConfig() }
+      if mode == "grid" { ret.Grid  = NewGridConfig()  }
+      if mode == "lines" { ret.Lines = NewLinesConfig() }
+      if mode == "test" { ret.Test  = NewTestConfig()  }
     ret.Font =   gfx.NewFontConfig()
     ret.Camera = gfx.NewCameraConfig()
     ret.Mask =   gfx.NewMaskConfig()

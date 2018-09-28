@@ -6,7 +6,7 @@ import (
     "os"
     "bufio"
     log "./log"
-    conf "./conf"
+    render "./render"
 )
 
 
@@ -21,11 +21,11 @@ func NewScanner() *Scanner {
 }
 
 
-func (scanner *Scanner) ScanText(textChan chan conf.RawText) {
+func (scanner *Scanner) ScanText(textChan chan render.RawText) {
     for scanner.scanner.Scan() {
         text := scanner.scanner.Text()
 //        log.Debug("scan  %s",text)
-        textChan <- conf.RawText(text)
+        textChan <- render.RawText(text)
     }    
     err := scanner.scanner.Err()
     if err != nil {
