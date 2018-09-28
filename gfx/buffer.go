@@ -18,6 +18,8 @@ type Buffer struct {
 }
 
 
+const DEBUG_BUFFER = false
+
 func NewBuffer(count uint) *Buffer {
     ret := &Buffer{}
     if count == 0 { count = 1 }
@@ -86,11 +88,11 @@ func (buffer *Buffer) Queue(newItem *Text) {
 
     if buffer.items[buffer.tail] == nil && newItem != nil {
         buffer.items[buffer.tail] = newItem
-        if newItem == nil {
-            log.Debug("jump nil %s\n%s",buffer.Desc(),buffer.Dump())
-        } else {
-            log.Debug("jump '%s' %s\n%s",newItem.Desc(),buffer.Desc(),buffer.Dump())
-        }
+        if DEBUG_BUFFER {
+            tmp := ""
+            if newItem != nil { tmp = newItem.Desc() }
+            log.Debug("jump %s\n%s",tmp,buffer.Dump())
+        }        
         return
     }
 
@@ -109,11 +111,11 @@ func (buffer *Buffer) Queue(newItem *Text) {
     buffer.head = (buffer.head+1)%buffer.count
     buffer.tail = (buffer.tail+1)%buffer.count
     
-    if newItem == nil {
-        log.Debug("queue nil %s\n%s",buffer.Desc(),buffer.Dump())
-    } else {
-        log.Debug("queue '%s' %s\n%s",newItem.Desc(),buffer.Desc(),buffer.Dump())
-    }
+    if DEBUG_BUFFER {
+        tmp := ""
+        if newItem != nil { tmp = newItem.Desc() }
+        log.Debug("queue %s\n%s",tmp,buffer.Dump())
+    }        
 }
 
 

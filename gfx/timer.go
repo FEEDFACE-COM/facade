@@ -52,12 +52,16 @@ func (timer *Timer) Update(now float32) bool {
     timer.Fader = Clamp( t/d )
     timer.Cycle = math.TAU * timer.Fader
     
+    //triggered?
     if now > timer.start+timer.duration {
+        timer.start += timer.duration
+        timer.Fader = 0.0
+        timer.Cycle = 0.0
+        timer.Count += 1
         if timer.Fun != nil {
             timer.Fun()
         }
-        timer.Count += 1
-        timer.start += timer.duration
+
         return true
     }
     return false

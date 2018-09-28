@@ -35,8 +35,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     gl.ClearColor(0,0,0,1)
     gl.ActiveTexture(gl.TEXTURE0)
     
-
-    
     grid.program.UseProgram(debug)
     grid.object.BindBuffer()
     
@@ -77,10 +75,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2+1)*4, (0)*4 )
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2+1)*4, (3)*4 )
-    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2+1)*4, (3+2)*4 )
-    grid.program.VertexAttribPointer(gfx.TOTALWIDTH,1, (3+2+2+1)*4, (3+2+2)*4 )
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4, (0)*4 )
+    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4 )
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4 )
     
     
     count := int32(grid.config.Width*grid.config.Height)
@@ -134,7 +131,7 @@ func (grid *Grid) FillTest(test string, font *gfx.Font) {
 
 
 
-func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point, maxSize gfx.Size, totalWidth float32) []float32 {
+func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point, maxSize gfx.Size) []float32 {
     
     w, h := size.W, size.H
     x, y := float32(tileCoord.X), float32(tileCoord.Y)
@@ -145,12 +142,12 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     
     return []float32{
             //vertex          //texcoords        // coordinates
-        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,    totalWidth,
-        -w/2, -h/2, 0,                 0+ox, th+oy,      x, y,    totalWidth,
-         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,    totalWidth,
-         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,    totalWidth,
-         w/2,  h/2, 0,                tw+ox,  0+oy,      x, y,    totalWidth,
-        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,    totalWidth,
+        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
+        -w/2, -h/2, 0,                 0+ox, th+oy,      x, y,
+         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,
+         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,
+         w/2,  h/2, 0,                tw+ox,  0+oy,      x, y,
+        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
         
     }
     
@@ -161,9 +158,12 @@ func min(a,b float32) float32 {
     return b 
 }
 
+
+const DEBUG_DATA = false
+
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-//    tmp := ""
+    tmp := ""
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
         y:= -1 * (r-h/2)
@@ -175,7 +175,6 @@ func (grid *Grid) generateData(font *gfx.Font) {
             line  = grid.buffer.Head(uint(r))
         }        
         
-        totalWidth := float32(0.0)
         for c:=0; c<w; c++ {
             x:= c-w/2 + (1-w%2)
             
@@ -202,15 +201,13 @@ func (grid *Grid) generateData(font *gfx.Font) {
                 Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
             }
 
-            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize,totalWidth)... )
-            tw := size.W
-            totalWidth += tw
+            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
 
-//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
         } 
-//        tmp += "\n"
+        tmp += "\n"
     }
-//    log.Debug(tmp)
+    if DEBUG_DATA { log.Debug(tmp) }
     grid.object.BufferData( len(grid.data)*4,grid.data )
 }
 
@@ -254,13 +251,13 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
 
 
     grid.scroller.Init(now)
-    grid.scroller.Timer.Fun = func(){ 
-//        newText:=gfx.NewText("trigger")
-        grid.buffer.Queue(nil)
-        grid.generateData(font)
-//        log.Debug("trigger %s",font.Desc()) 
+    if grid.scroller.Scroll {
+        grid.scroller.Timer.Fun = func(){ 
+            grid.buffer.Queue(nil)
+            grid.generateData(font)
+            log.Debug("queued nil, scroller is %s",grid.scroller.Desc())
+        }
     }
-
 }
 
 
@@ -289,7 +286,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     grid.buffer.Queue( newText )
     grid.generateData(font)
     
-    log.Debug(grid.buffer.Dump())
+//    log.Debug(grid.buffer.Dump())
 //    log.Debug("queued text: %s",text)
 }
 
@@ -324,7 +321,7 @@ func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *g
     grid.config = *config
 
     if config.Scroll != old.Scroll || config.Speed != old.Speed {
-        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))    
+        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))     //and then what? timer?
     }
         
     if config.Height != old.Height {

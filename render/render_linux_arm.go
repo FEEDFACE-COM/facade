@@ -53,11 +53,11 @@ func NewRenderer() *Renderer {
     return ret
 }
 
-const DEBUG_CLOCK  = false
+const DEBUG_CLOCK  =  true
 const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
- 
+const DEBUG_MESSAGES = false
 
 
 func (renderer *Renderer) Init(config *conf.Config) error {
@@ -152,6 +152,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
     var now *gfx.Clock = &renderer.now
     var prev gfx.Clock = *now
 
+    now.Tick()
+
     gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
 
@@ -168,7 +170,7 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
 
     renderer.font.Init()
     renderer.camera.Init()
-    renderer.grid.Init(renderer.camera,renderer.font)
+    renderer.grid.Init(now, renderer.camera,renderer.font)
     renderer.lines.Init(renderer.camera,renderer.font)
     renderer.test.Init(renderer.camera,renderer.font)
     renderer.mask.Init()
@@ -181,14 +183,10 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
 
 
 
-    timer := gfx.NewTimer(now,3.0)
-    now.Tick()
     log.Debug("renderer start")
     for {
-//        if e := gl.GetError(); e != gl.NO_ERROR && debug { log.Error("pre render gl error: %s",gl.ErrorString(e)) }
         
         verbose := now.DebugFrame()
-        if verbose { log.Debug("%s    %s",now.Desc(),timer.Desc()) }
         
         renderer.mutex.Lock()
         piglet.MakeCurrent()
@@ -226,9 +224,8 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         // FIXME, maybe dont wait as long??
 
         if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
-//        StartGC()
-        now.Tick()
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
+        now.Tick()
     }
     return nil
 }
@@ -327,8 +324,9 @@ func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan s
 
     for {
         rawText := <-rawChan
-
-        log.Debug("process raw text: %s",string(rawText))
+        if DEBUG_MESSAGES {
+            log.Debug("process raw text: %s",string(rawText))
+        }
         text := renderer.SanitizeText(rawText)
         
         renderer.mutex.Lock()
@@ -345,7 +343,9 @@ func (renderer *Renderer) ProcessText(rawChan chan conf.RawText, textChan chan s
 func (renderer *Renderer) ProcessConf(rawChan chan conf.Config, confChan chan conf.Config) error {
     for {
         rawConf := <-rawChan
-        log.Debug("process raw conf: %s",rawConf.Desc())
+        if DEBUG_MESSAGES {
+            log.Debug("process raw conf: %s",rawConf.Desc())
+        }
         conf := renderer.SanitizeConfig(rawConf)
 
         renderer.mutex.Lock()
