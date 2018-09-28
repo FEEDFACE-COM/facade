@@ -3,12 +3,10 @@
 
 package main
 
-import (
-    facade "./facade"
-)
+import ( facade "./facade" )
 
 type Tester struct {}
-func NewTester() *Tester { return &Tester{} }
+func NewTester(_ string) *Tester { return &Tester{} }
 func (tester *Tester) Test(str string) { }
 func (tester *Tester) Configure(config *facade.Config) {}
 

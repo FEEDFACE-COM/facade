@@ -15,14 +15,14 @@ import (
     facade "./facade"
 )
 
-type Tester struct {font *gfx.Font; name string}
-func NewTester() *Tester { return &Tester{} }
+type Tester struct {font *gfx.Font; name string; directory string}
+func NewTester(directory string) *Tester { return &Tester{directory: directory} }
 
 
 func (tester *Tester) Configure(config *facade.Config) {
     tester.name = config.Font.Name
     var err error
-    tester.font,err = gfx.GetFont(config.Font,facade.DIRECTORY)
+    tester.font,err = gfx.GetFont(config.Font,tester.directory)
     if err != nil {
         log.PANIC("fail loading font %s: %s",config.Font.Name,err)
     }
@@ -61,17 +61,15 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 func (tester *Tester) Test(str string) {
     test0,_ := tester.testCharMap()
     test1,_ := tester.testTextTex(str)
-    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.name))
+    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.directory+tester.name+".png"))
     SaveRGBA(test1,fmt.Sprintf("text-%s-%s",tester.name,str))
 }
 
 
-func SaveRGBA(img *image.RGBA,outname string)  {
+func SaveRGBA(img *image.RGBA,outPath string)  {
 
-    var outPath = facade.DIRECTORY + "/out/" + outname + ".png"
-    
     if img == nil {
-        log.Error("nil image not saved at "+outPath)
+        log.Error("no image to save at "+outPath)
         return 
     }
     

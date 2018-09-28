@@ -8,8 +8,7 @@ import (
 )
 
 var DEFAULT_MODE Mode = GRID
-var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
-
+var DEFAULT_DIRECTORY = "~/src/gfx/facade/asset/"
 
 
 
@@ -75,6 +74,7 @@ func (config *Config) FlagSet() *flag.FlagSet {
     if config.Camera != nil { config.Camera.AddFlags(ret) }
     if config.Mask   != nil { config.Mask.AddFlags(ret) }
     ret.BoolVar(&config.Debug,"D",config.Debug,"Draw Debug" )
+    
     return ret
 }
 

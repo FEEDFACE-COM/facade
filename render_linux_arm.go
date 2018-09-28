@@ -8,6 +8,7 @@ import (
     "strings"
     "time"
     "sync"
+    "os"
 //    "runtime"
     log "./log"
     facade "./facade"
@@ -64,7 +65,10 @@ func NewRenderer(directory string) *Renderer {
 
 func (renderer *Renderer) Init(config *facade.Config) error {
     var err error
-    log.Debug("init %s",renderer.Desc())
+    log.Debug("init renderer[%s]",renderer.directory)
+    if strings.HasPrefix(renderer.directory, "~/") {
+        renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
+    }
     
     err = piglet.CreateContext()
     if err != nil {
@@ -92,7 +96,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
 
-    renderer.font,err = gfx.GetFont(config.Font,facade.DIRECTORY)
+    renderer.font,err = gfx.GetFont(config.Font, renderer.directory)
     if err != nil {
         log.PANIC("no default font: %s",err)    
     }
@@ -130,7 +134,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     }
     
     if config.Font != nil && config.Font != old.Font {
-        newFont,err := gfx.GetFont(config.Font, facade.DIRECTORY)
+        newFont,err := gfx.GetFont(config.Font, renderer.directory)
         if err == nil {
             log.Debug("switch font -> %s",string(config.Font.Name))
             newFont.Init()
@@ -345,6 +349,10 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
     
 }
 
+
+
+
+
 func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
@@ -368,5 +376,6 @@ func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan 
 func (renderer *Renderer) Desc() string { 
     return fmt.Sprintf("renderer[%dx%d]",int(renderer.screen.W),int(renderer.screen.H))
 }
+
 
 

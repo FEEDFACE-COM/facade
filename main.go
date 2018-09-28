@@ -53,7 +53,7 @@ var (
 
 func main() {
     quiet, verbose, debug := false, false, false
-    directory := "~/.fcd/"
+    directory := facade.DEFAULT_DIRECTORY
     
     
     signals := make(chan os.Signal, 1)
@@ -176,7 +176,7 @@ func main() {
         case TEST:
             flags[TEST].Usage = func() {ShowHelpCommand(TEST,flags) }
             flags[TEST].Parse( flag.Args()[1:] )
-            tester = NewTester()
+            tester = NewTester(directory)
 
         default:
             ShowHelpGeneral()
