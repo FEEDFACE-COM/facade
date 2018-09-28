@@ -4,11 +4,11 @@
 package main
 
 import (
-    conf "./conf"
+    facade "./facade"
 )
 
 type Tester struct {}
 func NewTester() *Tester { return &Tester{} }
 func (tester *Tester) Test(str string) { }
-func (tester *Tester) Configure(config *conf.Config) {}
+func (tester *Tester) Configure(config *facade.Config) {}
 

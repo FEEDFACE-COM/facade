@@ -1,7 +1,7 @@
 
 // +build linux,arm
 
-package render
+package main
 
 import (
     "fmt"
@@ -9,10 +9,9 @@ import (
     "time"
     "sync"
 //    "runtime"
-    log "../log"
-    conf "../conf"
-    facade "../facade"
-    gfx "../gfx"
+    log "./log"
+    facade "./facade"
+    gfx "./gfx"
     "src.feedface.com/gfx/piglet"
     gl "src.feedface.com/gfx/piglet/gles2"
 )
@@ -30,7 +29,7 @@ const BUFFER_SIZE = 80
 type Renderer struct {
     screen gfx.Size
 
-    config conf.Config
+    config facade.Config
 
     grid *facade.Grid
     lines *facade.Lines
@@ -60,7 +59,7 @@ const DEBUG_DIAG   = false
 const DEBUG_MESSAGES = false
 
 
-func (renderer *Renderer) Init(config *conf.Config) error {
+func (renderer *Renderer) Init(config *facade.Config) error {
     var err error
     log.Debug("init %s",renderer.Desc())
     
@@ -113,7 +112,7 @@ func (renderer *Renderer) Init(config *conf.Config) error {
 }
 
 
-func (renderer *Renderer) Configure(config *conf.Config) error {
+func (renderer *Renderer) Configure(config *facade.Config) error {
     
     if config == nil { log.Error("renderer config nil") ;return nil }
     
@@ -149,7 +148,7 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
 }
 
 
-func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string) error {
+func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan string) error {
 
     
     var now *gfx.Clock = &renderer.now
@@ -251,7 +250,7 @@ func (renderer *Renderer) QueueTexts(textChan chan string) {
 
 
 
-func (renderer *Renderer) QueueConfs(confChan chan conf.Config) {
+func (renderer *Renderer) QueueConfs(confChan chan facade.Config) {
     
     select {
         case conf := <-confChan:
@@ -307,7 +306,7 @@ func (renderer *Renderer) PrintDebug(now gfx.Clock, prev gfx.Clock) {
 //
 
 
-func (renderer *Renderer) SanitizeText(raw RawText) string {
+func (renderer *Renderer) SanitizeText(raw facade.RawText) string {
     const TABWIDTH = 8
     ret := string(raw)
     ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
@@ -315,7 +314,7 @@ func (renderer *Renderer) SanitizeText(raw RawText) string {
 }
 
 
-func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
+func (renderer *Renderer) SanitizeConfig(raw facade.Config) facade.Config {
     ret := raw
     return ret
 }
@@ -323,7 +322,7 @@ func (renderer *Renderer) SanitizeConfig(raw conf.Config) conf.Config {
 
 
 
-func (renderer *Renderer) ProcessText(rawChan chan RawText, textChan chan string) error {
+func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan string) error {
 
     for {
         rawText := <-rawChan
@@ -343,7 +342,7 @@ func (renderer *Renderer) ProcessText(rawChan chan RawText, textChan chan string
     
 }
 
-func (renderer *Renderer) ProcessConf(rawChan chan conf.Config, confChan chan conf.Config) error {
+func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
         if DEBUG_MESSAGES {

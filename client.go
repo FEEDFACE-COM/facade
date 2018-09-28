@@ -10,7 +10,7 @@ import (
     "encoding/gob"
 //    "time"
     log "./log"
-    conf "./conf"
+    facade "./facade"
 )
 
 const DEBUG_SEND = true
@@ -57,7 +57,7 @@ func (client *Client) ScanAndSendText() {
 }
 
 
-func (client *Client) SendConf(config *conf.Config) { 
+func (client *Client) SendConf(config *facade.Config) { 
     confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
     log.Info("config %s",config.Desc())
     log.Info("connect to %s",confConnStr) 

@@ -1,5 +1,5 @@
 
-package render
+package main
 
 import (
     "runtime"

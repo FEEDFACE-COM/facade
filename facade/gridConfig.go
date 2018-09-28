@@ -1,6 +1,6 @@
 
 
-package conf
+package facade
 
 import (
     "flag"    
@@ -18,7 +18,12 @@ type GridConfig struct {
 
 
 func NewGridConfig() *GridConfig {
-    return &GridConfig{Width: 0, Height: 2, Scroll: false, Speed: 1.0}
+    return &GridConfig{
+        Width: 0,
+        Height: 8,
+        Scroll: false, 
+        Speed: 1.0,
+    }
 }
 
 

@@ -1,19 +1,20 @@
 
+// +build linux,arm
+
 package facade
 
 import(
     "fmt"
 //    "math"
-	"github.com/go-gl/mathgl/mgl32"    
-    conf "../conf"
     gfx "../gfx"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
+	"github.com/go-gl/mathgl/mgl32"    
 )
 
 
 type Grid struct {
-    config conf.GridConfig    
+    config GridConfig    
 
     buffer *gfx.Buffer
     
@@ -308,7 +309,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 
 
-func (grid *Grid) autoWidth(config conf.GridConfig, camera *gfx.Camera, font *gfx.Font) conf.GridConfig {
+func (grid *Grid) autoWidth(config GridConfig, camera *gfx.Camera, font *gfx.Font) GridConfig {
     ret := config
     if config.Width == 0 {
         w := camera.Ratio() / font.Ratio() * float32(config.Height)
@@ -322,7 +323,7 @@ func (grid *Grid) autoWidth(config conf.GridConfig, camera *gfx.Camera, font *gf
 
 
 
-func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *gfx.Font) {
+func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Font) {
     if config == nil { return }
 
     autoConf := grid.autoWidth(*config,camera,font)
@@ -357,9 +358,9 @@ func (grid *Grid) Configure(config *conf.GridConfig, camera *gfx.Camera, font *g
 
 }
 
-func NewGrid(config *conf.GridConfig) *Grid {
+func NewGrid(config *GridConfig) *Grid {
     if config == nil { 
-        config = conf.NewGridConfig() 
+        config = NewGridConfig() 
     }
     ret := &Grid{config: *config}
     ret.needGen = true

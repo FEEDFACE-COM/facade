@@ -1,6 +1,6 @@
 
 
-package conf
+package facade
 
 import (
     "flag"    

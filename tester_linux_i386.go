@@ -11,7 +11,6 @@ import (
     "image"
 //    "errors"
     log "./log"
-    conf "./conf"
     gfx "./gfx"
     facade "./facade"
 )
@@ -20,7 +19,7 @@ type Tester struct {font *gfx.Font; name string}
 func NewTester() *Tester { return &Tester{} }
 
 
-func (tester *Tester) Configure(config *conf.Config) {
+func (tester *Tester) Configure(config *facade.Config) {
     tester.name = config.Font.Name
     var err error
     tester.font,err = gfx.GetFont(config.Font,facade.DIRECTORY)

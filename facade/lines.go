@@ -6,17 +6,16 @@ package facade
 import(
 //    "fmt"
 //    "strings"
-	"github.com/go-gl/mathgl/mgl32"    
-    conf "../conf"
     gfx "../gfx"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
+	"github.com/go-gl/mathgl/mgl32"    
 )
 
 
 
 type Lines struct {
-    config conf.LinesConfig
+    config LinesConfig
 
     buffer *gfx.Buffer 
     program *gfx.Program
@@ -62,7 +61,7 @@ func (lines *Lines) Queue(text string, font *gfx.Font) {
 
 
 
-func (lines *Lines) Configure(config *conf.LinesConfig) {
+func (lines *Lines) Configure(config *LinesConfig) {
     if config == nil { return }
     if *config == lines.config { return}
     
@@ -154,9 +153,9 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
 
 
 
-func NewLines(config *conf.LinesConfig) *Lines {
+func NewLines(config *LinesConfig) *Lines {
     if config == nil {
-        config = conf.NewLinesConfig()
+        config = NewLinesConfig()
     }
     ret := &Lines{config: *config}
     ret.buffer = gfx.NewBuffer(config.Height)

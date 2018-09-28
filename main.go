@@ -9,9 +9,7 @@ import (
     "os/signal"
     "runtime"
     log "./log"
-    render "./render"
     facade "./facade"
-    conf "./conf"
 )
 
 
@@ -68,11 +66,11 @@ func main() {
 
     log.SetVerbosity(log.NOTICE)
     
-    flag.Usage = ShowHelp
+    flag.Usage = ShowHelpGeneral
 
     flags := make(map[Command] *flag.FlagSet)
 
-    if render.RENDERER_AVAILABLE {
+    if RENDERER_AVAILABLE {
         cmds = append(cmds, READ)
         cmds = append(cmds, RECV)
     }
@@ -91,7 +89,7 @@ func main() {
         flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
     }
 
-    if render.RENDERER_AVAILABLE {
+    if RENDERER_AVAILABLE {
         flags[RECV].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
         flags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
         flags[RECV].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
@@ -113,7 +111,7 @@ func main() {
     
     flag.Parse()
     if flag.NArg() < 1 { 
-        ShowHelp(); 
+        ShowHelpGeneral(); 
         os.Exit(-2) 
     }
     if debug { 
@@ -128,7 +126,7 @@ func main() {
     var client *Client
     var server *Server
     var scanner *Scanner
-    var renderer *render.Renderer
+    var renderer *Renderer
     var tester *Tester
     
     
@@ -137,33 +135,33 @@ func main() {
     switch ( cmd ) {
 
         case READ:
-            if !render.RENDERER_AVAILABLE {
-                ShowHelp()
+            if !RENDERER_AVAILABLE {
+                ShowHelpGeneral()
                 os.Exit(-2)    
             }
-            flags[READ].Usage = func() { ShowCommandHelp(READ,flags) }
+            flags[READ].Usage = func() { ShowHelpCommand(READ,flags) }
             flags[READ].Parse( flag.Args()[1:] )
-            renderer = render.NewRenderer()
+            renderer = NewRenderer()
             scanner = NewScanner()
 
         case RECV:
-            if !render.RENDERER_AVAILABLE {
-                ShowHelp()
+            if !RENDERER_AVAILABLE {
+                ShowHelpGeneral()
                 os.Exit(-2)    
             }
-            flags[RECV].Usage = func() { ShowCommandHelp(RECV,flags) }
+            flags[RECV].Usage = func() { ShowHelpCommand(RECV,flags) }
             flags[RECV].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
-            renderer = render.NewRenderer()
+            renderer = NewRenderer()
 
         case PIPE:
-            flags[PIPE].Usage = func() { ShowCommandHelp(PIPE,flags) }
+            flags[PIPE].Usage = func() { ShowHelpCommand(PIPE,flags) }
             flags[PIPE].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
             
         case CONF:
-            flags[CONF].Usage = func() { ShowCommandHelp(CONF,flags) }
+            flags[CONF].Usage = func() { ShowHelpCommand(CONF,flags) }
             flags[CONF].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
             
@@ -172,29 +170,29 @@ func main() {
             os.Exit(-2)
 
         case HELP:
-            ShowHelp()
+            ShowHelpGeneral()
             os.Exit(-2)
             
         
         case TEST:
-            flags[TEST].Usage = func() {ShowCommandHelp(TEST,flags) }
+            flags[TEST].Usage = func() {ShowHelpCommand(TEST,flags) }
             flags[TEST].Parse( flag.Args()[1:] )
             tester = NewTester()
 
         default:
-            ShowHelp()
+            ShowHelpGeneral()
             os.Exit(-2)
     }
     
     
     
-    var config *conf.Config = conf.NewConfig(string(facade.DEFAULT_MODE))
+    var config *facade.Config = facade.NewConfig( facade.DEFAULT_MODE )
     var modeflags *flag.FlagSet = config.FlagSet()
     args := flags[cmd].Args()
     
     if len(args) < 1 {
         if cmd == CONF { 
-            ShowCommandHelp(CONF,flags)
+            ShowHelpCommand(CONF,flags)
             os.Exit(-2)
         } else {
             
@@ -205,23 +203,23 @@ func main() {
          
             
     } else {
-        mode := args[0]
+        mode := facade.Mode(args[0])
         switch facade.Mode(mode) {
             
             case facade.GRID:
-                config = conf.NewConfig(mode)
+                config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
                 modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
             case facade.LINES:
-                config = conf.NewConfig(mode)
+                config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
                 modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
             case facade.TEST:
-                config = conf.NewConfig(mode)
+                config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
                 modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
@@ -229,7 +227,7 @@ func main() {
 
                         
             default:
-                ShowHelp()
+                ShowHelpGeneral()
                 os.Exit(-2)    
         }
     }
@@ -246,7 +244,7 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            rawTexts := make(chan render.RawText)
+            rawTexts := make(chan facade.RawText)
             texts := make(chan string)
             go scanner.ScanText(rawTexts)
             go renderer.ProcessText(rawTexts,texts)
@@ -258,9 +256,9 @@ func main() {
             log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            rawConfs := make(chan conf.Config)
-            rawTexts := make(chan render.RawText)
-            confs := make(chan conf.Config)
+            rawConfs := make(chan facade.Config)
+            rawTexts := make(chan facade.RawText)
+            confs := make(chan facade.Config)
             texts := make(chan string)
             go server.ListenConf(rawConfs)
             go server.ListenText(rawTexts)
@@ -321,7 +319,7 @@ func ShowModeHelp(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
 
 
 
-func ShowCommandHelp(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
+func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
     switches := ""
     flags := ""
     flagSetMap[cmd].VisitAll( func(f *flag.Flag) { 
@@ -338,8 +336,7 @@ func ShowCommandHelp(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
     fmt.Fprintf(os.Stderr,"\n")
 }
 
-
-func ShowHelp() {
+func ShowHelpGeneral() {
     flags := ""
     flag.CommandLine.VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
@@ -352,25 +349,28 @@ func ShowHelp() {
     for _,cmd := range cmds {
         fmt.Fprintf(os.Stderr,"%s|",cmd)
     }
+    
+    
     fmt.Fprintf(os.Stderr,"    ")
     for _,m := range facade.Modes {
         fmt.Fprintf(os.Stderr,"%s|",m)
     }
     fmt.Fprintf(os.Stderr,"\n")
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
-    if render.RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",READ,"pipe stdin to display")
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",RECV,"receive text and display")
+    if RENDERER_AVAILABLE {
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",READ,"read stdin and display")
+        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",RECV,"receive and display ")
     }
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"pipe stdin to remote facade")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",CONF,"control remote facade")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show facade info")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"pipe stdin to remote")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",CONF,"configure remote")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show version info")
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.GRID,"a grid")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.LINES,"lines")
+    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.GRID,"character grid")
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
+    
+    
 }
     
 

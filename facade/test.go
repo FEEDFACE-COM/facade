@@ -1,18 +1,19 @@
 
+// +build linux,arm
+
 package facade
 
 import(
-	"github.com/go-gl/mathgl/mgl32"    
-    conf "../conf"
     gfx "../gfx"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
+	"github.com/go-gl/mathgl/mgl32"    
 )
 
 
 type Test struct {
     
-    config conf.TestConfig
+    config TestConfig
     
     camera *gfx.Camera
 
@@ -121,11 +122,11 @@ func (test *Test) Queue(text string) {
 
 
 
-func (test *Test) Configure(config *conf.TestConfig) {
+func (test *Test) Configure(config *TestConfig) {
     if config == nil { return }
 }
 
-func NewTest(config *conf.TestConfig) *Test {
+func NewTest(config *TestConfig) *Test {
     ret := &Test{}
     return ret
 }
