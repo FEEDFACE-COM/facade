@@ -11,7 +11,7 @@ import (
 //    "runtime"
     log "../log"
     conf "../conf"
-    modes "../modes"
+    facade "../facade"
     gfx "../gfx"
     "src.feedface.com/gfx/piglet"
     gl "src.feedface.com/gfx/piglet/gles2"
@@ -32,9 +32,9 @@ type Renderer struct {
 
     config conf.Config
 
-    grid *modes.Grid
-    lines *modes.Lines
-    test *modes.Test
+    grid *facade.Grid
+    lines *facade.Lines
+    test *facade.Test
     font *gfx.Font
     camera *gfx.Camera
     mask *gfx.Mask
@@ -101,9 +101,9 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.camera.Configure(config.Camera)
 
     
-    renderer.grid = modes.NewGrid(config.Grid)
-    renderer.lines = modes.NewLines(config.Lines)
-    renderer.test = modes.NewTest(config.Test)
+    renderer.grid = facade.NewGrid(config.Grid)
+    renderer.lines = facade.NewLines(config.Lines)
+    renderer.test = facade.NewTest(config.Test)
 
 
     gfx.InitClock()

@@ -1,5 +1,5 @@
 
-package modes
+package facade
 
 import(
     "fmt"

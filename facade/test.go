@@ -1,5 +1,5 @@
 
-package modes
+package facade
 
 import(
 	"github.com/go-gl/mathgl/mgl32"    
@@ -11,6 +11,8 @@ import(
 
 
 type Test struct {
+    
+    config conf.TestConfig
     
     camera *gfx.Camera
 
@@ -25,45 +27,10 @@ type Test struct {
 
 
 
-var vertexShader = map[string]string{
-
-"ident":`
-uniform mat4 projection;
-uniform mat4 camera;
-attribute vec3 vert;
-attribute vec4 color;
-varying vec4 vertColor;
-
-void main() {
-    vertColor = color;
-    gl_Position = projection * camera * vec4(vert,1);
-}
-`,
-
-
-
-
-}
-
-var fragmentShader = map[string]string{
-
-"ident":`
-varying vec4 vertColor;
-void main() {
-    gl_FragColor = vertColor;
-}
-`,
-
-
-
-}
-
-
-func (test *Test) RenderAxis() {
-    program := test.program["test"]
+func (test *Test) RenderAxis(debug bool) {
+    program := test.program["axis"]
   
-  
-    program.UseProgram()
+    program.UseProgram(debug)
 
     object := test.object["axis"]
 
@@ -80,16 +47,18 @@ func (test *Test) RenderAxis() {
     }
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
     gl.BufferData(gl.ARRAY_BUFFER, len(axis)*4, gl.Ptr(axis), gl.STATIC_DRAW)
+  
     
     
     program.VertexAttribPointer(gfx.VERTEX, 3, (3+4)*4, 0 )
-    program.VertexAttribPointer(gfx.COLOR, 4, (3+4)*4, 3*4 )
+    program.VertexAttribPointer(gfx.COLOR,  4, (3+4)*4, 3*4 )
     
     
     model := mgl32.Ident4()
     //	model = mgl32.Scale3D(0.25,0.25,0.25)
     
     program.UniformMatrix4fv(gfx.MODEL,1,&model[0])
+
   
     gl.LineWidth(4.0)    
     gl.BindBuffer(gl.ARRAY_BUFFER,object) 
@@ -102,15 +71,15 @@ func (test *Test) RenderAxis() {
 
 
 
-func (test *Test) Render() {
+func (test *Test) Render(camera *gfx.Camera, debug, verbose bool) {
     gl.ClearColor(.5,.5,.5,1.)
     
-    if true { test.RenderAxis() }
+    if true { test.RenderAxis(debug) }
         
 }
 
 
-func (test *Test) Init(camera *gfx.Camera) {
+func (test *Test) Init(camera *gfx.Camera, font *gfx.Font) {
 
     test.camera = camera
 
@@ -124,42 +93,37 @@ func (test *Test) Init(camera *gfx.Camera) {
         test.object[name] = tmp
     }
     
-    test.vert =  map[string]*gfx.Shader{}
-    for name,src := range vertexShader {
-        test.vert[name] = gfx.NewShader(name,src,gl.VERTEX_SHADER)
-        if err := test.vert[name].CompileShader() ; err != nil {
-            log.Error("fail compile vertex shader %s: %s",name,err)
-        }
-    }
-    
-    test.frag =  map[string]*gfx.Shader{}
-    for name,src := range fragmentShader {
-        test.frag[name] = gfx.NewShader(name,src,gl.FRAGMENT_SHADER)
-        if err := test.frag[name].CompileShader() ; err != nil {
-            log.Error("fail compile fragment shader %s: %s",name,err)
-        }
-    }
-    
     var err error
-    test.program["test"] = gfx.NewProgram("test");
-    err = test.program["test"].CreateProgram(test.vert["ident"],test.frag["ident"])
-    if err != nil { log.Error("fail to create test: %s",err) }
-
+    {
+        test.program["axis"] = gfx.NewProgram("axis")
     
+        err = test.program["axis"].LoadShaders("color", "color")
+        if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }
+
+        err = test.program["axis"].LinkProgram()
+        if err != nil { log.Error("fail linking %s color shaders: %s","axis",err) }
+        
+        if test.program["axis"] == nil {
+            log.Error("fail Init!!")    
+        }
+            
+    }
     
 }
 
 
 
 func (test *Test) Queue(text string) {
-    log.Debug("test %s",text);    
+//    log.Debug("test %s",text);    
 }
 
 
 
 
 
-func (test *Test) Configure(config *conf.TestConfig) {}
+func (test *Test) Configure(config *conf.TestConfig) {
+    if config == nil { return }
+}
 
 func NewTest(config *conf.TestConfig) *Test {
     ret := &Test{}
@@ -167,6 +131,6 @@ func NewTest(config *conf.TestConfig) *Test {
 }
 
 
-func (test *Test) Desc() string { return "test[]" }
-func (test *Test) Dump() string { return "test[]" }
+func (test *Test) Desc() string { return test.config.Desc() }
+func (test *Test) Dump() string { return test.config.Desc() }
 

@@ -1,7 +1,7 @@
 
 // +build linux,arm
 
-package modes
+package facade
 
 import(
 //    "fmt"
