@@ -21,7 +21,11 @@ func NewTester() *Tester { return &Tester{} }
 
 func (tester *Tester) Configure(config *conf.Config) {
     tester.name = config.Font.Name
-    tester.font = gfx.GetFont(config.Font,conf.DIRECTORY)
+    var err error
+    tester.font,err = gfx.GetFont(config.Font,conf.DIRECTORY)
+    if err != nil {
+        log.PANIC("fail loading font %s: %s",config.Font.Name,err)
+    }
     tester.font.Init()
     tester.font.Configure(config.Font)
     log.Info("got font %s",tester.font.Desc())

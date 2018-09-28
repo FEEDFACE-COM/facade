@@ -29,6 +29,7 @@ const (
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
     SCROLLER   UniformName = "scroller"
+    TIMER      UniformName = "timer"
 )    
 
 type AttribName string

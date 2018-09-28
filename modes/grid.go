@@ -27,6 +27,7 @@ type Grid struct {
     black *gfx.Texture
     white *gfx.Texture
     
+    timer *gfx.Timer
     
     needGen bool
 }
@@ -249,6 +250,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
 
     grid.black = gfx.BlackColor()
     grid.white = gfx.WhiteColor()
+    grid.timer = gfx.NewTimer(now,1.0)
 
     grid.object.Init()
     

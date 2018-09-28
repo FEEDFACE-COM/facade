@@ -90,7 +90,10 @@ func (renderer *Renderer) Init(config *conf.Config) error {
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
 
-    renderer.font = gfx.GetFont(config.Font,conf.DIRECTORY)
+    renderer.font,err = gfx.GetFont(config.Font,conf.DIRECTORY)
+    if err != nil {
+        log.PANIC("no default font: %s",err)    
+    }
     renderer.camera = gfx.NewCamera(config.Camera,renderer.screen)
     renderer.mask = gfx.NewMask(config.Mask,renderer.screen)
 
@@ -125,20 +128,18 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
     }
     
     if config.Font != nil && config.Font != old.Font {
-        log.Debug("switch font -> %s",string(config.Font.Name))
-        newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
-        newFont.Init()
-
-//        oldFont := renderer.font
-        renderer.font = newFont
-        
-        
-
+        newFont,err := gfx.GetFont(config.Font, conf.DIRECTORY)
+        if err == nil {
+            log.Debug("switch font -> %s",string(config.Font.Name))
+            newFont.Init()
+            renderer.font = newFont
+            renderer.font.Configure(config.Font)
 //        oldFont.Close() //still, leaks?
+        }
+
     }
     
     
-    renderer.font.Configure(config.Font)
     renderer.lines.Configure(config.Lines)
     renderer.grid.Configure(config.Grid,renderer.camera,renderer.font)
     renderer.test.Configure(config.Test)

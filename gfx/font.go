@@ -37,15 +37,18 @@ const scratchSize = 8192
 const DEBUG_FONT = false
 
 
-func GetFont(config *conf.FontConfig, directory string) *Font {
+func GetFont(config *conf.FontConfig, directory string) (*Font,error) {
     if fonts[config.Name] == nil {
-        fonts[config.Name] = NewFont(config, directory)
-        err := fonts[config.Name].loadFont(directory+config.Name)
+        tmp := NewFont(config, directory)
+        err := tmp.loadFont(directory+config.Name)
         if err != nil {
+            fonts[config.Name] = nil
             log.Error("fail to load font %s: %s",config.Name,err)
+            return nil, log.NewError("fail to load font %s: %s",config.Name,err)
         } 
+        fonts[config.Name] = tmp
     } 
-    return fonts[config.Name]
+    return fonts[config.Name],nil
     //note, its' still leaking tho!
     
 }
@@ -111,13 +114,11 @@ func (font *Font) loadFont(fontfile string) error {
         }
     }
     if err != nil {
-        log.Error("fail to read font %s: %s",fontfile,err)
-        return err
+        return log.NewError("fail to read font: %s",err)
     }
     font.font,err = freetype.ParseFont(data)
     if err != nil {
-        log.Error("fail to parse font %s: %s",fontfile,err)
-        return err
+        return log.NewError("fail to parse: %s",err)
     }
     log.Debug("load font file %s",fontfile+ext)
     return nil
