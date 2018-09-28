@@ -1,5 +1,5 @@
 
-package conf
+package gfx
 
 import (
     "fmt"

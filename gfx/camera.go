@@ -5,7 +5,6 @@ package gfx
 
 import (
     log "../log"
-    conf "../conf"
 //    log "../log"
 //    gl "src.feedface.com/gfx/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
@@ -13,7 +12,7 @@ import (
 
 type Camera struct {
     
-    config conf.CameraConfig
+    config CameraConfig
     
     projection mgl32.Mat4
     projectionUniform int32
@@ -40,7 +39,7 @@ func perspective(width,height float32) mgl32.Mat4 {
 func (camera *Camera) Ratio() float32 { return camera.size.W / camera.size.H }
     
 
-func NewCamera(config *conf.CameraConfig, screen Size) *Camera {
+func NewCamera(config *CameraConfig, screen Size) *Camera {
     ret := &Camera{config: *config, size: screen}
     return ret
 }
@@ -56,7 +55,7 @@ func (camera *Camera) Init() {
 }
 
 
-func (camera *Camera) Configure(config *conf.CameraConfig) {
+func (camera *Camera) Configure(config *CameraConfig) {
     if config == nil { return }
 //    if *config == camera.config { return }
 

@@ -49,8 +49,8 @@ void main() {
         col = vec4(1.0,scroll,scroll,1.0);
     } 
     
-    col.r = cos(vTimer + vTileCoord.x) * col.rgb;
-    col.gb = cos(vTimer + vTileCoord.y) * col.rgb;
+    col.r = cos(vTimer + vTileCoord.x) * col.r;
+    col.gb = cos(vTimer + vTileCoord.y) * col.gb;
     
     gl_FragColor = vec4(col.rgb,1.0);
 }

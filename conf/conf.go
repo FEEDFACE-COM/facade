@@ -4,6 +4,7 @@ package conf
 import (
     "fmt"
     "flag"
+    gfx "../gfx"
 )
 
 
@@ -12,9 +13,9 @@ type Config struct {
     Grid *GridConfig
     Lines *LinesConfig
     Test *TestConfig
-    Font *FontConfig
-    Camera *CameraConfig    
-    Mask *MaskConfig
+    Font *gfx.FontConfig
+    Camera *gfx.CameraConfig    
+    Mask *gfx.MaskConfig
     Debug bool
 }
 
@@ -44,9 +45,9 @@ func NewConfig(mode Mode) *Config {
     if mode == GRID  { ret.Grid  = NewGridConfig() }
     if mode == LINES { ret.Lines = NewLinesConfig() }
     if mode == TEST  { ret.Test  = NewTestConfig() }
-    ret.Font =   NewFontConfig()
-    ret.Camera = NewCameraConfig()
-    ret.Mask =   NewMaskConfig()
+    ret.Font =   gfx.NewFontConfig()
+    ret.Camera = gfx.NewCameraConfig()
+    ret.Mask =   gfx.NewMaskConfig()
 //˚    ret.Debug = true
     return ret
 }

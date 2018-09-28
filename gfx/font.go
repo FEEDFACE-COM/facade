@@ -15,7 +15,6 @@ import (
     "github.com/golang/freetype"
     "github.com/golang/freetype/truetype"
     log "../log"
-    conf "../conf"
 )
 
 
@@ -37,7 +36,7 @@ const scratchSize = 8192
 const DEBUG_FONT = false
 
 
-func GetFont(config *conf.FontConfig, directory string) (*Font,error) {
+func GetFont(config *FontConfig, directory string) (*Font,error) {
     if fonts[config.Name] == nil {
         tmp := NewFont(config, directory)
         err := tmp.loadFont(directory+config.Name)
@@ -56,7 +55,7 @@ func GetFont(config *conf.FontConfig, directory string) (*Font,error) {
 
 
 type Font struct {
-    config conf.FontConfig
+    config FontConfig
 
     directory string
 
@@ -75,14 +74,14 @@ func (font *Font) MaxSize() Size {
 }
 
 
-func NewFont(config *conf.FontConfig, directory string) *Font {
+func NewFont(config *FontConfig, directory string) *Font {
     ret := &Font{config: *config, directory: directory}
     ret.scratch = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
     return ret
 }
 
 
-func (font *Font) Configure(config *conf.FontConfig) {
+func (font *Font) Configure(config *FontConfig) {
     if config == nil { return }
     if *config == font.config { return }
     

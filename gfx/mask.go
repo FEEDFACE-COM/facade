@@ -4,7 +4,6 @@
 package gfx
 
 import(
-    conf "../conf"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -12,7 +11,7 @@ import(
 
 type Mask struct {
 
-    config conf.MaskConfig
+    config MaskConfig
     program *Program
 
     object *Object
@@ -23,13 +22,13 @@ type Mask struct {
     
 }
 
-func NewMask(config *conf.MaskConfig, screen Size) *Mask {
+func NewMask(config *MaskConfig, screen Size) *Mask {
     ret := &Mask{config: *config, Width: screen.W, Height: screen.H}
     return ret
 }
 
 
-func (mask *Mask) Configure(config *conf.MaskConfig) {
+func (mask *Mask) Configure(config *MaskConfig) {
     if config == nil { return }
     if *config == mask.config { return }
     

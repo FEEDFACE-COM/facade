@@ -74,8 +74,9 @@ void main() {
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
     
-    
-    pos.x += 0.5 * cos(timer);
+
+    pos.x += 0.1 * cos(vTimer + vTileCoord.x);
+    pos.y += 0.1 * cos(vTimer + vTileCoord.y);
 
     if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
     if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
