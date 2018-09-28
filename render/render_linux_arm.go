@@ -129,10 +129,12 @@ func (renderer *Renderer) Configure(config *conf.Config) error {
         newFont := gfx.GetFont(config.Font, conf.DIRECTORY)
         newFont.Init()
 
-        oldFont := renderer.font
+//        oldFont := renderer.font
         renderer.font = newFont
+        
+        
 
-        oldFont.Close() //still, leaks?
+//        oldFont.Close() //still, leaks?
     }
     
     
@@ -213,9 +215,9 @@ func (renderer *Renderer) Render(confChan chan conf.Config, textChan chan string
         
         if verbose { renderer.PrintDebug(*now,prev); prev = *now }
 
-//        if verbose {
-//            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
-//        }    
+        if verbose {
+            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
+        }    
 
         piglet.SwapBuffers()
         renderer.mutex.Unlock()

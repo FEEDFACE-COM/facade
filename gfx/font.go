@@ -124,6 +124,10 @@ func (font *Font) loadFont(fontfile string) error {
 }
 
 func (font *Font) Init() {
+    if font.context != nil { 
+        log.Debug("font ready")
+        return 
+    }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
 
