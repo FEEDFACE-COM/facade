@@ -53,6 +53,7 @@ var (
 
 func main() {
     quiet, verbose, debug := false, false, false
+    directory := "~/.fcd/"
     
     
     signals := make(chan os.Signal, 1)
@@ -96,18 +97,16 @@ func main() {
         flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
     
+    if RENDERER_AVAILABLE {
+        flag.CommandLine.StringVar(&directory,  "D", directory,   "shader/font/texture")
+    }    
+
+
+    flag.CommandLine.BoolVar(&verbose,"v", verbose, "show info messages")
+    flag.CommandLine.BoolVar(&debug,  "d", debug,   "show debug messages")
+    flag.CommandLine.BoolVar(&quiet,  "q", quiet,   "show warnings only")
+        
     
-
-
-    all := []*flag.FlagSet{flag.CommandLine}
-//    for _,cmd := range cmds {
-//        all = append(all,flags[cmd])
-//    }
-    for _,flagSet := range all {
-        flagSet.BoolVar(&verbose,"v", verbose, "show info messages")
-        flagSet.BoolVar(&debug,  "d", debug,   "show debug messages")
-        flagSet.BoolVar(&debug,  "q", debug,   "show warning messages only")
-    }
     
     flag.Parse()
     if flag.NArg() < 1 { 
@@ -141,7 +140,7 @@ func main() {
             }
             flags[READ].Usage = func() { ShowHelpCommand(READ,flags) }
             flags[READ].Parse( flag.Args()[1:] )
-            renderer = NewRenderer()
+            renderer = NewRenderer(directory)
             scanner = NewScanner()
 
         case RECV:
@@ -152,7 +151,7 @@ func main() {
             flags[RECV].Usage = func() { ShowHelpCommand(RECV,flags) }
             flags[RECV].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
-            renderer = NewRenderer()
+            renderer = NewRenderer(directory)
 
         case PIPE:
             flags[PIPE].Usage = func() { ShowHelpCommand(PIPE,flags) }

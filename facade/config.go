@@ -7,7 +7,7 @@ import (
     gfx "../gfx"
 )
 
-var DEFAULT_MODE Mode = TEST
+var DEFAULT_MODE Mode = GRID
 var DIRECTORY = "/home/folkert/src/gfx/facade/asset/"
 
 
@@ -33,13 +33,17 @@ type RawText string
 
 type Config struct {
     Mode Mode
+
     Grid *GridConfig
     Lines *LinesConfig
     Test *TestConfig
+
     Font *gfx.FontConfig
     Camera *gfx.CameraConfig    
     Mask *gfx.MaskConfig
+
     Debug bool
+    Directory string
 }
 
 

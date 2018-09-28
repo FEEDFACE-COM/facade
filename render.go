@@ -11,7 +11,7 @@ import (
 const RENDERER_AVAILABLE = false
 
 type Renderer struct {}
-func NewRenderer() *Renderer { return &Renderer{} }
+func NewRenderer(_ string) *Renderer { return &Renderer{} }
 
 func (renderer *Renderer) Init(config *facade.Config) error { return errors.New("RENDERER NOT AVAILABLE") }
 func (renderer *Renderer) Configure(config *facade.Config) error { return errors.New("RENDERER NOT AVAILABLE") }

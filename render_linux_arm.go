@@ -43,13 +43,7 @@ type Renderer struct {
     now gfx.Clock
     buffer *gfx.Buffer
     mutex *sync.Mutex
-}
-
-func NewRenderer() *Renderer {
-    ret := &Renderer{}
-    ret.mutex = &sync.Mutex{}
-    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
-    return ret
+    directory string
 }
 
 const DEBUG_CLOCK  =  true
@@ -57,6 +51,15 @@ const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
 const DEBUG_MESSAGES = false
+
+
+
+func NewRenderer(directory string) *Renderer {
+    ret := &Renderer{directory: directory}
+    ret.mutex = &sync.Mutex{}
+    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
+    return ret
+}
 
 
 func (renderer *Renderer) Init(config *facade.Config) error {
