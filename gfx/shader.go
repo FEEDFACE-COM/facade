@@ -6,6 +6,7 @@ package gfx
 
 import (
     "fmt"
+    "os"
     "strings"
     "io/ioutil"
     "time"
@@ -51,35 +52,37 @@ const (
     FRAGMENT_SHADER ShaderType = "frag"
 )
 
-var shaderDirectory string
-func SetShaderDirectory(directory string) { shaderDirectory = directory }
+var shaderPath string
+func SetShaderDirectory(path string) { shaderPath = path }
 
-func loadShader(shaderName string, shaderType ShaderType) (string, error) {
-    var data []byte
+
+func (shader *Shader) LoadShader(filePath string) error {
     var err error
-    filePath := fmt.Sprintf("%s/%s.%s",shaderDirectory,shaderName,string(shaderType))
-    data, err = ioutil.ReadFile(filePath)
+    shader.Source, err = loadShaderFile(filePath)       
+    if err != nil { return err }
+    return nil
+}
+
+func loadShaderFile(filePath string) (string, error) {
+    data, err := ioutil.ReadFile(filePath)
     if err != nil {
-        log.Error("fail read shader file %s: %s",filePath,err)
         return "", log.NewError("fail read shader file: %s",err)
     }
     log.Debug("read shader file %s",filePath)
-    
-    go func(){
-        time.Sleep( time.Duration( int64(time.Second*2)) )
-        log.Debug("still here watching %s",filePath)
-    }()
-    
-    return string(data), nil    
+    return string(data), nil
 }
 
-func GetShader(name string, shaderType ShaderType) (*Shader,error) {
+
+
+
+func GetShader(name string, shaderType ShaderType, program *Program) (*Shader,error) {
     var ret *Shader = nil
-    src, err := loadShader(name, shaderType)
+    filePath := fmt.Sprintf("%s/%s.%s",shaderPath,name,string(shaderType))
+    src, err := loadShaderFile(filePath)
     if err == nil {
         
         ret = NewShader(name, src, shaderType)
-        //TODO: register callback
+        go WatchShaderFile(filePath, program, ret)
         return ret,nil
         
     } else {
@@ -100,22 +103,61 @@ func GetShader(name string, shaderType ShaderType) (*Shader,error) {
     
 }
 
+func WatchShaderFile(path string, program *Program, shader *Shader) {
+
+        
+
+        info,err := os.Stat(path)
+        if err != nil {
+            log.Debug("fail stat %s",shader.Desc())
+            return
+        }
+        last := info.ModTime()
+        for {
+            
+            time.Sleep( time.Duration( int64(time.Second)) )
+            info,err = os.Stat(path)
+            if err != nil { continue }
+            if info.ModTime().After( last ) {
+                log.Debug("alert %s %s",program.Desc(),shader.Desc())
+                shader.LoadShader(path)
+                refreshChan <-Refresh{program: program, shader: shader}
+                last = info.ModTime()
+            }
+            
+        }
 
 
+        
+        
+        
+        
+}
+
+func (shader *Shader) Desc() string {
+    return fmt.Sprintf("shader[%s.%s]",shader.Name,shader.Type)
+}
 
 func NewShader(name string, source string, shaderType ShaderType) *Shader {
     ret := &Shader{Name: name, Source: source, Type: shaderType}
     return ret    
 }
 
-
+func (shader *Shader) Close() {
+    if shader.Shader > 0 {
+        log.Debug("delete %s",shader.Desc())    
+    	gl.DeleteShader(shader.Shader)
+    }   
+}
 
 func (shader *Shader) CompileShader() error {
-    switch shader.Type {
-        case VERTEX_SHADER:    shader.Shader = gl.CreateShader(gl.VERTEX_SHADER)
-        case FRAGMENT_SHADER:  shader.Shader = gl.CreateShader(gl.FRAGMENT_SHADER)
+    if shader.Shader <= 0 {
+        switch shader.Type {
+            case VERTEX_SHADER:    shader.Shader = gl.CreateShader(gl.VERTEX_SHADER)
+            case FRAGMENT_SHADER:  shader.Shader = gl.CreateShader(gl.FRAGMENT_SHADER)
+        }
     }
-        
+            
     sources, free := gl.Strs(shader.Source+"\x00")
     gl.ShaderSource(shader.Shader, 1, sources, nil)
     free()

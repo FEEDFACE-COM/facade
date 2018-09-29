@@ -30,7 +30,7 @@ type Grid struct {
     
     timer *gfx.Timer
     
-    needGen bool
+    dirty bool
 }
 
 
@@ -40,9 +40,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     gl.ClearColor(0,0,0,1)
     
     
-    if grid.needGen {
+    if grid.dirty {
         grid.generateData(font)
-        grid.needGen = false
+        grid.dirty = false
     }
     
     gl.ActiveTexture(gl.TEXTURE0)
@@ -274,7 +274,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
     grid.object.Init()
     
 //    grid.generateData(font)
-    grid.needGen = true
+    grid.dirty = true
 
     err = grid.program.LoadShaders("grid/grid","grid/grid")
     if err != nil { log.Error("fail load grid shaders: %s",err) }
@@ -286,7 +286,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
     if grid.scroller.Scroll {
         grid.scroller.Timer.Fun = func(){ 
             grid.buffer.Queue(nil)
-            grid.needGen = true
+            grid.dirty = true
             log.Debug("queued nil, scroller is %s",grid.scroller.Desc())
         }
     }
@@ -317,7 +317,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     grid.buffer.Queue( newText )
 //    grid.generateData(font)
-    grid.needGen = true
+    grid.dirty = true
     
 //    log.Debug(grid.buffer.Dump())
 //    log.Debug("queued text: %s",text)
@@ -369,7 +369,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 
 
-    grid.needGen = true
+    grid.dirty = true
 //    grid.generateData(font)
 
 }
@@ -379,9 +379,9 @@ func NewGrid(config *GridConfig) *Grid {
         config = NewGridConfig() 
     }
     ret := &Grid{config: *config}
-    ret.needGen = true
+    ret.dirty = true
     ret.buffer = gfx.NewBuffer(config.Height)
-    ret.program = gfx.NewProgram("grid")
+    ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
     ret.scroller = gfx.NewScroller(config.Scroll,float32(config.Speed))

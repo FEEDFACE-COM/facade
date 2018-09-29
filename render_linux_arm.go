@@ -47,7 +47,7 @@ type Renderer struct {
     directory string
 }
 
-const DEBUG_CLOCK  =  true
+const DEBUG_CLOCK  = false
 const DEBUG_MODE   = false
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
@@ -191,7 +191,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("author",renderer.font)
+    if renderer.config.Debug {
+        renderer.grid.FillTest("coord",renderer.font)
+    } else {
+        renderer.grid.FillTest("author",renderer.font)
+    }
 
 
 
@@ -203,12 +207,13 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
-        renderer.QueueTexts(textChan)
-        renderer.QueueConfs(confChan)
+        renderer.ProcessTexts(textChan)
+        renderer.ProcessConfs(confChan)
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
+        gfx.RefreshPrograms()
 
         switch facade.Mode(renderer.config.Mode) {
             case facade.GRID:
@@ -243,7 +248,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 }
 
 
-func (renderer *Renderer) QueueTexts(textChan chan string) {
+func (renderer *Renderer) ProcessTexts(textChan chan string) {
 
     select {
         case text := <-textChan:
@@ -260,7 +265,7 @@ func (renderer *Renderer) QueueTexts(textChan chan string) {
 
 
 
-func (renderer *Renderer) QueueConfs(confChan chan facade.Config) {
+func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
     
     select {
         case conf := <-confChan:

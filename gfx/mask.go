@@ -78,7 +78,7 @@ func (mask *Mask) Init() {
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
     var err error    
-    mask.program = NewProgram("mask")
+    mask.program = GetProgram("mask")
 
     err = mask.program.LoadShaders("mask/mask","mask/mask")
     if err != nil { log.Error("fail load mask shaders: %s",err) }

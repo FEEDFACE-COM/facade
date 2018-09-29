@@ -57,7 +57,7 @@ func (axis *Axis) Init() {
     axis.object.BufferData(len(axis.data)*4, axis.data)
 
     var err error    
-    axis.program = NewProgram("axis")
+    axis.program = GetProgram("axis")
 
     err = axis.program.LoadShaders("color","color")
     if err != nil { log.Error("fail load color shaders: %s",err) }
