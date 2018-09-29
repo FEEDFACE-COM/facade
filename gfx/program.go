@@ -112,7 +112,6 @@ func (program *Program) LoadShaders(vertName, fragName string) error {
 
 func (program *Program) LinkProgram() error {
     var ret error
-    //todo: cleanup if already present?
 
     if program.vertexShader == nil || program.fragmentShader == nil {
         return log.NewError("missing shader in %s",program.Name)
