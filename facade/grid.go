@@ -30,7 +30,6 @@ type Grid struct {
     
     timer *gfx.Timer
     
-//    dirty bool
     refreshChan chan bool
 }
 
@@ -57,11 +56,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
         default:
             break    
     }
-    
-//    if grid.dirty {
-//        grid.generateData(font)
-//        grid.dirty = false
-//    }
     
     gl.ActiveTexture(gl.TEXTURE0)
     
@@ -291,9 +285,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
 
     grid.object.Init()
     
-//    grid.dirty = true
     select { case grid.refreshChan <- true: ; default: ; }
-//    grid.refreshChan <- true
     
 
     err = grid.program.LoadShaders("grid/grid","grid/grid")
@@ -306,7 +298,6 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
     if grid.scroller.Scroll {
         grid.scroller.Timer.Fun = func(){ 
             grid.buffer.Queue(nil)
-//            grid.dirty = true
             select { case grid.refreshChan <- true: ; default: ; }
             log.Debug("queued nil, scroller is %s",grid.scroller.Desc())
         }
@@ -340,7 +331,6 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 //gen here?
     select { case grid.refreshChan <- true: ; default: ; }
-//    grid.dirty = true
     
 }
 
@@ -391,7 +381,6 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 
     select { case grid.refreshChan <- true: ; default: ; }
-//    grid.dirty = true
 
 }
 
@@ -400,7 +389,6 @@ func NewGrid(config *GridConfig) *Grid {
         config = NewGridConfig() 
     }
     ret := &Grid{config: *config}
-//    ret.dirty = true
     ret.refreshChan = make( chan bool, 1 )
     ret.buffer = gfx.NewBuffer(config.Height)
     ret.program = gfx.GetProgram("grid")

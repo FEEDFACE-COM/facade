@@ -35,7 +35,7 @@ const (
     HELP    Command = "help"
     TEST    Command = "test"
 )
-var cmds = []Command{CONF,PIPE,TEST}
+var commands = []Command{CONF,PIPE,TEST}
 
 
 
@@ -67,38 +67,38 @@ func main() {
 
     log.SetVerbosity(log.NOTICE)
     
-    flag.Usage = ShowHelpGeneral
+    flag.Usage = ShowHelp
 
     flags := make(map[Command] *flag.FlagSet)
 
     if RENDERER_AVAILABLE {
-        cmds = append(cmds, READ)
-        cmds = append(cmds, RECV)
+        commands = append(commands, READ)
+        commands = append(commands, RECV)
     }
     
-    for _,cmd := range cmds {
+    for _,cmd := range commands {
         flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
     }
 
     for _,cmd := range []Command{PIPE} {
-        flags[cmd].UintVar(&textPort, "textport", textPort, "connect to `port` for text" )
+        flags[cmd].UintVar(&textPort, "tp", textPort, "connect to `port` for text" )
     }
     
     for _,cmd := range []Command{PIPE,CONF} {
-        flags[cmd].UintVar(&confPort, "confport", confPort, "connect to `port` for config" )
-        flags[cmd].StringVar(&connectHost, "host", connectHost, "connect to `host`" )
-        flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout after `seconds`") 
+        flags[cmd].UintVar(&confPort, "cp", confPort, "connect to `port` for config" )
+        flags[cmd].StringVar(&connectHost, "h", connectHost, "connect to `host`" )
+        flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout after `seconds`") 
     }
 
     if RENDERER_AVAILABLE {
-        flags[RECV].UintVar(&confPort, "confport", confPort, "listen on `port` for config" )
-        flags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for text" )
-        flags[RECV].StringVar(&listenHost, "host", listenHost, "listen on `host`" )
+        flags[RECV].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
+        flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
+        flags[RECV].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
         flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
     
     if RENDERER_AVAILABLE {
-        flag.CommandLine.StringVar(&directory,  "D", directory,   "shader/font/texture")
+        flag.CommandLine.StringVar(&directory,  "D", directory,   "directory")
     }    
 
 
@@ -110,7 +110,7 @@ func main() {
     
     flag.Parse()
     if flag.NArg() < 1 { 
-        ShowHelpGeneral(); 
+        ShowHelp(); 
         os.Exit(-2) 
     }
     if debug { 
@@ -135,7 +135,7 @@ func main() {
 
         case READ:
             if !RENDERER_AVAILABLE {
-                ShowHelpGeneral()
+                ShowHelp()
                 os.Exit(-2)    
             }
             flags[READ].Usage = func() { ShowHelpCommand(READ,flags) }
@@ -145,7 +145,7 @@ func main() {
 
         case RECV:
             if !RENDERER_AVAILABLE {
-                ShowHelpGeneral()
+                ShowHelp()
                 os.Exit(-2)    
             }
             flags[RECV].Usage = func() { ShowHelpCommand(RECV,flags) }
@@ -169,7 +169,7 @@ func main() {
             os.Exit(-2)
 
         case HELP:
-            ShowHelpGeneral()
+            ShowHelp()
             os.Exit(-2)
             
         
@@ -179,7 +179,7 @@ func main() {
             tester = NewTester(directory)
 
         default:
-            ShowHelpGeneral()
+            ShowHelp()
             os.Exit(-2)
     }
     
@@ -189,13 +189,14 @@ func main() {
     var modeflags *flag.FlagSet = config.FlagSet()
     args := flags[cmd].Args()
     
+    //no more args after cmd
     if len(args) < 1 {
-        if cmd == CONF { 
+        if cmd == CONF { //conf needs args so bail
             ShowHelpCommand(CONF,flags)
             os.Exit(-2)
-        } else {
+        } else { // otherwise huh?
             
-                modeflags.Usage = func() { ShowModeHelp(facade.Mode(config.Mode),cmd,modeflags) }
+                modeflags.Usage = func() { ShowHelpMode(facade.Mode(config.Mode),cmd,modeflags) }
                 modeflags.Parse( args[0:] )
                 
         }
@@ -208,25 +209,25 @@ func main() {
             case facade.GRID:
                 config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
+                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
             case facade.LINES:
                 config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
+                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
             case facade.TEST:
                 config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowModeHelp(facade.Mode(mode),cmd,modeflags) }
+                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
 
 
                         
             default:
-                ShowHelpGeneral()
+                ShowHelp()
                 os.Exit(-2)    
         }
     }
@@ -298,19 +299,18 @@ func main() {
 }
 
 
-func ShowModeHelp(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
-    switches := ""
+func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
+    switches := "-"
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
         if name != "" { name = "="+name }
-        if len(f.Name) == 1 { switches += " [ -"+f.Name+name+" ]" }
-        if len(f.Name) >  1 { flags += " [ -"+f.Name+name+" ]" }
+        if len(f.Name) == 1 && name == "" { switches += f.Name }
+        if len(f.Name) >  1 || name != "" { flags += " [-"+f.Name+name+"]" }
     })
     ShowVersion()
-    fmt.Fprintf(os.Stderr,"\nUsage:\n")    
-    fmt.Fprintf(os.Stderr,"\n")
-    fmt.Fprintf(os.Stderr,"  %s %s %s%s%s\n",BUILD_NAME,cmd,mode,switches,flags)
+    fmt.Fprintf(os.Stderr,"\nUsage:\n")
+    fmt.Fprintf(os.Stderr,"  %s %s %s [%s]%s\n",BUILD_NAME,cmd,mode,switches,flags)
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flagset.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
@@ -319,52 +319,57 @@ func ShowModeHelp(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
 
 
 func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
-    switches := ""
+    modes := JoinModes(facade.Modes,"|")
+    switches := "-"
     flags := ""
     flagSetMap[cmd].VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
         if name != "" { name = "="+name }
-        if len(f.Name) == 1 { switches += " [ -"+f.Name+name+" ]" }
-        if len(f.Name) >  1 { flags += " [ -"+f.Name+name+" ]" }
+        if len(f.Name) == 1 && name == "" { switches += f.Name }
+        if len(f.Name) >  1 || name != "" { flags += " [-"+f.Name+name+"]" }
     })
+
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s%s%s\n",BUILD_NAME,cmd,switches,flags)
+    fmt.Fprintf(os.Stderr,"  %s %s [%s] %s  %s\n",BUILD_NAME,cmd,switches,flags,modes)
+    ShowModes()
+
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flagSetMap[cmd].PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
 }
 
-func ShowHelpGeneral() {
+func ShowCommands() {
+    fmt.Fprintf(os.Stderr,"\nCommands:\n")
+    if RENDERER_AVAILABLE {
+        fmt.Fprintf(os.Stderr,"%6s     %s\n",READ,"read stdin and display")
+        fmt.Fprintf(os.Stderr,"%6s     %s\n",RECV,"receive and display ")
+    }
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"pipe stdin to remote")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"configure remote")
+}
+
+
+func ShowModes() {
+    fmt.Fprintf(os.Stderr,"\nModes:\n")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",facade.GRID,"character grid")
+}
+
+func ShowHelp() {
     flags := ""
     flag.CommandLine.VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
         if name != "" { name = "="+name }
         if len(f.Name) >=  1 { flags +=    " [-"+f.Name+name+"]" }
     })
+    cmds := JoinCommands(commands,"|")
+    modes := JoinModes(facade.Modes,"|")
+
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s   ",BUILD_NAME,flags)
-    for _,cmd := range cmds {
-        fmt.Fprintf(os.Stderr,"%s|",cmd)
-    }
-    
-    
-    fmt.Fprintf(os.Stderr,"    ")
-    for _,m := range facade.Modes {
-        fmt.Fprintf(os.Stderr,"%s|",m)
-    }
-    fmt.Fprintf(os.Stderr,"\n")
-    fmt.Fprintf(os.Stderr,"\nCommands:\n")
-    if RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",READ,"read stdin and display")
-        fmt.Fprintf(os.Stderr,"  %6s    # %s\n",RECV,"receive and display ")
-    }
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",PIPE,"pipe stdin to remote")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",CONF,"configure remote")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",INFO,"show version info")
-    fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"  %6s    # %s\n",facade.GRID,"character grid")
+    fmt.Fprintf(os.Stderr,"  %s %s  %s  %s\n",BUILD_NAME,flags,cmds,modes)
+    ShowCommands()
+    ShowModes()
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
@@ -372,6 +377,18 @@ func ShowHelpGeneral() {
     
 }
     
+func JoinCommands(cmds []Command, sep string) string { 
+    var strs []string 
+    for _,cmd := range cmds { strs = append(strs,string(cmd)) }
+    return strings.Join(strs,sep)
+}
+
+func JoinModes(modes []facade.Mode, sep string) string { 
+    var strs []string 
+    for _,mode := range modes { strs = append(strs,string(mode)) }
+    return strings.Join(strs,sep)
+}
+
 
 func ShowVersion() {
     fmt.Printf(AUTHOR)
