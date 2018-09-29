@@ -114,33 +114,49 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 
 func (grid *Grid) FillTest(test string, font *gfx.Font) {
-    if test == "coord" {
-        w,h := int(grid.config.Width), int(grid.config.Height)
-        for r:=0; r<h; r++ {
-            line := ""
-            for c:=0; c<w; c++ {
-                d := "."
-                if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
-                if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
-                if c % 5 == 0 && r % 5 == 0 { d = "#" }
-
-                line += fmt.Sprintf("%s",d)        
-            }
-        grid.Queue(line,font)
-        }
-        
-        
-    } else if test == "alpha" {
-        w,h := int(grid.config.Width), int(grid.config.Height)
-        alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
-        s := 0
-        for r:=0; r<h; r++ {
-            line := alpha[s%len(alpha):(s+w)%len(alpha)]
-            grid.Queue(line,font)
-            s += 1
-        }
-    } 
     
+    switch test {
+    
+        case "author": 
+            for _,line := range []string{
+                " _  _   _  _   _   _",
+                "|_ |_| /  |_| | \\ |_", 
+                "|  | | \\_ | | |_/ |_",
+                "                    ",
+                "by FEEDFACE.COM     ",
+                "                    ",
+            } {
+                grid.Queue(line,font)    
+            }
+        
+        
+        case "coord":
+            w,h := int(grid.config.Width), int(grid.config.Height)
+            for r:=0; r<h; r++ {
+                line := ""
+                for c:=0; c<w; c++ {
+                    d := "."
+                    if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
+                    if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
+                    if c % 5 == 0 && r % 5 == 0 { d = "#" }
+    
+                    line += fmt.Sprintf("%s",d)        
+                }
+                grid.Queue(line,font)
+            }
+            
+            
+        case "alpha":
+            w,h := int(grid.config.Width), int(grid.config.Height)
+            alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
+            s := 0
+            for r:=0; r<h; r++ {
+                line := alpha[s%len(alpha):(s+w)%len(alpha)]
+                grid.Queue(line,font)
+                s += 1
+            }
+
+    }    
 }
 
 
@@ -260,7 +276,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
 //    grid.generateData(font)
     grid.needGen = true
 
-    err = grid.program.LoadShaders("grid","grid")
+    err = grid.program.LoadShaders("grid/grid","grid/grid")
     if err != nil { log.Error("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }

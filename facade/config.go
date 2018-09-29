@@ -8,7 +8,7 @@ import (
 )
 
 var DEFAULT_MODE Mode = GRID
-var DEFAULT_DIRECTORY = "~/src/gfx/facade/asset/"
+var DEFAULT_DIRECTORY = "~/src/gfx/facade"
 
 
 

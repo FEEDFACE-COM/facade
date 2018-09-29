@@ -20,7 +20,25 @@ void main() {
 
 
 
-"grid":`
+"ident":`
+uniform sampler2D texture;
+
+varying vec2 vFragCoord;
+varying float vDebugFlag;
+
+bool DEBUG = vDebugFlag > 0.0;
+
+
+void main() {
+    vec4 tex = texture2D(texture,vFragCoord);
+    gl_FragColor = tex;
+}
+`,
+
+
+
+
+"grid/grid":`
 
 uniform sampler2D texture;
 
@@ -49,8 +67,6 @@ void main() {
         col = vec4(1.0,scroll,scroll,1.0);
     } 
     
-    col.r = cos(vTimer + vTileCoord.x) * col.r;
-    col.gb = cos(vTimer + vTileCoord.y) * col.gb;
     
     gl_FragColor = vec4(col.rgb,1.0);
 }
@@ -59,25 +75,7 @@ void main() {
 
 
 
-"ident":`
-uniform sampler2D texture;
-
-varying vec2 vFragCoord;
-varying float vDebugFlag;
-
-bool DEBUG = vDebugFlag > 0.0;
-
-
-void main() {
-    vec4 tex = texture2D(texture,vFragCoord);
-    gl_FragColor = tex;
-}
-`,
-
-
-
-
-"mask":`
+"mask/mask":`
 
 varying vec2 vTexCoord;
 varying float vDebugFlag;

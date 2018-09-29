@@ -41,7 +41,7 @@ func SetFontDirectory(directory string) { fontDirectory = directory }
 func GetFont(config *FontConfig) (*Font,error) {
     if fonts[config.Name] == nil {
         tmp := NewFont(config)
-        err := tmp.loadFont(fontDirectory+config.Name)
+        err := tmp.loadFont(fontDirectory,config.Name)
         if err != nil {
             fonts[config.Name] = nil
             log.Error("fail to load font %s: %s",config.Name,err)
@@ -102,12 +102,15 @@ func (font *Font) Desc() string {
 
 
 
-func (font *Font) loadFont(fontfile string) error {
+func (font *Font) loadFont(path,name string) error {
     var data []byte 
     var err error
-    var ext string
-    for _,ext = range []string{ ".ttc", ".ttf", ".TTC", ".TTF" } {
-        data, err = ioutil.ReadFile(fontfile + ext )
+    var filePath string
+
+    
+    for _,ext := range []string{ "ttc", "ttf", "TTC", "TTF" } {
+        filePath = fmt.Sprintf("%s/%s.%s",path,name,ext)
+        data, err = ioutil.ReadFile(filePath)
         if err == nil {
             break   
         }
@@ -119,7 +122,7 @@ func (font *Font) loadFont(fontfile string) error {
     if err != nil {
         return log.NewError("fail to parse: %s",err)
     }
-    log.Debug("load font file %s",fontfile+ext)
+    log.Debug("load font file %s",filePath)
     return nil
 }
 

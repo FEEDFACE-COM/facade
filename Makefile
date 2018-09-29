@@ -58,32 +58,32 @@ ${BUILD_PRODUCT}: ${SOURCE_FILES} ${SHADER_FILES}
 	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
 
-gfx/shaderFragment.go: shader/*.frag
-	echo "" >|$@
-	echo "// +build linux,arm" >>$@
-	echo "package gfx" >>$@
-	echo "var FragmentShader = map[string]string{" >>$@
-	for src in shader/*.frag; do \
-      name=$$(basename $$src | cut -d. -f -1); \
+gfx/shaderFragment.go: shader/*.frag shader/*/*.frag
+	echo ""                                         >|$@
+	echo "// +build linux,arm"                      >>$@
+	echo "package gfx"                              >>$@
+	echo "var FragmentShader = map[string]string{"  >>$@
+	for src in shader/*.frag shader/*/*.frag; do \
+      name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
       echo "\`,\n\n"; \
-    done >>$@
-	echo "}" >>$@
+    done                                            >>$@
+	echo "}"                                        >>$@
+
 	
-	
-gfx/shaderVertex.go: shader/*.vert
-	echo "" >|$@
-	echo "// +build linux,arm" >>$@
-	echo "package gfx" >>$@
-	echo "var VertexShader = map[string]string{" >>$@
-	for src in shader/*.vert; do \
-      name=$$(basename $$src | cut -d. -f -1); \
+gfx/shaderVertex.go: shader/*.vert shader/*/*.vert
+	echo ""                                         >|$@
+	echo "// +build linux,arm"                      >>$@
+	echo "package gfx"                              >>$@
+	echo "var VertexShader = map[string]string{"    >>$@
+	for src in shader/*.vert shader/*/*.vert; do \
+      name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
       echo "\`,\n\n"; \
-    done >>$@
-	echo "}" >>$@
+    done                                            >>$@
+	echo "}"                                        >>$@
 
 
 

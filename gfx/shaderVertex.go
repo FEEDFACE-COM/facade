@@ -28,7 +28,31 @@ void main() {
 
 
 
-"grid":`
+"ident":`
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+
+uniform float debugFlag;
+
+attribute vec3 vertex;
+attribute vec2 texCoord;
+
+varying vec2 vFragCoord;
+varying float vDebugFlag;
+
+bool DEBUG = debugFlag > 0.0;
+
+void main() {
+    vFragCoord = texCoord;
+    gl_Position = projection * view * model * vec4(vertex, 1);
+}
+`,
+
+
+
+
+"grid/grid":`
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
@@ -75,8 +99,6 @@ void main() {
     pos.y += (tileCoord.y * tileSize.y);
     
 
-    pos.x += 0.1 * cos(vTimer + vTileCoord.x);
-    pos.y += 0.1 * cos(vTimer + vTileCoord.y);
 
     if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
     if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
@@ -89,31 +111,7 @@ void main() {
 
 
 
-"ident":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform float debugFlag;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-
-varying vec2 vFragCoord;
-varying float vDebugFlag;
-
-bool DEBUG = debugFlag > 0.0;
-
-void main() {
-    vFragCoord = texCoord;
-    gl_Position = projection * view * model * vec4(vertex, 1);
-}
-`,
-
-
-
-
-"mask":`
+"mask/mask":`
 
 
 uniform float debugFlag;

@@ -62,8 +62,8 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 func (tester *Tester) Test(str string) {
     test0,_ := tester.testCharMap()
     test1,_ := tester.testTextTex(str)
-    SaveRGBA(test0,fmt.Sprintf("map-%s",tester.directory+tester.name+".png"))
-    SaveRGBA(test1,fmt.Sprintf("text-%s-%s",tester.name,str))
+    SaveRGBA(test0,fmt.Sprintf("%s/test/map-%s.png",tester.directory,tester.name))
+    SaveRGBA(test1,fmt.Sprintf("%s/test/text-%s-%s",tester.directory,tester.name,str))
 }
 
 

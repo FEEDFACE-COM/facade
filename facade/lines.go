@@ -112,7 +112,7 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
 
     lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
     lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
-    modelUniform := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+    modelUniform,_ := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     var d float32 
     if lines.config.Height % 2 == 0 {

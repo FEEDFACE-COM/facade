@@ -44,20 +44,20 @@ func (program *Program) UseProgram(debug bool) {
 
 func (program *Program) LoadShaders(vertName, fragName string) error {
     var err error
-    program.vertexShader, err = GetShader(vertName,gl.VERTEX_SHADER)
+    program.vertexShader, err = GetShader(vertName,VERTEX_SHADER)
     if err != nil { return log.NewError("fail to get shader: %s",err) }
     err = program.vertexShader.CompileShader()
     if err != nil { return log.NewError("fail to compile shader: %s",err) }
     
     
-    program.fragmentShader, err = GetShader(fragName,gl.FRAGMENT_SHADER)
+    program.fragmentShader, err = GetShader(fragName,FRAGMENT_SHADER)
     if err != nil { return log.NewError("fail to get shader: %s",err) }
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail to compile shader: %s",err) }
     
-    return nil
-    
+    return nil   
 }
+
 
 
 func (program *Program) LinkProgram() error {
@@ -104,75 +104,74 @@ func (program *Program) LinkProgram() error {
 }
 
 
-func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) {
+func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) error {
     ret := gl.GetAttribLocation(program.Program, gl.Str(string(name)+"\x00")) 
     if ret < 0 {
-//        log.Debug("no vertexattrib %s: %d",name,ret)
-        return;
+        return log.NewError("no pointer for attribute '%s' by program %s",name,program.Name)
     }
     gl.EnableVertexAttribArray( uint32(ret) )
     gl.VertexAttribPointer( uint32(ret), size, gl.FLOAT, false, stride, gl.PtrOffset(offset) )
-    return
+    return nil
 }
 
 
-func (program *Program) uniformLocation(name UniformName) int32 {
+func (program *Program) uniformLocation(name UniformName) (int32,error) {
     ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
-    if ret < 0 { 
-        log.Debug("fail get uniform location %s program %s: %d",name,program.Name,ret)
+    if ret <= 0 { 
+        return -1,log.NewError("no location for uniform '%s' by program %s",name,program.Name)
     }
-    return ret;
+    return ret,nil;
 }
 
-func (program *Program) UniformMatrix4fv(name UniformName, count int32, value *float32) int32 {
-    if program.broken { return -1 }
-    ret := program.uniformLocation(name)
-    if ret <= 0 {
-        return ret;
+func (program *Program) UniformMatrix4fv(name UniformName, count int32, value *float32) (int32,error) {
+    if program.broken { return -1, log.NewError("program '%s' b0rken",program.Name) }
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
     }
     gl.UniformMatrix4fv(ret, count, false, value)
-    return ret
+    return ret,nil
 }
 
 
-func (program *Program) Uniform2f(name UniformName, value0, value1 float32) int32 {
-    if program.broken { return -1 }
-    ret := program.uniformLocation(name)
-    if ret <= 0 {
-        return ret;
+func (program *Program) Uniform2f(name UniformName, value0, value1 float32) (int32,error) {
+    if program.broken { return -1, log.NewError("program '%s' b0rken",program.Name) }
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
     }
     gl.Uniform2f(ret, value0, value1)
-    return ret
+    return ret,nil
 }
 
-func (program *Program) Uniform2fv(name UniformName, count int32, value *float32) int32 {
-    if program.broken { return -1 }
-    ret := program.uniformLocation(name)
-    if ret <= 0 {
-        return ret;
+func (program *Program) Uniform2fv(name UniformName, count int32, value *float32) (int32,error) {
+    if program.broken { return -1, log.NewError("program '%s' b0rken",program.Name) }
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
     }
     gl.Uniform2fv(ret,count, value)
-    return ret
+    return ret,nil
 }
 
-func (program *Program) Uniform1f(name UniformName, value float32) int32 {
-    if program.broken { return -1 }
-    ret := program.uniformLocation(name)
-    if ret <= 0 {
-        return ret;
+func (program *Program) Uniform1f(name UniformName, value float32) (int32,error) {
+    if program.broken { return -1, log.NewError("program '%s' b0rken",program.Name) }
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
     }
     gl.Uniform1f(ret, value)
-    return ret
+    return ret,nil
 }
 
-func (program *Program) Uniform1i(name UniformName, value int32) int32 {
-    if program.broken { return -1 }
-    ret := program.uniformLocation(name)
-    if ret <= 0 {
-        return ret;
+func (program *Program) Uniform1i(name UniformName, value int32) (int32,error) {
+    if program.broken { return -1, log.NewError("program '%s' b0rken",program.Name) }
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
     }
     gl.Uniform1i(ret, value)
-    return ret
+    return ret,nil
 }
 
 func (program *Program) Desc() string {

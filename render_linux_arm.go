@@ -70,8 +70,8 @@ func (renderer *Renderer) Init(config *facade.Config) error {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
     
-    gfx.SetShaderDirectory(renderer.directory)
-    gfx.SetFontDirectory(renderer.directory)
+    gfx.SetShaderDirectory(renderer.directory+"/shader")
+    gfx.SetFontDirectory(renderer.directory+"/font")
     
     err = piglet.CreateContext()
     if err != nil {
@@ -191,7 +191,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("coord",renderer.font)
+    renderer.grid.FillTest("author",renderer.font)
 
 
 

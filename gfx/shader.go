@@ -5,8 +5,10 @@
 package gfx
 
 import (
+    "fmt"
     "strings"
     "io/ioutil"
+    "time"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -15,7 +17,7 @@ import (
 type Shader struct {
     Name string
     Source string
-    Type uint32
+    Type ShaderType
     Shader uint32
 }
 
@@ -42,31 +44,38 @@ const (
     TOTALWIDTH AttribName = "totalWidth"
 )
 
-var shaderDirectory string
 
+type ShaderType string
+const (
+    VERTEX_SHADER   ShaderType = "vert"
+    FRAGMENT_SHADER ShaderType = "frag"
+)
+
+var shaderDirectory string
 func SetShaderDirectory(directory string) { shaderDirectory = directory }
 
-func loadShaderFile(shaderName string, shaderType uint32) (string, error) {
+func loadShader(shaderName string, shaderType ShaderType) (string, error) {
     var data []byte
     var err error
-    ext := ""
-    switch (shaderType) {
-        case gl.VERTEX_SHADER:   ext = ".vert"
-        case gl.FRAGMENT_SHADER: ext = ".frag"
-    }
-    filePath := shaderDirectory + shaderName + ext
+    filePath := fmt.Sprintf("%s/%s.%s",shaderDirectory,shaderName,string(shaderType))
     data, err = ioutil.ReadFile(filePath)
     if err != nil {
         log.Error("fail read shader file %s: %s",filePath,err)
         return "", log.NewError("fail read shader file: %s",err)
     }
     log.Debug("read shader file %s",filePath)
+    
+    go func(){
+        time.Sleep( time.Duration( int64(time.Second*2)) )
+        log.Debug("still here watching %s",filePath)
+    }()
+    
     return string(data), nil    
 }
 
-func GetShader(name string, shaderType uint32) (*Shader,error) {
+func GetShader(name string, shaderType ShaderType) (*Shader,error) {
     var ret *Shader = nil
-    src, err := loadShaderFile(name, shaderType)
+    src, err := loadShader(name, shaderType)
     if err == nil {
         
         ret = NewShader(name, src, shaderType)
@@ -76,8 +85,8 @@ func GetShader(name string, shaderType uint32) (*Shader,error) {
     } else {
         src := ""
         switch (shaderType) {
-            case gl.VERTEX_SHADER:   src = VertexShader[name]
-            case gl.FRAGMENT_SHADER: src = FragmentShader[name]
+            case VERTEX_SHADER:   src = VertexShader[name]
+            case FRAGMENT_SHADER: src = FragmentShader[name]
         }
         
         if src == "" {
@@ -94,7 +103,7 @@ func GetShader(name string, shaderType uint32) (*Shader,error) {
 
 
 
-func NewShader(name string, source string, shaderType uint32) *Shader {
+func NewShader(name string, source string, shaderType ShaderType) *Shader {
     ret := &Shader{Name: name, Source: source, Type: shaderType}
     return ret    
 }
@@ -102,8 +111,11 @@ func NewShader(name string, source string, shaderType uint32) *Shader {
 
 
 func (shader *Shader) CompileShader() error {
-    shader.Shader = gl.CreateShader(shader.Type)
-    
+    switch shader.Type {
+        case VERTEX_SHADER:    shader.Shader = gl.CreateShader(gl.VERTEX_SHADER)
+        case FRAGMENT_SHADER:  shader.Shader = gl.CreateShader(gl.FRAGMENT_SHADER)
+    }
+        
     sources, free := gl.Strs(shader.Source+"\x00")
     gl.ShaderSource(shader.Shader, 1, sources, nil)
     free()
