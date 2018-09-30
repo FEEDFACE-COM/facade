@@ -18,14 +18,18 @@ type Scroller struct {
     Timer *Timer
 }
 
-func (scroller *Scroller) Uniform(program *Program) {
-    val := float32(0.0)
+func (scroller *Scroller) Uniform(program *Program, downward bool) {
+    var val float32
+//    if (downward) { val = -0.0 }
     
     if scroller.Scroll {
         val = scroller.Timer.Fader
-        if scroller.Speed < 0. {
-            val *= -1.
-        }
+    } else {
+        val = 1.0;
+    }
+
+    if (downward) {
+        val *= -1.
     }
     program.Uniform1f(SCROLLER, val)
 }
@@ -45,7 +49,8 @@ func (scroller *Scroller) Init(now *Clock) {
 
 func (scroller *Scroller) Desc() string {
     tmp := ""
-    if scroller.Scroll { tmp = fmt.Sprintf("%.2f %s",scroller.Speed,scroller.Timer.Desc()) }
+    if scroller.Scroll { tmp += fmt.Sprintf("%.2f",scroller.Speed) }
+    if scroller.Timer != nil { tmp += " " + scroller.Timer.Desc() }
     return fmt.Sprintf("scroller[%s]",tmp)
 }
 

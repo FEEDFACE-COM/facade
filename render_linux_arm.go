@@ -191,11 +191,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    if renderer.config.Debug {
-        renderer.grid.FillTest("coord",renderer.font)
-    } else {
-        renderer.grid.FillTest("author",renderer.font)
-    }
+    renderer.grid.FillTest("coord",renderer.font)
 
 
 

@@ -32,6 +32,7 @@ const (
     TEXTURE    UniformName = "texture"
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
+    DOWNWARD   UniformName = "downwardFlag"
     SCROLLER   UniformName = "scroller"
     TIMER      UniformName = "timer"
 )    
@@ -40,9 +41,8 @@ type AttribName string
 const (
     VERTEX     AttribName = "vertex"    
     COLOR      AttribName = "color"    
-    TEXCOORD   AttribName = "texcoord"
+    TEXCOORD   AttribName = "texCoord"
     TILECOORD  AttribName = "tileCoord"
-    TOTALWIDTH AttribName = "totalWidth"
 )
 
 
