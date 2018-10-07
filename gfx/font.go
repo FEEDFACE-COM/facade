@@ -5,6 +5,8 @@ package gfx
 
 import (
     "fmt"
+    "strings"
+    "path"
     "io/ioutil"
     "image"
     "image/color"
@@ -34,14 +36,18 @@ const DEBUG_FONT = false
 
 
 var fontDirectory string
-func SetFontDirectory(directory string) { fontDirectory = directory }
+func SetFontDirectory(directory string) { fontDirectory = path.Clean(directory) }
 
 
 
 func GetFont(config *FontConfig) (*Font,error) {
     if fonts[config.Name] == nil {
         tmp := NewFont(config)
-        err := tmp.loadFont(fontDirectory,config.Name)
+        path,err := getFilePathForFont(fontDirectory, config.Name)
+        if err != nil {
+            return nil, log.NewError("fail to find file for font %s in %s",config.Name,fontDirectory)    
+        }
+        err = tmp.loadFont(path)
         if err != nil {
             fonts[config.Name] = nil
             log.Error("fail to load font %s: %s",config.Name,err)
@@ -54,6 +60,24 @@ func GetFont(config *FontConfig) (*Font,error) {
     
 }
 
+
+func getFilePathForFont(fontDirectory string, fontName string) (string,error) {
+    var extensions =[]string{ ".ttf", ".ttc" }
+    var err error
+    files, err := ioutil.ReadDir(fontDirectory)
+    if err != nil {
+        return "", log.NewError("fail list fonts in %s: %s",fontDirectory,err)
+    }
+    for _, f := range files {
+        for _, ext := range extensions {
+            if strings.ToLower(f.Name()) == strings.ToLower(fontName+ext) {
+                log.Debug("found %s matching %s",f.Name(),ext)
+                return fontDirectory + "/" + f.Name(), nil
+            }
+        }
+    }
+    return "",log.NewError("fail finding file for font %s in %s",fontName,fontDirectory)
+}
 
 
 type Font struct {
@@ -102,21 +126,15 @@ func (font *Font) Desc() string {
 
 
 
-func (font *Font) loadFont(path,name string) error {
+func (font *Font) loadFont(path string) error {
     var data []byte 
     var err error
     var filePath string
 
     
-    for _,ext := range []string{ "ttc", "ttf", "TTC", "TTF" } {
-        filePath = fmt.Sprintf("%s/%s.%s",path,name,ext)
-        data, err = ioutil.ReadFile(filePath)
-        if err == nil {
-            break   
-        }
-    }
+    data, err = ioutil.ReadFile(path)
     if err != nil {
-        return log.NewError("fail to read font: %s",err)
+        return log.NewError("fail to read font file %s: %s",path,err)
     }
     font.font,err = freetype.ParseFont(data)
     if err != nil {

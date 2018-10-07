@@ -7,6 +7,7 @@ package gfx
 import (
     "fmt"
     "os"
+    "path"
     "strings"
     "io/ioutil"
     "time"
@@ -53,7 +54,7 @@ const (
 )
 
 var shaderPath string
-func SetShaderDirectory(path string) { shaderPath = path }
+func SetShaderDirectory(path string) { shaderPath = path.Clean(path) }
 
 
 func (shader *Shader) LoadShader(filePath string) error {
