@@ -1,12 +1,11 @@
 
-// +build linux,arm
-
 package gfx
 
 import (
     "fmt"
     "strings"
     "path"
+    "encoding/base64"
     "io/ioutil"
     "image"
     "image/color"
@@ -41,20 +40,46 @@ func SetFontDirectory(directory string) { fontDirectory = path.Clean(directory) 
 
 
 func GetFont(config *FontConfig) (*Font,error) {
-    if fonts[config.Name] == nil {
-        tmp := NewFont(config)
+    var err error
+    var data []byte
+    
+    if fonts[config.Name] != nil {
+        return fonts[config.Name],nil
+    }
+    
+    fnt := NewFont(config)
+    
+    if VectorFont[config.Name] != "" {
+        
+        data,err = base64.StdEncoding.DecodeString( VectorFont[config.Name] )
+        if err != nil {
+            return nil, log.NewError("fail to decode font %s: %s",config.Name,err)    
+        }
+
+
+    } else {
+
         path,err := getFilePathForFont(fontDirectory, config.Name)
         if err != nil {
-            return nil, log.NewError("fail to find file for font %s in %s",config.Name,fontDirectory)    
+            return nil, log.NewError("fail to find font file %s in %s",config.Name,fontDirectory)    
         }
-        err = tmp.loadFont(path)
+
+        data, err = ioutil.ReadFile(path)
         if err != nil {
-            fonts[config.Name] = nil
-            log.Error("fail to load font %s: %s",config.Name,err)
-            return nil, log.NewError("fail to load font %s: %s",config.Name,err)
-        } 
-        fonts[config.Name] = tmp
+            return nil,log.NewError("fail to read font file %s: %s",path,err)
+        }
+   
+    }
+    
+    
+    err = fnt.loadFont(data)
+    if err != nil {
+        log.Error("fail to load font %s: %s",config.Name,err)
+        return nil, log.NewError("fail to load font %s: %s",config.Name,err)
     } 
+    
+    
+    fonts[config.Name] = fnt
     return fonts[config.Name],nil
     //note, its' still leaking tho!
     
@@ -126,21 +151,15 @@ func (font *Font) Desc() string {
 
 
 
-func (font *Font) loadFont(path string) error {
-    var data []byte 
+func (font *Font) loadFont(data []byte) error {
     var err error
-    var filePath string
 
     
-    data, err = ioutil.ReadFile(path)
-    if err != nil {
-        return log.NewError("fail to read font file %s: %s",path,err)
-    }
     font.font,err = freetype.ParseFont(data)
     if err != nil {
         return log.NewError("fail to parse: %s",err)
     }
-    log.Debug("load font file %s",filePath)
+    log.Debug("load font %s",font.config.Name)
     return nil
 }
 
@@ -271,7 +290,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 
 func (font *Font) stringForByte(b byte) string {
         if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
-            return "X"
+            return " "
         }
         if font.config.Name == "OCRAEXT" && b == 0xB7 {
             log.Debug("special-case ocraext '%c'",b)

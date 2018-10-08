@@ -9,7 +9,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 SOURCES=$(wildcard *.go */*.go) 
-ASSETS=gfx/asset/vert.go gfx/asset/frag.go gfx/asset/font.go
+ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
 
 
@@ -66,14 +66,24 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
 	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
-asset: ${ASSETS}
+assets: ${ASSETS}
 
-gfx/asset/frag.go: ${ASSET_FRAG}
+
+	
+gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
 	echo ""                                         >|$@
-	echo "// +build linux,arm"                      >>$@
+#	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var FragmentShaders = map[string]string{" >>$@
-	for src in ${FRAG_SHADERS}; do \
+	echo "var VertexShader = map[string]string{"    >>$@
+	for src in ${ASSET_VERT}; do \
+      name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
+      echo "\n\n\"$${name}\":\`";\
+      cat $$src; \
+      echo "\`,\n\n"; \
+    done                                            >>$@
+	echo "}\n\n"                                    >>$@
+	echo "var FragmentShader = map[string]string{"  >>$@
+	for src in ${ASSET_FRAG}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
@@ -81,26 +91,13 @@ gfx/asset/frag.go: ${ASSET_FRAG}
     done                                            >>$@
 	echo "}"                                        >>$@
 
-	
-gfx/asset/vert.go: ${ASSET_VERT}
-	echo ""                                         >|$@
-	echo "// +build linux,arm"                      >>$@
-	echo "package gfx"                              >>$@
-	echo "var VertexShaders = map[string]string{"   >>$@
-	for src in ${VERT_SHADERS}; do \
-      name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
-      echo "\n\n\"$${name}\":\`";\
-      cat $$src; \
-      echo "\`,\n\n"; \
-    done                                            >>$@
-	echo "}"                                        >>$@
 
-gfx/asset/font.go: ${ASSET_FONT}
+gfx/fontAssets.go: ${ASSET_FONT}
 	echo ""                                         >|$@
-	echo "// +build linux,arm"                      >>$@
+#	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var Fonts = map[string]string{"           >>$@
-	for src in ${FONTS}; do \
+	echo "var VectorFont = map[string]string{"      >>$@
+	for src in ${ASSET_FONT}; do \
       name=$$( echo $$src | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src | base64 ; \
@@ -110,5 +107,5 @@ gfx/asset/font.go: ${ASSET_FONT}
 
 
 
-.PHONY: help info build clean get asset
+.PHONY: help info build clean get assets demo
 

@@ -98,7 +98,7 @@ func main() {
 //        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
     
-    if RENDERER_AVAILABLE {
+    {
         flag.CommandLine.StringVar(&directory,  "D", directory,   "directory")
     }    
 
@@ -396,13 +396,14 @@ func ShowAssets() {
     shaders := gfx.ListShaderNames()
     fonts := gfx.ListFontNames()
     fmt.Fprintf(os.Stderr,"\nShaders:\n")
-    for s := range shaders {
-        fmt.Fprintf(os.Stderr,"%s\n",s)
+    for _,s := range shaders {
+        fmt.Fprintf(os.Stderr,"  %s\n",s)
     }
     fmt.Fprintf(os.Stderr,"\nFonts:\n")
-    for f := range fonts {
-        fmt.Fprintf(os.Stderr,"%s\n",f)
+    for _,f := range fonts {
+        fmt.Fprintf(os.Stderr,"  %s\n",f)
     }
+    fmt.Fprintf(os.Stderr,"\n")
 }
 
 

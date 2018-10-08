@@ -1,5 +1,4 @@
 
-// +build linux arm
 
 package main
 
@@ -15,12 +14,11 @@ import (
     facade "./facade"
 )
 
-type Tester struct {font *gfx.Font; name string; directory string}
+type Tester struct {font *gfx.Font; name string; mode facade.Mode; directory string}
 func NewTester(directory string) *Tester { return &Tester{directory: directory} }
 
 
 func (tester *Tester) Configure(config *facade.Config) {
-    tester.name = config.Font.Name
     var err error
     gfx.SetFontDirectory(tester.directory)
     tester.font,err = gfx.GetFont(config.Font)
@@ -29,6 +27,8 @@ func (tester *Tester) Configure(config *facade.Config) {
     }
     tester.font.Init()
     tester.font.Configure(config.Font)
+    tester.name = config.Font.Name
+    tester.mode = config.Mode
     log.Info("got font %s",tester.font.Desc())
     
     
@@ -60,10 +60,15 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 
 
 func (tester *Tester) Test(str string) {
-    test0,_ := tester.testCharMap()
-    test1,_ := tester.testTextTex(str)
-    SaveRGBA(test0,fmt.Sprintf("%s/test/map-%s.png",tester.directory,tester.name))
-    SaveRGBA(test1,fmt.Sprintf("%s/test/text-%s-%s",tester.directory,tester.name,str))
+    switch tester.mode {
+        case facade.GRID:
+            test,_ := tester.testCharMap()
+            SaveRGBA(test,fmt.Sprintf("%s/test/map-%s.png",tester.directory,tester.name))            
+            
+        case facade.LINES:
+            test,_ := tester.testTextTex(str)
+            SaveRGBA(test,fmt.Sprintf("%s/test/text-%s-%s.png",tester.directory,tester.name,str))
+    }
 }
 
 
