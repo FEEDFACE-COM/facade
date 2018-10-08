@@ -10,6 +10,7 @@ import (
     "runtime"
     log "./log"
     facade "./facade"
+    gfx "./gfx"
 )
 
 
@@ -45,7 +46,7 @@ var (
     connectHost    string   = "fcd.hq.feedface.com"
     connectTimeout float64  = 5.0
     listenHost     string   = "0.0.0.0"
-    daemonize      bool     = false
+//    daemonize      bool     = false
 )
 
 
@@ -94,7 +95,7 @@ func main() {
         flags[RECV].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
         flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
         flags[RECV].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
-        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+//        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
     }
     
     if RENDERER_AVAILABLE {
@@ -166,6 +167,7 @@ func main() {
             
         case INFO:
             ShowVersion()
+            ShowAssets()
             os.Exit(-2)
 
         case HELP:
@@ -387,6 +389,20 @@ func JoinModes(modes []facade.Mode, sep string) string {
     var strs []string 
     for _,mode := range modes { strs = append(strs,string(mode)) }
     return strings.Join(strs,sep)
+}
+
+
+func ShowAssets() {
+    shaders := gfx.ListShaderNames()
+    fonts := gfx.ListFontNames()
+    fmt.Fprintf(os.Stderr,"\nShaders:\n")
+    for s := range shaders {
+        fmt.Fprintf(os.Stderr,"%s\n",s)
+    }
+    fmt.Fprintf(os.Stderr,"\nFonts:\n")
+    for f := range fonts {
+        fmt.Fprintf(os.Stderr,"%s\n",f)
+    }
 }
 
 

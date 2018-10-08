@@ -8,10 +8,15 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-SOURCE_FILES=$(wildcard *.go */*.go) gfx/shaderFragment.go gfx/shaderVertex.go
-SHADER_FILES=$(wildcard shader/*.vert shader/*.frag)
+SOURCES=$(wildcard *.go */*.go) 
+ASSETS=gfx/asset/vert.go gfx/asset/frag.go gfx/asset/font.go
 
 
+
+
+ASSET_FONT=font/RobotoMono-Regular.ttf font/VT323-Regular.ttf
+ASSET_VERT=$(wildcard shader/*.vert shader/*/*.vert)
+ASSET_FRAG=$(wildcard shader/*.frag shader/*/*.frag)
 
 LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
 
@@ -35,13 +40,17 @@ info:
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo ""
 	@echo "### Build Variables ###"
-	@echo " source     ${SOURCE_FILES}"
-	@echo " shader     ${SHADER_FILES}"
+	@echo " source     ${SOURCES}"
+	@echo "  asset     ${ASSETS}"
+	@echo ""
+	@echo "   vert     ${ASSET_VERT}"
+	@echo "   frag     ${ASSET_FRAG}"
+	@echo "   font     ${ASSET_FONT}"   
 	
 build: ${BUILD_PRODUCT}
 
 demo: ${BUILD_PRODUCT}
-	for f in ${SOURCE_FILES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid -h 10 -s; done; done
+	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid -h 10 -s; done; done
 # for f in gfx/*.go; do cat $f | while read l; do sleep 1; echo $l | fcd; done; done
 
 
@@ -49,21 +58,22 @@ get:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} gfx/shaderFragment.go gfx/shaderVertex.go
+	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} ${ASSETS}
 
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
-${BUILD_PRODUCT}: ${SOURCE_FILES} ${SHADER_FILES}
+${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
 	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
+asset: ${ASSETS}
 
-gfx/shaderFragment.go: shader/*.frag shader/*/*.frag
+gfx/asset/frag.go: ${ASSET_FRAG}
 	echo ""                                         >|$@
 	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var FragmentShader = map[string]string{"  >>$@
-	for src in shader/*.frag shader/*/*.frag; do \
+	echo "var FragmentShaders = map[string]string{" >>$@
+	for src in ${FRAG_SHADERS}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
@@ -72,12 +82,12 @@ gfx/shaderFragment.go: shader/*.frag shader/*/*.frag
 	echo "}"                                        >>$@
 
 	
-gfx/shaderVertex.go: shader/*.vert shader/*/*.vert
+gfx/asset/vert.go: ${ASSET_VERT}
 	echo ""                                         >|$@
 	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var VertexShader = map[string]string{"    >>$@
-	for src in shader/*.vert shader/*/*.vert; do \
+	echo "var VertexShaders = map[string]string{"   >>$@
+	for src in ${VERT_SHADERS}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
@@ -85,8 +95,20 @@ gfx/shaderVertex.go: shader/*.vert shader/*/*.vert
     done                                            >>$@
 	echo "}"                                        >>$@
 
+gfx/asset/font.go: ${ASSET_FONT}
+	echo ""                                         >|$@
+	echo "// +build linux,arm"                      >>$@
+	echo "package gfx"                              >>$@
+	echo "var Fonts = map[string]string{"           >>$@
+	for src in ${FONTS}; do \
+      name=$$( echo $$src | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
+      echo "\n\n\"$${name}\":\`";\
+      cat $$src | base64 ; \
+      echo "\`,\n\n"; \
+    done                                            >>$@
+	echo "}"                                        >>$@
 
 
 
-.PHONY: help info build clean get 
+.PHONY: help info build clean get asset
 
