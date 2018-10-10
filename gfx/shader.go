@@ -54,7 +54,7 @@ const (
 )
 
 var shaderPath string
-func SetShaderDirectory(path string) { shaderPath = path.Clean(path) }
+func SetShaderDirectory(directory string) { shaderPath = path.Clean(directory) }
 
 
 func (shader *Shader) LoadShader(filePath string) error {

@@ -14,7 +14,7 @@ ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
 
 
-ASSET_FONT=font/RobotoMono-Regular.ttf font/VT323-Regular.ttf
+ASSET_FONT=font/RobotoMono.ttf font/VT323.ttf
 ASSET_VERT=$(wildcard shader/*.vert shader/*/*.vert)
 ASSET_FRAG=$(wildcard shader/*.frag shader/*/*.frag)
 
@@ -69,7 +69,12 @@ ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
 assets: ${ASSETS}
 
 
-	
+font/RobotoMono.ttf:
+	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/apache/robotomono/RobotoMono-Regular.ttf
+
+font/VT323.ttf:
+	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
+
 gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
 	echo ""                                         >|$@
 #	echo "// +build linux,arm"                      >>$@

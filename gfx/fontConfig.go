@@ -16,7 +16,7 @@ func (config *FontConfig) AddFlags(flags *flag.FlagSet) {
     flags.StringVar(&config.Name,"font",config.Name,"use fontface `font`" )
 }
 
-func NewFontConfig() *FontConfig { return &FontConfig{Name: "Monaco"} }
+func NewFontConfig() *FontConfig { return &FontConfig{Name: "RobotoMono"} }
 
 func (config *FontConfig) Desc() string { return fmt.Sprintf("font[%s]",config.Name) }
 
