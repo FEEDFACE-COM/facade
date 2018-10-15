@@ -82,11 +82,11 @@ func GetProgram(name string) *Program {
 
 func (program *Program) UseProgram(debug bool) { 
     gl.UseProgram(program.Program) 
-    program.debugFlag = float32(0)
+    program.debugFlag = float32( 0 )
     if debug {
-        program.debugFlag = float32(1)
+        program.debugFlag = float32( 1 )
     }
-        program.Uniform1f(DEBUGFLAG, program.debugFlag)
+    program.Uniform1f(DEBUGFLAG, program.debugFlag)
 }
 
 

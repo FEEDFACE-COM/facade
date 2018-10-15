@@ -60,7 +60,7 @@ func NewConfig(mode Mode) *Config {
     ret.Font =   gfx.NewFontConfig()
     ret.Camera = gfx.NewCameraConfig()
     ret.Mask =   gfx.NewMaskConfig()
-//˚    ret.Debug = true
+//    ret.Debug = true
     return ret
 }
 

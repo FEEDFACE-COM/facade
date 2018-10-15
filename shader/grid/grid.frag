@@ -24,18 +24,22 @@ void main() {
     vec2 pos = vTileCoord;
     vec2 tex = vTexCoord;
 
-    vec4 col = texture2D(texture, tex);
+    vec4 col;
+    if (DEBUG) { col = vec4(1.,1.,1.,1.); }
+    else       { col = texture2D(texture, tex); }
     
-    bool firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
-    bool lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
 
+    bool firstLine, lastLine;
     if (downward) {
         firstLine = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
         lastLine =   0.5*vTileCount.y       == vTileCoord.y ;
+    } else {
+        firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
+        lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
     }
 
     if (firstLine && scroll > 0.5) { //oldest line vanishes later
-        col.rgb = col.rgb * (1.- 2.*(scroll-0.5));
+//        col.rgb = col.rgb * (1.- 2.*(scroll-0.5));
     }
 
     if (lastLine) { //newest line blends in
