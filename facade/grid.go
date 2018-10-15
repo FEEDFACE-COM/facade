@@ -8,6 +8,7 @@ import(
 //    "math"
     gfx "../gfx"
     log "../log"
+    math "../math32"
     gl "src.feedface.com/gfx/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
 )
@@ -70,7 +71,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
-    grid.program.Uniform1f(gfx.TIMER, grid.timer.Cycle )
+    grid.program.Uniform1f(gfx.TIMER, grid.timer.Fader * math.TAU )
     
     { 
         dw := float32(0.0); 
