@@ -279,7 +279,7 @@ func getGlyphCoord(chr byte) gfx.Coord {
 }
 
 
-func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
+func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     var err error
 
     grid.config = grid.autoWidth(grid.config,camera,font)
@@ -293,7 +293,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
 
     grid.black = gfx.BlackColor()
     grid.white = gfx.WhiteColor()
-    grid.timer = gfx.NewTimer(now,1.0)
+    grid.timer = gfx.NewTimer(1.0)
 
     grid.object.Init()
     
@@ -306,7 +306,7 @@ func (grid *Grid) Init(now *gfx.Clock, camera *gfx.Camera, font *gfx.Font) {
     if err != nil { log.Error("fail link grid program: %v",err) }
 
 
-    grid.scroller.Init(now)
+    grid.scroller.Init()
     if grid.scroller.Scroll {
         grid.scroller.Timer.Fun = func(){ 
             grid.buffer.Queue(nil)

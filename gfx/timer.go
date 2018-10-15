@@ -32,9 +32,9 @@ func Clamp(x float32) float32 {
 }
 
 
-func NewTimer(now *Clock, duration float32) *Timer {
-    ret := &Timer{start: now.time, duration: duration}
-    now.Register(ret)
+func NewTimer(duration float32) *Timer {
+    ret := &Timer{start: NOW(), duration: duration}
+    RegisterTimer(ret)
     return ret
 }
 

@@ -12,60 +12,59 @@ import (
 const DEBUG_FRAMES = 90
 const CLOCK_RATE = 1.0
 
-var startTime time.Time
+var clockStart time.Time
+
+var clockFrame uint
+var clockTime float32
+
+var clockTimers []*Timer
+
+func NOW() float32 { return clockTime }
+
 
 type Clock struct {
     frame uint
     time  float32
-    
-    timers []*Timer
 }
 
 func NewClock() *Clock {
-    ret := new(Clock)
-    ret.Reset()
-    return ret
+    return &Clock{frame: clockFrame, time: clockTime}
 }
 
-func (clock *Clock) Reset() {
-    startTime = time.Now()    
-    clock.frame = 0
-    clock.time = 0.0
-}
-
-func StartClock() {
-    startTime = time.Now()
+func ClockReset() {
+    clockStart = time.Now()    
+    clockFrame = 0
+    clockTime = 0.0
 }
 
 
-func (clock *Clock) Register(timer *Timer) {
-    clock.timers = append(clock.timers, timer )    
+
+func RegisterTimer(timer *Timer) {
+    clockTimers = append(clockTimers, timer )    
     log.Debug("register %s",(*timer).Desc())
 }
 
 
-func (clock *Clock) Time() float32 {
-    return clock.time    
+
+
+
+func ClockDebug() bool { return clockFrame % DEBUG_FRAMES == 0 }
+
+
+func ClockDelta(prev Clock) float32 { 
+    return float32(clockFrame - prev.frame) / (clockTime-prev.time) 
 }
 
 
-func (clock *Clock) DebugFrame() bool { return clock.frame % DEBUG_FRAMES == 0 }
 
-
-func (clock *Clock) Delta(prev Clock) float32 { 
-    return float32(clock.frame - prev.frame) / (clock.time-prev.time) 
-}
-
-
-
-func (clock *Clock) Tick() {
+func ClockTick() {
     
-    clock.frame += 1
-    clock.time = CLOCK_RATE *  float32( time.Now().Sub(startTime) ) / (1000.*1000.*1000.)
+    clockFrame += 1
+    clockTime = CLOCK_RATE *  float32( time.Now().Sub(clockStart) ) / (1000.*1000.*1000.)
     
     
-    for _,timer := range( clock.timers ) {
-        trigger := (*timer).Update(clock.time)
+    for _,timer := range( clockTimers ) {
+        trigger := (*timer).Update(clockTime)
         if trigger {
 //            log.Debug("trigger %s",timer.Desc())
         }
@@ -74,6 +73,6 @@ func (clock *Clock) Tick() {
     
 }
 
-func (clock *Clock) Desc() string {
-    return fmt.Sprintf("frame #%05d %7.2fs",clock.frame,clock.time)
+func ClockDesc() string {
+    return fmt.Sprintf("frame #%05d %7.2fs",clockFrame,clockTime)
 }

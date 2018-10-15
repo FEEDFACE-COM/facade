@@ -41,7 +41,6 @@ type Renderer struct {
     
     axis *gfx.Axis
 
-    now gfx.Clock
     buffer *gfx.Buffer
     mutex *sync.Mutex
     directory string
@@ -115,9 +114,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.test = facade.NewTest(config.Test)
 
 
-    gfx.StartClock()
-    renderer.now = gfx.Clock{}
-
+    gfx.ClockReset()
     return err
 }
 
@@ -161,10 +158,8 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan string) error {
 
     
-    var now *gfx.Clock = &renderer.now
-    var prev gfx.Clock = *now
 
-    now.Tick()
+    gfx.ClockTick()
 
     gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
@@ -182,7 +177,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.font.Init()
     renderer.camera.Init()
-    renderer.grid.Init(now, renderer.camera,renderer.font)
+    renderer.grid.Init(renderer.camera,renderer.font)
     renderer.lines.Init(renderer.camera,renderer.font)
     renderer.test.Init(renderer.camera,renderer.font)
     renderer.mask.Init()
@@ -195,10 +190,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
 
 
+    var prev gfx.Clock = *gfx.NewClock()
     log.Debug("renderer start")
     for {
         
-        verbose := now.DebugFrame()
+        verbose := gfx.ClockDebug()
         
         renderer.mutex.Lock()
         piglet.MakeCurrent()
@@ -224,7 +220,10 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         renderer.mask.Render()
         if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
         
-        if verbose { renderer.PrintDebug(*now,prev); prev = *now }
+        if verbose { 
+            renderer.PrintDebug(prev); 
+            prev = *gfx.NewClock() 
+        }
 
         if verbose {
             log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
@@ -238,7 +237,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
         if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
-        now.Tick()
+        gfx.ClockTick()
     }
     return nil
 }
@@ -280,10 +279,10 @@ func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
 
 
 
-func (renderer *Renderer) PrintDebug(now gfx.Clock, prev gfx.Clock) {
+func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
     if DEBUG_CLOCK   {
-        log.Debug("%s    %4.1ffps",now.Desc(),now.Delta(prev))
+        log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev))
     }
     
     if DEBUG_DIAG {

@@ -41,8 +41,8 @@ func NewScroller(scroll bool,speed float32) *Scroller {
 
 
 
-func (scroller *Scroller) Init(now *Clock) {
-    scroller.Timer = NewTimer(now, math.Abs(scroller.Speed) )
+func (scroller *Scroller) Init() {
+    scroller.Timer = NewTimer(math.Abs(scroller.Speed) )
 }
 
 
