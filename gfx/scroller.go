@@ -24,7 +24,7 @@ func (scroller *Scroller) Uniform(program *Program, downward bool) {
 //    if (downward) { val = -0.0 }
     
     if scroller.Timer != nil {
-        val = scroller.Timer.Fader
+        val =   math.EaseInEaseOut( scroller.Timer.Fader() )
     } else {
         val = 1.0;
     }

@@ -6,7 +6,7 @@ package gfx
 
 import (
     "fmt"
-//    math "../math32"
+    math "../math32"
 )
 
 
@@ -15,23 +15,20 @@ import (
 type Timer struct {
     Name string
 
-    Count uint
-    Fader float32
+    count uint
+    fader float32
     Fun func()
-    
-    
     
     start float32
     duration float32
     repeat bool
 }
 
+func (timer *Timer) Count() uint    { return timer.count }
+func (timer *Timer) Fader() float32 { return timer.fader }
 
-func Clamp(x float32) float32 {
-    if x < 0.0 { return 0.0 }
-    if x > 1.0 { return 1.0 }
-    return x   
-}
+
+
 
 
 func NewTimer(duration float32, repeat bool) *Timer {
@@ -49,14 +46,14 @@ func (timer *Timer) Close() {
 
 func (timer *Timer) Reset() {
     timer.start = NOW()
-    timer.Fader = 0.0
-    timer.Count = 0    
+    timer.fader = 0.0
+    timer.count = 0    
 }
 
 func (timer *Timer) Start() {
     timer.start = NOW()
-    timer.Fader = 0.0
-    timer.Count = 0    
+    timer.fader = 0.0
+    timer.count = 0    
 }
 
 
@@ -66,8 +63,8 @@ func (timer *Timer) Update() bool {
     t := NOW() - timer.start
     d := timer.duration
     
-    timer.Fader = Clamp( t/d )
-    timer.Count += 1
+    timer.fader = math.Clamp( t/d )
+    timer.count += 1
     
     //triggered?
     if NOW() > timer.start+timer.duration {
@@ -88,5 +85,5 @@ func (timer *Timer) Update() bool {
 
 
 func (timer *Timer) Desc() string { 
-    return fmt.Sprintf("t[%s "+/*%4.2f↺ */"%4.2f⤢ %d#]",timer.Name,timer.Fader,timer.Count)
+    return fmt.Sprintf("t[%s "+/*%4.2f↺ */"%4.2f⤢ %d#]",timer.Name,timer.fader,timer.count)
 }

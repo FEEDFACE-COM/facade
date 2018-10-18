@@ -70,7 +70,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
-    grid.program.Uniform1f(gfx.TIMER, grid.timer.Fader * math.TAU )
+    grid.program.Uniform1f(gfx.TIMER, grid.timer.Fader() * math.TAU )
     
     { 
         dw := float32(0.0); 
@@ -179,7 +179,7 @@ func (grid *Grid) FillTest(test string, font *gfx.Font) {
         
         
         case "coord":
-            w,h := int(grid.config.Width), int(grid.config.Height-1)
+            w,h := int(grid.config.Width), int(grid.config.Height)
             for r:=0; r<h; r++ {
                 line := ""
                 for c:=0; c<w; c++ {
