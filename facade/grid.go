@@ -26,7 +26,6 @@ type Grid struct {
     
     scroller *gfx.Scroller
     
-    black *gfx.Texture
     white *gfx.Texture
     
     timer *gfx.Timer
@@ -129,9 +128,23 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     if debug {
         gl.LineWidth(3.0)
         grid.white.BindTexture()
-        for i:=0; i<int(count); i++ {
-            gl.DrawArrays(gl.LINE_STRIP, int32(i * (2*3)), int32(2*3) )        
+        
+        w,h := int(grid.config.Width), int(grid.config.Height)
+        for r:=0; r<h; r++ {
+            var line *gfx.Text
+            if grid.config.Downward {
+                line  = grid.buffer.Tail(uint(r))
+            } else {
+                line  = grid.buffer.Head(uint(r))
+            }        
+            for c:=0; c<w; c++ {
+                if line != nil && int(c) < len(line.Text) /**/ && line.Text[c] != byte(' ') /**/ {
+                    gl.DrawArrays(gl.LINE_STRIP, int32((r*w+c) * (2*3)), int32(2*3) )
+                }
+            }
         }
+        
+        
     }
 //    if verbose { log.Debug( grid.scroller.Desc() ) }
 }
@@ -153,10 +166,20 @@ func (grid *Grid) FillTest(test string, font *gfx.Font) {
             } {
                 grid.Queue(line,font)    
             }
+            
+        case "title": 
+            for _,line := range []string{
+                "             ",
+                " F A C A D E ",
+                "             ",
+            } {
+                grid.Queue(line,font)    
+            }
+            
         
         
         case "coord":
-            w,h := int(grid.config.Width), int(grid.config.Height)
+            w,h := int(grid.config.Width), int(grid.config.Height-1)
             for r:=0; r<h; r++ {
                 line := ""
                 for c:=0; c<w; c++ {
@@ -292,9 +315,8 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.texture.TexImage()
     
 
-    grid.black = gfx.BlackColor()
     grid.white = gfx.WhiteColor()
-    grid.timer = gfx.NewTimer(1.0)
+    grid.timer = gfx.NewTimer(1.0,true)
 
     grid.object.Init()
     
@@ -308,13 +330,6 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
 
 
     grid.scroller.Init()
-    if grid.scroller.Scroll {
-        grid.scroller.Timer.Fun = func(){ 
-            grid.buffer.Queue(nil)
-            select { case grid.refreshChan <- true: ; default: ; }
-//            log.Debug("queued nil, scroller is %s",grid.scroller.Desc())
-        }
-    }
 }
 
 
@@ -341,8 +356,7 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
 func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     grid.buffer.Queue( newText )
-
-//gen here?
+    grid.scroller.Once()
     select { case grid.refreshChan <- true: ; default: ; }
     
 }
@@ -378,7 +392,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     grid.config = *config
 
     if config.Scroll != old.Scroll || config.Speed != old.Speed {
-        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))     //and then what? timer?
+        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))
     }
         
     if config.Height != old.Height {

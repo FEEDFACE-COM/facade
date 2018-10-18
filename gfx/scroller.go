@@ -6,6 +6,7 @@ package gfx
 
 import (
     "fmt"
+    log "../log"
     math "../math32"
 )
 
@@ -22,7 +23,7 @@ func (scroller *Scroller) Uniform(program *Program, downward bool) {
     var val float32
 //    if (downward) { val = -0.0 }
     
-    if scroller.Scroll {
+    if scroller.Timer != nil {
         val = scroller.Timer.Fader
     } else {
         val = 1.0;
@@ -42,7 +43,24 @@ func NewScroller(scroll bool,speed float32) *Scroller {
 
 
 func (scroller *Scroller) Init() {
-    scroller.Timer = NewTimer(math.Abs(scroller.Speed) )
+//    scroller.Timer = NewTimer(math.Abs(scroller.Speed),false )
+}
+
+func (scroller *Scroller) Once() {
+    if ! scroller.Scroll {
+        return
+    }
+    if scroller.Timer != nil {
+        return    
+    }
+    scroller.Timer = NewTimer(math.Abs(scroller.Speed),false )
+    scroller.Timer.Start()
+    scroller.Timer.Fun = func() {
+        UnRegisterTimer(scroller.Timer)
+        scroller.Timer = nil
+        log.Debug("stop %s",scroller.Desc())
+    }    
+    log.Debug("start %s",scroller.Desc())
 }
 
 
@@ -57,5 +75,4 @@ func (scroller *Scroller) Desc() string {
 func (scroller *Scroller) SetScrollSpeed(scroll bool, speed float32) {
     scroller.Scroll = scroll
     scroller.Speed = speed
-    scroller.Timer.duration=speed
 }

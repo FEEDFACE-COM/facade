@@ -43,7 +43,7 @@ void main() {
     }
 
     if (lastLine) { //newest line blends in
-        col.rgb = col.rgb * scroll;
+//        col.rgb = col.rgb * scroll;
     }    
     
     gl_FragColor = col;

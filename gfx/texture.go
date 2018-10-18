@@ -9,6 +9,7 @@ import (
     "errors"
     "image"
     "image/draw"
+    "image/color"
     _ "image/png"
     gl "src.feedface.com/gfx/piglet/gles2"
     log "../log"
@@ -77,23 +78,23 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
 
 
 
-func WhiteColor() *Texture {
-    ret := NewTexture("white")
+func WhiteColor() *Texture { return ColorTexture("white",image.Black) }
+func BlackColor() *Texture { return ColorTexture("black",image.Black) }
+func GreyColor() *Texture { return ColorTexture("gray",image.NewUniform( color.Gray16{0x8000})) }
+
+
+
+
+func ColorTexture(name string,color *image.Uniform) *Texture {
+    ret := NewTexture(name)
     rgba := image.NewRGBA( image.Rect(0,0,2,2) )
-    draw.Draw( rgba, rgba.Bounds(), image.White, image.ZP, draw.Src )
+    draw.Draw( rgba, rgba.Bounds(), color, image.ZP, draw.Src )
     ret.LoadRGBA(rgba)
     ret.TexImage()
     return ret
 }
 
-func BlackColor() *Texture {
-    ret := NewTexture("black")
-    rgba := image.NewRGBA( image.Rect(0,0,2,2) )
-    draw.Draw( rgba, rgba.Bounds(), image.Black, image.ZP, draw.Src )
-    ret.LoadRGBA(rgba)
-    ret.TexImage()
-    return ret
-}
+
 
 func (texture *Texture) Init() {
     gl.GenTextures(1, &texture.texture)

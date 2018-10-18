@@ -186,7 +186,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("coord",renderer.font)
+    renderer.grid.FillTest("title",renderer.font)
 
 
 

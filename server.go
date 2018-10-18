@@ -12,8 +12,8 @@ import (
 )
 
 
-const DEBUG_ACCEPT = false
-const DEBUG_RECV =   false
+const DEBUG_ACCEPT = true
+const DEBUG_RECV =   true
 
 
 type Server   struct {
@@ -76,7 +76,12 @@ func (server *Server) ListenText(textChan chan facade.RawText) {
 
 
 func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config) {
-    defer func() { /*log.Debug("close conf %s",confConn.RemoteAddr().String());*/ confConn.Close() }()
+    defer func() { 
+        if DEBUG_ACCEPT {
+            log.Debug("close conf %s",confConn.RemoteAddr().String());
+        }
+            confConn.Close() 
+    }()
     decoder := gob.NewDecoder(confConn)
     config := &facade.Config{}
     confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
@@ -92,7 +97,12 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
 }
 
 func (server *Server) ReceiveText(textConn net.Conn, textChan chan facade.RawText) {
-    defer func() { /*log.Debug("close text %s",textConn.RemoteAddr().String());*/ textConn.Close() }()
+    defer func() { 
+        if DEBUG_ACCEPT {
+            log.Debug("close text %s",textConn.RemoteAddr().String());
+        }
+        textConn.Close() 
+    }()
     scanner := bufio.NewScanner(textConn)
     for scanner.Scan() {
         textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )

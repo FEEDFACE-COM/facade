@@ -165,7 +165,7 @@ func (font *Font) loadFont(data []byte) error {
 
 func (font *Font) Init() {
     if font.context != nil { 
-        log.Debug("font ready")
+//        log.Debug("font already initialized")
         return 
     }
     font.context = freetype.NewContext()

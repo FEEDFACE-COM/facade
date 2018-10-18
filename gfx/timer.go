@@ -19,8 +19,11 @@ type Timer struct {
     Fader float32
     Fun func()
     
+    
+    
     start float32
     duration float32
+    repeat bool
 }
 
 
@@ -31,36 +34,54 @@ func Clamp(x float32) float32 {
 }
 
 
-func NewTimer(duration float32) *Timer {
-    ret := &Timer{start: NOW(), duration: duration}
+func NewTimer(duration float32, repeat bool) *Timer {
+    ret := &Timer{start: NOW(), duration: duration, repeat: repeat}
     RegisterTimer(ret)
     return ret
 }
+
+
 
 func (timer *Timer) Close() {
     //todo: dereg
 }
 
 
+func (timer *Timer) Reset() {
+    timer.start = NOW()
+    timer.Fader = 0.0
+    timer.Count = 0    
+}
+
+func (timer *Timer) Start() {
+    timer.start = NOW()
+    timer.Fader = 0.0
+    timer.Count = 0    
+}
 
 
-func (timer *Timer) Update(now float32) bool {
-    t := now - timer.start
+
+
+func (timer *Timer) Update() bool {
+    t := NOW() - timer.start
     d := timer.duration
     
     timer.Fader = Clamp( t/d )
+    timer.Count += 1
     
     //triggered?
-    if now > timer.start+timer.duration {
-        timer.start += timer.duration
-        timer.Fader = 0.0
-        timer.Count += 1
+    if NOW() > timer.start+timer.duration {
+
         if timer.Fun != nil {
             timer.Fun()
         }
-
-        return true
-    }
+     
+        if timer.repeat {
+            timer.start = NOW()
+        }
+     
+        return true   
+    }        
     return false
 }
 

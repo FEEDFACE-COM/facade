@@ -45,6 +45,16 @@ func RegisterTimer(timer *Timer) {
 }
 
 
+func UnRegisterTimer(timer *Timer) {
+    var ct []*Timer
+    for _,v := range( clockTimers ) {
+        if v != timer {
+            ct = append(ct,v)
+        }
+    }
+    clockTimers = ct    
+}
+
 
 
 
@@ -64,7 +74,7 @@ func ClockTick() {
     
     
     for _,timer := range( clockTimers ) {
-        trigger := (*timer).Update(clockTime)
+        trigger := (*timer).Update()
         if trigger {
 //            log.Debug("trigger %s",timer.Desc())
         }
