@@ -9,7 +9,7 @@ varying vec2 vTileCount;
 varying float vDownwardFlag;
 varying float vDebugFlag;
 varying float vScroller;
-varying float vTimer;
+varying float vNow;
 
 bool DEBUG    = vDebugFlag > 0.0;
 bool downward = vDownwardFlag > 0.0;
@@ -38,12 +38,12 @@ void main() {
         lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
     }
 
-    if (firstLine && scroll > 0.5) { //oldest line vanishes later
-//        col.rgb = col.rgb * (1.- 2.*(scroll-0.5));
+    if (DEBUG && firstLine) { //oldest line vanishes later
+        col.rgb = vec3(1.,0.,0.);
     }
 
-    if (lastLine) { //newest line blends in
-//        col.rgb = col.rgb * scroll;
+    if (DEBUG && lastLine) { //newest line blends in
+        col.rgb = vec3(1.,0.,0.);
     }    
     
     gl_FragColor = col;

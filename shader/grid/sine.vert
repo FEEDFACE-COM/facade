@@ -50,9 +50,29 @@ void main() {
     
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
+    
+    
+//    pos.z +=  pos.x * 0.25 * cos( now );
+    
+    float F = 0.25;
+    
+    float f0 = ease1( pos.y + now );  
+    float f1 = 0.;
+    
+    
+
+    pos.z += F * cos( pos.x + 2. * now         );
+    pos.z += F * cos( pos.y + 3. * now + PI/2. );
+    
+    pos.z += F * f0;
+//    pos.z += F* cos(now);
+
+
 
     if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
     if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
 
+    
+    gl_Position = projection * view * model * pos;
     gl_Position =  projection * view * model * vec4(pos.x, pos.y, pos.z, 1.);
 }

@@ -71,6 +71,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
     grid.program.Uniform1f(gfx.TIMER, grid.timer.Fader() * math.TAU )
+    grid.program.Uniform1f(gfx.CLOCKNOW, gfx.NOW() )
     
     { 
         dw := float32(0.0); 
@@ -109,7 +110,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     } 
 
     model := mgl32.Ident4()
-    model = model.Mul4( mgl32.Scale3D(scale,scale,0.0) )
+    model = model.Mul4( mgl32.Scale3D(scale,scale,scale) )
     model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
@@ -169,8 +170,7 @@ func (grid *Grid) FillTest(test string, font *gfx.Font) {
             
         case "title": 
             for _,line := range []string{
-                "             ",
-                " F A C A D E ",
+                " F A C A D E  by FEEDFACE.COM",
                 "             ",
             } {
                 grid.Queue(line,font)    
@@ -219,7 +219,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     tw := glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
     
     return []float32{
-            //vertex          //texcoords        // coordinates
+        //vertex                     //texcoords        // tile coords
         -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
         -w/2, -h/2, 0,                 0+ox, th+oy,      x, y,
          w/2, -h/2, 0,                tw+ox, th+oy,      x, y,
@@ -316,7 +316,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     
 
     grid.white = gfx.WhiteColor()
-    grid.timer = gfx.NewTimer(1.0,true)
+    grid.timer = gfx.NewTimer(4.0,true)
 
     grid.object.Init()
     

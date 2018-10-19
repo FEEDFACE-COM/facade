@@ -226,7 +226,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         }
 
         if verbose {
-            log.Debug("draw %s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
+            log.Debug("%s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
         }    
 
         piglet.SwapBuffers()

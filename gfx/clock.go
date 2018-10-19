@@ -6,7 +6,7 @@ package gfx
 import (
     "time"
     "fmt"
-    log "../log"
+//    log "../log"
 )
 
 const DEBUG_FRAMES = 90
@@ -41,7 +41,7 @@ func ClockReset() {
 
 func RegisterTimer(timer *Timer) {
     clockTimers = append(clockTimers, timer )    
-    log.Debug("register %s",(*timer).Desc())
+//    log.Debug("register %s",(*timer).Desc())
 }
 
 

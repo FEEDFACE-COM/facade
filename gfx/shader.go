@@ -36,6 +36,7 @@ const (
     DOWNWARD   UniformName = "downwardFlag"
     SCROLLER   UniformName = "scroller"
     TIMER      UniformName = "timer"
+    CLOCKNOW   UniformName = "now"
 )    
 
 type AttribName string

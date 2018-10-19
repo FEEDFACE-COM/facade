@@ -33,7 +33,7 @@ func orthographic(width,height float32) mgl32.Mat4 {
 }
 
 func perspective(width,height float32) mgl32.Mat4 {
-    return mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.1, 10.0)
+    return mgl32.Perspective(mgl32.DegToRad(45.0), width/height, 0.01, 10.0)
 }
 
 func (camera *Camera) Ratio() float32 { return camera.size.W / camera.size.H }
@@ -43,7 +43,7 @@ func NewCamera(config *CameraConfig, screen Size) *Camera {
     ret := &Camera{config: *config, size: screen}
     return ret
 }
-
+    
 func (camera *Camera) Uniform(program *Program) {
 	camera.projectionUniform,_ = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
 	camera.viewUniform,_ = program.UniformMatrix4fv(VIEW, 1, &camera.view[0] )
@@ -66,12 +66,13 @@ func (camera *Camera) Configure(config *CameraConfig) {
     zoom := float32(camera.config.Zoom)
     if camera.config.Isometric {
         camera.projection = orthographic(camera.size.W, camera.size.H)
-        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     } else {
+        const MAGIC = 0.41
         camera.projection = perspective(camera.size.W, camera.size.H)
-//        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
-        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{zoom,zoom,zoom}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0,0,1.0}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( MAGIC*zoom, MAGIC*zoom, MAGIC*zoom ) )
     }
 
 }

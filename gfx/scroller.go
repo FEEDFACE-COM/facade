@@ -6,7 +6,7 @@ package gfx
 
 import (
     "fmt"
-    log "../log"
+//    log "../log"
     math "../math32"
 )
 
@@ -58,9 +58,9 @@ func (scroller *Scroller) Once() {
     scroller.Timer.Fun = func() {
         UnRegisterTimer(scroller.Timer)
         scroller.Timer = nil
-        log.Debug("stop %s",scroller.Desc())
+//        log.Debug("stop %s",scroller.Desc())
     }    
-    log.Debug("start %s",scroller.Desc())
+//    log.Debug("start %s",scroller.Desc())
 }
 
 

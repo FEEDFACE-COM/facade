@@ -12,8 +12,8 @@ import (
 )
 
 
-const DEBUG_ACCEPT = true
-const DEBUG_RECV =   true
+const DEBUG_ACCEPT = false
+const DEBUG_RECV =   false
 
 
 type Server   struct {
