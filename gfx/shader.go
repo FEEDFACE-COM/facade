@@ -75,9 +75,9 @@ func loadShaderFile(filePath string) (string, error) {
 
 
 
-func GetShader(name string, shaderType ShaderType, program *Program) (*Shader,error) {
+func GetShader(mode string, name string, shaderType ShaderType, program *Program) (*Shader,error) {
     var ret *Shader = nil
-    filePath := fmt.Sprintf("%s/%s.%s",shaderPath,name,string(shaderType))
+    filePath := path.Clean( fmt.Sprintf("%s/%s/%s.%s",shaderPath,mode,name,string(shaderType)) )
     src, err := loadShaderFile(filePath)
     if err == nil {
         
@@ -104,7 +104,7 @@ func GetShader(name string, shaderType ShaderType, program *Program) (*Shader,er
 }
 
 func WatchShaderFile(path string, program *Program, shader *Shader) {
-
+        log.Debug("watching %s",path)
         
 
         info,err := os.Stat(path)

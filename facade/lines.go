@@ -89,7 +89,7 @@ func (lines *Lines) Init(camera *gfx.Camera, font *gfx.Font) {
     lines.generateData()
 
 
-    err = lines.program.LoadShaders("ident","ident")
+    err = lines.program.LoadShaders("/","identity","identity")
     if err != nil { log.Error("fail load lines shaders: %s",err) }
     err = lines.program.LinkProgram(); 
     if err != nil { log.Error("fail link lines program: %v",err) }

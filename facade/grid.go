@@ -308,7 +308,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     select { case grid.refreshChan <- true: ; default: ; }
     
 
-    err = grid.program.LoadShaders("grid/grid","grid/grid")
+    err = grid.program.LoadShaders("/grid","identity","identity")
     if err != nil { log.Error("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }

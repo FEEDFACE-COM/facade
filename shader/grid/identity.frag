@@ -23,12 +23,21 @@ void main() {
         texture2D(texture, vTexCoord); 
     }
     
+    bool firstLine,lastLine;
+    if (mod(vTileCount.y, 2.0) != 1.0 ) { 
+        firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
+        lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
+    } else {
+        firstLine =  0.5*(vTileCount.y+1.) == vTileCoord.y + 1. ;
+        lastLine  = -0.5*(vTileCount.y+1.) == vTileCoord.y - 1. ;
+    }
 
-    bool firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
-    bool lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
+    if (DEBUG && firstLine ) {
+        col.rgb = vec3(1.,0.,1.);
+    }
 
-    if (DEBUG && (firstLine || lastLine) ) {
-        col.rgb = vec3(1.,0.,0.);
+    if (DEBUG && lastLine ) {
+        col.rgb = vec3(0.,1.,0.);
     }
     
     gl_FragColor = col;

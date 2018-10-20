@@ -92,15 +92,17 @@ func (program *Program) UseProgram(debug bool) {
 
 
 
-func (program *Program) LoadShaders(vertName, fragName string) error {
+func (program *Program) LoadShaders(modeName, vertName, fragName string) error {
     var err error
-    program.vertexShader, err = GetShader(vertName,VERTEX_SHADER,program)
+//    modeVertName, modeFragName := modeName+"/"+vertName, modeName+"/"+FragName
+
+    program.vertexShader, err = GetShader(modeName,vertName,VERTEX_SHADER,program)
     if err != nil { return log.NewError("fail to get shader: %s",err) }
     err = program.vertexShader.CompileShader()
     if err != nil { return log.NewError("fail to compile shader: %s",err) }
     
     
-    program.fragmentShader, err = GetShader(fragName,FRAGMENT_SHADER,program)
+    program.fragmentShader, err = GetShader(modeName,fragName,FRAGMENT_SHADER,program)
     if err != nil { return log.NewError("fail to get shader: %s",err) }
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail to compile shader: %s",err) }

@@ -21,8 +21,8 @@ func NewGridConfig() *GridConfig {
     return &GridConfig{
         Width: 0,
         Height: 8,
-        Scroll: false, 
-        Speed: 1.0,
+        Scroll: true, 
+        Speed: 0.4,
     }
 }
 
