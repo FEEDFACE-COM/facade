@@ -180,12 +180,9 @@ attribute vec2 tileCoord;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
 varying vec2 vTileCount;
 
 varying float vDebugFlag;
-varying float vDownwardFlag;
-varying float vScroller;
 varying float vNow;
 
 
@@ -203,21 +200,34 @@ void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
     vDebugFlag = debugFlag;
-    vDownwardFlag = downwardFlag;
-    vScroller = scroller;
     vNow = now;
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y += vScroller;
+    pos.y += scroller;
     
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
+    
+    
+    float F = 0.25;
+    
+    float f0 = ease1( pos.y + now );  
+    float f1 = 0.;
+    
+    
+
+    pos.z += F * cos( pos.x + 2. * now         );
+    pos.z += F * cos( pos.y + 3. * now + PI/2. );
+    pos.z += F * f0;
+
+
 
     if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
     if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
 
-    gl_Position =  projection * view * model * vec4(pos.x, pos.y, pos.z, 1.);
+    
+    gl_Position = projection * view * model * pos;
 }
 `,
 
@@ -303,48 +313,33 @@ uniform sampler2D texture;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
-
 varying vec2 vTileCount;
-varying float vDownwardFlag;
+
 varying float vDebugFlag;
-varying float vScroller;
 varying float vNow;
 
 bool DEBUG    = vDebugFlag > 0.0;
-bool downward = vDownwardFlag > 0.0;
 
 float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
 
 
 void main() {
-    float scroll = abs(vScroller);
-    
-    vec2 pos = vTileCoord;
-    vec2 tex = vTexCoord;
 
     vec4 col;
-    if (DEBUG) { col = vec4(1.,1.,1.,1.); }
-    else       { col = texture2D(texture, tex); }
+    if (DEBUG) { 
+        col = vec4(1.,1.,1.,1.); 
+    } else { col = 
+        texture2D(texture, vTexCoord); 
+    }
     
 
-    bool firstLine, lastLine;
-    if (downward) {
-        firstLine = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
-        lastLine =   0.5*vTileCount.y       == vTileCoord.y ;
-    } else {
-        firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
-        lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
-    }
+    bool firstLine =  0.5*vTileCount.y       == vTileCoord.y ;
+    bool lastLine  = -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
 
-    if (DEBUG && firstLine) { //oldest line vanishes later
+    if (DEBUG && (firstLine || lastLine) ) {
         col.rgb = vec3(1.,0.,0.);
     }
-
-    if (DEBUG && lastLine) { //newest line blends in
-        col.rgb = vec3(1.,0.,0.);
-    }    
     
     gl_FragColor = col;
 }

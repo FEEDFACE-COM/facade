@@ -42,10 +42,6 @@ func NewScroller(scroll bool,speed float32) *Scroller {
 
 
 
-func (scroller *Scroller) Init() {
-//    scroller.Timer = NewTimer(math.Abs(scroller.Speed),false )
-}
-
 func (scroller *Scroller) Once() {
     if ! scroller.Scroll {
         return

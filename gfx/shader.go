@@ -33,9 +33,7 @@ const (
     TEXTURE    UniformName = "texture"
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
-    DOWNWARD   UniformName = "downwardFlag"
     SCROLLER   UniformName = "scroller"
-    TIMER      UniformName = "timer"
     CLOCKNOW   UniformName = "now"
 )    
 

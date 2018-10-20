@@ -8,7 +8,7 @@ import(
 //    "math"
     gfx "../gfx"
     log "../log"
-    math "../math32"
+//    math "../math32"
     gl "src.feedface.com/gfx/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
 )
@@ -25,10 +25,6 @@ type Grid struct {
     data []float32
     
     scroller *gfx.Scroller
-    
-    white *gfx.Texture
-    
-    timer *gfx.Timer
     
     refreshChan chan bool
 }
@@ -70,15 +66,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
-    grid.program.Uniform1f(gfx.TIMER, grid.timer.Fader() * math.TAU )
     grid.program.Uniform1f(gfx.CLOCKNOW, gfx.NOW() )
-    
-    { 
-        dw := float32(0.0); 
-        if grid.config.Downward { dw = 1.0 }
-        grid.program.Uniform1f(gfx.DOWNWARD, dw)
-    }
-    
+        
     grid.scroller.Uniform(grid.program, grid.config.Downward)
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
@@ -128,7 +117,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     if debug {
         gl.LineWidth(3.0)
-        grid.white.BindTexture()
         
         w,h := int(grid.config.Width), int(grid.config.Height)
         for r:=0; r<h; r++ {
@@ -315,9 +303,6 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.texture.TexImage()
     
 
-    grid.white = gfx.WhiteColor()
-    grid.timer = gfx.NewTimer(4.0,true)
-
     grid.object.Init()
     
     select { case grid.refreshChan <- true: ; default: ; }
@@ -328,8 +313,6 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }
 
-
-    grid.scroller.Init()
 }
 
 
