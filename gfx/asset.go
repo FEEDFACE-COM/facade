@@ -2,6 +2,7 @@
 package gfx
 
 import "fmt"
+import "sort"
 
 func ListShaderNames() []string {
     var ret []string
@@ -17,6 +18,7 @@ func ListShaderNames() []string {
             ret = append(ret,fmt.Sprintf("%s.frag",n)) 
         }        
     }
+    sort.Strings(ret)
     return ret
 }
 
@@ -26,6 +28,7 @@ func ListFontNames() []string {
     for n,_ := range VectorFont {
         ret = append(ret,n)
     }
+    sort.Strings(ret)
     return ret
 }
 
