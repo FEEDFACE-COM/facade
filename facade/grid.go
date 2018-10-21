@@ -71,6 +71,12 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.scroller.Uniform(grid.program, grid.config.Downward)
     camera.Uniform(grid.program)
     grid.program.Uniform1i(gfx.TEXTURE,0)
+
+    { 
+        dw := float32(0.0); 
+        if grid.config.Downward { dw = 1.0 }
+        grid.program.Uniform1f(gfx.DOWNWARD, dw)
+    }
     
     
     scale := float32( 1.0 )

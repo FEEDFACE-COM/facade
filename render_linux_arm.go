@@ -47,7 +47,7 @@ type Renderer struct {
 }
 
 const DEBUG_CLOCK  = false
-const DEBUG_MODE   = false
+const DEBUG_MODE   = true
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
 const DEBUG_MESSAGES = false

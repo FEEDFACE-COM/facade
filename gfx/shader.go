@@ -34,6 +34,7 @@ const (
     TILECOUNT  UniformName = "tileCount"
     TILESIZE   UniformName = "tileSize"
     SCROLLER   UniformName = "scroller"
+    DOWNWARD   UniformName = "downward"
     CLOCKNOW   UniformName = "now"
 )    
 

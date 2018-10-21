@@ -8,7 +8,7 @@ uniform vec2 tileCount;
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downwardFlag;
+uniform float downward;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
@@ -21,6 +21,8 @@ varying vec2 vTileCount;
 
 varying float vDebugFlag;
 varying float vNow;
+varying float vScroller;
+varying float vDownward;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -31,6 +33,8 @@ void main() {
     vTileCoord = tileCoord;
     vDebugFlag = debugFlag;
     vNow = now;
+    vScroller = scroller;
+    vDownward = downward;
     
     vec4 pos = vec4(vertex,1);
 
