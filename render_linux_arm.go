@@ -68,6 +68,8 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     if strings.HasPrefix(renderer.directory, "~/") {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
+
+    config.Clean()
     
     gfx.SetShaderDirectory(renderer.directory+"/shader")
     gfx.SetFontDirectory(renderer.directory+"/font")
@@ -123,8 +125,8 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     
     if config == nil { log.Error("renderer config nil") ;return nil }
     
+    config.Clean()
     log.Debug("conf %s",config.Desc())
-    
     
     old := renderer.config
 
@@ -225,17 +227,18 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
             prev = *gfx.NewClock() 
         }
 
-        if verbose {
-            log.Debug("%s %s %s %s ",renderer.Desc(),renderer.grid.Desc(),renderer.camera.Desc(),renderer.font.Desc())    
-        }    
-
         piglet.SwapBuffers()
         renderer.mutex.Unlock()
         
         // wait for next frame
         // FIXME, maybe dont wait as long??
 
-        if e := gl.GetError(); e != gl.NO_ERROR && verbose { log.Error("post render gl error: %s",gl.ErrorString(e)) }
+
+        e := gl.GetError()
+//        e := uint32(gl.NO_ERROR)
+        if e != gl.NO_ERROR && verbose { 
+            log.Error("post render gl error: %s",gl.ErrorString(e)) 
+        }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
         gfx.ClockTick()
     }
@@ -301,14 +304,14 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
     }
     
     if DEBUG_MODE {
-            tmp := ""
+        tmp := ""
         switch facade.Mode(renderer.config.Mode) { 
             case facade.LINES:
                 tmp = renderer.lines.Desc()
             case facade.GRID:
                 tmp = renderer.grid.Desc()
         }
-        log.Debug("%s %s %s %s ",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.Desc())    
+        log.Debug("%s %s %s ",tmp,renderer.camera.Desc(),renderer.font.Desc())
     }
     
 }

@@ -68,46 +68,60 @@ func loadShaderFile(filePath string) (string, error) {
     if err != nil {
         return "", log.NewError("fail read shader file: %s",err)
     }
-    log.Debug("read shader file %s",filePath)
+//    log.Debug("read %s",filePath)
     return string(data), nil
 }
 
 
+func shaderFilePath(shaderName string, shaderType ShaderType) string {
+    return path.Clean( fmt.Sprintf("%s/%s.%s",shaderPath,shaderName,string(shaderType)) )    
+}
 
 
-func GetShader(mode string, name string, shaderType ShaderType, program *Program) (*Shader,error) {
+
+func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, program *Program) (*Shader,error) {
     var ret *Shader = nil
-    filePath := path.Clean( fmt.Sprintf("%s/%s/%s.%s",shaderPath,mode,name,string(shaderType)) )
+    filePath := shaderFilePath(shaderPrefix+shaderName,shaderType)
     src, err := loadShaderFile(filePath)
     if err == nil {
         
-        ret = NewShader(name, src, shaderType)
+        ret = NewShader(shaderName, src, shaderType)
         go WatchShaderFile(filePath, program, ret)
         return ret,nil
         
     } else {
         src := ""
         switch (shaderType) {
-            case VERTEX_SHADER:   src = VertexShader[name]
-            case FRAGMENT_SHADER: src = FragmentShader[name]
+            case VERTEX_SHADER:   src = VertexShader[shaderPrefix+shaderName]
+            case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+shaderName]
         }
+
+
+        if src == "" {
+            switch (shaderType) {
+                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"identity"]
+                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"identity"]
+            }    
+        }
+
         
         if src == "" {
-            return nil, log.NewError("fail get shader %s from file and map",name)
+            return nil, log.NewError("fail get %s shader %s from file and map",string(shaderType),shaderName)
         }
         
-        ret := NewShader(name, src, shaderType)
+        ret := NewShader(shaderPrefix+shaderName, src, shaderType)
         return ret,nil
     }
     
     
 }
 
-func WatchShaderFile(path string, program *Program, shader *Shader) {
-        log.Debug("watching %s",path)
+func WatchShaderFile(filePath string, program *Program, shader *Shader) {
+        // REM, should verify that we're not alreay watching this file..
+        log.Debug("watch %s",filePath)
         
 
-        info,err := os.Stat(path)
+        info,err := os.Stat(filePath)
         if err != nil {
             log.Debug("fail stat %s",shader.Desc())
             return
@@ -116,26 +130,26 @@ func WatchShaderFile(path string, program *Program, shader *Shader) {
         for {
             
             time.Sleep( time.Duration( int64(time.Second)) )
-            info,err = os.Stat(path)
+            info,err = os.Stat(filePath)
             if err != nil { continue }
             if info.ModTime().After( last ) {
-                log.Debug("alert %s %s",program.Desc(),shader.Desc())
-                shader.LoadShader(path)
+                if ! program.HasShader(shader) {
+                    break
+                }
+                shader.Source, err = loadShaderFile(filePath)       
+//                log.Debug("alert %s %s",program.Desc(),shader.Desc())
                 refreshChan <-Refresh{program: program, shader: shader}
                 last = info.ModTime()
             }
             
         }
-
-
-        
-        
-        
-        
+    log.Debug("unwatch %s",filePath)
 }
 
+
+
 func (shader *Shader) Desc() string {
-    return fmt.Sprintf("shader[%s.%s]",shader.Name,shader.Type)
+    return fmt.Sprintf("%s[%s]",shader.Type,shader.Name)
 }
 
 func NewShader(name string, source string, shaderType ShaderType) *Shader {

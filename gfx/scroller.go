@@ -65,7 +65,7 @@ func (scroller *Scroller) Desc() string {
     tmp := ""
     if scroller.Scroll { tmp += fmt.Sprintf("%.2f",scroller.Speed) }
     if scroller.Timer != nil { tmp += " " + scroller.Timer.Desc() }
-    return fmt.Sprintf("scroller[%s]",tmp)
+    return fmt.Sprintf("scroll[%s]",tmp)
 }
 
 func (scroller *Scroller) SetScrollSpeed(scroll bool, speed float32) {

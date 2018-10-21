@@ -59,7 +59,7 @@ func (axis *Axis) Init() {
     var err error    
     axis.program = GetProgram("axis")
 
-    err = axis.program.LoadShaders("/","color","color")
+    err = axis.program.GetCompileShaders("","color","color")
     if err != nil { log.Error("fail load color shaders: %s",err) }
 
     err = axis.program.LinkProgram(); 

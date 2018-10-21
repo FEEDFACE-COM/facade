@@ -33,8 +33,6 @@ func RefreshPrograms() {
     select {
         
         case refresh := <-refreshChan:
-        
-            log.Debug("refresh %s %s",refresh.program.Desc(),refresh.shader.Desc())
             err = refresh.program.ReloadShader( refresh.shader )
             if err != nil {
                 log.Debug("fail refresh %s %s",refresh.program.Desc(),refresh.shader.Desc())
@@ -47,9 +45,24 @@ func RefreshPrograms() {
     
 }
 
+func (program *Program) HasShader(shader *Shader) bool {
+    if shader.Type == VERTEX_SHADER   && shader.Name == program.vertexShader.Name { return true }
+    if shader.Type == FRAGMENT_SHADER && shader.Name == program.fragmentShader.Name { return true }
+    return false
+}
+
 
 func (program *Program) ReloadShader(shader *Shader) error {
     var err error
+
+
+    if shader != program.vertexShader && shader != program.fragmentShader {
+        log.Debug("ignore %s",shader.Desc())    
+        return nil
+    }
+
+    log.Debug("reload %s %s",program.Desc(),shader.Desc())
+
 
     err = shader.CompileShader()
     if err != nil { return err }
@@ -70,7 +83,6 @@ func (program *Program) ReloadShader(shader *Shader) error {
     err = program.LinkProgram()
     if err != nil { return err }
 
-    log.Debug("reload %s %s",program.Desc(),shader.Desc())
     return nil    
 }
 
@@ -92,20 +104,20 @@ func (program *Program) UseProgram(debug bool) {
 
 
 
-func (program *Program) LoadShaders(modeName, vertName, fragName string) error {
+func (program *Program) GetCompileShaders(modeName, vertName, fragName string) error {
     var err error
 //    modeVertName, modeFragName := modeName+"/"+vertName, modeName+"/"+FragName
 
     program.vertexShader, err = GetShader(modeName,vertName,VERTEX_SHADER,program)
-    if err != nil { return log.NewError("fail to get shader: %s",err) }
+    if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.vertexShader.CompileShader()
-    if err != nil { return log.NewError("fail to compile shader: %s",err) }
+    if err != nil { return log.NewError("fail compile shader: %s",err) }
     
     
     program.fragmentShader, err = GetShader(modeName,fragName,FRAGMENT_SHADER,program)
-    if err != nil { return log.NewError("fail to get shader: %s",err) }
+    if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.fragmentShader.CompileShader()
-    if err != nil { return log.NewError("fail to compile shader: %s",err) }
+    if err != nil { return log.NewError("fail compile shader: %s",err) }
     
     return nil   
 }
@@ -141,8 +153,8 @@ func (program *Program) LinkProgram() error {
         if strings.Contains(logs,"vertex shader")   { src += "\n" + program.vertexShader.Source }
         if strings.Contains(logs,"fragment shader") { src += "\n" + program.fragmentShader.Source }
 
-		log.Error("fail link program %s/%s: %s%s", program.vertexShader.Name,program.fragmentShader.Name, logs,src)
-		ret = log.NewError("fail link program %s/%s",program.vertexShader.Name,program.fragmentShader.Name)
+		log.Error("fail link %s: %s%s", program.Desc(), logs,src)
+		ret = log.NewError("fail link %s",program.Desc())
 	}
 
 	gl.DetachShader(program.Program, program.vertexShader.Shader)
@@ -229,9 +241,9 @@ func (program *Program) Uniform1i(name UniformName, value int32) (int32,error) {
 
 func (program *Program) Desc() string {
     tmp := ""
-//    if program.vertexShader != nil { tmp += " " + program.vertexShader.Name }
-//    if program.fragmentShader != nil { tmp += "/" + program.fragmentShader.Name }
-    return fmt.Sprintf("program[%s%s]",program.Name,tmp)
+    if program.vertexShader != nil { tmp += program.vertexShader.Name }
+    if program.fragmentShader != nil { tmp += "," + program.fragmentShader.Name }
+    return fmt.Sprintf("prog[%s]",tmp)
 }
 
 

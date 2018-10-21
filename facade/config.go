@@ -42,7 +42,6 @@ type Config struct {
     Mask *gfx.MaskConfig
 
     Debug bool
-    Directory string
 }
 
 
@@ -62,6 +61,10 @@ func NewConfig(mode Mode) *Config {
     ret.Mask =   gfx.NewMaskConfig()
 //    ret.Debug = true
     return ret
+}
+
+func (config *Config) Clean() {
+    if config.Grid != nil { config.Grid.Clean() }     
 }
 
 

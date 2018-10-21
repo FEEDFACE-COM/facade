@@ -23,6 +23,6 @@ func NewCameraConfig() *CameraConfig { return &CameraConfig{Isometric: true, Zoo
 func (config *CameraConfig) Desc() string { 
     tmp := "ppv"
     if config.Isometric { tmp = "iso" }
-    return fmt.Sprintf("camera[%s %.2f]",tmp,config.Zoom) 
+    return fmt.Sprintf("cam[%s %.2f]",tmp,config.Zoom) 
 }
     

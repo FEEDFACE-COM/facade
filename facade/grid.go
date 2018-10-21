@@ -292,7 +292,6 @@ func getGlyphCoord(chr byte) gfx.Coord {
 
 
 func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
-    var err error
 
     grid.config = grid.autoWidth(grid.config,camera,font)
     
@@ -304,15 +303,18 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     
 
     grid.object.Init()
-    
+    grid.LoadShaders()
+        
     select { case grid.refreshChan <- true: ; default: ; }
-    
 
-    err = grid.program.LoadShaders("/grid","identity","identity")
+}
+
+func (grid *Grid) LoadShaders() {
+    var err error
+    err = grid.program.GetCompileShaders("grid/",grid.config.Vert,grid.config.Frag)
     if err != nil { log.Error("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }
-
 }
 
 
@@ -383,9 +385,13 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         log.Debug(grid.buffer.Dump())
     }
 
-    if true {
+    if true { // REM, optimize, only rerender if font changed?
         grid.RenderMap(font)
         grid.texture.TexImage()
+    }
+    
+    if config.Vert != old.Vert || config.Frag != old.Frag {
+        grid.LoadShaders()    
     }
 
 
@@ -411,6 +417,7 @@ func NewGrid(config *GridConfig) *Grid {
 func (grid *Grid) Desc() string {
     tmp := ""
     if grid.scroller != nil { tmp = " " + grid.scroller.Desc() }
+    tmp += " " + grid.program.Desc()
     return grid.config.Desc() + tmp
 }
 

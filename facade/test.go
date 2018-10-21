@@ -98,7 +98,7 @@ func (test *Test) Init(camera *gfx.Camera, font *gfx.Font) {
     {
         test.program["axis"] = gfx.GetProgram("axis")
     
-        err = test.program["axis"].LoadShaders("/","color","color")
+        err = test.program["axis"].GetCompileShaders("","color","color")
         if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }
 
         err = test.program["axis"].LinkProgram()
