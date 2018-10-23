@@ -59,6 +59,9 @@ func (camera *Camera) Configure(config *CameraConfig) {
     if config == nil { return }
 //    if *config == camera.config { return }
 
+    const MAGIC = 2.5 / 1.05
+    position := mgl32.Vec3{0,0,MAGIC}
+
     log.Debug("config %s -> %s",camera.Desc(),config.Desc())
     camera.config = *config
 
@@ -69,10 +72,9 @@ func (camera *Camera) Configure(config *CameraConfig) {
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
         camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     } else {
-        const MAGIC = 0.41
         camera.projection = perspective(camera.size.W, camera.size.H)
-        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0,0,1.0}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
-        camera.view = camera.view.Mul4( mgl32.Scale3D( MAGIC*zoom, MAGIC*zoom, MAGIC*zoom ) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(position, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     }
 
 }

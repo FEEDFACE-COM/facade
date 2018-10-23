@@ -152,26 +152,37 @@ func (grid *Grid) Fill(font *gfx.Font) {
     
     switch fill {
     
-        case "author": 
+        case "title1": 
             for _,line := range []string{
+                "                    ",
                 " _  _   _  _   _   _",
                 "|_ |_| /  |_| | \\ |_", 
                 "|  | | \\_ | | |_/ |_",
                 "                    ",
-                "by FEEDFACE.COM     ",
+                "     by FEEDFACE.COM",
                 "                    ",
             } {
                 grid.Queue(line,font)    
             }
             
-        case "title": 
+        case "title2": 
             for _,line := range []string{
-                " F A C A D E  by FEEDFACE.COM",
-                "             ",
+                "              ",
+                "F A C A D E   ",
+                "              ",
+                "            by",
+                "  FEEDFACE.COM",
+                "              ",
             } {
                 grid.Queue(line,font)    
             }
             
+        case "title3": 
+            for _,line := range []string{
+                "F A C A D E",
+            } {
+                grid.Queue(line,font)    
+            }
         
         
         case "coord":
@@ -403,7 +414,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     }
 
 
-    if config.Fill != old.Fill {
+    if config.Fill != "" {
         grid.Fill(font)
     }
 

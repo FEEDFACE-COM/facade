@@ -18,7 +18,12 @@ func (config *CameraConfig) AddFlags(flags *flag.FlagSet) {
     flags.Float64Var(&config.Zoom,"zoom",config.Zoom,"zoom" )
 }
 
-func NewCameraConfig() *CameraConfig { return &CameraConfig{Isometric: true, Zoom: 1.0} }
+func NewCameraConfig() *CameraConfig { 
+    return &CameraConfig{
+        Isometric: false, 
+        Zoom: 1.0,
+    }
+}
 
 func (config *CameraConfig) Desc() string { 
     tmp := "ppv"
