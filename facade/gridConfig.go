@@ -19,6 +19,9 @@ type GridConfig struct {
     Vert string
     Frag string
     
+    
+    Fill string
+    
 }
 
 
@@ -30,6 +33,7 @@ func NewGridConfig() *GridConfig {
         Speed: 0.4,
         Vert: "identity",
         Frag: "identity",
+        Fill: "",
     }
 }
 
@@ -42,6 +46,7 @@ func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
     flags.Float64Var(&config.Speed,"S",config.Speed,"scroll speed")
     flags.StringVar(&config.Vert,"V",config.Vert,"vertex shader")
     flags.StringVar(&config.Frag,"F",config.Frag,"fragment shader")
+    flags.StringVar(&config.Fill,"fill",config.Fill,"fill pattern")
 }
 
 func (config *GridConfig) Desc() string { 

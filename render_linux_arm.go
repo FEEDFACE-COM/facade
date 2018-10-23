@@ -9,7 +9,6 @@ import (
     "time"
     "sync"
     "os"
-//    "runtime"
     log "./log"
     facade "./facade"
     gfx "./gfx"
@@ -50,6 +49,7 @@ const DEBUG_CLOCK  = false
 const DEBUG_MODE   = true
 const DEBUG_BUFFER = false
 const DEBUG_DIAG   = false
+const DEBUG_MEMORY = true
 const DEBUG_MESSAGES = false
 
 
@@ -136,6 +136,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     }
     
     if config.Font != nil && config.Font != old.Font {
+//        oldFont := renderer.font
         newFont,err := gfx.GetFont(config.Font)
         if err == nil {
             log.Debug("switch font -> %s",string(config.Font.Name))
@@ -153,6 +154,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     renderer.test.Configure(config.Test)
     renderer.camera.Configure(config.Camera)
     renderer.mask.Configure(config.Mask)
+    
     return nil
 }
 
@@ -188,7 +190,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     renderer.grid.Configure(renderer.config.Grid,renderer.camera,renderer.font)
 
-    renderer.grid.FillTest("title",renderer.font)
+    renderer.grid.Fill(renderer.font)
 
 
 
@@ -254,11 +256,11 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
             renderer.lines.Queue(text, renderer.font )
             renderer.grid.Queue(text, renderer.font)
             renderer.test.Queue(text)
+            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
         default:
             //nop    
     }
-    
 }
 
 
@@ -269,11 +271,12 @@ func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
         case conf := <-confChan:
         
             renderer.Configure(&conf)
+            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
         
         default:
             //nop    
-    }    
+    }
 }
 
 

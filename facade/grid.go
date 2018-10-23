@@ -146,9 +146,11 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 
 
-func (grid *Grid) FillTest(test string, font *gfx.Font) {
+func (grid *Grid) Fill(font *gfx.Font) {
     
-    switch test {
+    fill := grid.config.Fill
+    
+    switch fill {
     
         case "author": 
             for _,line := range []string{
@@ -401,6 +403,9 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     }
 
 
+    if config.Fill != old.Fill {
+        grid.Fill(font)
+    }
 
     select { case grid.refreshChan <- true: ; default: ; }
 
@@ -423,7 +428,7 @@ func NewGrid(config *GridConfig) *Grid {
 func (grid *Grid) Desc() string {
     tmp := ""
     if grid.scroller != nil { tmp = " " + grid.scroller.Desc() }
-    tmp += " " + grid.program.Desc()
+//    tmp += " " + grid.program.Desc()
     return grid.config.Desc() + tmp
 }
 
