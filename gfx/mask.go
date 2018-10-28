@@ -50,6 +50,7 @@ func (mask *Mask) Render() {
     mask.program.UseProgram(false)
     mask.object.BindBuffer()
     
+    mask.program.Uniform1f(SCREENRATIO, mask.Width / mask.Height)
     mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )
     mask.program.VertexAttribPointer(TEXCOORD, 2, (3+2)*4, 3*4)
 

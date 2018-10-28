@@ -55,11 +55,12 @@ void main() {
     // allow for scroller
     float from = cos( vTileCoord.y + 3. * now + PI/2.);
     float to =   cos( vTileCoord.y-1. + 3. * now + PI/2. );
+//    float from = to;
     float delta =  to + scroller * (from - to);
     
     
 
-    pos.z += F * cos( vTileCoord.x + 2. * now );
+//    pos.z += F * cos( vTileCoord.x + 2. * now );
     pos.z += F * delta;
 
 

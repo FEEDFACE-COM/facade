@@ -40,6 +40,7 @@ void main() {
         col = texture2D(texture, vTexCoord); 
     }
     
+    col.b =  1.-  abs((2.*vTileCoord.x /vTileCount.x));
     
     if ( ! downward && firstLine() || downward && lastLine() ) {
         col.g = 0.0;
@@ -49,6 +50,7 @@ void main() {
         col.r = 0.0;
         col.b = 0.0;
     }
+    
     
     gl_FragColor = col;
 }

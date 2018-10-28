@@ -38,8 +38,6 @@ func (grid *Grid) MarkDirty() {
 }
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
-    gl.ClearColor(0.0,0.0,0.0,1.0)
-    
     
     select {
     
@@ -244,14 +242,14 @@ func min(a,b float32) float32 {
 }
 
 
-const DEBUG_DATA = true
+const DEBUG_DATA = false
 
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
-//    tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
+    tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
     w,h := int(grid.config.Width), int(grid.config.Height)
     for r:=0; r<h; r++ {
-//        tmp += "\n"
+        tmp += "\n"
         y:= -1 * (r-h/2)
 
         var line *gfx.Text
@@ -289,10 +287,11 @@ func (grid *Grid) generateData(font *gfx.Font) {
 
             grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
 
-//            tmp += fmt.Sprintf("%+d/%+d %.0fx%0.f    ",x,y,float32(glyphSize.W),float32(glyphSize.H))
+            tmp += fmt.Sprintf("%+d/%+d    ",x,y)
+//            tmp += fmt.Sprintf(" %.0fx%0.f    ",float32(glyphSize.W),float32(glyphSize.H))
         } 
     }
-//    if DEBUG_DATA { log.Debug(tmp) }
+    if DEBUG_DATA { log.Debug(tmp) }
     grid.object.BufferData( len(grid.data)*4,grid.data )
 }
 

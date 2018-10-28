@@ -45,15 +45,23 @@ void main() {
         col = texture2D(texture, vTexCoord); 
     }
     
-
-    if ( ! downward && firstLine() || downward && lastLine() ) {
-        col.a = 1. - vScroller;    
+    
+    
+    if (downward) {
+        if ( firstLine() ) {
+            col.rgb *= (-1.0 * vScroller);
+        }
+        if ( lastLine() ) {
+            col.rgb *= (1.0 - -1.0 * vScroller);
+        }
+    } else { // ! downward
+        if ( firstLine() ) {
+            col.rgb *= (1.0 - vScroller);
+        }
+        if ( lastLine() ) {
+            col.rgb *= vScroller; 
+        }
     }
-    
-    if ( ! downward && lastLine() || downward && firstLine() ) {
-       col.a = vScroller;
-    }
-    
-    
-    gl_FragColor = col;
+        
+    gl_FragColor = vec4(col.rgb,1.0);
 }

@@ -165,15 +165,15 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     gfx.ClockTick()
 
-    gl.ClearColor(0.5,0.5,0.5,1)
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
 
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
-	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+
+    gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 	
-	gl.Enable(gl.BLEND)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+//	gl.Enable(gl.BLEND)
+//	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 //    gl.Enable(gl.CULL_FACE)
 //    gl.CullFace(gl.BACK)

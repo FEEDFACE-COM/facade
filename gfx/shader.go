@@ -26,16 +26,17 @@ type Shader struct {
 
 type UniformName string
 const (
-    DEBUGFLAG  UniformName = "debugFlag"
-    PROJECTION UniformName = "projection"
-    MODEL      UniformName = "model"
-    VIEW       UniformName = "view"
-    TEXTURE    UniformName = "texture"
-    TILECOUNT  UniformName = "tileCount"
-    TILESIZE   UniformName = "tileSize"
-    SCROLLER   UniformName = "scroller"
-    DOWNWARD   UniformName = "downward"
-    CLOCKNOW   UniformName = "now"
+    DEBUGFLAG   UniformName = "debugFlag"
+    PROJECTION  UniformName = "projection"
+    MODEL       UniformName = "model"
+    VIEW        UniformName = "view"
+    SCREENRATIO UniformName = "ratio"
+    TEXTURE     UniformName = "texture"
+    TILECOUNT   UniformName = "tileCount"
+    TILESIZE    UniformName = "tileSize"
+    SCROLLER    UniformName = "scroller"
+    DOWNWARD    UniformName = "downward"
+    CLOCKNOW    UniformName = "now"
 )    
 
 type AttribName string
@@ -103,6 +104,7 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
                 case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"identity"]
                 case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"identity"]
             }    
+            log.Debug("fallback to %s%s.%s",shaderPrefix,"identity",shaderType)
         }
 
         
