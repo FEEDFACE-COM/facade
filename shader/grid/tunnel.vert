@@ -82,18 +82,8 @@ void main() {
 
 
     
-//    pos.z += 2.;
-//    if (downward == 1.0) {
-//        pos.z += tileCoord.y;
-//        pos.z -= scroller;
-//    } else {
-//    }
-    
-//    pos.y += tileCoord.y * tileSize.y;
-
-
-//    vec3 axis = vec3(1.,0.,0.);
-//    mat4 rot = rotationMatrix(axis, PI/2.);
+    vec3 axis = vec3(-1.,-1.,0.);
+    mat4 rot = rotationMatrix(axis, PI/2.);
 //    pos = rot * pos;
 
 //    pos.x += (tileCoord.x * tileSize.x);
