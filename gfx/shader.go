@@ -101,10 +101,10 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
 
         if src == "" {
             switch (shaderType) {
-                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"identity"]
-                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"identity"]
+                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"null"]
+                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"null"]
             }    
-            log.Debug("fallback to %s%s.%s",shaderPrefix,"identity",shaderType)
+            log.Debug("fallback to %s%s.%s",shaderPrefix,"null",shaderType)
         }
 
         

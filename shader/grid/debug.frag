@@ -40,7 +40,9 @@ void main() {
         col = texture2D(texture, vTexCoord); 
     }
     
-    col.b =  1.-  abs((2.*vTileCoord.x /vTileCount.x));
+    col.b =  -0.5 + (vTileCount.x+vTileCoord.x) / vTileCount.x;
+    
+    col.rg *= 0.75;
     
     if ( ! downward && firstLine() || downward && lastLine() ) {
         col.g = 0.0;
@@ -48,7 +50,7 @@ void main() {
 
     if ( ! downward && lastLine() || downward && firstLine() ) {
         col.r = 0.0;
-        col.b = 0.0;
+//        col.b = 0.0;
     }
     
     

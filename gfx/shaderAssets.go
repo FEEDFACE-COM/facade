@@ -3,7 +3,7 @@ package gfx
 var VertexShader = map[string]string{
 
 
-"identity":`
+"null":`
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
@@ -51,7 +51,7 @@ void main() {
 
 
 
-"mask/identity":`
+"mask/null":`
 
 
 uniform float debugFlag;
@@ -74,61 +74,6 @@ void main() {
     
     
     gl_Position = vec4(vertex,1);
-}
-`,
-
-
-
-
-"grid/identity":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-uniform float downward;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vTileCount;
-
-varying float vDebugFlag;
-varying float vNow;
-varying float vScroller;
-varying float vDownward;
-
-
-bool DEBUG = debugFlag > 0.0;
-
-void main() {
-    vTileCount = tileCount;
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vDebugFlag = debugFlag;
-    vNow = now;
-    vScroller = scroller;
-    vDownward = downward;
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-    //
-    if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
-    if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
-
-    gl_Position = projection * view * model * pos;
 }
 `,
 
@@ -207,6 +152,8 @@ void main() {
     float a;
     a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
 
+    a += vNow/10.;
+
     pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
     pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
     
@@ -222,7 +169,7 @@ void main() {
     
     vec3 axis = vec3(-1.,-1.,0.);
     mat4 rot = rotationMatrix(axis, PI/2.);
-//    pos = rot * pos;
+    pos = rot * pos;
 
 //    pos.x += (tileCoord.x * tileSize.x);
 //    pos.y += (tileCoord.y * tileSize.y);
@@ -387,6 +334,61 @@ void main() {
 
 
 
+"grid/null":`
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+
+uniform vec2 tileSize;
+uniform vec2 tileCount;
+
+uniform float now;
+uniform float scroller;
+uniform float debugFlag;
+uniform float downward;
+
+attribute vec3 vertex;
+attribute vec2 texCoord;
+attribute vec2 tileCoord;
+
+
+varying vec2 vTexCoord;
+varying vec2 vTileCoord;
+varying vec2 vTileCount;
+
+varying float vDebugFlag;
+varying float vNow;
+varying float vScroller;
+varying float vDownward;
+
+
+bool DEBUG = debugFlag > 0.0;
+
+void main() {
+    vTileCount = tileCount;
+    vTexCoord = texCoord;
+    vTileCoord = tileCoord;
+    vDebugFlag = debugFlag;
+    vNow = now;
+    vScroller = scroller;
+    vDownward = downward;
+    
+    vec4 pos = vec4(vertex,1);
+
+    pos.y += scroller;
+    pos.x += (tileCoord.x * tileSize.x);
+    pos.y += (tileCoord.y * tileSize.y);
+    //
+    if (mod(tileCount.x, 2.0) != 1.0 ) { pos.x -= tileSize.x/2.; }
+    if (mod(tileCount.y, 2.0) != 1.0 ) { pos.y -= tileSize.y/2.; }
+
+    gl_Position = projection * view * model * pos;
+}
+`,
+
+
+
+
 "grid/oval":`
 uniform mat4 projection;
 uniform mat4 view;
@@ -514,7 +516,7 @@ void main() {
 var FragmentShader = map[string]string{
 
 
-"identity":`
+"null":`
 uniform sampler2D texture;
 
 varying vec2 vFragCoord;
@@ -548,26 +550,6 @@ void main() {
 
 
 
-"mask/identity":`
-
-varying vec2 vTexCoord;
-varying float vDebugFlag;
-
-bool DEBUG = vDebugFlag > 0.0;
-
-
-void main() {
-
-    vec2 pos = vTexCoord;
-    vec4 col = vec4(0.0,0.0,0.0,0.0);
-
-    gl_FragColor = col;
-}
-`,
-
-
-
-
 "mask/debug":`
 
 varying vec2 vTexCoord;
@@ -591,30 +573,46 @@ bool grid(vec2 pos) {
 
 void main() {
 
-    float MARGIN = 0.5;
+    float MARGIN = 0.25;
 
     vec2 pos = vTexCoord;
-    vec3 col = vec3(1.0,1.0,1.0);
-
-//    if ( grid(pos) ) { col = vec4(1.,1.,1.,0.5); }
-//    if ( pos.y > 0.0 && pos.y < 1.0 && abs(pos.x) <= w ) { col = vec4(0.,1.,0.); }
-//    if ( pos.x > 0.0 && pos.x < 1.0 && abs(pos.y) <= w ) { col = vec3(1.,0.,0.); }
-  
-  
+    vec3 col = vec3(0.,1.,1.);
+    
 
     if (pos.x > MARGIN || pos.x < -1. * MARGIN  ) {
-        col -= 0.5;
+//        col -= 0.5;
     }
     
     if (pos.y > MARGIN || pos.y < -1. * MARGIN  ) {
-        col -= 0.5;
+//        col -= 0.5;
     }
     
-       
-    gl_FragColor = vec4(col.rgb, 1.0);
+
+    float a = vTexCoord.x * -1.;           
+    gl_FragColor = vec4( col.rgb, a );
 }
 
 
+`,
+
+
+
+
+"mask/null":`
+
+varying vec2 vTexCoord;
+varying float vDebugFlag;
+
+bool DEBUG = vDebugFlag > 0.0;
+
+
+void main() {
+
+    vec2 pos = vTexCoord;
+    vec4 col = vec4(0.0,0.0,0.0,0.0);
+
+    gl_FragColor = col;
+}
 `,
 
 
@@ -748,7 +746,7 @@ void main() {
 
 
 
-"grid/identity":`
+"grid/null":`
 
 uniform sampler2D texture;
 

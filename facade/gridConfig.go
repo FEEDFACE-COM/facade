@@ -31,8 +31,8 @@ func NewGridConfig() *GridConfig {
         Height: 8,
         Scroll: true, 
         Speed: 0.4,
-        Vert: "identity",
-        Frag: "identity",
+        Vert: "null",
+        Frag: "null",
         Fill: "",
     }
 }

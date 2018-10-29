@@ -69,6 +69,8 @@ void main() {
     float a;
     a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
 
+    a += vNow/10.;
+
     pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
     pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
     
@@ -84,7 +86,7 @@ void main() {
     
     vec3 axis = vec3(-1.,-1.,0.);
     mat4 rot = rotationMatrix(axis, PI/2.);
-//    pos = rot * pos;
+    pos = rot * pos;
 
 //    pos.x += (tileCoord.x * tileSize.x);
 //    pos.y += (tileCoord.y * tileSize.y);

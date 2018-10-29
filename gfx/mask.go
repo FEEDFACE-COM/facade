@@ -81,7 +81,7 @@ func (mask *Mask) Init() {
     var err error    
     mask.program = GetProgram("mask")
 
-    err = mask.program.GetCompileShaders("mask/","identity","debug")
+    err = mask.program.GetCompileShaders("mask/","null","null")
     if err != nil { log.Error("fail load mask shaders: %s",err) }
 
     err = mask.program.LinkProgram(); 

@@ -205,12 +205,17 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         
         renderer.ProcessTexts(textChan)
         renderer.ProcessConfs(confChan)
+
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
         gfx.RefreshPrograms()
 
+
+
+//    	gl.Enable(gl.DEPTH_TEST)
+    	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         switch facade.Mode(renderer.config.Mode) {
             case facade.GRID:
                 renderer.grid.Render(renderer.camera, renderer.font, renderer.config.Debug, verbose )
@@ -220,9 +225,12 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
                 renderer.test.Render(renderer.camera, renderer.config.Debug, verbose)
         }
       
-        gl.Disable(gl.DEPTH_TEST)
-        renderer.mask.Render()
         if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
+
+
+        gl.Disable(gl.DEPTH_TEST)
+    	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE);
+        renderer.mask.Render()
         
         if verbose { 
             renderer.PrintDebug(prev); 
