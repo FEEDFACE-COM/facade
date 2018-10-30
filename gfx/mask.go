@@ -11,7 +11,7 @@ import(
 
 type Mask struct {
 
-    config MaskConfig
+    Config MaskConfig
     program *Program
 
     object *Object
@@ -23,31 +23,31 @@ type Mask struct {
 }
 
 func NewMask(config *MaskConfig, screen Size) *Mask {
-    ret := &Mask{config: *config, Width: screen.W, Height: screen.H}
+    ret := &Mask{Config: *config, Width: screen.W, Height: screen.H}
     return ret
 }
 
 
 func (mask *Mask) Configure(config *MaskConfig) {
     if config == nil { return }
-    if *config == mask.config { return }
+    if *config == mask.Config { return }
     
     log.Debug("config %s -> %s",mask.Desc(),config.Desc())
-    mask.config = *config
+    mask.Config = *config
     
     
 }
 
-func (mask *Mask) Desc() string { return mask.config.Desc() }
+func (mask *Mask) Desc() string { return mask.Config.Desc() }
 
 
-func (mask *Mask) Render() {
+func (mask *Mask) Render(debug bool) {
 
-    if !mask.config.Mask {
+    if !mask.Config.Mask {
         return
     }
 
-    mask.program.UseProgram(false)
+    mask.program.UseProgram(debug)
     mask.object.BindBuffer()
     
     mask.program.Uniform1f(SCREENRATIO, mask.Width / mask.Height)

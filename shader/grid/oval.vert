@@ -17,12 +17,7 @@ attribute vec2 tileCoord;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-varying vec2 vTileCount;
 
-varying float vScroller;
-varying float vDebugFlag;
-varying float vNow;
-varying float vDownward;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -48,13 +43,8 @@ mat4 rotationMatrix(vec3 axis, float angle)
 
 
 void main() {
-    vTileCount = tileCount;
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
-    vDebugFlag = debugFlag;
-    vScroller = scroller;
-    vNow = now;
-    vDownward = downward;
     
     vec4 pos = vec4(vertex,1);
     

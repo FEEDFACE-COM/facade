@@ -20,9 +20,9 @@ type Axis struct {
 
 
 
-func (axis *Axis) Render(camera *Camera) {
+func (axis *Axis) Render(camera *Camera, debug bool) {
 
-    axis.program.UseProgram(false)
+    axis.program.UseProgram(debug)
     axis.object.BindBuffer()
     camera.Uniform(axis.program)
     

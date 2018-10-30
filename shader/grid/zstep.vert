@@ -17,12 +17,7 @@ attribute vec2 tileCoord;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-varying vec2 vTileCount;
 
-varying float vDebugFlag;
-varying float vNow;
-varying float vScroller;
-varying float vDownward;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -31,13 +26,8 @@ float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 
 
 void main() {
-    vTileCount = tileCount;
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
-    vDebugFlag = debugFlag;
-    vDownward = downward;
-    vScroller = scroller;
-    vNow = now;
     
     vec4 pos = vec4(vertex,1);
 

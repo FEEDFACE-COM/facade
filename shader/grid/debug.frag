@@ -1,31 +1,29 @@
 
+uniform float debugFlag;
+uniform float downward;
+uniform vec2 tileCount;
 uniform sampler2D texture;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-varying vec2 vTileCount;
 
-varying float vDebugFlag;
-varying float vNow;
-varying float vScroller;
-varying float vDownward;
 
-bool DEBUG    = vDebugFlag > 0.0;
-bool downward = vDownward == 1.0;
+bool DEBUG    = debugFlag > 0.0;
+bool DOWNWARD = downward == 1.0;
 
 bool firstLine() {
-    if (mod(vTileCount.y, 2.0) != 1.0 ) { 
-        return 0.5*vTileCount.y       == vTileCoord.y ;
+    if (mod(tileCount.y, 2.0) != 1.0 ) { 
+        return 0.5*tileCount.y       == vTileCoord.y ;
     } else {
-        return  0.5*(vTileCount.y+1.) == vTileCoord.y + 1. ;
+        return  0.5*(tileCount.y+1.) == vTileCoord.y + 1. ;
     }
 }
 
 bool lastLine() {
-    if (mod(vTileCount.y, 2.0) != 1.0 ) { 
-        return -0.5*vTileCount.y + 1.0 == vTileCoord.y ;
+    if (mod(tileCount.y, 2.0) != 1.0 ) { 
+        return -0.5*tileCount.y + 1.0 == vTileCoord.y ;
     } else {
-        return -0.5*(vTileCount.y+1.) == vTileCoord.y - 1. ;
+        return -0.5*(tileCount.y+1.) == vTileCoord.y - 1. ;
     }
 
 }
@@ -40,15 +38,15 @@ void main() {
         col = texture2D(texture, vTexCoord); 
     }
     
-    col.b =  -0.5 + (vTileCount.x+vTileCoord.x) / vTileCount.x;
+    col.b =  -0.5 + (tileCount.x+vTileCoord.x) / tileCount.x;
     
     col.rg *= 0.75;
     
-    if ( ! downward && firstLine() || downward && lastLine() ) {
+    if ( ! DOWNWARD && firstLine() || DOWNWARD && lastLine() ) {
         col.g = 0.0;
     }
 
-    if ( ! downward && lastLine() || downward && firstLine() ) {
+    if ( ! DOWNWARD && lastLine() || DOWNWARD && firstLine() ) {
         col.r = 0.0;
 //        col.b = 0.0;
     }

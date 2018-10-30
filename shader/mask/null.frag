@@ -1,14 +1,16 @@
 
-varying vec2 vTexCoord;
-varying float vDebugFlag;
+uniform float debugFlag;
 
-bool DEBUG = vDebugFlag > 0.0;
+bool DEBUG = debugFlag > 0.0;
 
 
 void main() {
+    vec3 col = vec3(0.0,0.0,0.0);
+    float a = 1.0;
 
-    vec2 pos = vTexCoord;
-    vec4 col = vec4(0.0,0.0,0.0,0.0);
-
-    gl_FragColor = col;
+    if ( DEBUG ) {
+        col.r = 0.5; 
+    }
+    
+    gl_FragColor = vec4(col.rgb, a);
 }

@@ -167,7 +167,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
 
-	gl.Enable(gl.DEPTH_TEST)
+    gl.Disable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
 
     gl.ClearColor(0., 0., 0., 1.0)
@@ -213,9 +213,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         gfx.RefreshPrograms()
 
 
-
-//    	gl.Enable(gl.DEPTH_TEST)
-    	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
+        gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE)
         switch facade.Mode(renderer.config.Mode) {
             case facade.GRID:
                 renderer.grid.Render(renderer.camera, renderer.font, renderer.config.Debug, verbose )
@@ -225,12 +224,12 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
                 renderer.test.Render(renderer.camera, renderer.config.Debug, verbose)
         }
       
-        if renderer.config.Debug {renderer.axis.Render(renderer.camera) }
+        if renderer.config.Debug {renderer.axis.Render(renderer.camera, renderer.config.Debug) }
 
 
-        gl.Disable(gl.DEPTH_TEST)
-    	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE);
-        renderer.mask.Render()
+        gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
+        gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA,gl.ZERO,gl.ONE)
+        renderer.mask.Render(renderer.config.Debug)
         
         if verbose { 
             renderer.PrintDebug(prev); 
@@ -322,7 +321,11 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
             case facade.GRID:
                 tmp = renderer.grid.Desc()
         }
-        log.Debug("%s %s %s ",tmp,renderer.camera.Desc(),renderer.font.Desc())
+        tmp2 := ""
+        if renderer.mask.Config.Mask {
+            tmp2 = " " + renderer.mask.Desc()
+        }
+        log.Debug("%s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),tmp2)
     }
     
 }

@@ -1,14 +1,11 @@
 
+uniform float debugFlag;
 uniform sampler2D texture;
 
 varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vTileCount;
 
-varying float vDebugFlag;
-varying float vNow;
 
-bool DEBUG    = vDebugFlag > 0.0;
+bool DEBUG    = debugFlag > 0.0;
 
 void main() {
     if (DEBUG) { 
