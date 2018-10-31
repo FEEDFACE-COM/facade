@@ -173,6 +173,8 @@ func (program *Program) Close() {
     }
 }
 
+const DEBUG_PROGRAM = false
+
 
 func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) error {
     ret := gl.GetAttribLocation(program.Program, gl.Str(string(name)+"\x00")) 
@@ -187,7 +189,7 @@ func (program *Program) VertexAttribPointer(name AttribName, size int32, stride 
 
 func (program *Program) uniformLocation(name UniformName) (int32,error) {
     ret := gl.GetUniformLocation(program.Program, gl.Str(string(name)+"\x00") )
-    if ret <= 0 { 
+    if ret < 0 { 
         return -1,log.NewError("no location for uniform '%s' by program %s",name,program.Name)
     }
     return ret,nil;
@@ -218,6 +220,15 @@ func (program *Program) Uniform2fv(name UniformName, count int32, value *float32
         return -1,err
     }
     gl.Uniform2fv(ret,count, value)
+    return ret,nil
+}
+
+func (program *Program) Uniform1fv(name UniformName, count int32, value *float32) (int32,error) {
+    ret,err := program.uniformLocation(name)
+    if err != nil {
+        return -1,err
+    }
+    gl.Uniform1fv(ret, count, value)
     return ret,nil
 }
 

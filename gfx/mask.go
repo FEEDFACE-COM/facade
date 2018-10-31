@@ -50,6 +50,7 @@ func (mask *Mask) Render(debug bool) {
     mask.program.UseProgram(debug)
     mask.object.BindBuffer()
     
+    
     mask.program.Uniform1f(SCREENRATIO, mask.Width / mask.Height)
     mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )
     mask.program.VertexAttribPointer(TEXCOORD, 2, (3+2)*4, 3*4)
@@ -66,6 +67,7 @@ func (mask *Mask) Init() {
     v := h/h * h/2. 
     u := w/h * w/2. 
     mask.data = []float32{
+        // x     //y          // tx //ty
         -w/2.,  h/2., 0.0,    -u,  v,
         -w/2., -h/2., 0.0,    -u, -v,
          w/2., -h/2., 0.0,     u, -v,

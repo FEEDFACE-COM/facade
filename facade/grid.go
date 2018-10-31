@@ -64,11 +64,13 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
 
-    grid.program.Uniform1f(gfx.CLOCKNOW, gfx.NOW() )
+    clocknow := float32( gfx.NOW() )
+    grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
         
     grid.scroller.Uniform(grid.program, grid.config.Downward)
     camera.Uniform(grid.program)
-    grid.program.Uniform1i(gfx.TEXTURE,0)
+    
+    grid.texture.Uniform(grid.program)
 
     { 
         dw := float32(0.0); 
