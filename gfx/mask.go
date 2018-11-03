@@ -38,7 +38,12 @@ func (mask *Mask) Configure(config *MaskConfig) {
     
 }
 
-func (mask *Mask) Desc() string { return mask.Config.Desc() }
+func (mask *Mask) Desc() string { 
+    if mask.Config.mask {
+        return mask.Config.Desc() 
+    }
+    return ""
+}
 
 
 func (mask *Mask) Render(debug bool) {

@@ -321,7 +321,7 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
             case facade.GRID:
                 tmp = renderer.grid.Desc()
         }
-        log.Debug("%s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc())
+        log.Debug("%s %s %s %s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc())
     }
     
 }
