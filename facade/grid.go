@@ -187,7 +187,7 @@ func (grid *Grid) Fill(font *gfx.Font) {
         
         case "coord":
             w,h := int(grid.config.Width), int(grid.config.Height)
-            for r:=0; r<h; r++ {
+            for r:=0; r<h-1; r++ {
                 line := ""
                 for c:=0; c<w; c++ {
                     d := "."
@@ -206,7 +206,7 @@ func (grid *Grid) Fill(font *gfx.Font) {
             alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
             s := 0
             for r:=0; r<h; r++ {
-                line := alpha[s%len(alpha):(s+w)%len(alpha)]
+                line := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
                 grid.Queue(line,font)
                 s += 1
             }
@@ -214,6 +214,8 @@ func (grid *Grid) Fill(font *gfx.Font) {
     }    
 }
 
+
+func min(a,b int) int { if a < b { return a; }; return b; }
 
 
 func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point, maxSize gfx.Size) []float32 {
@@ -238,10 +240,6 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
     
 }
 
-func min(a,b float32) float32 { 
-    if a<b { return a } 
-    return b 
-}
 
 
 const DEBUG_DATA = false

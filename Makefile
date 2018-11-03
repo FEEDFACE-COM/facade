@@ -6,6 +6,10 @@ BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else da
 BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
+BUILD_DEBUG    ?= false
+
+
+
 
 
 SOURCES=$(wildcard *.go */*.go) 
@@ -18,7 +22,12 @@ ASSET_FONT=font/RobotoMono.ttf font/VT323.ttf
 ASSET_VERT=$(wildcard shader/*.vert shader/*/*.vert)
 ASSET_FRAG=$(wildcard shader/*.frag shader/*/*.frag)
 
-LDFLAGS = "-X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}"
+GCFLAGS ?= 
+ifeq (${BUILD_DEBUG},true)
+    GCFLAGS += -N -l
+endif
+
+LDFLAGS = -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
 
 
 default: build
@@ -64,7 +73,7 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
 ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
-	go build -v -o ${BUILD_PRODUCT} -v -ldflags ${LDFLAGS} $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
+	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
 
 assets: ${ASSETS}
 
