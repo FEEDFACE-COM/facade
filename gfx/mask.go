@@ -43,7 +43,7 @@ func (mask *Mask) Desc() string { return mask.Config.Desc() }
 
 func (mask *Mask) Render(debug bool) {
 
-    if !mask.Config.Mask {
+    if !mask.Config.mask {
         return
     }
 

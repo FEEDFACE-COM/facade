@@ -32,7 +32,7 @@ type Lines struct {
 func (lines *Lines) generateData() {
     lines.data = []float32{}
     
-    for i:=uint(0);i<lines.config.Height;i++ {
+    for i:=uint(0);i<lines.config.Height();i++ {
 
         item := lines.buffer.Tail(i)
         var w,h float32
@@ -69,8 +69,8 @@ func (lines *Lines) Configure(config *LinesConfig) {
     lines.config = *config
     log.Debug("config %s",config.Desc())
     
-    if config.Height != old.Height {
-        lines.buffer.Resize(config.Height)
+    if config.Height() != old.Height() {
+        lines.buffer.Resize(config.Height())
         lines.generateData()
     }
 
@@ -115,16 +115,16 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     modelUniform,_ := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     var d float32 
-    if lines.config.Height % 2 == 0 {
-        d = float32( int(lines.config.Height/2) ) + 0.5
+    if lines.config.Height() % 2 == 0 {
+        d = float32( int(lines.config.Height()/2) ) + 0.5
     } else {
-        d = float32( int(lines.config.Height/2) ) + 1.0
+        d = float32( int(lines.config.Height()/2) ) + 1.0
     }
 
 
     model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
     
-    for i:=uint(0);i<lines.config.Height;i++ {
+    for i:=uint(0);i<lines.config.Height();i++ {
         line  := lines.buffer.Tail(i)
 
         model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
@@ -158,7 +158,7 @@ func NewLines(config *LinesConfig) *Lines {
         config = NewLinesConfig()
     }
     ret := &Lines{config: *config}
-    ret.buffer = gfx.NewBuffer(config.Height)
+    ret.buffer = gfx.NewBuffer(config.Height())
     ret.program = gfx.GetProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret

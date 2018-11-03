@@ -7,27 +7,30 @@ import (
 )
 
 type CameraConfig struct {
-    Isometric bool
-    Zoom float64
+    isometric bool
+    zoom float64
 }
 
 
+func (config *CameraConfig) Isometric() bool { return config.isometric }
+func (config *CameraConfig) Zoom() float64 { return config.zoom }
+
 
 func (config *CameraConfig) AddFlags(flags *flag.FlagSet) {
-    flags.BoolVar(&config.Isometric,"iso",config.Isometric,"isometric projection" )
-    flags.Float64Var(&config.Zoom,"zoom",config.Zoom,"zoom" )
+    flags.BoolVar(&config.isometric,"iso",config.isometric,"isometric projection" )
+    flags.Float64Var(&config.zoom,"zoom",config.zoom,"zoom" )
 }
 
 func NewCameraConfig() *CameraConfig { 
     return &CameraConfig{
-        Isometric: false, 
-        Zoom: 1.0,
+        isometric: false, 
+        zoom: 1.0,
     }
 }
 
 func (config *CameraConfig) Desc() string { 
-    tmp := "ppv"
-    if config.Isometric { tmp = "iso" }
-    return fmt.Sprintf("cam[%s %.2f]",tmp,config.Zoom) 
+    tmp := ""
+    if config.isometric { tmp = "iso " }
+    return fmt.Sprintf("cam[%s%.2f]",tmp,config.zoom) 
 }
     

@@ -58,7 +58,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     
-    tileCount := mgl32.Vec2{ float32(grid.config.Width),float32(grid.config.Height), }
+    tileCount := mgl32.Vec2{ float32(grid.config.Width()),float32(grid.config.Height()), }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
@@ -67,14 +67,14 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     clocknow := float32( gfx.NOW() )
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
         
-    grid.scroller.Uniform(grid.program, grid.config.Downward)
+    grid.scroller.Uniform(grid.program, grid.config.Downward())
     camera.Uniform(grid.program)
     
     grid.texture.Uniform(grid.program)
 
     { 
         dw := float32(0.0); 
-        if grid.config.Downward { dw = 1.0 }
+        if grid.config.Downward() { dw = 1.0 }
         grid.program.Uniform1f(gfx.DOWNWARD, dw)
     }
     
@@ -88,8 +88,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
         
         ratio := screenRatio / fontRatio
         
-        scaleWidth :=  ratio * 2. / float32(grid.config.Width) 
-        scaleHeight :=      2. / float32(grid.config.Height - 1) //minus one line below
+        scaleWidth :=  ratio * 2. / float32(grid.config.Width()) 
+        scaleHeight :=      2. / float32(grid.config.Height() - 1) //minus one line below
         
         if scaleWidth < scaleHeight { 
             scale = scaleWidth
@@ -100,7 +100,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     }
 
     trans := float32(-0.5)
-    if ( grid.config.Downward ) {
+    if ( grid.config.Downward() ) {
         trans *= -1.
     } 
 
@@ -114,7 +114,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4 )
     
     
-    count := int32(grid.config.Width*grid.config.Height)
+    count := int32(grid.config.Width()*grid.config.Height())
 
     if !debug {    
         grid.texture.BindTexture()
@@ -124,10 +124,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     if debug {
         gl.LineWidth(3.0)
         
-        w,h := int(grid.config.Width), int(grid.config.Height)
+        w,h := int(grid.config.Width()), int(grid.config.Height())
         for r:=0; r<h; r++ {
             var line *gfx.Text
-            if grid.config.Downward {
+            if grid.config.Downward() {
                 line  = grid.buffer.Tail(uint(r))
             } else {
                 line  = grid.buffer.Head(uint(r))
@@ -148,7 +148,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 func (grid *Grid) Fill(font *gfx.Font) {
     
-    fill := grid.config.Fill
+    fill := grid.config.Fill()
     
     switch fill {
     
@@ -186,7 +186,7 @@ func (grid *Grid) Fill(font *gfx.Font) {
         
         
         case "coord":
-            w,h := int(grid.config.Width), int(grid.config.Height)
+            w,h := int(grid.config.Width()), int(grid.config.Height())
             for r:=0; r<h-1; r++ {
                 line := ""
                 for c:=0; c<w; c++ {
@@ -202,7 +202,7 @@ func (grid *Grid) Fill(font *gfx.Font) {
             
             
         case "alpha":
-            w,h := int(grid.config.Width), int(grid.config.Height)
+            w,h := int(grid.config.Width()), int(grid.config.Height())
             alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
             s := 0
             for r:=0; r<h; r++ {
@@ -247,13 +247,13 @@ const DEBUG_DATA = false
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
     tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
-    w,h := int(grid.config.Width), int(grid.config.Height)
+    w,h := int(grid.config.Width()), int(grid.config.Height())
     for r:=0; r<h; r++ {
         tmp += "\n"
         y:= -1 * (r-h/2)
 
         var line *gfx.Text
-        if grid.config.Downward {
+        if grid.config.Downward() {
             line  = grid.buffer.Tail(uint(r))
         } else {
             line  = grid.buffer.Head(uint(r))
@@ -329,7 +329,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
 
 func (grid *Grid) LoadShaders() {
     var err error
-    err = grid.program.GetCompileShaders("grid/",grid.config.Vert,grid.config.Frag)
+    err = grid.program.GetCompileShaders("grid/",grid.config.Vert(),grid.config.Frag())
     if err != nil { log.Error("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
     if err != nil { log.Error("fail link grid program: %v",err) }
@@ -368,13 +368,13 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 func (grid *Grid) autoWidth(config GridConfig, camera *gfx.Camera, font *gfx.Font) GridConfig {
     ret := config
-    if config.Width == 0 {
-        w := camera.Ratio() / font.Ratio() * float32(config.Height-1)  //minus one for line below waiting to scroll in
-        if config.Height == 1 { w = 5. }
-        ret.Width = uint(w)
+    if config.Width() == 0 {
+        w := camera.Ratio() / font.Ratio() * float32(config.Height()-1)//minus one for line below waiting to scroll in
+        if config.Height() == 1 { w = 5. }
+        ret.SetWidth(uint(w))
         log.Debug("autowidth %s -> %s",config.Desc(),ret.Desc())
     } 
-    if ret.Width == 0 { ret.Width = 5 }    
+    if ret.width == 0 { ret.width = 5 }    
     return ret
 }
 
@@ -394,12 +394,12 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     old := grid.config
     grid.config = *config
 
-    if config.Scroll != old.Scroll || config.Speed != old.Speed {
-        grid.scroller.SetScrollSpeed(config.Scroll, float32(config.Speed))
+    if config.Scroll() != old.Scroll() || config.Speed() != old.Speed() {
+        grid.scroller.SetScrollSpeed(config.Scroll(), float32(config.Speed()))
     }
         
-    if config.Height != old.Height {
-        grid.buffer.Resize(grid.config.Height)    
+    if config.Height() != old.Height() {
+        grid.buffer.Resize(grid.config.Height())    
         log.Debug(grid.buffer.Dump())
     }
 
@@ -408,12 +408,12 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         grid.texture.TexImage()
     }
     
-    if config.Vert != old.Vert || config.Frag != old.Frag {
+    if config.Vert() != old.Vert() || config.Frag() != old.Frag() {
         grid.LoadShaders()    
     }
 
 
-    if config.Fill != "" {
+    if config.Fill() != "" {
         grid.Fill(font)
     }
 
@@ -427,11 +427,11 @@ func NewGrid(config *GridConfig) *Grid {
     }
     ret := &Grid{config: *config}
     ret.refreshChan = make( chan bool, 1 )
-    ret.buffer = gfx.NewBuffer(config.Height)
+    ret.buffer = gfx.NewBuffer(config.Height())
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
-    ret.scroller = gfx.NewScroller(config.Scroll,float32(config.Speed))
+    ret.scroller = gfx.NewScroller(config.Scroll(),float32(config.Speed()))
     return ret
 }
 

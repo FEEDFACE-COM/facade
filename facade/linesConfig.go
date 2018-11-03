@@ -8,22 +8,23 @@ import (
 
 
 type LinesConfig struct {
-    Height uint
+    height uint
 }
 
+func (config *LinesConfig) Height()    uint    { return config.height    }
 
 
 
 func NewLinesConfig() *LinesConfig {
-    return &LinesConfig{Height: 1}
+    return &LinesConfig{height: 1}
 }
 
 
 func (config *LinesConfig) AddFlags(flags *flag.FlagSet) {
-    flags.UintVar(&config.Height,"h",config.Height,"line count")
+    flags.UintVar(&config.height,"h",config.height,"line count")
 
 }
 
-func (config *LinesConfig) Desc() string { return fmt.Sprintf("lines[%d]",config.Height) }
+func (config *LinesConfig) Desc() string { return fmt.Sprintf("lines[%d]",config.height) }
 
 

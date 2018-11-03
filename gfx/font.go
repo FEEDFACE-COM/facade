@@ -55,25 +55,25 @@ func GetFont(config *FontConfig) (*Font,error) {
     var err error
     var data []byte
     
-    if fonts[config.Name] != nil {
-        return fonts[config.Name],nil
+    if fonts[config.Name()] != nil {
+        return fonts[config.Name()],nil
     }
     
     fnt := NewFont(config)
     
-    if VectorFont[config.Name] != "" {
+    if VectorFont[config.Name()] != "" {
         
-        data,err = base64.StdEncoding.DecodeString( VectorFont[config.Name] )
+        data,err = base64.StdEncoding.DecodeString( VectorFont[config.Name()] )
         if err != nil {
-            return nil, log.NewError("fail to decode font %s: %s",config.Name,err)    
+            return nil, log.NewError("fail to decode font %s: %s",config.Name(),err)    
         }
 
 
     } else {
 
-        path,err := getFilePathForFont(fontDirectory, config.Name)
+        path,err := getFilePathForFont(fontDirectory, config.Name())
         if err != nil {
-            return nil, log.NewError("fail to find font file %s in %s",config.Name,fontDirectory)    
+            return nil, log.NewError("fail to find font file %s in %s",config.Name(),fontDirectory)    
         }
 
         data, err = ioutil.ReadFile(path)
@@ -86,13 +86,13 @@ func GetFont(config *FontConfig) (*Font,error) {
     
     err = fnt.loadFont(data)
     if err != nil {
-        log.Error("fail to load font %s: %s",config.Name,err)
-        return nil, log.NewError("fail to load font %s: %s",config.Name,err)
+        log.Error("fail to load font %s: %s",config.Name(),err)
+        return nil, log.NewError("fail to load font %s: %s",config.Name(),err)
     } 
     
     
-    fonts[config.Name] = fnt
-    return fonts[config.Name],nil
+    fonts[config.Name()] = fnt
+    return fonts[config.Name()],nil
     //note, its' still leaking tho!
     
 }
@@ -148,7 +148,7 @@ func (font *Font) Desc() string {
 //    mw, mh := font.MaxSize().W * GlyphCols, font.MaxSize().H * GlyphRows
 //    gw, gh := GlyphCols, GlyphRows
 //    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
-    return fmt.Sprintf("font[%s %.2f]",font.config.Name,font.Ratio())
+    return fmt.Sprintf("font[%s %.2f]",font.config.Name(),font.Ratio())
 }
 
 
@@ -161,7 +161,7 @@ func (font *Font) loadFont(data []byte) error {
     if err != nil {
         return log.NewError("fail to parse: %s",err)
     }
-    log.Debug("load font %s",font.config.Name)
+    log.Debug("load font %s",font.config.Name())
     return nil
 }
 
@@ -288,7 +288,7 @@ func (font *Font) stringForByte(b byte) string {
         if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
             return " "
         }
-        if font.config.Name == "OCRAEXT" && b == 0xB7 {
+        if font.config.Name() == "OCRAEXT" && b == 0xB7 {
             log.Debug("special-case ocraext '%c'",b)
             return " "
         }

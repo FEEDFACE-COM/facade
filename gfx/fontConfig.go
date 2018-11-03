@@ -7,17 +7,17 @@ import (
 )
 
 type FontConfig struct {
-    Name string
+    name string
 }
 
-
+func (config *FontConfig) Name() string { return config.name }
 
 func (config *FontConfig) AddFlags(flags *flag.FlagSet) {
-    flags.StringVar(&config.Name,"font",config.Name,"use fontface `font`" )
+    flags.StringVar(&config.name,"font",config.name,"render with `font`" )
 }
 
-func NewFontConfig() *FontConfig { return &FontConfig{Name: "RobotoMono"} }
+func NewFontConfig() *FontConfig { return &FontConfig{name: "RobotoMono"} }
 
-func (config *FontConfig) Desc() string { return fmt.Sprintf("font[%s]",config.Name) }
+func (config *FontConfig) Desc() string { return fmt.Sprintf("font[%s]",config.name) }
 
 

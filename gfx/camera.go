@@ -66,8 +66,8 @@ func (camera *Camera) Configure(config *CameraConfig) {
     camera.config = *config
 
     camera.view = mgl32.Ident4()
-    zoom := float32(camera.config.Zoom)
-    if camera.config.Isometric {
+    zoom := float32(camera.config.Zoom())
+    if camera.config.Isometric() {
         camera.projection = orthographic(camera.size.W, camera.size.H)
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
         camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
