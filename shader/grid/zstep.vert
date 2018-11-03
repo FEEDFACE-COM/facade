@@ -37,14 +37,15 @@ void main() {
     
     
     float F = 0.25;
-    float f0 = ease1( now /1.);  
+    float f0 = ease1( now /4.);  
     float f1 = 0.;
     
     
 
     // allow for scroller
-    float from = cos( vTileCoord.y + 3. * now + PI/2.);
-    float to =   cos( vTileCoord.y-1. + 3. * now + PI/2. );
+    float f = 1.;
+    float from = cos( vTileCoord.y + f * now + PI/2.);
+    float to =   cos( vTileCoord.y-1. + f * now + PI/2. );
 //    float from = to;
     float delta =  to + scroller * (from - to);
     

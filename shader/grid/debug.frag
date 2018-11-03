@@ -50,7 +50,13 @@ void main() {
         col.r = 0.0;
 //        col.b = 0.0;
     }
+
+    if (!gl_FrontFacing) {
+        col.rgb = 0.35 * vec3(1., 1., 1.);
+    } 
     
     
-    gl_FragColor = vec4(col.rgb,col.a);
+    gl_FragColor = col;
+    
+
 }

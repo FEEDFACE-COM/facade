@@ -55,6 +55,11 @@ void main() {
             col.rgba *= scroller; 
         }
     }
+
+    if (!gl_FrontFacing) {
+//        col.rgb = 0.4 * vec3(1., 1., 1.);
+            col.a -= 0.6;
+    } 
         
     gl_FragColor = col;
 }

@@ -33,7 +33,7 @@ float MAX(float a, float b) {
 
 float mask(vec2 p) { 
     float x = p.x; float y = p.y;
-    float ff = 0.75;
+    float ff = 1.;
     float A = 3. * ff;
     float B = 4. * ff; 
     if (abs(x) >= A/B && abs(y) >= A/B)
@@ -57,13 +57,13 @@ void main() {
     a = mask(vec2(pos.x/ratio,pos.y));
 
 
-    if ( false && DEBUG && grid(pos) ) {
+    if ( true && DEBUG && grid(pos) ) {
         float gray = 0.5;
         col = gray * vec3(1.,1.,1.);
     }
 
     if (DEBUG) {
-        col.r =  1. - mask(vec2(pos.x/ratio,pos.y));
+        col.r =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
     }
     
     

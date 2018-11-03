@@ -69,35 +69,39 @@ void main() {
     float radius = circum / TAU;
     
     float a,b;
-    
-    a = radius;
-    b = radius/2.;
+    float zoom = 2.;
+    a = zoom * radius;
+    b = zoom * radius/2.;
 
     
 
     float phase = -1. * PI/8.; 
     
+    
 //    phase += PI/2. * (ease1( now/8. ) );
     
     float alpha = grad.x * TAU + phase;
+ 
+//    alpha += now/10.;
+ 
     
-    pos = rotationMatrix(vec3(0., 0., 1.), alpha * -1. + PI/2.  ) * pos;
+    alpha = alpha * -1. + PI/4.;
+        
+    pos = rotationMatrix(vec3(0., 0., 1.), alpha) * pos;
 
 
     
 
-    a += 0.25 * cos(0.3*now * ease1((  mod(now,TAU) +scroller)/100.) * vTileCoord.y);
+//    a += 0.25 * cos(0.3*now * ease1((  mod(now,TAU) +scroller)/100.) * vTileCoord.y);
 
 //    vec3 tmp = vec3(pos);
     
-//    pos.x = cos(alpha) * 1.;
-//    pos.y = sin(alpha) * 1.;
 
     pos.x -= cos(alpha) * a;
     pos.y -= sin(alpha) * b;
 
-    pos.z -= (tileCoord.y*tileSize.y);
-    pos.z -= scroller;
+    pos.z += (tileCoord.y*tileSize.y);
+    pos.z += scroller;
 
 //    pos = rotationMatrix(vec3(-1.,1.,0.), PI/4.) * pos;
 //    pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;

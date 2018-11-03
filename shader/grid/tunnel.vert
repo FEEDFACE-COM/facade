@@ -48,7 +48,6 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-//    pos.y += scroller;
 
     float c = tileCount.x * tileSize.x;
 
@@ -59,6 +58,9 @@ void main() {
     a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
 
     a += now/10.;
+    
+    
+    a += ease1(now/2.);
 
     pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
     pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
