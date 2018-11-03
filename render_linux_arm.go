@@ -43,6 +43,9 @@ type Renderer struct {
     buffer *gfx.Buffer
     mutex *sync.Mutex
     directory string
+    
+    mode  facade.Mode
+    debug bool
 }
 
 const DEBUG_CLOCK  = false
@@ -70,6 +73,9 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     }
 
     config.Clean()
+    
+    renderer.mode,_   = config.Mode()
+    renderer.debug,_  = config.Debug()
     
     gfx.SetShaderDirectory(renderer.directory+"/shader")
     gfx.SetFontDirectory(renderer.directory+"/font")
@@ -100,20 +106,20 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.config = *config   
     renderer.axis = &gfx.Axis{}
 
-    renderer.font,err = gfx.GetFont(config.Font())
+    font,_ := config.Font(); renderer.font,err = gfx.GetFont(font)
     if err != nil {
         log.PANIC("no default font: %s",err)    
     }
-    renderer.camera = gfx.NewCamera(config.Camera(),renderer.screen)
-    renderer.mask = gfx.NewMask(config.Mask(),renderer.screen)
+    camera,_ := config.Camera(); renderer.camera = gfx.NewCamera(camera,renderer.screen)
+    mask,_   := config.Mask();   renderer.mask = gfx.NewMask(mask,renderer.screen)
 
-    renderer.font.Configure(config.Font())
-    renderer.camera.Configure(config.Camera())
+    renderer.font.Configure(font)
+    renderer.camera.Configure(camera)
 
     
-    renderer.grid = facade.NewGrid(config.Grid())
-    renderer.lines = facade.NewLines(config.Lines())
-    renderer.test = facade.NewTest(config.Test())
+    grid,_ := config.Grid();  renderer.grid  = facade.NewGrid(grid)
+    lines,_ := config.Lines(); renderer.lines = facade.NewLines(lines)
+    test,_ := config.Test();  renderer.test  = facade.NewTest(test)
 
 
     gfx.ClockReset()
@@ -131,29 +137,36 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     old := renderer.config
 
     renderer.config = *config
-    if renderer.config.Mode() != old.Mode() {
-        log.Debug("switch mode -> %s",string(config.Mode()))
+
+    mode,ok := config.Mode()
+    oldMode,_ := old.Mode()
+    if mode != oldMode {
+        log.Debug("switch mode -> %s",string(mode))
     }
     
-    if config.Font != nil && config.Font() != old.Font() {
+    font,ok := config.Font()
+    if ok {
 //        oldFont := renderer.font
-        newFont,err := gfx.GetFont(config.Font())
+        newFont,err := gfx.GetFont(font)
         if err == nil {
-            log.Debug("switch font -> %s",string(config.Font().Name()))
+            log.Debug("switch font -> %s",string(font.Name()))
             newFont.Init()
             renderer.font = newFont
-            renderer.font.Configure(config.Font())
+            renderer.font.Configure(font)
 //        oldFont.Close() //still, leaks?
         }
 
     }
     
     
-    renderer.lines.Configure(config.Lines())
-    renderer.grid.Configure(config.Grid(),renderer.camera,renderer.font)
-    renderer.test.Configure(config.Test())
-    renderer.camera.Configure(config.Camera())
-    renderer.mask.Configure(config.Mask())
+    //REM, set renderer mode + debug frmo config
+    
+    
+    grid,ok  := config.Grid(); renderer.grid.Configure(grid,renderer.camera,renderer.font)
+    lines,ok := config.Lines(); renderer.lines.Configure(lines)
+    test,ok := config.Test(); renderer.test.Configure(test)
+    camera,ok := config.Camera(); renderer.camera.Configure(camera)
+    mask,ok := config.Mask(); renderer.mask.Configure(mask)
     
     return nil
 }
@@ -187,8 +200,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
     renderer.mask.Init()
     renderer.axis.Init()
 
-
-    renderer.grid.Configure(renderer.config.Grid(),renderer.camera,renderer.font)
+    gridConfig,_ := renderer.config.Grid()
+    renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
 
     renderer.grid.Fill(renderer.font)
 
@@ -215,21 +228,21 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 
         gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
         gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE)
-        switch facade.Mode(renderer.config.Mode()) {
+        switch facade.Mode(renderer.mode) {
             case facade.GRID:
-                renderer.grid.Render(renderer.camera, renderer.font, renderer.config.Debug(), verbose )
+                renderer.grid.Render(renderer.camera, renderer.font, renderer.debug, verbose )
             case facade.LINES:
-                renderer.lines.Render(renderer.camera, renderer.config.Debug(), verbose )
+                renderer.lines.Render(renderer.camera, renderer.debug, verbose )
             case facade.TEST:
-                renderer.test.Render(renderer.camera, renderer.config.Debug(), verbose)
+                renderer.test.Render(renderer.camera, renderer.debug, verbose)
         }
       
-        if renderer.config.Debug() {renderer.axis.Render(renderer.camera, renderer.config.Debug()) }
+        if renderer.debug {renderer.axis.Render(renderer.camera, renderer.debug) }
 
 
         gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
         gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA,gl.ZERO,gl.ONE)
-        renderer.mask.Render(renderer.config.Debug())
+        renderer.mask.Render(renderer.debug)
         
         if verbose { 
             renderer.PrintDebug(prev); 
@@ -305,7 +318,7 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
     
     if DEBUG_BUFFER {
 //        log.Debug(renderer.buffer.Dump())    
-        switch facade.Mode(renderer.config.Mode()) { 
+        switch facade.Mode(renderer.mode) { 
             case facade.LINES:
                 log.Debug( renderer.lines.Dump() )
             case facade.GRID:
@@ -315,7 +328,7 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
     
     if DEBUG_MODE {
         tmp := ""
-        switch facade.Mode(renderer.config.Mode()) { 
+        switch facade.Mode(renderer.mode) { 
             case facade.LINES:
                 tmp = renderer.lines.Desc()
             case facade.GRID:

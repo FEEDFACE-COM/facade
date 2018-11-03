@@ -21,14 +21,15 @@ func NewTester(directory string) *Tester { return &Tester{directory: directory} 
 func (tester *Tester) Configure(config *facade.Config) {
     var err error
     gfx.SetFontDirectory(tester.directory)
-    tester.font,err = gfx.GetFont(config.Font())
+    font,_ := config.Font()
+    tester.font,err = gfx.GetFont(font)
     if err != nil {
-        log.PANIC("fail loading font %s: %s",config.Font().Name,err)
+        log.PANIC("fail loading font %s: %s",font.Name,err)
     }
     tester.font.Init()
-    tester.font.Configure(config.Font())
-    tester.name = config.Font().Name()
-    tester.mode = config.Mode()
+    tester.font.Configure(font)
+    tester.name = font.Name()
+    tester.mode,_ = config.Mode()
     log.Info("got font %s",tester.font.Desc())
     
     

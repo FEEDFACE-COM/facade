@@ -197,8 +197,8 @@ func main() {
             ShowHelpCommand(CONF,flags)
             os.Exit(-2)
         } else { // otherwise huh?
-            
-                modeflags.Usage = func() { ShowHelpMode(facade.Mode(config.Mode()),cmd,modeflags) }
+                mode,_ := config.Mode()
+                modeflags.Usage = func() { ShowHelpMode(mode,cmd,modeflags) }
                 modeflags.Parse( args[0:] )
                 
         }
