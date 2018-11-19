@@ -118,18 +118,25 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
     cameraConfig,_ := config.Camera()
     renderer.camera = gfx.NewCamera(&cameraConfig,renderer.screen)
-    renderer.camera.Configure(&cameraConfig)
+    renderer.camera.Init()
 
     maskConfig,_ := config.Mask()
     renderer.mask = gfx.NewMask(&maskConfig,renderer.screen)
+    renderer.mask.Init()
+    
 
     gridConfig,_ := config.Grid()    
-    renderer.grid = facade.NewGrid(nil)
+    renderer.grid = facade.NewGrid(&gridConfig)
     renderer.grid.Init(renderer.camera,renderer.font)
     renderer.grid.Configure(&gridConfig,renderer.camera,renderer.font)
     
 //    renderer.lines = facade.NewLines(config.Lines)
+//    renderer.lines.Init(renderer.camera,renderer.font)
+
 //    renderer.test = facade.NewTest(config.Test)
+  //  renderer.test.Init(renderer.camera,renderer.font)
+
+    renderer.axis.Init()
 
 
     gfx.ClockReset()
@@ -178,36 +185,18 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 
 func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan string) error {
 
-    
-
-    gfx.ClockTick()
-
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
-
     gl.Disable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
-
     gl.ClearColor(0., 0., 0., 1.0)
-	
+    gl.ClearColor(1.0,0.0, 0.0, 1.0)
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
 //    gl.Enable(gl.CULL_FACE)
 //    gl.CullFace(gl.BACK)
 
 
-    renderer.font.Init()
-    renderer.camera.Init()
-    renderer.grid.Init(renderer.camera,renderer.font)
-//    renderer.lines.Init(renderer.camera,renderer.font)
-  //  renderer.test.Init(renderer.camera,renderer.font)
-    renderer.mask.Init()
-    renderer.axis.Init()
-
-    gridConfig,_ := renderer.config.Grid()
-    renderer.grid.Configure(&gridConfig,renderer.camera,renderer.font)
-
-
+    gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
     log.Debug("renderer start")
     for {

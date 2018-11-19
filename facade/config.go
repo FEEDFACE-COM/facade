@@ -64,6 +64,7 @@ func NewConfig(mode Mode) *Config {
     ret.SetFont( *gfx.NewFontConfig() )
     ret.SetCamera( *gfx.NewCameraConfig() )
     ret.SetMask( *gfx.NewMaskConfig() )
+    ret.SetDebug(true)
     return &ret
 }
 

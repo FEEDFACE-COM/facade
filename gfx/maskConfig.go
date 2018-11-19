@@ -13,6 +13,7 @@ func (config *MaskConfig) SetMask(val bool) { (*config)["mask"] = val }
 
 func NewMaskConfig() *MaskConfig {
     ret := make(MaskConfig)
+    ret.SetMask(true)
     return &ret
 }
 

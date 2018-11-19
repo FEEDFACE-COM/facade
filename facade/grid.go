@@ -369,7 +369,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 
 
 
-func (grid *Grid) AutoWidth(config GridConfig, camera *gfx.Camera, font *gfx.Font) {
+func (grid *Grid) autoWidth(config GridConfig, camera *gfx.Camera, font *gfx.Font) {
     if width,ok := config.Width(); !ok || width == 0 {
         height,_ := config.Height()
         w := camera.Ratio() / font.Ratio() * float32(height-1)  //minus one for line below waiting to scroll in
@@ -388,9 +388,9 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     log.Debug("config %s",config.Desc())
 
 
+    if width,ok := config.Width(); ok { grid.width = width } 
     grid.autoWidth(*config,camera,font)
         
-    if width,ok := config.Width(); ok { grid.width = width } 
     if height,ok := config.Height(); ok && height != grid.height { 
         log.Debug("resize %s",grid.buffer.Desc())
         grid.buffer.Resize(uint(height))    
