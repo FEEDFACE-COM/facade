@@ -11,39 +11,48 @@ import(
 
 type Mask struct {
 
-    Config MaskConfig
     program *Program
 
     object *Object
     data []float32
     
-    Width float32
-    Height float32
-    
+    width float32
+    height float32
+    mask bool
 }
 
 func NewMask(config *MaskConfig, screen Size) *Mask {
-    ret := &Mask{Config: *config, Width: screen.W, Height: screen.H}
+    ret := &Mask{width: screen.W, height: screen.H}
     return ret
 }
 
 
 func (mask *Mask) Configure(config *MaskConfig) {
     if config == nil { return }
-    if *config == mask.Config { return }
     
-    log.Debug("config %s -> %s",mask.Desc(),config.Desc())
-    mask.Config = *config
-    
-    
+    // TODO: if no change, return
+
+    if val,ok := config.Mask(); ok {
+        mask.mask = val
+        log.Debug("config %s",mask.Desc())
+    }    
 }
 
-func (mask *Mask) Desc() string { return mask.Config.Desc() }
+func (mask *Mask) Mask() bool { return mask.mask }
+
+func (mask *Mask) Desc() string {
+    ret := "mask["
+    if mask.mask {
+        ret += "✓"
+    }
+    ret += "]"
+    return ret
+}
 
 
 func (mask *Mask) Render(debug bool) {
 
-    if !mask.Config.Mask {
+    if !mask.mask {
         return
     }
 
@@ -51,7 +60,7 @@ func (mask *Mask) Render(debug bool) {
     mask.object.BindBuffer()
     
     
-    mask.program.Uniform1f(SCREENRATIO, mask.Width / mask.Height)
+    mask.program.Uniform1f(SCREENRATIO, mask.width / mask.height)
     mask.program.VertexAttribPointer(VERTEX, 3, (3+2)*4, 0 )
     mask.program.VertexAttribPointer(TEXCOORD, 2, (3+2)*4, 3*4)
 
@@ -61,8 +70,8 @@ func (mask *Mask) Render(debug bool) {
 
 
 func (mask *Mask) Init() {
-    w := mask.Width  
-    h := mask.Height 
+    w := mask.width  
+    h := mask.height 
 
     v := h/h * h/2. 
     u := w/h * w/2. 
