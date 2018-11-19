@@ -6,8 +6,8 @@ import (
     "net"    
     "time"
     "bufio"
-//    "encoding/json"
-    "encoding/gob"
+    "encoding/json"
+//    "encoding/gob"
     log "./log"
     facade "./facade"
 )
@@ -83,10 +83,10 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
         }
             confConn.Close() 
     }()
-    decoder := gob.NewDecoder(confConn)
-    config := &facade.Config{}
+    decoder := json.NewDecoder(confConn)
+    config := make(facade.Config)
     confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
-    err := decoder.Decode(config)
+    err := decoder.Decode(&config)
     if err != nil {
         log.Error("fail to decode %s: %s",confConn.RemoteAddr().String(),err)
         return
@@ -94,7 +94,7 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
     if DEBUG_RECV {
         log.Debug("receive conf %s",config.Desc())
     }
-    confChan <- *config
+    confChan <- config
 }
 
 func (server *Server) ReceiveText(textConn net.Conn, textChan chan facade.RawText) {

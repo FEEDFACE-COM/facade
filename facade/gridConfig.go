@@ -38,15 +38,37 @@ func (config *GridConfig) SetFill(val string) { (*config)["fill"] = val }
 
 func NewGridConfig() *GridConfig {
     ret := make(GridConfig)
-    ret.SetWidth(0)
-    ret.SetHeight(8)
-    ret.SetScroll(true)
-    ret.SetSpeed(0.4)
-    ret.SetVert("null")
-    ret.SetFrag("null")
+    ret.SetWidth(gridDefaults.width)
+    ret.SetHeight(gridDefaults.height)
+    ret.SetScroll(gridDefaults.scroll)
+    ret.SetSpeed(gridDefaults.speed)
+    ret.SetVert(gridDefaults.vert)
+    ret.SetFrag(gridDefaults.frag)
     return &ret
 }
 
+var gridDefaults = struct {
+    width int
+    height int
+    
+    downward bool
+    scroll bool
+    speed float32
+    
+    vert string
+    frag string
+    fill string
+            
+    }{
+    0,
+    8,
+    false,
+    true,
+    0.4,
+    "null",
+    "null",
+    "",
+    }
 
 
 
@@ -59,6 +81,19 @@ func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
 //    flags.StringVar(&config.Vert,"V",config.Vert,"vertex shader")
 //    flags.StringVar(&config.Frag,"F",config.Frag,"fragment shader")
 //    flags.StringVar(&config.Fill,"fill",config.Fill,"fill pattern")
+
+
+
+    flags.Uint("w",uint(gridDefaults.width),"grid width")
+    flags.Uint("h",uint(gridDefaults.height),"grid height")
+    flags.Bool("d",gridDefaults.downward,"downward")
+    flags.Bool("s",gridDefaults.scroll,"scroll")
+    flags.Float64("S",float64(gridDefaults.speed),"scroll speed")
+    flags.String("V",gridDefaults.vert,"vertex shader")
+    flags.String("F",gridDefaults.frag,"fragment shader")
+    flags.String("fill",gridDefaults.fill,"fill pattern")
+
+
 }
 
 func (config *GridConfig) Desc() string { 

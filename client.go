@@ -7,8 +7,7 @@ import (
     "bufio"
     "os"
 //    "bytes"
-//    "encoding/json"
-    "encoding/gob"
+    "encoding/json"
 //    "time"
     log "./log"
     facade "./facade"
@@ -68,8 +67,9 @@ func (client *Client) SendConf(config *facade.Config) {
         return
     }
     defer func() { /*log.Debug("close %s",conn.RemoteAddr().String());*/ conn.Close() }()
-    enc := gob.NewEncoder(conn)
-    err = enc.Encode( *config )
+    
+    encoder := json.NewEncoder(conn)
+    err = encoder.Encode( *config )
     if err != nil {
         log.Error("fail to encode %s: %s",config.Desc(),err)
         return

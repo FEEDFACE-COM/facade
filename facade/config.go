@@ -26,7 +26,6 @@ var Modes = []Mode{GRID,LINES,TEST}
 
 
 
-
 type RawText string
 
 type Config map[string]interface{}
@@ -48,8 +47,11 @@ func (config *Config) SetCamera(val gfx.CameraConfig) { (*config)["camera"] = ma
 func (config *Config) SetMask(val gfx.MaskConfig) { (*config)["mask"] = map[string]interface{}(val) }
 
 
-
-
+var defaults = struct {
+    debug bool        
+}{
+    true,
+}
 
 
 
@@ -64,7 +66,7 @@ func NewConfig(mode Mode) *Config {
     ret.SetFont( *gfx.NewFontConfig() )
     ret.SetCamera( *gfx.NewCameraConfig() )
     ret.SetMask( *gfx.NewMaskConfig() )
-    ret.SetDebug(true)
+    ret.SetDebug(defaults.debug)
     return &ret
 }
 
@@ -76,14 +78,15 @@ func (config *Config) Clean() {
 func (config *Config) FlagSet() *flag.FlagSet {
     mode,_ := config.Mode()
     ret := flag.NewFlagSet(string(mode), flag.ExitOnError)
-//    if config.Grid   != nil { config.Grid.AddFlags(ret) }
+    if grid,ok := config.Grid(); ok { grid.AddFlags(ret) }
 //    if config.Lines  != nil { config.Lines.AddFlags(ret) }
 //    if config.Test   != nil { config.Test.AddFlags(ret) }
 //    if config.Font   != nil { config.Font.AddFlags(ret) }
 //    if config.Camera != nil { config.Camera.AddFlags(ret) }
 //    if config.Mask   != nil { config.Mask.AddFlags(ret) }
-//    ret.BoolVar(&config.Debug,"D",config.Debug,"Draw Debug" )
     
+    
+    ret.Bool("D",defaults.debug,"Draw Debug" )
     return ret
 }
 
