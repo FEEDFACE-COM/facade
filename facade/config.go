@@ -32,19 +32,19 @@ type Config map[string]interface{}
 
 
 func (config *Config) Mode()   (Mode,bool)              { ret,ok := (*config)["mode"].(string); return Mode(ret),ok }
-func (config *Config) Font()   (gfx.FontConfig,bool)            { ret,ok := (*config)["font"].(string); return gfx.FontConfig(ret),ok }
+func (config *Config) Font()   (gfx.FontConfig,bool)    { ret,ok := (*config)["font"].(string); return gfx.FontConfig(ret),ok }
 func (config *Config) Debug()  (bool,bool)              { ret,ok := (*config)["debug"].(bool); return ret,ok }
-func (config *Config) Grid()   (GridConfig,bool)        { ret,ok := (*config)["grid"].(map[string]interface{}); return GridConfig(ret),ok }
+func (config *Config) Grid()   (GridDelta,bool)        { ret,ok := (*config)["grid"].(map[string]interface{}); return GridDelta(ret),ok }
 func (config *Config) Camera() (gfx.CameraConfig,bool)  { ret,ok := (*config)["camera"].(map[string]interface{}); return gfx.CameraConfig(ret),ok }
-func (config *Config) Mask() (gfx.MaskConfig,bool)  { ret,ok := (*config)["mask"].(map[string]interface{}); return gfx.MaskConfig(ret),ok }
+func (config *Config) Mask()   (gfx.MaskConfig,bool)    { ret,ok := (*config)["mask"].(map[string]interface{}); return gfx.MaskConfig(ret),ok }
  
 
-func (config *Config) SetMode(val Mode) { (*config)["mode"] = string(val) }
-func (config *Config) SetFont(val gfx.FontConfig) { (*config)["font"] = string(val) }
-func (config *Config) SetDebug(val bool) { (*config)["debug"] = val }
-func (config *Config) SetGrid(val GridConfig) { (*config)["grid"] = map[string]interface{}(val) }
+func (config *Config) SetMode(val Mode)               { (*config)["mode"] = string(val) }
+func (config *Config) SetFont(val gfx.FontConfig)     { (*config)["font"] = string(val) }
+func (config *Config) SetDebug(val bool)              { (*config)["debug"] = val }
+func (config *Config) SetGrid(val GridDelta)         { (*config)["grid"] = map[string]interface{}(val) }
 func (config *Config) SetCamera(val gfx.CameraConfig) { (*config)["camera"] = map[string]interface{}(val) }
-func (config *Config) SetMask(val gfx.MaskConfig) { (*config)["mask"] = map[string]interface{}(val) }
+func (config *Config) SetMask(val gfx.MaskConfig)     { (*config)["mask"] = map[string]interface{}(val) }
 
 
 var defaults = struct {
@@ -61,7 +61,7 @@ func NewConfig(mode Mode) *Config {
     ret := make(Config)
     ret.SetMode(mode)
     switch mode {
-        case GRID: ret.SetGrid( *NewGridConfig() )    
+        case GRID: ret.SetGrid( *NewGridDelta() )    
     }
     ret.SetFont( *gfx.NewFontConfig() )
     ret.SetCamera( *gfx.NewCameraConfig() )
@@ -78,12 +78,12 @@ func (config *Config) Clean() {
 func (config *Config) FlagSet() *flag.FlagSet {
     mode,_ := config.Mode()
     ret := flag.NewFlagSet(string(mode), flag.ExitOnError)
-    if grid,ok := config.Grid(); ok { grid.AddFlags(ret) }
-//    if config.Lines  != nil { config.Lines.AddFlags(ret) }
-//    if config.Test   != nil { config.Test.AddFlags(ret) }
-//    if config.Font   != nil { config.Font.AddFlags(ret) }
-//    if config.Camera != nil { config.Camera.AddFlags(ret) }
-//    if config.Mask   != nil { config.Mask.AddFlags(ret) }
+//    if grid,ok := config.Grid(); ok     { grid.AddFlags(ret) }
+//    if lines,ok := config.Lines(); ok   { lines.AddFlags(ret) }
+//    if test,ok := config.Test(); ok     { test.AddFlags(ret) }
+    if font,ok := config.Font(); ok     { font.AddFlags(ret) }
+    if camera,ok := config.Camera(); ok { camera.AddFlags(ret) }
+    if mask,ok := config.Mask(); ok     { mask.AddFlags(ret) }
     
     
     ret.Bool("D",defaults.debug,"Draw Debug" )

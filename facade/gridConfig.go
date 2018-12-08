@@ -9,116 +9,124 @@ import (
 )
 
 
-type GridConfig map[string]interface{}
+type GridDelta map[string]interface{}
 
-func (config *GridConfig) Width() (int,bool) { ret,ok := (*config)["width"].(float64); return int(ret),ok }
-func (config *GridConfig) Height() (int,bool) { ret,ok := (*config)["height"].(float64); return int(ret),ok }
-func (config *GridConfig) Downward() (bool,bool) { ret,ok := (*config)["downward"].(bool); return ret,ok }
-
-func (config *GridConfig) Scroll() (bool,bool) { ret,ok := (*config)["scroll"].(bool); return ret,ok }
-func (config *GridConfig) Speed() (float32,bool) { ret,ok := (*config)["speed"].(float64); return float32(ret),ok }
-
-func (config *GridConfig) Vert() (string,bool) { ret,ok := (*config)["vert"].(string); return ret,ok }
-func (config *GridConfig) Frag() (string,bool) { ret,ok := (*config)["frag"].(string); return ret,ok }
-func (config *GridConfig) Fill() (string,bool) { ret,ok := (*config)["fill"].(string); return ret,ok }
+func (delta *GridDelta) Width() (uint,bool) { ret,ok := (*delta)["width"].(float64); return uint(ret),ok }
+func (delta *GridDelta) Height() (uint,bool) { ret,ok := (*delta)["height"].(float64); return uint(ret),ok }
+func (delta *GridDelta) Downward() (bool,bool) { ret,ok := (*delta)["downward"].(bool); return ret,ok }
+func (delta *GridDelta) Scroll() (bool,bool) { ret,ok := (*delta)["scroll"].(bool); return ret,ok }
+func (delta *GridDelta) Speed() (float64,bool) { ret,ok := (*delta)["speed"].(float64); return ret,ok }
+func (delta *GridDelta) Vert() (string,bool) { ret,ok := (*delta)["vert"].(string); return ret,ok }
+func (delta *GridDelta) Frag() (string,bool) { ret,ok := (*delta)["frag"].(string); return ret,ok }
+func (delta *GridDelta) Fill() (string,bool) { ret,ok := (*delta)["fill"].(string); return ret,ok }
 
 
 
-func (config *GridConfig) SetWidth(val int) { (*config)["width"] = float64(val) }
-func (config *GridConfig) SetHeight(val int) { (*config)["height"] = float64(val) }
-func (config *GridConfig) SetDownward(val bool) { (*config)["downward"] = val }
-
-func (config *GridConfig) SetScroll(val bool) { (*config)["scroll"] = val }
-func (config *GridConfig) SetSpeed(val float32) { (*config)["speed"] = float64(val) }
-
-func (config *GridConfig) SetVert(val string) { (*config)["vert"] = val }
-func (config *GridConfig) SetFrag(val string) { (*config)["frag"] = val }
-func (config *GridConfig) SetFill(val string) { (*config)["fill"] = val }
+func (delta *GridDelta) SetWidth(val uint) { (*delta)["width"] = float64(val) }
+func (delta *GridDelta) SetHeight(val uint) { (*delta)["height"] = float64(val) }
+func (delta *GridDelta) SetDownward(val bool) { (*delta)["downward"] = val }
+func (delta *GridDelta) SetScroll(val bool) { (*delta)["scroll"] = val }
+func (delta *GridDelta) SetSpeed(val float64) { (*delta)["speed"] = val }
+func (delta *GridDelta) SetVert(val string) { (*delta)["vert"] = val }
+func (delta *GridDelta) SetFrag(val string) { (*delta)["frag"] = val }
+func (delta *GridDelta) SetFill(val string) { (*delta)["fill"] = val }
 
 
-func NewGridConfig() *GridConfig {
-    ret := make(GridConfig)
-    ret.SetWidth(gridDefaults.width)
-    ret.SetHeight(gridDefaults.height)
-    ret.SetScroll(gridDefaults.scroll)
-    ret.SetSpeed(gridDefaults.speed)
-    ret.SetVert(gridDefaults.vert)
-    ret.SetFrag(gridDefaults.frag)
+func NewGridDelta() *GridDelta {
+    ret := make(GridDelta)
     return &ret
 }
 
-var gridDefaults = struct {
-    width int
-    height int
+type GridConfig struct {
+    width uint
+    height uint
     
     downward bool
     scroll bool
-    speed float32
+    speed float64
     
     vert string
     frag string
     fill string
-            
-    }{
-    0,
-    8,
-    false,
-    true,
-    0.4,
-    "null",
-    "null",
-    "",
-    }
+}
+
+var GridDefaults = GridConfig {
+    0,       //width
+    8,       //height
+    false,   //downward
+    true,    //scroll
+    0.4,     //speed
+    "null",  //vert
+    "null",  //frag
+    "",      //fill
+}
 
 
 
 func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
-//    flags.UintVar(&config.Width,"w",config.Width,"grid width")
-//    flags.UintVar(&config.Height,"h",config.Height,"grid height")
-//    flags.BoolVar(&config.Downward,"d",config.Downward,"downward")
-//    flags.BoolVar(&config.Scroll,"s",config.Scroll,"scroll")
-//    flags.Float64Var(&config.Speed,"S",config.Speed,"scroll speed")
-//    flags.StringVar(&config.Vert,"V",config.Vert,"vertex shader")
-//    flags.StringVar(&config.Frag,"F",config.Frag,"fragment shader")
-//    flags.StringVar(&config.Fill,"fill",config.Fill,"fill pattern")
 
-
-
-    flags.Uint("w",uint(gridDefaults.width),"grid width")
-    flags.Uint("h",uint(gridDefaults.height),"grid height")
-    flags.Bool("d",gridDefaults.downward,"downward")
-    flags.Bool("s",gridDefaults.scroll,"scroll")
-    flags.Float64("S",float64(gridDefaults.speed),"scroll speed")
-    flags.String("V",gridDefaults.vert,"vertex shader")
-    flags.String("F",gridDefaults.frag,"fragment shader")
-    flags.String("fill",gridDefaults.fill,"fill pattern")
-
+    flags.UintVar(&config.width,"w",config.width,"grid width")
+    flags.UintVar(&config.height,"h",config.height,"grid height")
+    flags.BoolVar(&config.downward,"d",config.downward,"downward")
+    flags.BoolVar(&config.scroll,"s",config.scroll,"scroll")
+    flags.Float64Var(&config.speed,"S",config.speed,"scroll speed")
+    flags.StringVar(&config.vert,"V",config.vert,"vertex shader")
+    flags.StringVar(&config.frag,"F",config.frag,"fragment shader")
+    flags.StringVar(&config.fill,"fill",config.fill,"fill pattern")
 
 }
 
-func (config *GridConfig) Desc() string { 
+func (delta *GridDelta) Desc() string { 
     ret := "grid["
-    if tmp,ok := config.Width(); ok { ret += fmt.Sprintf("%d",tmp) }
+    if tmp,ok := delta.Width(); ok { ret += fmt.Sprintf("%d",tmp) }
     ret += "x"
-    if tmp,ok := config.Height(); ok { ret += fmt.Sprintf("%d",tmp) }
-    if tmp,ok := config.Downward(); ok { if tmp { ret += "↓" } else { ret += "↑" } }
+    if tmp,ok := delta.Height(); ok { ret += fmt.Sprintf("%d",tmp) }
+    if tmp,ok := delta.Downward(); ok { if tmp { ret += "↓" } else { ret += "↑" } }
     ret += " "
-    if tmp,ok := config.Scroll(); ok { if tmp { ret += "→" } else { ret += "x" } }
-    if tmp,ok := config.Speed(); ok { ret += fmt.Sprintf("%.1f",tmp) }
+    if tmp,ok := delta.Scroll(); ok { if tmp { ret += "→" } else { ret += "x" } }
+    if tmp,ok := delta.Speed(); ok { ret += fmt.Sprintf("%.1f",tmp) }
     ret += " "
-    if tmp,ok := config.Vert(); ok { ret += tmp }
+    if tmp,ok := delta.Vert(); ok { ret += tmp }
     ret += ","
-    if tmp,ok := config.Frag(); ok { ret += tmp }
-    if tmp,ok := config.Fill(); ok { ret += " " + tmp }
+    if tmp,ok := delta.Frag(); ok { ret += tmp }
+    if tmp,ok := delta.Fill(); ok { ret += " " + tmp }
     ret += "]"
     return ret
 }
 
+func (config *GridConfig) Desc() string {
+	delta := config.Delta()
+	return delta.Desc()	
+}
+
+func (config *GridConfig) Delta() *GridDelta {
+	ret := NewGridDelta()
+	ret.SetWidth(config.width)
+	ret.SetHeight(config.height)
+	ret.SetDownward(config.downward)
+	ret.SetScroll(config.scroll)
+	ret.SetSpeed(config.speed)
+	ret.SetVert(config.vert)
+	ret.SetFrag(config.frag)
+	ret.SetFill(config.fill)
+	return ret	
+}
+
+func (config *GridConfig) ApplyDelta(delta *GridDelta) {
+	if tmp,ok := delta.Width(); ok { config.width = tmp }
+	if tmp,ok := delta.Height(); ok { config.height = tmp }
+	if tmp,ok := delta.Downward(); ok { config.downward = tmp }
+	if tmp,ok := delta.Scroll(); ok { config.scroll = tmp }
+	if tmp,ok := delta.Speed(); ok { config.speed = tmp }
+	if tmp,ok := delta.Vert(); ok { config.vert = tmp }
+	if tmp,ok := delta.Frag(); ok { config.frag = tmp }
+	if tmp,ok := delta.Fill(); ok { config.fill = tmp }
+}
 
 
 
-func (config *GridConfig) Clean() {
-    if vert,ok := config.Vert(); ok { config.SetVert( strings.Replace(vert,"/","",-1) ) }
-    if frag,ok := config.Frag(); ok { config.SetFrag( strings.Replace(frag,"/","",-1) ) }
+func (delta *GridDelta) Clean() {
+    if vert,ok := delta.Vert(); ok { delta.SetVert( strings.Replace(vert,"/","",-1) ) }
+    if frag,ok := delta.Frag(); ok { delta.SetFrag( strings.Replace(frag,"/","",-1) ) }
 }
 

@@ -132,39 +132,35 @@ func main() {
     
     
     cmd := Command(flag.Args()[0])
-    switch ( cmd ) {
 
-        case READ:
+	switch (cmd) {
+		case READ, RECV:
             if !RENDERER_AVAILABLE {
                 ShowHelp()
                 os.Exit(-2)    
             }
-            flags[READ].Usage = func() { ShowHelpCommand(READ,flags) }
-            flags[READ].Parse( flag.Args()[1:] )
+            fallthrough
+        case PIPE, CONF:
+            flags[cmd].Usage = func() { ShowHelpCommand(cmd,flags) }
+            flags[cmd].Parse( flag.Args()[1:] )
+	}
+	
+
+	switch (cmd) {
+		case READ:
             renderer = NewRenderer(directory)
             scanner = NewScanner()
-
+			
         case RECV:
-            if !RENDERER_AVAILABLE {
-                ShowHelp()
-                os.Exit(-2)    
-            }
-            flags[RECV].Usage = func() { ShowHelpCommand(RECV,flags) }
-            flags[RECV].Parse( flag.Args()[1:] )
             server = NewServer(listenHost,confPort,textPort)
             renderer = NewRenderer(directory)
 
         case PIPE:
-            flags[PIPE].Usage = func() { ShowHelpCommand(PIPE,flags) }
-            flags[PIPE].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
-            
-            
+
         case CONF:
-            flags[CONF].Usage = func() { ShowHelpCommand(CONF,flags) }
-            flags[CONF].Parse( flag.Args()[1:] )
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
-            
+
         case INFO:
             ShowVersion()
             ShowAssets()
@@ -174,17 +170,12 @@ func main() {
             ShowHelp()
             os.Exit(-2)
             
-        
-        case TEST:
-            flags[TEST].Usage = func() {ShowHelpCommand(TEST,flags) }
-            flags[TEST].Parse( flag.Args()[1:] )
-            tester = NewTester(directory)
-
         default:
             ShowHelp()
             os.Exit(-2)
-    }
-    
+        
+	}
+
     
     
     var config *facade.Config = facade.NewConfig( facade.DEFAULT_MODE )
@@ -208,25 +199,11 @@ func main() {
         mode := facade.Mode(args[0])
         switch facade.Mode(mode) {
             
-            case facade.GRID:
+            case facade.GRID, facade.LINES, facade.TEST:
                 config = facade.NewConfig(mode)
                 modeflags = config.FlagSet()
                 modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
                 modeflags.Parse( args[1:] )
-
-            case facade.LINES:
-                config = facade.NewConfig(mode)
-                modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
-                modeflags.Parse( args[1:] )
-
-            case facade.TEST:
-                config = facade.NewConfig(mode)
-                modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
-                modeflags.Parse( args[1:] )
-
-
                         
             default:
                 ShowHelp()

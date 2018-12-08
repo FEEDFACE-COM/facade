@@ -125,10 +125,11 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.mask.Init()
     
 
-    gridConfig,_ := config.Grid()    
-    renderer.grid = facade.NewGrid(&gridConfig)
+
+    gridDelta,_ := config.Grid()    
+    renderer.grid = facade.NewGrid(nil)
     renderer.grid.Init(renderer.camera,renderer.font)
-    renderer.grid.Configure(&gridConfig,renderer.camera,renderer.font)
+    renderer.grid.Configure(&gridDelta,renderer.camera,renderer.font)
     
 //    renderer.lines = facade.NewLines(config.Lines)
 //    renderer.lines.Init(renderer.camera,renderer.font)
