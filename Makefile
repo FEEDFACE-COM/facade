@@ -58,8 +58,8 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
-demo: ${BUILD_PRODUCT}
-	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid -h 10 -s; done; done
+demo:
+	./${BUILD_PRODUCT} conf grid -h 10 -s; for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe; done; done
 # for f in gfx/*.go; do cat $f | while read l; do sleep 1; echo $l | fcd; done; done
 
 

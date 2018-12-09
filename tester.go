@@ -19,17 +19,17 @@ func NewTester(directory string) *Tester { return &Tester{directory: directory} 
 
 
 func (tester *Tester) Configure(config *facade.Config) {
-    var err error
-    gfx.SetFontDirectory(tester.directory)
-    font,_ := config.Font()
-    tester.font,err = gfx.GetFont(&font)
-    if err != nil {
-        log.PANIC("fail loading font %s: %s",font,err)
-    }
-    tester.font.Init()
-    tester.name = tester.font.Name()
-    tester.mode,_ = config.Mode()
-    log.Info("got font %s",tester.font.Desc())
+//    var err error
+//    gfx.SetFontDirectory(tester.directory)
+//    font,_ := config.Font()
+//    tester.font,err = gfx.GetFont(&font)
+//    if err != nil {
+//        log.PANIC("fail loading font %s: %s",font,err)
+//    }
+//    tester.font.Init()
+//    tester.name = tester.font.Name()
+//    tester.mode,_ = config.Mode()
+//    log.Info("got font %s",tester.font.Desc())
     
     
 }

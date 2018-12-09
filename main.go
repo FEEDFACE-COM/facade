@@ -176,40 +176,70 @@ func main() {
         
 	}
 
+
+
+	
     
-    
-    var config *facade.Config = facade.NewConfig( facade.DEFAULT_MODE )
-    var modeflags *flag.FlagSet = config.FlagSet()
+    var mode facade.Mode
     args := flags[cmd].Args()
+
+	// parse mode, if given
+    if len(args) > 0 {
+	    switch facade.Mode( args[0] ) {
+			case facade.GRID, facade.LINES, facade.TEST:
+				mode = facade.Mode(args[0])
+				args = args[1:]
+		}
+	}
+
+    var state = facade.NewState(mode)
+    var modeFlags = flag.NewFlagSet(string(mode), flag.ExitOnError)    
     
-    //no more args after cmd
-    if len(args) < 1 {
-        if cmd == CONF { //conf needs args so bail
-            ShowHelpCommand(CONF,flags)
-            os.Exit(-2)
-        } else { // otherwise huh?
-                mode,_ := config.Mode()
-                modeflags.Usage = func() { ShowHelpMode(mode,cmd,modeflags) }
-                modeflags.Parse( args[0:] )
-                
-        }
-         
-            
-    } else {
-        mode := facade.Mode(args[0])
-        switch facade.Mode(mode) {
-            
-            case facade.GRID, facade.LINES, facade.TEST:
-                config = facade.NewConfig(mode)
-                modeflags = config.FlagSet()
-                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
-                modeflags.Parse( args[1:] )
-                        
-            default:
-                ShowHelp()
-                os.Exit(-2)    
-        }
-    }
+    state.AddFlags( modeFlags )
+	modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+	modeFlags.Parse( args[0:] )
+	
+	
+	config := state.CheckFlags(modeFlags)
+	log.Debug("delta "+config.Desc())
+
+
+
+
+    
+////    var config *facade.Config = facade.NewConfig()
+////    var modeflags *flag.FlagSet = config.FlagSet()
+////    var modeflags *flag.FlagSet flag.NewFlagSet(string(mode), flag.ExitOnError)
+//    
+//    
+//    //no more args after cmd
+//    if len(args) < 1 {
+//        if cmd == CONF { //conf needs args so bail
+//            ShowHelpCommand(CONF,flags)
+//            os.Exit(-2)
+//        } else { // otherwise huh?
+//                mode := config.Mode
+//                flags.Usage = func() { ShowHelpMode(mode,cmd,modeflags) }
+//                flag.Parse( args[0:] )
+//                
+//        }
+//         
+//            
+//    } else {
+//        mode := facade.Mode(args[0])
+//        switch mode {
+//            
+//            case facade.GRID, facade.LINES, facade.TEST:
+//                config.SetMode(mode)
+//                modeflags = config.FlagSet()
+//                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
+//                modeflags.Parse( args[1:] )
+//                        
+//            default:
+//                ShowHelp()
+//                os.Exit(-2)    
+//        }
+//    }
         
     
     
@@ -263,8 +293,8 @@ func main() {
         case TEST:
             if tester == nil { log.PANIC("tester not available") }
             str := "FEEDFACE.COM"
-            if modeflags.NArg() > 0 {
-                str = strings.Join(modeflags.Args()," ")
+            if modeFlags.NArg() > 0 {
+                str = strings.Join(modeFlags.Args()," ")
             }
             tester.Configure(config)
             tester.Test(str)
@@ -283,7 +313,7 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
         name,_ := flag.UnquoteUsage(f)
-        if name != "" { name = "="+name }
+        if name != "" { name = "=" }
         if len(f.Name) == 1 && name == "" { switches += f.Name }
         if len(f.Name) >  1 || name != "" { flags += " [-"+f.Name+name+"]" }
     })
@@ -291,7 +321,13 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
     fmt.Fprintf(os.Stderr,"  %s %s %s [%s]%s\n",BUILD_NAME,cmd,mode,switches,flags)
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
-    flagset.PrintDefaults()
+    flagset.VisitAll( func( f *flag.Flag) {
+        name,_ := flag.UnquoteUsage(f)
+//	    tmp := ""
+//	    tmp += fmt.Sprintf(" (%s)",f.DefValue)
+		fmt.Fprintf(os.Stderr,"  -%s\t%s\t\t%s\n",f.Name,f.Usage,name)
+	})
+//    flagset.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
 }
 

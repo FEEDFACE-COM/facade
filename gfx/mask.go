@@ -18,41 +18,32 @@ type Mask struct {
     
     width float32
     height float32
-    mask bool
+    
+    state MaskState
 }
 
 func NewMask(config *MaskConfig, screen Size) *Mask {
     ret := &Mask{width: screen.W, height: screen.H}
+    ret.state.ApplyConfig(config)
     return ret
 }
 
 
 func (mask *Mask) Configure(config *MaskConfig) {
     if config == nil { return }
-    
-    // TODO: if no change, return
 
-    if val,ok := config.Mask(); ok {
-        mask.mask = val
+	if mask.state.ApplyConfig(config) {
         log.Debug("config %s",mask.Desc())
-    }    
+	}
+
 }
 
-func (mask *Mask) Mask() bool { return mask.mask }
 
-func (mask *Mask) Desc() string {
-    ret := "mask["
-    if mask.mask {
-        ret += "✓"
-    }
-    ret += "]"
-    return ret
-}
-
+func (mask *Mask) Desc() string { return mask.state.Desc() }
 
 func (mask *Mask) Render(debug bool) {
 
-    if !mask.mask {
+    if !mask.state.Mask {
         return
     }
 

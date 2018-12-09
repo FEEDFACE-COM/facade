@@ -43,7 +43,7 @@ type Font struct {
     max struct {w, h int}
     Size [GlyphCols][GlyphRows]Size
     
-    name string
+    state FontState
 }
 
 
@@ -124,7 +124,6 @@ func getFilePathForFont(fontDirectory string, fontName string) (string,error) {
 
 
 
-func (font *Font) Name() string { return font.name }
 func (font *Font) Ratio() float32 { return float32(font.max.w) / float32(font.max.h) }
 
 func (font *Font) MaxSize() Size {
@@ -134,8 +133,7 @@ func (font *Font) MaxSize() Size {
 
 func NewFont(config *FontConfig) *Font {
     ret := &Font{}
-    name, ok := config.Name()
-    if ok { ret.name = name }
+    ret.state.ApplyConfig(config)
     return ret
 }
 
@@ -148,11 +146,13 @@ func (font *Font) Desc() string {
 //    gw, gh := GlyphCols, GlyphRows
 //    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
 
-    ret := "font["
-    ret += font.name
-    ret += fmt.Sprintf(" %.2f",font.Ratio() )
-    ret += "]"
-    return ret
+//    ret := "font["
+//    ret += font.name
+//    ret += fmt.Sprintf(" %.2f",font.Ratio() )
+//    ret += "]"
+//    return ret
+
+	return font.state.Desc()
 }
 
 
@@ -166,7 +166,7 @@ func (font *Font) loadFont(data []byte) error {
     if err != nil {
         return log.NewError("fail to parse: %s",err)
     }
-    log.Debug("load font %s",font.name)
+    log.Debug("load %s",font.Desc())
     return nil
 }
 
@@ -293,7 +293,7 @@ func (font *Font) stringForByte(b byte) string {
         if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
             return " "
         }
-        if font.name == "OCRAEXT" && b == 0xB7 {
+        if font.state.Name == "OCRAEXT" && b == 0xB7 {
             log.Debug("special-case ocraext '%c'",b)
             return " "
         }

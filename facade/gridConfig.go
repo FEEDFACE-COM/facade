@@ -5,128 +5,192 @@ package facade
 import (
     "flag"    
     "fmt"
+    gfx "../gfx"
     "strings"
 )
 
 
-type GridDelta map[string]interface{}
-
-func (delta *GridDelta) Width() (uint,bool) { ret,ok := (*delta)["width"].(float64); return uint(ret),ok }
-func (delta *GridDelta) Height() (uint,bool) { ret,ok := (*delta)["height"].(float64); return uint(ret),ok }
-func (delta *GridDelta) Downward() (bool,bool) { ret,ok := (*delta)["downward"].(bool); return ret,ok }
-func (delta *GridDelta) Scroll() (bool,bool) { ret,ok := (*delta)["scroll"].(bool); return ret,ok }
-func (delta *GridDelta) Speed() (float64,bool) { ret,ok := (*delta)["speed"].(float64); return ret,ok }
-func (delta *GridDelta) Vert() (string,bool) { ret,ok := (*delta)["vert"].(string); return ret,ok }
-func (delta *GridDelta) Frag() (string,bool) { ret,ok := (*delta)["frag"].(string); return ret,ok }
-func (delta *GridDelta) Fill() (string,bool) { ret,ok := (*delta)["fill"].(string); return ret,ok }
 
 
 
-func (delta *GridDelta) SetWidth(val uint) { (*delta)["width"] = float64(val) }
-func (delta *GridDelta) SetHeight(val uint) { (*delta)["height"] = float64(val) }
-func (delta *GridDelta) SetDownward(val bool) { (*delta)["downward"] = val }
-func (delta *GridDelta) SetScroll(val bool) { (*delta)["scroll"] = val }
-func (delta *GridDelta) SetSpeed(val float64) { (*delta)["speed"] = val }
-func (delta *GridDelta) SetVert(val string) { (*delta)["vert"] = val }
-func (delta *GridDelta) SetFrag(val string) { (*delta)["frag"] = val }
-func (delta *GridDelta) SetFill(val string) { (*delta)["fill"] = val }
+const (
+	gridWidth    = "width"
+	gridHeight   = "height"
+	gridDownward = "downward"
+	gridScroll   = "scroll"
+	gridSpeed    = "speed"
+	gridVert     = "vert"
+	gridFrag     = "frag"
+	gridFill     = "fill"
+)
 
-
-func NewGridDelta() *GridDelta {
-    ret := make(GridDelta)
-    return &ret
-}
-
-type GridConfig struct {
-    width uint
-    height uint
-    
-    downward bool
-    scroll bool
-    speed float64
-    
-    vert string
-    frag string
-    fill string
-}
-
-var GridDefaults = GridConfig {
-    0,       //width
-    8,       //height
-    false,   //downward
-    true,    //scroll
-    0.4,     //speed
-    "null",  //vert
-    "null",  //frag
-    "",      //fill
-}
+type GridConfig gfx.Config
 
 
 
-func (config *GridConfig) AddFlags(flags *flag.FlagSet) {
+func (config *GridConfig) Width()     (uint,bool) { ret,ok := (*config)[gridWidth   ].(float64); return uint(ret), ok }
+func (config *GridConfig) Height()    (uint,bool) { ret,ok := (*config)[gridHeight  ].(float64); return uint(ret), ok }
+func (config *GridConfig) Downward()  (bool,bool) { ret,ok := (*config)[gridDownward].(bool);    return      ret , ok }
+func (config *GridConfig) Scroll()    (bool,bool) { ret,ok := (*config)[gridScroll  ].(bool);    return      ret , ok }
+func (config *GridConfig) Speed()  (float64,bool) { ret,ok := (*config)[gridSpeed   ].(float64); return      ret , ok }
+func (config *GridConfig) Vert()    (string,bool) { ret,ok := (*config)[gridVert    ].(string);  return      ret , ok }
+func (config *GridConfig) Frag()    (string,bool) { ret,ok := (*config)[gridFrag    ].(string);  return      ret , ok }
+func (config *GridConfig) Fill()    (string,bool) { ret,ok := (*config)[gridFill    ].(string);  return      ret , ok }
 
-    flags.UintVar(&config.width,"w",config.width,"grid width")
-    flags.UintVar(&config.height,"h",config.height,"grid height")
-    flags.BoolVar(&config.downward,"d",config.downward,"downward")
-    flags.BoolVar(&config.scroll,"s",config.scroll,"scroll")
-    flags.Float64Var(&config.speed,"S",config.speed,"scroll speed")
-    flags.StringVar(&config.vert,"V",config.vert,"vertex shader")
-    flags.StringVar(&config.frag,"F",config.frag,"fragment shader")
-    flags.StringVar(&config.fill,"fill",config.fill,"fill pattern")
+func (config *GridConfig) SetWidth(   val uint)    { (*config)[gridWidth]    = float64(val) }
+func (config *GridConfig) SetHeight(  val uint)    { (*config)[gridHeight]   = float64(val) }
+func (config *GridConfig) SetDownward(val bool)    { (*config)[gridDownward] =         val  }
+func (config *GridConfig) SetScroll(  val bool)    { (*config)[gridScroll]   =         val  }
+func (config *GridConfig) SetSpeed(   val float64) { (*config)[gridSpeed]    =         val  }
+func (config *GridConfig) SetVert(    val string)  { (*config)[gridVert]     =         val  }
+func (config *GridConfig) SetFrag(    val string)  { (*config)[gridFrag]     =         val  }
+func (config *GridConfig) SetFill(    val string)  { (*config)[gridFill]     =         val  }
 
-}
 
-func (delta *GridDelta) Desc() string { 
+func (config *GridConfig) Desc() string { 
     ret := "grid["
-    if tmp,ok := delta.Width(); ok { ret += fmt.Sprintf("%d",tmp) }
-    ret += "x"
-    if tmp,ok := delta.Height(); ok { ret += fmt.Sprintf("%d",tmp) }
-    if tmp,ok := delta.Downward(); ok { if tmp { ret += "↓" } else { ret += "↑" } }
-    ret += " "
-    if tmp,ok := delta.Scroll(); ok { if tmp { ret += "→" } else { ret += "x" } }
-    if tmp,ok := delta.Speed(); ok { ret += fmt.Sprintf("%.1f",tmp) }
-    ret += " "
-    if tmp,ok := delta.Vert(); ok { ret += tmp }
-    ret += ","
-    if tmp,ok := delta.Frag(); ok { ret += tmp }
-    if tmp,ok := delta.Fill(); ok { ret += " " + tmp }
+    {
+    	w,wok := config.Width(); 
+	    h,hok := config.Height();
+	    if wok { ret += fmt.Sprintf("%d",w) }
+    	if wok || hok { ret += "x" }
+	    if hok { ret += fmt.Sprintf("%d",h) }
+	    if wok || hok { ret += " " }
+	}
+    
+    if tmp,ok := config.Downward(); ok { if tmp { ret += "↓ " } else { ret += "↑ " } }
+    {
+		s,sok := config.Scroll();
+		p,pok := config.Speed();
+		if sok { if s { ret += "→" } else { ret += "↛" } }
+		if pok { ret += fmt.Sprintf("%.1f",p) }
+		if pok || sok { ret += " " }
+	}
+	{
+		v, vok := config.Vert()
+		f, fok := config.Frag()
+		if vok { ret += v }
+		if vok || fok { ret += "," }
+		if fok { ret += f }
+		if vok || fok { ret += " " }	
+	}
+    if tmp,ok := config.Fill(); ok { ret += tmp + " " } 
+    ret = strings.TrimRight(ret, " ")
     ret += "]"
     return ret
 }
 
-func (config *GridConfig) Desc() string {
-	delta := config.Delta()
-	return delta.Desc()	
-}
 
-func (config *GridConfig) Delta() *GridDelta {
-	ret := NewGridDelta()
-	ret.SetWidth(config.width)
-	ret.SetHeight(config.height)
-	ret.SetDownward(config.downward)
-	ret.SetScroll(config.scroll)
-	ret.SetSpeed(config.speed)
-	ret.SetVert(config.vert)
-	ret.SetFrag(config.frag)
-	ret.SetFill(config.fill)
-	return ret	
-}
-
-func (config *GridConfig) ApplyDelta(delta *GridDelta) {
-	if tmp,ok := delta.Width(); ok { config.width = tmp }
-	if tmp,ok := delta.Height(); ok { config.height = tmp }
-	if tmp,ok := delta.Downward(); ok { config.downward = tmp }
-	if tmp,ok := delta.Scroll(); ok { config.scroll = tmp }
-	if tmp,ok := delta.Speed(); ok { config.speed = tmp }
-	if tmp,ok := delta.Vert(); ok { config.vert = tmp }
-	if tmp,ok := delta.Frag(); ok { config.frag = tmp }
-	if tmp,ok := delta.Fill(); ok { config.fill = tmp }
+func (config *GridConfig) ApplyConfig(cfg *GridConfig) {
+	if tmp,ok := cfg.Width(); ok { config.SetWidth(tmp) }	
+	if tmp,ok := cfg.Height(); ok { config.SetHeight(tmp) }	
+	if tmp,ok := cfg.Downward(); ok { config.SetDownward(tmp) }	
+	if tmp,ok := cfg.Scroll(); ok { config.SetScroll(tmp) }	
+	if tmp,ok := cfg.Speed(); ok { config.SetSpeed(tmp) }	
+	if tmp,ok := cfg.Vert(); ok { config.SetVert(tmp) }	
+	if tmp,ok := cfg.Frag(); ok { config.SetFrag(tmp) }	
+	if tmp,ok := cfg.Fill(); ok { config.SetFill(tmp) }	
 }
 
 
 
-func (delta *GridDelta) Clean() {
-    if vert,ok := delta.Vert(); ok { delta.SetVert( strings.Replace(vert,"/","",-1) ) }
-    if frag,ok := delta.Frag(); ok { delta.SetFrag( strings.Replace(frag,"/","",-1) ) }
+
+
+type GridState struct {
+    Width uint
+    Height uint
+    
+    Downward bool
+    Scroll bool
+    Speed float64
+    
+    Vert string
+    Frag string
+    Fill string
 }
+
+var GridDefaults = GridState{
+    Width:        0,
+    Height:       8,
+    Downward: false,
+    Scroll:    true,
+    Speed:      0.4,
+    Vert:    "null",
+    Frag:    "null",
+    Fill:        "",
+}
+
+func (state *GridState) AddFlags(flags *flag.FlagSet) {
+    flags.UintVar(&state.Width,"w",state.Width,"grid width")
+    flags.UintVar(&state.Height,"h",state.Height,"grid height")
+    flags.BoolVar(&state.Downward,"d",state.Downward,"downward")
+    flags.BoolVar(&state.Scroll,"s",state.Scroll,"scroll")
+    flags.Float64Var(&state.Speed,"S",state.Speed,"scroll speed")
+    flags.StringVar(&state.Vert,"V",state.Vert,"vertex shader")
+    flags.StringVar(&state.Frag,"F",state.Frag,"fragment shader")
+    flags.StringVar(&state.Fill,"fill",state.Fill,"fill pattern")
+}
+
+
+func (state *GridState) CheckFlags(flags *flag.FlagSet) (*GridConfig,bool) {
+	ok := false
+	ret := make(GridConfig)
+	flags.Visit( func(f *flag.Flag) {
+		if f.Name == "w" { ok = true; ret.SetWidth( state.Width ) }
+		if f.Name == "h" { ok = true; ret.SetHeight( state.Height ) }
+		if f.Name == "d" { ok = true; ret.SetDownward( state.Downward ) }
+		if f.Name == "s" { ok = true; ret.SetScroll( state.Scroll ) }
+		if f.Name == "S" { ok = true; ret.SetSpeed( state.Speed ) }
+		if f.Name == "V" { ok = true; ret.SetVert( state.Vert ) }
+		if f.Name == "F" { ok = true; ret.SetFrag( state.Frag ) }
+		if f.Name == "fill" { ok = true; ret.SetFill( state.Fill ) }
+	})
+	return &ret,ok
+}
+
+
+func (state *GridState) Desc() string { return state.Config().Desc() }
+
+
+
+//func (delta *GridDelta) Clean() {
+//    if vert,ok := delta.Vert(); ok { delta.SetVert( strings.Replace(vert,"/","",-1) ) }
+//    if frag,ok := delta.Frag(); ok { delta.SetFrag( strings.Replace(frag,"/","",-1) ) }
+//}
+
+
+
+
+
+func (state *GridState) Config() *GridConfig {
+	ret := make(GridConfig)
+	ret.SetWidth(state.Width)
+	ret.SetHeight(state.Height)
+	ret.SetDownward(state.Downward)
+	ret.SetScroll(state.Scroll)
+	ret.SetSpeed(state.Speed)
+	ret.SetVert(state.Vert)
+	ret.SetFrag(state.Frag)
+	ret.SetFill(state.Fill)
+	return &ret	
+}
+
+func (state *GridState) ApplyConfig(config *GridConfig) bool {
+	changed := false
+	if tmp,ok := config.Width();    ok { if state.Width    != tmp { changed = true }; state.Width = tmp }
+	if tmp,ok := config.Height();   ok { if state.Height   != tmp { changed = true }; state.Height = tmp }
+	if tmp,ok := config.Downward(); ok { if state.Downward != tmp { changed = true }; state.Downward = tmp }
+	if tmp,ok := config.Scroll();   ok { if state.Scroll   != tmp { changed = true }; state.Scroll = tmp }
+	if tmp,ok := config.Speed();    ok { if state.Speed    != tmp { changed = true }; state.Speed = tmp }
+	if tmp,ok := config.Vert();     ok { if state.Vert     != tmp { changed = true }; state.Vert = tmp }
+	if tmp,ok := config.Frag();     ok { if state.Frag     != tmp { changed = true }; state.Frag = tmp }
+	if tmp,ok := config.Fill();     ok { if state.Fill     != tmp { changed = true }; state.Fill = tmp }
+	return changed
+}
+
+
+
+
+
+
 

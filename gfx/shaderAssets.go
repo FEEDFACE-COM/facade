@@ -774,9 +774,9 @@ bool DEBUG    = debugFlag > 0.0;
 
 void main() {
     if (DEBUG) { 
-        gl_FragColor = vec4(1.,1.,0.,1.); 
+        gl_FragColor = vec4(1.,1.,1.,1.); 
     } else { 
-        gl_FragColor = vec4(1.,0.,1.,1.); 
+        gl_FragColor = texture2D(texture, vTexCoord); 
     }
 }
 `,

@@ -4,7 +4,6 @@
 package gfx
 
 import (
-    "fmt"
     log "../log"
 //    log "../log"
 //    gl "src.feedface.com/gfx/piglet/gles2"
@@ -20,8 +19,8 @@ type Camera struct {
     viewUniform int32
 
     size Size    
-    zoom float32
-    isometric bool
+    
+    state CameraState
 }
 
 
@@ -40,10 +39,10 @@ func perspective(width,height float32) mgl32.Mat4 {
 func (camera *Camera) Ratio() float32 { return camera.size.W / camera.size.H }
     
 
+
 func NewCamera(config *CameraConfig, screen Size) *Camera {
     ret := &Camera{size: screen}
-    if iso,ok  := config.Iso(); ok  { ret.isometric = iso }
-    if zoom,ok := config.Zoom(); ok { ret.zoom = zoom }
+    ret.state.ApplyConfig(config)
     return ret
 }
     
@@ -53,49 +52,38 @@ func (camera *Camera) Uniform(program *Program) {
 }
 
 
-func (camera *Camera) Init() {} //FIXME, why do we have this ??
+func (camera *Camera) Init(config *CameraConfig) {
+	camera.Configure(config)
+} 
 
 
 func (camera *Camera) Configure(config *CameraConfig) {
     if config == nil { return }
 
-    // TODO: if no change, return
-
+//	if ! camera.state.ApplyConfig(config) {
+//		return
+//	}
+	
+	
     
-    if zoom,ok := config.Zoom(); ok {
-        camera.zoom = zoom
-    }
-    
-    if iso,ok := config.Iso(); ok {
-        camera.isometric = iso                
-    }
-    
-
     const MAGIC = 2.5 / 1.05
     position := mgl32.Vec3{0,0,MAGIC}
     camera.view = mgl32.Ident4()
-    if camera.isometric {
+    zoom := float32(camera.state.Zoom)
+    if camera.state.Isometric {
         camera.projection = orthographic(camera.size.W, camera.size.H)
         camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
-        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.zoom, camera.zoom, camera.zoom ) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     } else {
         camera.projection = perspective(camera.size.W, camera.size.H)
         camera.view = camera.view.Mul4( mgl32.LookAtV(position, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
-        camera.view = camera.view.Mul4( mgl32.Scale3D( camera.zoom, camera.zoom, camera.zoom ) )
+        camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     }
     log.Debug("config %s",camera.Desc())
 
 }
 
 
-func (camera *Camera) Desc() string { 
-    ret := "cam["
-    ret += fmt.Sprintf("%.1f",camera.zoom)
-    if camera.isometric {
-        ret += " iso"
-    } 
-    ret += "]"
-    return ret
-}
+func (camera *Camera) Desc() string { return camera.state.Desc() }
     
 
