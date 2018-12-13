@@ -60,9 +60,9 @@ func (camera *Camera) Init(config *CameraConfig) {
 func (camera *Camera) Configure(config *CameraConfig) {
     if config == nil { return }
 
-//	if ! camera.state.ApplyConfig(config) {
-//		return
-//	}
+	if camera.state.ApplyConfig(config) {
+		log.Debug("camera config %s",camera.Desc())
+	}
 	
 	
     
@@ -79,7 +79,7 @@ func (camera *Camera) Configure(config *CameraConfig) {
         camera.view = camera.view.Mul4( mgl32.LookAtV(position, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
         camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     }
-    log.Debug("config %s",camera.Desc())
+    log.Debug("cam config %s",camera.Desc())
 
 }
 

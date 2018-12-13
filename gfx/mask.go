@@ -33,7 +33,7 @@ func (mask *Mask) Configure(config *MaskConfig) {
     if config == nil { return }
 
 	if mask.state.ApplyConfig(config) {
-        log.Debug("config %s",mask.Desc())
+        log.Debug("mask config %s",mask.Desc())
 	}
 
 }
