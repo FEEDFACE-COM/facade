@@ -59,7 +59,7 @@ info:
 build: ${BUILD_PRODUCT}
 
 demo:
-	./${BUILD_PRODUCT} conf grid -h 10 -s; for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe; done; done
+	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid; done; done
 # for f in gfx/*.go; do cat $f | while read l; do sleep 1; echo $l | fcd; done; done
 
 
@@ -79,9 +79,11 @@ assets: ${ASSETS}
 
 
 font/RobotoMono.ttf:
+	mkdir -p font
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/apache/robotomono/RobotoMono-Regular.ttf
 
 font/VT323.ttf:
+	mkdir -p font
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
 
 gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
