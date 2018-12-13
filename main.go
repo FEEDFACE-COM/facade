@@ -31,12 +31,13 @@ const (
     READ    Command = "read"
     RECV    Command = "recv"
     PIPE    Command = "pipe"
+    EXEC    Command = "exec"
     CONF    Command = "conf"    
     INFO    Command = "info"
     HELP    Command = "help"
     TEST    Command = "test"
 )
-var commands = []Command{CONF,PIPE,TEST}
+var commands = []Command{CONF,PIPE,EXEC,TEST}
 
 
 
@@ -128,6 +129,7 @@ func main() {
     var scanner *Scanner
     var renderer *Renderer
     var tester *Tester
+    var executor *Executor
     
     
     
@@ -140,7 +142,7 @@ func main() {
                 os.Exit(-2)    
             }
             fallthrough
-        case PIPE, CONF:
+        case PIPE, CONF, EXEC:
             flags[cmd].Usage = func() { ShowHelpCommand(cmd,flags) }
             flags[cmd].Parse( flag.Args()[1:] )
 	}
@@ -160,6 +162,13 @@ func main() {
 
         case CONF:
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
+
+		case EXEC:
+		    args := flags[cmd].Args()
+			if len(args) < 1 { log.PANIC("exec cmd [args]") }
+			executor = NewExecutor(args[0],args[1:])
+			executor.Execute()
+			os.Exit(0)
 
         case INFO:
             ShowVersion()
@@ -298,6 +307,10 @@ func main() {
             }
             tester.Configure(config)
             tester.Test(str)
+
+//		case EXEC:
+//			if executor == nil { log.PANIC("executor not available") }
+//			executor.Execute()
             
         default:
             log.PANIC("inconsistent command")
