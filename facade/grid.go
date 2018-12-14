@@ -89,6 +89,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
         
         scaleWidth :=  ratio * 2. / float32(grid.state.Width) 
         scaleHeight :=      2. / float32(grid.state.Height - 1) //minus one line below
+//        scaleHeight :=      2. / float32(grid.state.Height) 
         
         if scaleWidth < scaleHeight { 
             scale = scaleWidth
@@ -98,14 +99,14 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
                 
     }
 
-    trans := float32(-0.5)
+    var trans = float32(-0.5)
     if ( grid.state.Downward ) {
         trans *= -1.
     } 
 
     model := mgl32.Ident4()
     model = model.Mul4( mgl32.Scale3D(scale,scale,scale) )
-    model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
+//	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4, (0)*4 )
@@ -122,8 +123,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     if debug {
         gl.LineWidth(3.0)
-        
-        w,h := int(grid.state.Width), int(grid.state.Height)
+		gl.BindTexture(gl.TEXTURE_2D, 0)        
+        w,h := int(grid.state.Width), int(grid.state.Height) //still mess?
         for r:=0; r<h; r++ {
             var line *gfx.Text
             if grid.state.Downward {
@@ -184,7 +185,8 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
         
         case "coord":
             w,h := int(grid.state.Width), int(grid.state.Height)
-            for r:=0; r<h-1; r++ {
+//            for r:=0; r<h-1; r++ {
+            for r:=0; r<h; r++ {
                 line := ""
                 for c:=0; c<w; c++ {
                     d := "."
@@ -223,7 +225,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
     th := 1./float32(gfx.GlyphRows)
     tw := glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
-    
+
     return []float32{
         //vertex                     //texcoords        // tile coords
         -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
@@ -257,7 +259,8 @@ func (grid *Grid) generateData(font *gfx.Font) {
         }        
         
         for c:=0; c<w; c++ {
-            x:= c-w/2 + (1-w%2)
+//            x:= c-w/2 + (1-w%2)
+            x:= c-w/2 + (w%2)
             
             chr := byte(' ')
             if DEBUG_GRID { chr = byte('#') }
@@ -271,6 +274,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
 
 
             maxSize := font.MaxSize()
+
 
             size := gfx.Size{
                 W: glyphSize.W / glyphSize.H,
@@ -373,7 +377,8 @@ func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) *GridCon
 	        log.Debug("autowidth fail: %s",config.Desc())
 	        return config
 	    }
-        w := camera.Ratio() / font.Ratio() * float32(height-1)  //minus one for line below waiting to scroll in
+//        w := camera.Ratio() / font.Ratio() * float32(height-1)  //minus one for line below waiting to scroll in
+        w := camera.Ratio() / font.Ratio() * float32(height)
         if height == 1 { w = 5. }
         ret.SetWidth( uint(w) )
         log.Debug("autowidth %s",ret.Desc())
