@@ -4,7 +4,7 @@
 package gfx
 
 import(
-//    log "../log"    
+    log "../log"    
 )
 
 type Text struct {
@@ -26,11 +26,11 @@ func NewText(text string) *Text {
 
 const MAX_LENGTH = 20
 
-func (text *Text) RenderTexture(font *Font) {
+func (text *Text) RenderTexture(font *Font) error {
 
     if text.Texture != nil { 
         //REM, cleanup old, then rerender!
-        return; 
+        return nil;  
     }
     
     txt := text.Text
@@ -44,11 +44,11 @@ func (text *Text) RenderTexture(font *Font) {
     } else {
         rgba, err := font.RenderTextRGBA(txt)
         if err != nil {
-            
+        	return log.NewError("fail render '%s': %s",txt,err)
         } else {
             text.Texture.LoadRGBA(rgba)    
         }
     }
     text.Texture.TexImage()
-        
+    return nil
 }

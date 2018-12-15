@@ -106,7 +106,7 @@ func (state *State) AddFlags(flags *flag.FlagSet) {
 func (state *State) CheckFlags(flags *flag.FlagSet) *Config {	
 	ret := make(Config)
 	flags.Visit( func(f *flag.Flag) {
-		if f.Name == "D" { ret.SetDebug( state.Debug ) }
+		if f.Name == "D" { if state.Debug { ret.SetDebug( state.Debug ) } }
 	})
 	if state.Font != nil   { 
 		fontConfig,ok := state.Font.CheckFlags(flags) 
@@ -151,15 +151,13 @@ func (state *State) Desc() string { return state.Config().Desc() }
 func (state *State) Config() *Config {
 	ret := make(Config)
 	ret.SetMode(state.Mode)	
-	// etc...
-	ret.SetDebug(state.Debug)
+		ret.SetDebug(state.Debug)
 	return &ret
 }
 
 func (state *State) ApplyConfig(config *Config) {
 	if tmp,ok := config.Mode();  ok { state.Mode = tmp }
-	// etc...
-	if tmp,ok := config.Debug(); ok { state.Debug = tmp }	
+	if tmp,ok := config.Debug(); ok { state.Debug = tmp }  else { state.Debug = false }	
 }
 
 

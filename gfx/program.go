@@ -19,7 +19,7 @@ type Program struct {
     Program uint32
     vertexShader *Shader
     fragmentShader *Shader
-    debugFlag float32
+	DebugFlag float32
 }
 
 
@@ -91,17 +91,18 @@ func GetProgram(name string) *Program {
     return ret
 }
 
+func (program *Program) SetDebug(debug bool) {
+	program.DebugFlag = float32( 0 )
+	if debug {
+		program.DebugFlag = float32( 1 )
+	}
+    program.Uniform1fv(DEBUGFLAG, 1, &program.DebugFlag)
+}
 
 func (program *Program) UseProgram(debug bool) { 
     gl.UseProgram(program.Program) 
-    program.debugFlag = float32( 0 )
-    if debug {
-        program.debugFlag = float32( 1 )
-    }
-    program.Uniform1f(DEBUGFLAG, program.debugFlag)
+    program.SetDebug(debug)
 }
-
-
 
 
 func (program *Program) GetCompileShaders(modeName, vertName, fragName string) error {

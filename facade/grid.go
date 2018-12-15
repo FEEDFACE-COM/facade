@@ -27,6 +27,7 @@ type Grid struct {
     
     state GridState
     
+    empty *gfx.Text
         
     refreshChan chan bool
 }
@@ -88,7 +89,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
         ratio := screenRatio / fontRatio
         
         scaleWidth :=  ratio * 2. / float32(grid.state.Width) 
-        scaleHeight :=      2. / float32(grid.state.Height - 1) //minus one line below
+        scaleHeight :=      2. / float32(grid.state.Height ) //minus one line below
 //        scaleHeight :=      2. / float32(grid.state.Height) 
         
         if scaleWidth < scaleHeight { 
@@ -110,30 +111,28 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
     grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4, (0)*4 )
-    grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4 )
+	grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4 )
     grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4 )
     
     
-    count := int32(grid.state.Width*grid.state.Height)
+    count := int32(grid.state.Width*(grid.state.Height+1))
 
-    if !debug {    
+    if !debug || debug {    
+	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
         gl.DrawArrays(gl.TRIANGLES, 0, count*(2*3)  )
+	    grid.program.SetDebug(debug)
     }
 
     if debug {
         gl.LineWidth(3.0)
-		gl.BindTexture(gl.TEXTURE_2D, 0)        
-        w,h := int(grid.state.Width), int(grid.state.Height) //still mess?
+		gl.BindTexture(gl.TEXTURE_2D, 0)         //still mess?
+        w,h := int(grid.state.Width), int(grid.state.Height+1)
         for r:=0; r<h; r++ {
-            var line *gfx.Text
-            if grid.state.Downward {
-                line  = grid.buffer.Tail(uint(r))
-            } else {
-                line  = grid.buffer.Head(uint(r))
-            }        
+            var line = grid.lineForRow(r)
             for c:=0; c<w; c++ {
-                if line != nil && int(c) < len(line.Text) /**/ && line.Text[c] != byte(' ') /**/ {
+	            
+                if true && line == line /* && line != nil && int(c) < len(line.Text)  /** && line.Text[c] != byte(' ') **/ {
                     gl.DrawArrays(gl.LINE_STRIP, int32((r*w+c) * (2*3)), int32(2*3) )
                 }
             }
@@ -144,6 +143,26 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 //    if verbose { log.Debug( grid.scroller.Desc() ) }
 }
 
+
+func (grid *Grid) lineForRow(row int) *gfx.Text {
+	r := uint(row)
+	
+//	if r >= grid.state.Height { 
+//		r= grid.state.Height-1 
+//	}
+
+	if r>= grid.state.Height {
+		return grid.empty
+	}
+
+
+	if grid.state.Downward {
+		return grid.buffer.Tail(r)
+	} else {
+		return grid.buffer.Head(r)
+	}	
+	return grid.empty
+}
 
 
 func (grid *Grid) Fill(font *gfx.Font, fill string) {
@@ -246,18 +265,12 @@ const DEBUG_DATA = false
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
     tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
-    w,h := int(grid.state.Width), int(grid.state.Height)
+    w,h := int(grid.state.Width), int(grid.state.Height+1)
     for r:=0; r<h; r++ {
         tmp += "\n"
         y:= -1 * (r-h/2)
 
-        var line *gfx.Text
-        if grid.state.Downward {
-            line  = grid.buffer.Tail(uint(r))
-        } else {
-            line  = grid.buffer.Head(uint(r))
-        }        
-        
+        var line = grid.lineForRow(r)
         for c:=0; c<w; c++ {
 //            x:= c-w/2 + (1-w%2)
             x:= c-w/2 + (w%2)
@@ -323,6 +336,8 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
 
     grid.object.Init()
     grid.LoadShaders()
+
+	grid.empty.RenderTexture(font)
         
     select { case grid.refreshChan <- true: ; default: ; }
 
@@ -425,8 +440,13 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         log.Debug("rendermap %s",font.Desc())
         grid.RenderMap(font)
 //        grid.texture.TexImage()
-
+		
+		grid.empty.RenderTexture(font)
     }
+
+	{
+		if tmp,ok := config.Downward(); ok { grid.state.Downward = tmp }	
+	}
 
 	{
 		changed := false
@@ -472,6 +492,7 @@ func NewGrid(config *GridConfig) *Grid {
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
     ret.scroller = gfx.NewScroller(ret.state.Scroll,float32(ret.state.Speed))
+    ret.empty = gfx.NewText("")
     return ret
 }
 

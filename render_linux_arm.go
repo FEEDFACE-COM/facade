@@ -183,6 +183,8 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	
 	if debug,ok := config.Debug(); ok {
 		renderer.state.Debug = debug	
+	} else {
+		renderer.state.Debug = false	
 	}
     
     
