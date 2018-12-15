@@ -118,15 +118,17 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     count := int32(grid.state.Width*(grid.state.Height+1))
 
     if !debug || debug {    
+	    off := 0
+	    if grid.state.Downward { off = 2*3 }
 	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, 0, count*(2*3)  )
+        gl.DrawArrays(gl.TRIANGLES, int32(off), count*(2*3)  )
 	    grid.program.SetDebug(debug)
     }
 
     if debug {
         gl.LineWidth(3.0)
-		gl.BindTexture(gl.TEXTURE_2D, 0)         //still mess?
+		gl.BindTexture(gl.TEXTURE_2D, 0)
         w,h := int(grid.state.Width), int(grid.state.Height+1)
         for r:=0; r<h; r++ {
             var line = grid.lineForRow(r)
@@ -155,6 +157,9 @@ func (grid *Grid) lineForRow(row int) *gfx.Text {
 		return grid.empty
 	}
 
+	if r < 0 {
+		return grid.empty
+	}
 
 	if grid.state.Downward {
 		return grid.buffer.Tail(r)
@@ -266,7 +271,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
     tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
     w,h := int(grid.state.Width), int(grid.state.Height+1)
-    for r:=0; r<h; r++ {
+    for r:=-1; r<h; r++ {
         tmp += "\n"
         y:= -1 * (r-h/2)
 
@@ -376,8 +381,20 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
 
 func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
-    grid.buffer.Queue( newText )
-    grid.scroller.Once()
+    fun := func() { 
+	    grid.empty = gfx.NewText("") 
+	    select { case grid.refreshChan <- true: ; default: ; }
+	    log.Debug("empty %s",grid.Desc())
+	}
+    if grid.scroller.Once(fun) {
+	    tmp := grid.buffer.Head(0)
+	    if tmp == nil {
+			grid.empty = gfx.NewText("")
+		} else {
+			grid.empty = gfx.NewText( tmp.Text )
+		}
+	} 
+	grid.buffer.Queue( newText )
     select { case grid.refreshChan <- true: ; default: ; }
     
 }

@@ -29,13 +29,14 @@ bool lastLine() {
 }
 
 
+
 void main() {
 
     vec4 col;
+	col = texture2D(texture, vTexCoord); 
     if (DEBUG) { 
-        col = vec4(1.,1.,1.,1.); 
-    } else { 
-        col = texture2D(texture, vTexCoord); 
+        col.rgb = vec3(1.,1.,1.);
+        col.a = 1.0;
     }
     
     col.b =  -0.5 + (tileCount.x+vTileCoord.x) / tileCount.x;
@@ -50,6 +51,10 @@ void main() {
         col.r = 0.0;
 //        col.b = 0.0;
     }
+    
+    if ( vTileCoord.y+1. >= tileCount.y ) {
+    	col.rgb = vec3(0., 0., 1.);
+   	}
 
     if (!gl_FrontFacing) {
         col.rgb = 0.35 * vec3(1., 1., 1.);

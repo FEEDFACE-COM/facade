@@ -24,7 +24,7 @@ func (scroller *Scroller) Uniform(program *Program, downward bool) {
 //    if (downward) { val = -0.0 }
     
     if scroller.Timer != nil {
-        val =   math.EaseInEaseOut( scroller.Timer.Fader() )
+        val =   1. - math.EaseInEaseOut( scroller.Timer.Fader() )
     } else {
         val = 0.0;
     }
@@ -42,20 +42,23 @@ func NewScroller(scroll bool,speed float32) *Scroller {
 
 
 
-func (scroller *Scroller) Once() {
+func (scroller *Scroller) Once(fun func()) bool {
     if ! scroller.Scroll {
-        return
+        return false
     }
     if scroller.Timer != nil {
-        return    
+        return false
     }
     scroller.Timer = NewTimer(math.Abs(scroller.Speed),false )
     scroller.Timer.Start()
     scroller.Timer.Fun = func() {
         UnRegisterTimer(scroller.Timer)
         scroller.Timer = nil
+        fun()
 //        log.Debug("stop %s",scroller.Desc())
+
     }    
+    return true	
 //    log.Debug("start %s",scroller.Desc())
 }
 

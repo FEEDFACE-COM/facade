@@ -329,7 +329,7 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y += scroller;
+    pos.y += (-scroller);
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
 
@@ -803,6 +803,10 @@ void main() {
         col.r = 0.0;
 //        col.b = 0.0;
     }
+    
+    if ( vTileCoord.y+1. >= tileCount.y ) {
+    	col.rgb = vec3(0., 0., 1.);
+   	}
 
     if (!gl_FrontFacing) {
         col.rgb = 0.35 * vec3(1., 1., 1.);
