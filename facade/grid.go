@@ -116,10 +116,14 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     count := int32(grid.state.Width*(grid.state.Height+1))
+	offset := 0
+	if grid.state.Downward { //need to skip first row
+		offset = 2*3 * len( grid.buffer.Tail(0).Text ) 
+	}
+	
 
     if !debug || debug {    
 	    off := 0
-	    if grid.state.Downward { off = 2*3 }
 	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
         gl.DrawArrays(gl.TRIANGLES, int32(off), count*(2*3)  )
@@ -135,7 +139,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
             for c:=0; c<w; c++ {
 	            
                 if true && line == line /* && line != nil && int(c) < len(line.Text)  /** && line.Text[c] != byte(' ') **/ {
-                    gl.DrawArrays(gl.LINE_STRIP, int32((r*w+c) * (2*3)), int32(2*3) )
+                    gl.DrawArrays(gl.LINE_STRIP, int32((r*w+c + offset ) * (2*3) ), int32(2*3) )
                 }
             }
         }
