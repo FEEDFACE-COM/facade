@@ -37,19 +37,38 @@ type Grid struct {
 const DEBUG_GRID = false
 
 
-func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
-    
-    select {
-    
-        case refresh := <- grid.refreshChan:
-            if refresh {
-//                log.Debug("refresh %s",grid.Desc())
-                grid.generateData(font)
-            }
+func (grid *Grid) ScheduleRefresh() {
 
-        default:
-            break       
-    }
+    select { case grid.refreshChan <- true: ; default: ; }
+	
+}
+
+
+func (grid *Grid) checkRefresh() bool {
+	ret := false
+	for { //read all messages from channel
+		select {
+			case refresh := <- grid.refreshChan:
+				if refresh {
+					ret = true
+				}
+
+			default:
+				return ret
+		}
+	}
+	return ret
+}
+
+func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
+
+    
+    if grid.checkRefresh() {
+
+	    grid.generateData(font)
+	    
+	}
+    
     
     gl.ActiveTexture(gl.TEXTURE0)
     
@@ -80,25 +99,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     scale := float32( 1.0 )
-    const autoScale = true //scale model to fit screen
-    if autoScale {
-
-        fontRatio := font.Ratio()
-        screenRatio := camera.Ratio()
-        
-        ratio := screenRatio / fontRatio
-        
-        scaleWidth :=  ratio * 2. / float32(grid.state.Width) 
-        scaleHeight :=      2. / float32(grid.state.Height ) //minus one line below
-//        scaleHeight :=      2. / float32(grid.state.Height) 
-        
-        if scaleWidth < scaleHeight { 
-            scale = scaleWidth
-        } else { 
-            scale = scaleHeight
-        }
-                
-    }
+    scale = grid.autoScale(camera,font)
 
     var trans = float32(-0.5)
     if ( grid.state.Downward ) {
@@ -148,6 +149,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     }
 //    if verbose { log.Debug( grid.scroller.Desc() ) }
 }
+
+
+func (grid *Grid) Height() uint { return grid.state.Height }
+
 
 
 func (grid *Grid) lineForRow(row int) *gfx.Text {
@@ -237,6 +242,13 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
                 grid.Queue(line,font)
                 s += 1
             }
+            
+            
+        case "clear":
+        	h := int(grid.state.Height)
+        	for r:=0; r<h; r++ {
+	        	grid.Queue("",font)
+	        }
 
     }    
 }
@@ -347,8 +359,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.LoadShaders()
 
 	grid.empty.RenderTexture(font)
-        
-    select { case grid.refreshChan <- true: ; default: ; }
+	grid.ScheduleRefresh()        
 
 }
 
@@ -375,6 +386,8 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
         return log.NewError("fail to load font map: %s",err)
     }
     grid.texture.TexImage()
+	
+	grid.ScheduleRefresh()
     return nil
 }
 
@@ -387,7 +400,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     fun := func() { 
 	    grid.empty = gfx.NewText("") 
-	    select { case grid.refreshChan <- true: ; default: ; }
+	    grid.ScheduleRefresh()
 	    log.Debug("empty %s",grid.Desc())
 	}
     if grid.scroller.Once(fun) {
@@ -399,40 +412,53 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 		}
 	} 
 	grid.buffer.Queue( newText )
-    select { case grid.refreshChan <- true: ; default: ; }
+	grid.ScheduleRefresh()
     
 }
 
-//REM not here!
-func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) *GridConfig {
-	ret := *config
+
+func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
+
+	fontRatio := font.Ratio()
+	screenRatio := camera.Ratio()
 	
+	ratio := screenRatio / fontRatio
+	
+	scaleWidth  :=  ratio * 2. / float32(grid.state.Width) 
+	scaleHeight :=          2. / float32(grid.state.Height ) 
+	
+	if scaleWidth < scaleHeight { 
+		return scaleWidth
+	} else { 
+		return scaleHeight
+	}
+	
+	return float32(1.0)	
+}
+
+
+func (grid *Grid) autoWidth(camera *gfx.Camera, font *gfx.Font) {
+	h := grid.state.Height
+	var cfg = make(GridConfig)
+	cfg.SetHeight(h)
+	cfg.autoWidth(camera, font)
+	
+}
+
+func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) {
     if width,ok := config.Width(); !ok || width == 0 { // no width given
         height,ok := config.Height()
         if !ok { 
 	        log.Debug("autowidth fail: %s",config.Desc())
-	        return config
+	        return
 	    }
-//        w := camera.Ratio() / font.Ratio() * float32(height-1)  //minus one for line below waiting to scroll in
         w := camera.Ratio() / font.Ratio() * float32(height)
         if height == 1 { w = 5. }
-        ret.SetWidth( uint(w) )
-        log.Debug("autowidth %s",ret.Desc())
+        config.SetWidth( uint(w) )
+        log.Debug("autowidth %s",config.Desc())
     } 
-    return &ret
 }
 
-
-////REM not here!
-//func (grid *Grid) autoWidth(config *GridConfig, camera *gfx.Camera, font *gfx.Font) {
-//    if width,ok := config.Width(); !ok || width == 0 {
-//        height,_ := config.Height()
-//        w := camera.Ratio() / font.Ratio() * float32(height-1)  //minus one for line below waiting to scroll in
-//        if height == 1 { w = 5. }
-//        grid.state.Width = uint(w)
-//        log.Debug("autowidth %s",grid.Desc())
-//    } 
-//}
 
 
 
@@ -445,7 +471,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     log.Debug("config %s",config.Desc())
 
 
-	config = config.autoWidth(camera,font)
+	config.autoWidth(camera,font)
 
     if width,ok := config.Width(); ok { 
 	    grid.state.Width = width 
@@ -497,10 +523,13 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     if fill,ok := config.Fill(); ok {
         grid.Fill(font,fill)
     }
-
-    select { case grid.refreshChan <- true: ; default: ; }
+	
+	grid.ScheduleRefresh()
 
 }
+
+
+
 
 
 func NewGrid(config *GridConfig) *Grid {

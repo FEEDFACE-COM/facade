@@ -157,27 +157,31 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     
     log.Debug("renderer config %s",config.Desc())
     
-    if cfg,ok := config.Font(); ok {
-		newFont, err := gfx.GetFont(&cfg)
-		if err == nil {
+    if tmp,ok := config.Font(); ok {
+		newFont, err := gfx.GetFont(&tmp)
+		if err != nil {
+			log.Error("fail to get font %s",tmp.Desc())
+		} else {
 			newFont.Init()
 			renderer.font = newFont
-			if renderer.grid != nil { renderer.grid.RenderMap(renderer.font) }
-		} else {
-			log.Error("fail to get %s",cfg.Desc())
+			if renderer.grid != nil { 
+				cfg := make(facade.GridConfig)
+				cfg.SetHeight( renderer.grid.Height() )
+				renderer.grid.Configure(&cfg,renderer.camera,renderer.font)
+			}
 		}
 	}
     
-    if cfg,ok := config.Camera(); ok {
-		renderer.camera.Configure(&cfg)    
+    if tmp,ok := config.Camera(); ok {
+		renderer.camera.Configure(&tmp)    
 	}
     
-    if cfg,ok := config.Mask(); ok {
-		renderer.mask.Configure(&cfg)    
+    if tmp,ok := config.Mask(); ok {
+		renderer.mask.Configure(&tmp)    
 	}
 
-    if cfg,ok := config.Grid(); ok {
-		renderer.grid.Configure(&cfg,renderer.camera,renderer.font)    
+    if tmp,ok := config.Grid(); ok {
+		renderer.grid.Configure(&tmp,renderer.camera,renderer.font)    
 	    
 	}
 	
@@ -186,39 +190,6 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	} else {
 		renderer.state.Debug = false	
 	}
-    
-    
-//    
-////    config.Clean()
-//    log.Debug("configure %s",config.Desc())
-//    
-//    renderer.config = *config
-//    
-//    if mode,ok := config.Mode(); ok && mode != renderer.mode {
-//        renderer.mode = mode
-//        log.Debug("switch mode %s",string(mode))
-//    }
-//    
-//    
-//    if fontConfig,ok := delta.Font(); ok && string(fontConfig) != renderer.font.Name() {
-//        log.Debug("switch %s",fontConfig)
-//        newFont,err := gfx.GetFont(&fontConfig)
-//        if err == nil {
-//            newFont.Init()
-//            renderer.font = newFont
-//        } else {
-//            log.Error("fail to get font %s",fontConfig.Desc())
-//        } 
-//    }
-//    
-//    if gridConfig,ok := config.Grid(); ok {
-//        renderer.grid.Configure(&gridConfig,renderer.camera,renderer.font)
-//    }
-////    renderer.lines.Configure(config.Lines)
-////    renderer.test.Configure(config.Test)
-//
-//    if cameraConfig,ok := config.Camera(); ok { renderer.camera.Configure(&cameraConfig) }
-//    if maskConfig, ok := config.Mask(); ok { renderer.mask.Configure(&maskConfig) }
     
     return nil
 }
