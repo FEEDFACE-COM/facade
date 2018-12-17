@@ -183,7 +183,9 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
     
     switch fill {
     
-        case "title1": 
+    	//todo: cheeck widht, switch different titles
+    	//also, clear!
+        case "title": 
             for _,line := range []string{
                 "                    ",
                 " _  _   _  _   _   _",
@@ -216,7 +218,7 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
             }
         
         
-        case "coord":
+        case "grid":
             w,h := int(grid.state.Width), int(grid.state.Height)
 //            for r:=0; r<h-1; r++ {
             for r:=0; r<h; r++ {
@@ -401,10 +403,14 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     fun := func() { 
 	    grid.empty = gfx.NewText("") 
 	    grid.ScheduleRefresh()
-	    log.Debug("empty %s",grid.Desc())
+	    log.Debug("empty funned: %s",grid.Desc())
 	}
     if grid.scroller.Once(fun) {
-	    tmp := grid.buffer.Head(0)
+	    log.Debug("empty primed: %s",grid.Desc())
+		tmp := grid.buffer.Head(0)
+	    if grid.state.Downward {
+		    tmp = grid.buffer.Tail(0)
+		}
 	    if tmp == nil {
 			grid.empty = gfx.NewText("")
 		} else {
