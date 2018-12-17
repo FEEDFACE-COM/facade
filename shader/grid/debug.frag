@@ -13,21 +13,35 @@ bool DEBUG    = debugFlag > 0.0;
 bool DOWNWARD = downward == 1.0;
 
 bool firstLine() {
-    if (mod(tileCount.y, 2.0) != 1.0 ) { 
-        return 0.5*tileCount.y       <= vTileCoord.y ;
-    } else {
-        return  0.5*(tileCount.y+2.) <= vTileCoord.y + 1. ;
-    }
-}
 
-bool lastLine() {
-    if (mod(tileCount.y, 2.0) != 1.0 ) { 
-        return -0.5*tileCount.y + 1.0 >= vTileCoord.y ;
-    } else {
-        return -0.5*(tileCount.y-2.) >= vTileCoord.y - 1. ;
-    }
+	return (vTileCoord.y+3.) * 2. <= tileCount.y;
+
+	return vTileCoord.y -1. <= tileCount.y/-2.;
+	return vTileCoord.y -2. <= tileCount.y/-2.;
 
 }
+
+
+bool lastLine() { 
+	return  vTileCoord.y*2.  > tileCount.y+1. ;
+}
+
+//bool firstLine() {
+//    if (mod(tileCount.y, 2.0) != 1.0 ) { 
+//        return 0.5*tileCount.y       <= vTileCoord.y ;
+//    } else {
+//        return  0.5*(tileCount.y+2.) <= vTileCoord.y + 1. ;
+//    }
+//}
+
+//bool lastLine() {
+//    if (mod(tileCount.y, 2.0) != 1.0 ) { 
+//        return -0.5*tileCount.y + 1.0 >= vTileCoord.y ;
+//    } else {
+//        return -0.5*(tileCount.y-2.) >= vTileCoord.y - 1. ;
+//    }
+//
+//}
 
 
 bool newestLine() {

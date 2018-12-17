@@ -119,7 +119,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     count := int32(grid.state.Width*(grid.state.Height+1))
 	offset := 0
 	if grid.state.Downward { //need to skip first row
-		offset = len( grid.buffer.Tail(0).Text ) 
+		tail := grid.buffer.Tail(0)
+		if tail != nil {
+			offset = len( tail.Text ) 
+		}
 	}
 	
 
