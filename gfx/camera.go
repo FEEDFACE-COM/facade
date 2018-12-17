@@ -66,7 +66,8 @@ func (camera *Camera) Configure(config *CameraConfig) {
 	
 	
     
-    const MAGIC = 2.5 / 1.05
+//    const MAGIC = 2.5 / 1.05
+    const MAGIC = 2.5
     position := mgl32.Vec3{0,0,MAGIC}
     camera.view = mgl32.Ident4()
     zoom := float32(camera.state.Zoom)
