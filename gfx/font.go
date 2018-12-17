@@ -293,7 +293,7 @@ func (font *Font) stringForByte(b byte) string {
         if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
             return " "
         }
-        if font.state.Name == "OCRAEXT" && b == 0xB7 {
+        if strings.ToUpper(font.state.Name) == "OCRAEXT" && b == 0xB7 {
             log.Debug("special-case ocraext '%c'",b)
             return " "
         }
