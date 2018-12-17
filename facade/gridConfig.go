@@ -115,8 +115,8 @@ var GridDefaults = GridState{
     Downward: false,
     Scroll:    true,
     Speed:      0.4,
-    Vert:    "null",
-    Frag:    "null",
+    Vert:    "def",
+    Frag:    "def",
     Fill:        "",
 }
 

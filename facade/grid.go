@@ -119,29 +119,40 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     count := int32(grid.state.Width*(grid.state.Height+1))
 	offset := 0
 	if grid.state.Downward { //need to skip first row
-		offset = 2*3 * len( grid.buffer.Tail(0).Text ) 
+		offset = len( grid.buffer.Tail(0).Text ) 
 	}
 	
 
     if !debug || debug {    
-	    off := 0
+	    off := offset
 	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, int32(off), count*(2*3)  )
+        gl.DrawArrays(gl.TRIANGLES, int32(off * 2*3), count*(2*3)  )
 	    grid.program.SetDebug(debug)
     }
 
     if debug {
         gl.LineWidth(3.0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-        w,h := int(grid.state.Width), int(grid.state.Height+1)
-        for r:=0; r<h; r++ {
+        w,h := int(grid.state.Width), int(grid.state.Height)
+        from := 0
+        to := h+1
+        if ! grid.state.Downward {
+	    	from = -1;
+	    	to = h;    
+	    }
+        for r:=from; r<to; r++ {
             var line = grid.lineForRow(r)
             for c:=0; c<w; c++ {
-	            
-                if true && line == line /* && line != nil && int(c) < len(line.Text)  /** && line.Text[c] != byte(' ') **/ {
-                    gl.DrawArrays(gl.LINE_STRIP, int32((r*w+c + offset ) * (2*3) ), int32(2*3) )
-                }
+
+				if line == nil { break }
+				if int(c) >= len(line.Text) { break }
+
+				
+				off := r*w + c
+				off += w
+				gl.DrawArrays(gl.LINE_STRIP, int32(off * 2*3), int32(2*3) )
+
             }
         }
         
@@ -408,9 +419,9 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     if grid.scroller.Once(fun) {
 	    log.Debug("empty primed: %s",grid.Desc())
 		tmp := grid.buffer.Head(0)
-	    if grid.state.Downward {
-		    tmp = grid.buffer.Tail(0)
-		}
+//	    if grid.state.Downward {
+//		    tmp = grid.buffer.Tail(0)
+//		}
 	    if tmp == nil {
 			grid.empty = gfx.NewText("")
 		} else {
