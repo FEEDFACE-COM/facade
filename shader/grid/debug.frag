@@ -7,7 +7,6 @@ uniform sampler2D texture;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 
-uniform float vScroller;
 
 bool DEBUG    = debugFlag > 0.0;
 bool DOWNWARD = downward == 1.0;
@@ -25,6 +24,14 @@ bool lastLine() {
 	return  vTileCoord.y*2.  > tileCount.y + 1. ;
 }
 
+bool newestLine() {
+	return ! DOWNWARD && firstLine() || DOWNWARD && lastLine() ;
+}
+
+bool oldestLine() {
+	return ! DOWNWARD && lastLine()  || DOWNWARD && firstLine();
+}
+
 
 void main() {
 
@@ -35,14 +42,14 @@ void main() {
         col.a = 1.0;
     }
     
-    if ( ! DOWNWARD && firstLine() || DOWNWARD && lastLine() ) {
-		col.gb = vec2(0. , 0.); // red
+    if ( newestLine() ) {
+		col.r = 0.0;
 	}
-    else if ( ! DOWNWARD && lastLine() || DOWNWARD && firstLine() ) {
-		col.rg = vec2(0.0,0.0); //blue
+	else if ( oldestLine() ) {
+		col.g = 0.0;
 	}
 	else {
-		col.rb = vec2( 0., 0.); // green
+		col.rg = vec2(0.0,0.0);
 	}
 
     if (gl_FrontFacing) {

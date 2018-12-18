@@ -7,7 +7,8 @@ import (
 )
 
 
-const DEFAULT_FONT = "vt323"
+//const DEFAULT_FONT = "vt323"
+const DEFAULT_FONT = "Menlo"
 
 
 
