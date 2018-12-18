@@ -71,7 +71,7 @@ void main() {
 
 
     pos.z -= tileCoord.y;
-    pos.z -= scroller;
+    pos.z += scroller;
 
 
     

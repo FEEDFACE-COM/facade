@@ -45,12 +45,10 @@ void main() {
         col = texture2D(texture, vTexCoord);
     }
 
-
-
 	if ( newestLine() ) {
-		col.a = 1.0 - scroller;
+		col.rgba *= (1.0 - scroller);
 	} else if ( oldestLine() ) {
-		col.a = scroller;
+		col.rgba *= scroller;
 	}
 
 
