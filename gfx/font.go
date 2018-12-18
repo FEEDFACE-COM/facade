@@ -311,7 +311,7 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     
     const (
         pointSize = 72.0
-        dpi = 144.0  
+        dpi = 256.0  
         rowSpacing = 1.25
     )
     
@@ -351,7 +351,7 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
 
 const (
     pointSize = 28.0
-    dpi = 144.0  
+    dpi = 256.0  
     rowSpacing = 1.25
 )
 
