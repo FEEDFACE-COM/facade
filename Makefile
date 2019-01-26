@@ -24,7 +24,7 @@ ASSET_FRAG=$(wildcard shader/*.frag shader/*/*.frag)
 
 GCFLAGS ?= 
 ifeq (${BUILD_DEBUG},true)
-    GCFLAGS += -N -l
+    GCFLAGS += -N -l 
 endif
 
 LDFLAGS = -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
@@ -35,9 +35,10 @@ default: build
 help:
 	@echo "### Usage ###"
 	@echo " make build    # build static executable"
-	@echo " make proto    # rebuild protocol files"
 	@echo " make info     # show build info"
+	@echo " make assets   # build fonts and shaders"
 	@echo " make clean    # clean up"
+	
 
 
 info: 
@@ -73,7 +74,7 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
 ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
-	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" $(shell go list -f '{{.GoFiles}}' | tr -d '[]' )
+	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
 assets: ${ASSETS}
 
