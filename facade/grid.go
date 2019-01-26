@@ -417,10 +417,8 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
     fun := func() { 
 	    grid.empty = gfx.NewText("") 
 	    grid.ScheduleRefresh()
-	    log.Debug("empty funned: %s",grid.Desc())
 	}
     if grid.scroller.Once(fun) {
-	    log.Debug("empty primed: %s",grid.Desc())
 		tmp := grid.buffer.Head(0)
 //	    if grid.state.Downward {
 //		    tmp = grid.buffer.Tail(0)
