@@ -55,7 +55,8 @@ void main() {
     if (!gl_FrontFacing) {
 		col.a /= 2.;
 	}
-	
+
+//    col = vec4(1.,1.,1.,1.);	
     gl_FragColor = col;
 
 }

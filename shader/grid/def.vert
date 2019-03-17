@@ -18,7 +18,7 @@ attribute vec2 tileCoord;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -27,11 +27,17 @@ bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
 bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
 
 
-
+//float abs(float a) {
+//    if ( a < 0.0 ) {
+//         return -1. * a; 
+//    } 
+//    return a; 
+//}
 
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
 
