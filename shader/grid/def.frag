@@ -16,24 +16,28 @@ bool DEBUG    = debugFlag > 0.0;
 bool DOWNWARD = downward == 1.0;
 
 bool firstLine() {
-	float t = 2.;
-    if (mod(tileCount.y, 2.0) != 1.0 ) {
-    	t = 1.;
-    }
-	return (  tileCount.y + vTileCoord.y - t) * 2. <= tileCount.y;
+    float t = 0.0;
+    if (DOWNWARD) {
+        t = 1.;
+    }    
+    return (  tileCount.y + vTileCoord.y - 1.) * 2. + t <= tileCount.y;
 }
 
 
 bool lastLine() { 
-	return  vTileCoord.y*2.  > tileCount.y + 1. ;
+    float t = 0.0;
+    if (DOWNWARD) {
+        t = 1.0;
+    } 
+    return  vTileCoord.y*2.  > tileCount.y - t;
 }
 
 bool newestLine() {
-	return ! DOWNWARD && firstLine() || DOWNWARD && lastLine() ;
+	return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
 }
 
 bool oldestLine() {
-	return ! DOWNWARD && lastLine()  || DOWNWARD && firstLine();
+	return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
 }
 
 
@@ -46,9 +50,9 @@ void main() {
     }
 
 	if ( newestLine() ) {
-		col.rgba *= (1.0 - scroller);
+		col.a *= (1.0 - scroller);
 	} else if ( oldestLine() ) {
-		col.rgba *= scroller;
+		col.a *= scroller;
 	}
 
 
@@ -56,7 +60,6 @@ void main() {
 		col.a /= 2.;
 	}
 
-//    col = vec4(1.,1.,1.,1.);	
     gl_FragColor = col;
 
 }

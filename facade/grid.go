@@ -118,19 +118,18 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     count := int32(grid.state.Width*(grid.state.Height+1))
 	offset := 0
-	if grid.state.Downward { //need to skip first row
+	if grid.state.Downward && grid.state.Height % 2  == 0 { //need to skip first row
 		tail := grid.buffer.Tail(0)
 		if tail != nil {
-			offset = len( tail.Text ) 
+			offset = len( tail.Text ) + 1.
 		}
-	}
-	
+    }	
 
     if !debug || debug {    
 	    off := offset
 	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, int32(off * 2*3), count*(2*3)  )
+        gl.DrawArrays(gl.TRIANGLES, int32(off * 2*3), (count)*(2*3)  )
 	    grid.program.SetDebug(debug)
     }
 
