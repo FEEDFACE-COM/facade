@@ -11,53 +11,56 @@ varying float vScroller;
 
 bool DEBUG    = debugFlag > 0.0;
 bool DOWNWARD = downward == 1.0;
-bool EVENLINES = mod(tileCount.y, 2.0) != 1.0;
+bool ODDLINES = mod(tileCount.y, 2.0) == 1.0;
 
 
 bool firstLine() {
+    float s = 0.0;
     float t = 0.0;
-    if (DOWNWARD) {
-        t = 1.;
-    }    
-    return (  tileCount.y + vTileCoord.y - 1.) * 2. + t <= tileCount.y;
+    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
+    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
+    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 1.0; }
+    if (   DOWNWARD &&   ODDLINES) { s = 0.0; t = 1.0; }
+    return (  tileCount.y + (vTileCoord.y-s) - 1.) * 2. + t <= tileCount.y;
 }
 
 
 bool lastLine() { 
+    float s = 0.0;
     float t = 0.0;
-    if (DOWNWARD) {
-        t = 1.0;
-    } 
-    return  vTileCoord.y*2.  > tileCount.y - t;
+    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
+    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
+    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 1.0; }
+    if (   DOWNWARD &&   ODDLINES) { s = 0.0; t = 1.0; }
+    return  (vTileCoord.y-s)*2.  > tileCount.y - t;
 }
 
 bool newestLine() {
-	return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
+    return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
 }
 
 bool oldestLine() {
-	return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
+    return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
 }
 
 
 
 void main() {
     vec4 col;
-	col = texture2D(texture, vTexCoord); 
+    col = texture2D(texture, vTexCoord); 
 
     if (DEBUG) { 
         col.rgb = vec3(1.,1.,1.);
         col.a = 1.0;
-    }
+    } 
     
-    if ( newestLine() ) {
-        col.rb *= 0.; //green
-		col.a *= (1.-vScroller);
-	}
-	else if ( oldestLine() ) {
-        col.gb *= 0.; //red
-		col.a *= vScroller;
-	}
+//    if (firstLine()) { col.r *= 0.; } //cyan
+//    if (lastLine())  { col.g *= 0.; } //magenta
+    
+    
+    if ( newestLine() ) { col.rb *= 0.; col.a *= (1.-vScroller); } //green
+    if ( oldestLine() ) { col.gb *= 0.; col.a *= vScroller; }      //red
+
 
 
     gl_FragColor = col;

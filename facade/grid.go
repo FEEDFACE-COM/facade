@@ -117,49 +117,79 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     count := int32(grid.state.Width*(grid.state.Height+1))
-	offset := 0
-	if grid.state.Downward && grid.state.Height % 2  == 0 { //need to skip first row
+	offset := int32(0)
+//	if grid.state.Downward && grid.state.Height % 2  == 0 { //need to skip first row
+//		tail := grid.buffer.Tail(0)
+//		if tail != nil {
+//			offset = len( tail.Text ) + 1.
+//		}
+//    }	
+	if grid.state.Downward && grid.state.Height % 2 != 0 { //need to skip first row
 		tail := grid.buffer.Tail(0)
 		if tail != nil {
-			offset = len( tail.Text ) + 1.
+			offset = int32(grid.state.Width)
+		}
+    }	
+	if grid.state.Downward && grid.state.Height % 2 == 0 { //need to skip first row
+		head := grid.buffer.Head(0)
+		if head != nil {
+			offset = int32(grid.state.Width)
 		}
     }	
 
+    if gfx.ClockDebug() {
+        log.Debug("offset %d",offset)    
+    }
+
     if !debug || debug {    
-	    off := offset
 	    grid.program.SetDebug(false)
         grid.texture.BindTexture()
-        gl.DrawArrays(gl.TRIANGLES, int32(off * 2*3), (count)*(2*3)  )
+        gl.DrawArrays(gl.TRIANGLES, int32(offset * 2*3), (count)*(2*3)  )
 	    grid.program.SetDebug(debug)
     }
+
+//    if debug {
+//        gl.LineWidth(3.0)
+//		gl.BindTexture(gl.TEXTURE_2D, 0)
+//        w,h := int(grid.state.Width), int(grid.state.Height)
+//        from := 0
+//        to := h+1
+//        if ! grid.state.Downward {
+//	    	from = -1;
+//	    	to = h;    
+//	    }
+//        for r:=from; r<to; r++ {
+//            var line = grid.lineForRow(r)
+//            for c:=0; c<w; c++ {
+//
+//				if line == nil { break }
+//				if int(c) >= len(line.Text) { break }
+//
+//				
+//				off := r*w + c
+//				off += w
+//				gl.DrawArrays(gl.LINE_STRIP, int32(off * 2*3), int32(2*3) )
+//
+//            }
+//        }
+//        
+//        
+//    }
+
 
     if debug {
         gl.LineWidth(3.0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-        w,h := int(grid.state.Width), int(grid.state.Height)
-        from := 0
-        to := h+1
-        if ! grid.state.Downward {
-	    	from = -1;
-	    	to = h;    
-	    }
-        for r:=from; r<to; r++ {
-            var line = grid.lineForRow(r)
-            for c:=0; c<w; c++ {
-
-				if line == nil { break }
-				if int(c) >= len(line.Text) { break }
-
-				
-				off := r*w + c
-				off += w
-				gl.DrawArrays(gl.LINE_STRIP, int32(off * 2*3), int32(2*3) )
-
-            }
-        }
+//        w,h := int(grid.state.Width), int(grid.state.Height)
+//        for r:=0; r<h+1; r++ {
+//            gl.DrawArrays(gl.LINE_STRIP, int32(r*w*2*3), int32(w)*int32(2*3) )
+//        }
+        gl.DrawArrays(gl.LINE_STRIP, int32(offset * 2*3), (count)*(2*3)  )
         
         
     }
+
+
 //    if verbose { log.Debug( grid.scroller.Desc() ) }
 }
 
@@ -296,7 +326,7 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
 
 
-const DEBUG_DATA = false
+const DEBUG_DATA = true
 
 func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
@@ -337,8 +367,9 @@ func (grid *Grid) generateData(font *gfx.Font) {
 
             grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
 
-            tmp += fmt.Sprintf("%+d/%+d    ",x,y)
+//            tmp += fmt.Sprintf("%+d/%+d    ",x,y)
 //            tmp += fmt.Sprintf(" %.0fx%0.f    ",float32(glyphSize.W),float32(glyphSize.H))
+            tmp += fmt.Sprintf("%c|",chr)
         } 
     }
     if DEBUG_DATA { log.Debug(tmp) }
