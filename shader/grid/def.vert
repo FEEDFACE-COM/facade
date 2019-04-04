@@ -4,6 +4,7 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
@@ -22,12 +23,6 @@ varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
-
-bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
-bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
-
-
-
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
@@ -39,17 +34,8 @@ void main() {
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
 
-    if ( oddColCount() ) {
-    	pos.x += (-1.0 * tileSize.x);
-    } else {
-    	pos.x += ( 0.5 * tileSize.x);
-   	}
-
-	if ( oddRowCount() ) {
-		pos.y += (-1.0 * tileSize.y);
-	} else {
-		pos.y += (-0.5 * tileSize.y);
-	}
+    pos.x += ( tileOffset.x * tileSize.x);
+    pos.y += ( tileOffset.y * tileSize.y);
 
     gl_Position = projection * view * model * pos;
 }

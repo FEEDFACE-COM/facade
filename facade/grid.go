@@ -82,6 +82,19 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
+    
+    tileOffset := mgl32.Vec2{}
+    if grid.state.Width % 2 == 0 { //even columns
+        tileOffset[0] = 0.5
+    } else {// odd columns
+        tileOffset[0] = -1.
+    }
+    if grid.state.Height % 2 == 0 { //even rows
+        tileOffset[1] = -0.5
+    } else { // odd rows
+        tileOffset[1] = -1.
+    }
+    grid.program.Uniform2fv(gfx.TILEOFFSET, 1, &tileOffset[0] );
 
     clocknow := float32( gfx.NOW() )
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )

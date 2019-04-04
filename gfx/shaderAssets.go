@@ -263,6 +263,7 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
@@ -298,9 +299,12 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y -= scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
+//    pos.y -= scroller;
+//    pos.x += (tileCoord.x * tileSize.x);
+//    pos.y += (tileCoord.y * tileSize.y);
+
+//    pos.x += ( tileOffset.x * tileSize.x);
+//    pos.y += ( tileOffset.y * tileSize.y);
 
     if ( oddColCount() ) {
     	pos.x += (-1.0 * tileSize.x);
@@ -316,6 +320,7 @@ void main() {
 	
 
     float F = 0.25;
+    
     pos.z += F * cos( pos.x + 2. * now         );
     pos.z += F * cos( pos.y + 3. * now + PI/2. );
 	
@@ -374,12 +379,14 @@ void main() {
     pos.y += (tileCoord.y * tileSize.y);
 
 
+    //REM this could be done at generateData time?
     if ( oddColCount() ) {
     	pos.x += (-1.0 * tileSize.x);
     } else {
     	pos.x += ( 0.5 * tileSize.x);
    	}
 
+    //REM this could be done at generateData time?
 	if ( oddRowCount() ) {
 		pos.y += (-1.0 * tileSize.y);
 	} else {
@@ -387,10 +394,17 @@ void main() {
 	}
     
     float F = 0.5;
-    float f0 = cos( vTileCoord.y    + now + PI/2. );
-    float f1 = cos( vTileCoord.y-1. + now + PI/2. );
+    float t = -1.;
+    if (downward == 1.0) {
+        t = 1.;
+    }
+    float y  =  vTileCoord.y       / (tileCount.y/2.);
+    float yy = (vTileCoord.y + t ) / (tileCount.y/2.);
 
-    float d =  f0 + scroller * (f1 - f0);
+    float freq = 2.;
+    float f0 = cos( freq * y  * PI + now + PI/2. );
+    float f1 = cos( freq * yy * PI + now + PI/2. );
+    float d =  f0 + abs(scroller) * (f1 - f0);
     pos.z += F * d;
 
 
@@ -986,8 +1000,9 @@ void main() {
 //    if (lastLine())  { col.g *= 0.; } //magenta
     
     
-    if ( newestLine() ) { col.rb *= 0.; col.a *= (1.-vScroller); } //green
+    if ( newestLine() )   { col.rb *= 0.; col.a *= (1.-vScroller); } //green
     if ( oldestLine() ) { col.gb *= 0.; col.a *= vScroller; }      //red
+    
 
     gl_FragColor = col;
     

@@ -60,8 +60,9 @@ void main() {
 //    if (lastLine())  { col.g *= 0.; } //magenta
     
     
-    if ( newestLine() ) { col.rb *= 0.; col.a *= (1.-vScroller); } //green
+    if ( newestLine() )   { col.rb *= 0.; col.a *= (1.-vScroller); } //green
     if ( oldestLine() ) { col.gb *= 0.; col.a *= vScroller; }      //red
+    
 
     gl_FragColor = col;
     
