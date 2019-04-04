@@ -6,24 +6,6 @@ varying vec2 vTexCoord;
 
 bool DEBUG = debugFlag > 0.0;
 
-bool grid(vec2 pos) {
-    float w = 0.005;
-    for (float d = -2.0; d<=2.0; d+=1.0) {
-        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
-        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
-    }
-    
-    return false;
-}
-
-
-//float mask(vec2 pos) {
-//    float MARGIN = 0.125;
-//    if ( abs(pos.x) > (ratio*1.0) - MARGIN ) { return 1.0; }
-//    if ( abs(pos.y) >        1.0  - MARGIN ) { return 1.0; }
-//    return 0.0;
-//}
-
 float MAX(float a, float b) { 
     if (a>=b) 
         return a; 
@@ -56,14 +38,8 @@ void main() {
 
     a = mask(vec2(pos.x/ratio,pos.y));
 
-
-    if ( true && DEBUG && grid(pos) ) {
-        float gray = 0.5;
-        col = gray * vec3(1.,1.,1.);
-    }
-
     if (DEBUG) {
-        col.r =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
+        col.b =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
     }
     
     

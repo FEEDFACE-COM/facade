@@ -42,17 +42,20 @@ void main() {
 
     float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 
-    float a = tileCoord.x / tileCount.x * 2. * PI + 0.25* sin(now);
+    float a = tileCoord.x / tileCount.x * 2. * PI;// + 0.25* sin(now);
     float a0 = a + PI/2.;
     float a1 = a;
     float radius = 4. + tileCoord.y / tileCount.y * 5.;
-    radius -= scroller;
+    
+    
+    radius -= vScroller;
 
 
     pos.x *= radius/2.;
 
     vec2 p = vec2(pos.x,pos.y);
-
+    
+    
     mat2 rotate = mat2(
         cos(-a0),  -1. * sin(-a0),
         sin(-a0),  cos(-a0) 

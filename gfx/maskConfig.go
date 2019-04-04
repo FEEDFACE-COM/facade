@@ -11,13 +11,13 @@ const(
 
 type MaskConfig Config
 
-func (config *MaskConfig) Mask() (bool,bool) { ret,ok := (*config)[maskMask].(bool); return ret,ok }
-func (config *MaskConfig) SetMask(val bool) { (*config)[maskMask] = val }
+func (config *MaskConfig) Mask() (string,bool) { ret,ok := (*config)[maskMask].(string); return ret,ok }
+func (config *MaskConfig) SetMask(val string) { (*config)[maskMask] = val }
     
 func (config *MaskConfig) Desc() string { 
     ret := "mask["
     if val,ok := config.Mask(); ok {
-	    if  val {ret += "✓" } else { ret += "✗" }
+        if val == "def" { ret += "" } else { ret += val }
     }
     ret += "]"
     return ret
@@ -30,15 +30,16 @@ func (config *MaskConfig) ApplyConfig(cfg *MaskConfig) {
 
 
 type MaskState struct {
-	Mask bool	
+	Mask string	
 }
 
 var MaskDefaults = MaskState{
-	Mask:    false,
+	Mask:    "def",
 }
 
 func (state *MaskState) AddFlags(flags *flag.FlagSet) {
-    flags.BoolVar(&state.Mask,"mask",state.Mask,"mask" )  
+    flags.StringVar(&state.Mask,"mask",state.Mask,"mask shader")
+
 }
 
 

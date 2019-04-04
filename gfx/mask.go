@@ -34,8 +34,9 @@ func (mask *Mask) Configure(config *MaskConfig) {
 
 	if mask.state.ApplyConfig(config) {
         log.Debug("mask config %s",mask.Desc())
-	}
-
+        mask.LoadShaders()	
+    }
+	
 }
 
 
@@ -43,7 +44,7 @@ func (mask *Mask) Desc() string { return mask.state.Desc() }
 
 func (mask *Mask) Render(debug bool) {
 
-    if !mask.state.Mask {
+    if mask.state.Mask == "def" {
         return
     }
 
@@ -59,6 +60,14 @@ func (mask *Mask) Render(debug bool) {
 
 }
 
+func (mask *Mask) LoadShaders() error {
+    var err error
+    err = mask.program.GetCompileShaders("mask/","def",mask.state.Mask)
+    if err != nil { log.Error("fail load mask shaders: %s",err) }
+    err = mask.program.LinkProgram(); 
+    if err != nil { log.Error("fail to link mask program: %s",err) }
+    return nil
+}
 
 func (mask *Mask) Init() {
     w := mask.width  
@@ -80,14 +89,9 @@ func (mask *Mask) Init() {
     mask.object.Init()
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
-    var err error    
     mask.program = GetProgram("mask")
+    mask.LoadShaders()
 
-    err = mask.program.GetCompileShaders("mask/","null","null")
-    if err != nil { log.Error("fail load mask shaders: %s",err) }
-
-    err = mask.program.LinkProgram(); 
-    if err != nil { log.Error("fail to link mask program: %s",err) }
 
 }
 

@@ -117,17 +117,20 @@ void main() {
 
     float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 
-    float a = tileCoord.x / tileCount.x * 2. * PI + 0.25* sin(now);
+    float a = tileCoord.x / tileCount.x * 2. * PI;// + 0.25* sin(now);
     float a0 = a + PI/2.;
     float a1 = a;
     float radius = 4. + tileCoord.y / tileCount.y * 5.;
-    radius -= scroller;
+    
+    
+    radius -= vScroller;
 
 
     pos.x *= radius/2.;
 
     vec2 p = vec2(pos.x,pos.y);
-
+    
+    
     mat2 rotate = mat2(
         cos(-a0),  -1. * sin(-a0),
         sin(-a0),  cos(-a0) 
@@ -429,12 +432,6 @@ bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
 bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
 
 
-//float abs(float a) {
-//    if ( a < 0.0 ) {
-//         return -1. * a; 
-//    } 
-//    return a; 
-//}
 
 void main() {
     vTexCoord = texCoord;
@@ -632,24 +629,6 @@ varying vec2 vTexCoord;
 
 bool DEBUG = debugFlag > 0.0;
 
-bool grid(vec2 pos) {
-    float w = 0.005;
-    for (float d = -2.0; d<=2.0; d+=1.0) {
-        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
-        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
-    }
-    
-    return false;
-}
-
-
-//float mask(vec2 pos) {
-//    float MARGIN = 0.125;
-//    if ( abs(pos.x) > (ratio*1.0) - MARGIN ) { return 1.0; }
-//    if ( abs(pos.y) >        1.0  - MARGIN ) { return 1.0; }
-//    return 0.0;
-//}
-
 float MAX(float a, float b) { 
     if (a>=b) 
         return a; 
@@ -682,14 +661,8 @@ void main() {
 
     a = mask(vec2(pos.x/ratio,pos.y));
 
-
-    if ( true && DEBUG && grid(pos) ) {
-        float gray = 0.5;
-        col = gray * vec3(1.,1.,1.);
-    }
-
     if (DEBUG) {
-        col.r =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
+        col.b =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
     }
     
     
@@ -702,15 +675,16 @@ void main() {
 
 "mask/debug":`
 
+uniform float debugFlag;
+uniform float ratio;
+
 varying vec2 vTexCoord;
-varying float vDebugFlag;
-varying float vRatio;
 
 
-bool DEBUG = vDebugFlag > 0.0;
-float w = 0.005;
+bool DEBUG = debugFlag > 0.0;
+float w = 0.002;
 
-bool grid(vec2 pos) {
+bool major(vec2 pos) {
 
     for (float d = -2.0; d<=2.0; d+=0.5) {
         if (abs(pos.y - d) - w <= 0.0 ) { return true; }
@@ -720,27 +694,37 @@ bool grid(vec2 pos) {
     return false;
 }
 
+bool minor(vec2 pos) {
+
+    for (float d = -2.0; d<=2.0; d+=0.25) {
+        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
+        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
+    }
+    
+    return false;
+}
+
+
 
 void main() {
+    vec3 col = vec3(0.0,0.0,0.0);
+    float a = 1.0;
 
-    float MARGIN = 0.25;
 
     vec2 pos = vTexCoord;
-    vec3 col = vec3(0.,1.,1.);
-    
 
-    if (pos.x > MARGIN || pos.x < -1. * MARGIN  ) {
-//        col -= 0.5;
-    }
-    
-    if (pos.y > MARGIN || pos.y < -1. * MARGIN  ) {
-//        col -= 0.5;
-    }
-    
 
-    float a = vTexCoord.x * -1.;           
-    gl_FragColor = vec4( col.rgb, a );
+    if ( true && major(pos) ) {
+        float gray = 0.9;
+        col = gray * vec3(1.,1.,1.);
+    } else if ( true && minor(pos) ) {
+        float gray = 0.5;
+        col = gray * vec3(1.,1.,1.);
+    }
+
+    gl_FragColor = vec4(col.rgb, a);
 }
+
 
 
 `,
@@ -878,56 +862,57 @@ uniform float scroller;
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
+varying float vScroller;
 
 
 
 bool DEBUG    = debugFlag > 0.0;
 bool DOWNWARD = downward == 1.0;
+bool ODDLINES = mod(tileCount.y, 2.0) == 1.0;
+
 
 bool firstLine() {
+    float s = 0.0;
     float t = 0.0;
-    if (DOWNWARD) {
-        t = 1.;
-    }    
-    return (  tileCount.y + vTileCoord.y - 1.) * 2. + t <= tileCount.y;
+    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
+    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
+    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 1.0; }
+    if (   DOWNWARD &&   ODDLINES) { s = 0.0; t = 1.0; }
+    return (  tileCount.y + (vTileCoord.y-s) - 1.) * 2. + t <= tileCount.y;
 }
 
 
 bool lastLine() { 
+    float s = 0.0;
     float t = 0.0;
-    if (DOWNWARD) {
-        t = 1.0;
-    } 
-    return  vTileCoord.y*2.  > tileCount.y - t;
+    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
+    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
+    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 1.0; }
+    if (   DOWNWARD &&   ODDLINES) { s = 0.0; t = 1.0; }
+    return  (vTileCoord.y-s)*2.  > tileCount.y - t;
 }
 
 bool newestLine() {
-	return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
+    return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
 }
 
 bool oldestLine() {
-	return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
+    return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
 }
 
 
 void main() {
     vec4 col;
+    col = texture2D(texture, vTexCoord);
+
     if (DEBUG) { 
         col = vec4(1.,1.,1.,1.); 
-    } else { 
-        col = texture2D(texture, vTexCoord);
     }
 
-	if ( newestLine() ) {
-		col.a *= (1.0 - scroller);
-	} else if ( oldestLine() ) {
-		col.a *= scroller;
-	}
+	if ( newestLine() ) { col.a *= (1.0 - vScroller); }
+	if ( oldestLine() ) { col.a *= vScroller; }
 
-
-    if (!gl_FrontFacing) {
-		col.a /= 2.;
-	}
+    if (!gl_FrontFacing) { col.a /= 2.; }
 
     gl_FragColor = col;
 
@@ -951,17 +936,19 @@ varying vec2 vTileCoord;
 varying float vScroller;
 
 bool DEBUG    = debugFlag > 0.0;
-bool DOWNWARD = downward == 1.0;
-bool ODDLINES = mod(tileCount.y, 2.0) == 1.0;
+
+
+bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
+bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
 
 
 bool firstLine() {
     float s = 0.0;
     float t = 0.0;
-    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
-    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
-    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
-    if (   DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
+    if      ( ! (downward == 1.0) && ! oddRowCount()) { s = 0.0; t = 0.0; }
+    else if ( ! (downward == 1.0) &&   oddRowCount()) { s = 1.0; t = 0.0; }
+    else if (   (downward == 1.0) && ! oddRowCount()) { s = 0.0; t = 1.0; }
+    else if (   (downward == 1.0) &&   oddRowCount()) { s = 0.0; t = 1.0; }
     return (  tileCount.y + (vTileCoord.y-s) - 1.) * 2. + t <= tileCount.y;
 }
 
@@ -969,28 +956,19 @@ bool firstLine() {
 bool lastLine() { 
     float s = 0.0;
     float t = 0.0;
-    if ( ! DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
-    if ( ! DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
-    if (   DOWNWARD && ! ODDLINES) { s = 0.0; t = 0.0; }
-    if (   DOWNWARD &&   ODDLINES) { s = 1.0; t = 0.0; }
-
-//    if (DOWNWARD) {
-//        t = 1.0;
-//    } 
-//    if (ODDLINES) {
-//        s = 1.0;
-//        t = 0.0;
-//    }    
-////    return false;
+    if      ( ! (downward == 1.0) && ! oddRowCount()) { s = 0.0; t = 0.0; }
+    else if ( ! (downward == 1.0) &&   oddRowCount()) { s = 1.0; t = 0.0; }
+    else if (   (downward == 1.0) && ! oddRowCount()) { s = 0.0; t = 1.0; }
+    else if (   (downward == 1.0) &&   oddRowCount()) { s = 0.0; t = 1.0; }
     return  (vTileCoord.y-s)*2.  > tileCount.y - t;
 }
 
 bool newestLine() {
-    return  ( !DOWNWARD && firstLine() ) || ( DOWNWARD && lastLine() ) ;
+    return  ( !(downward == 1.0) && firstLine() ) || ( (downward == 1.0) && lastLine() ) ;
 }
 
 bool oldestLine() {
-    return ( !DOWNWARD && lastLine() ) || ( DOWNWARD && firstLine() );
+    return ( !(downward == 1.0) && lastLine() ) || ( (downward == 1.0) && firstLine() );
 }
 
 
@@ -1004,37 +982,12 @@ void main() {
         col.a = 1.0;
     } 
     
+//    if (firstLine()) { col.r *= 0.; } //cyan
+//    if (lastLine())  { col.g *= 0.; } //magenta
     
     
-//    if (ODDLINES) {
-//        col.gb *= 0.;
-//    } 
-//    if (!ODDLINES) {
-//        col.rb *= 0.;
-//    }
-    
-    if (firstLine()) {
-        col.r *= 0.; //cyan
-    }
-    
-    if (lastLine()) {
-        col.g *= 0.; //magenta
-    }
-    
-    
-//    if ( newestLine() ) {
-//        col.rb *= 0.; //green
-////        col.a *= (1.-vScroller);
-//    }
-//    else if ( oldestLine() ) {
-//        col.gb *= 0.; //red
-////        col.a *= vScroller;
-//    }
-
-    if (DEBUG) { 
-        col.a = 1.0;
-    } 
-
+    if ( newestLine() ) { col.rb *= 0.; col.a *= (1.-vScroller); } //green
+    if ( oldestLine() ) { col.gb *= 0.; col.a *= vScroller; }      //red
 
     gl_FragColor = col;
     
