@@ -489,11 +489,11 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 	config.autoWidth(camera,font)
 
-    if width,ok := config.Width(); ok { 
+    if width,ok := config.Width(); ok && width != 0 { 
 	    grid.state.Width = width 
 	} 
 
-    if height,ok := config.Height(); ok && height != grid.state.Height { 
+    if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
 	    grid.state.Height = height 
         log.Debug("resize %s",grid.buffer.Desc())
         grid.buffer.Resize(height)    
