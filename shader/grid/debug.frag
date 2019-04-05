@@ -62,7 +62,8 @@ void main() {
     
     if ( newestLine() )   { col.rb *= 0.; col.a *= (1.-vScroller); } //green
     if ( oldestLine() ) { col.gb *= 0.; col.a *= vScroller; }      //red
-    
+
+    if (!gl_FrontFacing) { col.a /= 2.; }
 
     gl_FragColor = col;
     

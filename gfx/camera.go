@@ -73,7 +73,7 @@ func (camera *Camera) Configure(config *CameraConfig) {
     zoom := float32(camera.state.Zoom)
     if camera.state.Isometric {
         camera.projection = orthographic(camera.size.W, camera.size.H)
-        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{0, 0, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
+        camera.view = camera.view.Mul4( mgl32.LookAtV(mgl32.Vec3{1, 1, 1}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}) )
         camera.view = camera.view.Mul4( mgl32.Scale3D( zoom, zoom, zoom ) )
     } else {
         camera.projection = perspective(camera.size.W, camera.size.H)
