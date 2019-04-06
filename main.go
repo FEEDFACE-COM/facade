@@ -8,6 +8,7 @@ import (
     "os"    
     "os/signal"
     "runtime"
+    "time"
     log "./log"
     facade "./facade"
     gfx "./gfx"
@@ -82,11 +83,11 @@ func main() {
         flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
     }
 
-    for _,cmd := range []Command{PIPE} {
+    for _,cmd := range []Command{PIPE,EXEC} {
         flags[cmd].UintVar(&textPort, "tp", textPort, "connect to `port` for text" )
     }
     
-    for _,cmd := range []Command{PIPE,CONF} {
+    for _,cmd := range []Command{PIPE,CONF,EXEC} {
         flags[cmd].UintVar(&confPort, "cp", confPort, "connect to `port` for config" )
         flags[cmd].StringVar(&connectHost, "h", connectHost, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout after `seconds`") 
@@ -135,8 +136,8 @@ func main() {
     
     cmd := Command(flag.Args()[0])
 
-	switch (cmd) {
-		case READ, RECV:
+    switch (cmd) {
+        case READ, RECV:
             if !RENDERER_AVAILABLE {
                 ShowHelp()
                 os.Exit(-2)    
@@ -145,14 +146,14 @@ func main() {
         case PIPE, CONF, EXEC:
             flags[cmd].Usage = func() { ShowHelpCommand(cmd,flags) }
             flags[cmd].Parse( flag.Args()[1:] )
-	}
-	
+    }
+    
 
-	switch (cmd) {
-		case READ:
+    switch (cmd) {
+        case READ:
             renderer = NewRenderer(directory)
             scanner = NewScanner()
-			
+            
         case RECV:
             server = NewServer(listenHost,confPort,textPort)
             renderer = NewRenderer(directory)
@@ -163,12 +164,13 @@ func main() {
         case CONF:
             client = NewClient(connectHost,confPort,textPort,connectTimeout)
 
-		case EXEC:
-		    args := flags[cmd].Args()
-			if len(args) < 1 { log.PANIC("exec cmd [args]") }
-			executor = NewExecutor(args[0],args[1:])
-			executor.Execute()
-			os.Exit(0)
+        case EXEC:
+            client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            executor = NewExecutor(client)
+
+        case TEST:
+            server = NewServer(listenHost,confPort,textPort)
+            tester = NewTester("foo")
 
         case INFO:
             ShowVersion()
@@ -183,79 +185,70 @@ func main() {
             ShowHelp()
             os.Exit(-2)
         
-	}
+    }
 
 
 
-	
-    
+
+
     var mode facade.Mode
+    var state *facade.State
     args := flags[cmd].Args()
-
-	// parse mode, if given
+    
+    // parse mode, if given
     if len(args) > 0 {
-	    switch facade.Mode( args[0] ) {
-			case facade.GRID, facade.LINES, facade.TEST:
-				mode = facade.Mode(args[0])
-				args = args[1:]
-		}
-	}
-
-    var state = facade.NewState(mode)
+        switch facade.Mode( args[0] ) {
+            case facade.GRID, facade.LINES, facade.TEST:
+                mode = facade.Mode(args[0])
+                args = args[1:]
+        }
+    }
+    
+        
+    state = facade.NewState(mode)
     var modeFlags = flag.NewFlagSet(string(mode), flag.ExitOnError)    
     
     state.AddFlags( modeFlags )
-	modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
-	modeFlags.Parse( args[0:] )
-	
-	
-	config := state.CheckFlags(modeFlags)
-	log.Debug("delta "+config.Desc())
-
-
-
+    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+    modeFlags.Parse( args[0:] )
 
     
-////    var config *facade.Config = facade.NewConfig()
-////    var modeflags *flag.FlagSet = config.FlagSet()
-////    var modeflags *flag.FlagSet flag.NewFlagSet(string(mode), flag.ExitOnError)
-//    
-//    
-//    //no more args after cmd
-//    if len(args) < 1 {
-//        if cmd == CONF { //conf needs args so bail
-//            ShowHelpCommand(CONF,flags)
-//            os.Exit(-2)
-//        } else { // otherwise huh?
-//                mode := config.Mode
-//                flags.Usage = func() { ShowHelpMode(mode,cmd,modeflags) }
-//                flag.Parse( args[0:] )
-//                
-//        }
-//         
-//            
-//    } else {
-//        mode := facade.Mode(args[0])
-//        switch mode {
-//            
-//            case facade.GRID, facade.LINES, facade.TEST:
-//                config.SetMode(mode)
-//                modeflags = config.FlagSet()
-//                modeflags.Usage = func() { ShowHelpMode(facade.Mode(mode),cmd,modeflags) }
-//                modeflags.Parse( args[1:] )
-//                        
-//            default:
-//                ShowHelp()
-//                os.Exit(-2)    
-//        }
-//    }
+    
+    config := state.CheckFlags(modeFlags)
+
+
+    if cmd == EXEC {
+        var ok bool
+        var grid facade.GridConfig
+        if grid,ok = config.Grid(); !ok {
+            grid = facade.GridConfig{}
+            config.SetGrid(grid)
+//            log.PANIC("exec without grid")
+        } 
+        var cols,rows = uint(40), uint(12)
         
-    
-    
-    
-    
-    
+        if c,ok := grid.Width(); ok  { cols = c }
+        if r,ok := grid.Height(); ok { rows = r }
+        grid.SetWidth(cols)
+        grid.SetHeight(rows)
+        executor.SetSize(cols,rows)
+               
+        args := modeFlags.Args()
+        
+        if len(args) <= 0 {
+            ShowHelpMode(facade.GRID,EXEC,modeFlags)
+            os.Exit(-2)             
+        }
+        executor.SetPath(args[0])
+        executor.SetArgs(args[1:])
+        
+    }
 
+    log.Debug("delta "+config.Desc())
+    
+    
+    
+    var err error
     switch ( cmd ) {
 
         case READ:
@@ -268,7 +261,8 @@ func main() {
             go renderer.ProcessText(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
-            renderer.Render(nil, texts)
+            err = renderer.Render(nil, texts)
+            
 
         case RECV:
             log.Info(AUTHOR)
@@ -284,39 +278,80 @@ func main() {
             go renderer.ProcessText(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
-            renderer.Render(confs, texts)
+            err = renderer.Render(confs, texts)
                     
         case PIPE:
             if client == nil { log.PANIC("client not available") }
             if config != nil {
                 client.SendConf(config)
             }
+            err = client.OpenText()
             client.ScanAndSendText()
+            client.CloseText()
             
         case CONF:
             if client == nil { log.PANIC("client not available") }
             if config == nil { log.PANIC("config not available") }
-            client.SendConf(config)
+            err = client.SendConf(config)
 
+        case EXEC:
+            if client == nil { log.PANIC("client not available") }
+            if executor == nil { log.PANIC("executor not available") }
+            if config != nil {
+                client.SendConf(config)
+            }
+            err = client.OpenText()
+            err = executor.Execute()
+            
 
         case TEST:
-            if tester == nil { log.PANIC("tester not available") }
-            str := "FEEDFACE.COM"
-            if modeFlags.NArg() > 0 {
-                str = strings.Join(modeFlags.Args()," ")
-            }
-            tester.Configure(config)
-            tester.Test(str)
-
-//		case EXEC:
-//			if executor == nil { log.PANIC("executor not available") }
-//			executor.Execute()
+            if server == nil { log.PANIC("server not available") }
+            rawConfs := make(chan facade.Config)
+            rawTexts := make(chan facade.RawText)
+            go server.ListenConf(rawConfs)
+            go server.ListenText(rawTexts)
+            ansi := gfx.NewAnsiBuffer(20,8)
             
+
+            for { 
+                select { 
+                    case text := <- rawTexts:
+                        log.Debug("got text %s",text)
+                		os.Stdout.Write([]byte(text))
+                    
+                    case conf := <- rawConfs:
+                        log.Debug("got conf %s",conf.Desc())
+                    
+                    case <- time.After( 1 * time.Second ):
+                        log.Debug(ansi.Desc() )    
+                    
+                    default:
+                        //nop
+                }
+
+//            for {
+//                time.Sleep( time.Duration( int64(time.Second)) )
+//            }            
+        
+            if tester == nil { log.PANIC("tester not available") }
+//            str := "FEEDFACE.COM"
+//            if modeFlags.NArg() > 0 {
+//                str = strings.Join(modeFlags.Args()," ")
+//            }
+//            tester.Configure(config)
+//            err = tester.Test(str)
+
+        }
+
         default:
             log.PANIC("inconsistent command")
     }
         
-        
+
+    if err != nil {
+        log.Error("could not %s: %s",cmd,err)
+        os.Exit(-1)
+    }
     
 }
 
@@ -336,10 +371,10 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flagset.VisitAll( func( f *flag.Flag) {
         name,_ := flag.UnquoteUsage(f)
-//	    tmp := ""
-//	    tmp += fmt.Sprintf(" (%s)",f.DefValue)
-		fmt.Fprintf(os.Stderr,"  -%s\t%s\t\t%s\n",f.Name,f.Usage,name)
-	})
+//      tmp := ""
+//      tmp += fmt.Sprintf(" (%s)",f.DefValue)
+        fmt.Fprintf(os.Stderr,"  -%s\t%s\t\t%s\n",f.Name,f.Usage,name)
+    })
 //    flagset.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
 }
@@ -375,6 +410,7 @@ func ShowCommands() {
     }
     fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"pipe stdin to remote")
     fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"configure remote")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",EXEC,"execute")
 }
 
 

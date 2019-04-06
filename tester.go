@@ -59,7 +59,7 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 
 
 
-func (tester *Tester) Test(str string) {
+func (tester *Tester) Test(str string) error {
     switch tester.mode {
         case facade.GRID:
             test,_ := tester.testCharMap()
@@ -69,6 +69,7 @@ func (tester *Tester) Test(str string) {
             test,_ := tester.testTextTex(str)
             SaveRGBA(test,fmt.Sprintf("%s/test/text-%s-%s.png",tester.directory,tester.name,str))
     }
+    return nil
 }
 
 

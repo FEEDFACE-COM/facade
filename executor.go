@@ -19,159 +19,121 @@ import(
 type Executor struct{
 	path string
 	args []string
+	tty *os.File
+	rows, cols uint
+	client *Client
 }
 
 
-func NewExecutor(path string, args []string) *Executor { 
-	return &Executor{path:path, args:args} 
+func NewExecutor(client *Client) *Executor { 
+	return &Executor{path:"", args:[]string{}, client:client} 
 }
+
+//func NewExecutor(path string, args []string) *Executor { 
+//	return &Executor{path:path, args:args} 
+//}
+
+func (executor *Executor) SetPath(path string)    { executor.path = path }
+func (executor *Executor) SetArgs(args []string)  { executor.args = args }
+func (executor *Executor) SetSize(cols,rows uint) { executor.cols,executor.rows = cols,rows }
+
+
 
 
 func (executor *Executor) Execute() error {
+	var err error
 	
 	
+    _, err = pty.GetsizeFull(os.Stdin)
 
 	cmd := exec.Command(executor.path, executor.args ...)
 	
-	ptmx, err := pty.Start(cmd)
+    log.Debug("start %s",executor.path)
+    
+    oldSize, err := pty.GetsizeFull(os.Stdin)
+    if err != nil {
+        log.Error("fail pty getsize: %s",err)
+    }
+
+    var size = &pty.Winsize{Cols:uint16(executor.cols), Rows:uint16(executor.rows)}
+    
+	executor.tty, err = pty.StartWithSize(cmd,size)
 	if err != nil {
 		log.Error("fail pty start: %s",err)
 		return log.NewError("fail pty start: %s",err)
 	}
+	defer func() { 
+    	_ = executor.tty.Close() 
+    }() 
+    
+    log.Debug("resize %dx%d",size.Cols,size.Rows)
+    str := fmt.Sprintf("\033[8;%d;%dt",size.Rows,size.Cols)
+    os.Stdout.Write( []byte(str))
+    
 	
 	
-	defer func() { _ = ptmx.Close() }() 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGWINCH)
-	go func() {
-		for range ch {
-			err := pty.InheritSize(os.Stdin,ptmx); 
-			if err != nil {
-				log.Error("error resize pty: %s",err)
-			}
-		}
-	}()
-	ch <- syscall.SIGWINCH
-	
-	oldState,err := terminal.MakeRaw(int(os.Stdin.Fd()))
+	go executor.ProcessWindowChange(ch)
+    ch <- syscall.SIGWINCH	
+
+
+	oldState,err := terminal.MakeRaw( int(os.Stdin.Fd()) )
 	if err != nil {
 		log.Error("error make raw: %s",err)
 		return log.NewError("error make raw: %s",err)
 	}
-	
-	defer func() { _ = terminal.Restore(int(os.Stdin.Fd()),oldState) }()
-	
-	go func() { ReadStdout(ptmx) }()
-//	err = ReadInput()
-	
-//	go func() { _,_ = io.Copy(ptmx, os.Stdin) }()
-//	_,_ = io.Copy(os.Stdout,ptmx)
-	 _,_ = io.Copy(ptmx, os.Stdin)
+	defer func() { 
+    	_ = terminal.Restore(int(os.Stdin.Fd()),oldState) 
+    }()
+    
+    go executor.CopyStdinToTTY()
+    executor.ReadTTY()
+    
+    log.Debug("resize %dx%d",oldSize.Cols,oldSize.Rows)
+    str = fmt.Sprintf("\033[8;%d;%dt",oldSize.Rows,oldSize.Cols)
+    os.Stdout.Write( []byte(str))
 
-	
-	return err
-}
+    
+    log.Debug("done %s",executor.path)
+    return nil
+}    
 
-func ReadStdout(r io.Reader) error {
-	reader := bufio.NewReader(r)
+func (executor *Executor) ReadTTY() {
+
+	reader := bufio.NewReader( executor.tty )
+	var buf []byte = make([]byte, 1024)
 	for {
-		output, err := reader.ReadString('\n')
+        n,err := reader.Read(buf)
 		if err == io.EOF { break }
 		if err != nil {
 			log.Debug("read stdout error: %s",err)
 			break
 		}
-		if false { fmt.Fprintf(os.Stdout,output) }
-		log.Debug(output)
-	}
-	return nil
+		os.Stdout.Write(buf[0:n])
+		executor.client.SendText(buf[0:n])
+    }
 }
-//
-//func ReadInput() error {
-//	reader := bufio.NewReader(os.Stdin)
-//	for {
-//		input, err := reader.ReadString('\n')
-//		if err != nil {
-//			log.Debug("read error: %s",err)
-//		}	
-//		log.Debug(input)
-//	}	
-//	return nil
-//}
 
-	
-//	log.Debug("exec cmd %s %s",cmd.Path,strings.Join(cmd.Args[1:]," "))
-//
-//
-//    signals := make(chan os.Signal, 1)
-//    signal.Notify(signals, os.Interrupt)
-//    go func() {
-//        sig := <-signals
-//        log.Notice("%s",sig)
-//    }()
-//
-//
-//	var err error
-//    var stdin, stdout, stderr bytes.Buffer
-//
-//	cmd.Stdout = &stdout
-//	cmd.Stderr = &stderr
-//	cmd.Stdin = &stdin
-//	
-//	stdout,err := cmd.StdoutPipe()
-//	if err != nil { log.Error("error stdout pipe: %s",err) }
-//	stderr,err := cmd.StderrPipe()
-//	if err != nil { log.Error("error stderr pipe: %s",err) }
-//	
-//	go ReadStdout( stdout )
-//	go ReadStderr( stderr )
-//	
-//	go ReadInput()
-//	
-//	err = cmd.Start()
-//	
-//	
-//	
-//	if err != nil { log.Error("error start cmd %s: %s",cmd.Path,err) }
-//	
-//	
-//	
-//	
-//	err = cmd.Wait()
-//	if err != nil { log.Error("error wait cmd %s: %s",cmd.Path,err) }
-//	
-//	
-//	
-//	
-//	outStr, errStr := string(stdout.Bytes()),string(stderr.Bytes())
-//	log.Debug(stdout)
-//	log.Debug("")
-//	log.Debug(stderr)
-//	return err
-//}
-//
-//
-//
-//func ReadStderr(r io.Reader) error {
-//	reader  := bufio.NewReader(r)
-//	for {
-//		output, err := reader.ReadString('\n')
-//		if err == io.EOF { break }
-//		if err != nil {
-//			log.Debug("read stderr error: %s",err)
-//		}
-//		fmt.Fprintf(os.Stderr,output)
-//	}
-//	return nil
-//}
-//
-//func ReadInput() {
-//	reader := bufio.NewReader(os.Stdin)
-//	for {
-//		input, err := reader.ReadString('\n')
-//		if err != nil {
-//			log.Debug("read error: %s",err)
-//		}	
-//		log.Debug(input)
-//	}	
-//}
+
+func (executor *Executor) ProcessWindowChange(ch chan os.Signal) {
+    for range ch {
+        str := ""
+        rows,cols, err := pty.Getsize(os.Stdin)
+        if err == nil {
+            str = fmt.Sprintf("%dx%d",cols,rows)
+        }
+        log.Debug("window size %s",str)
+    }
+}
+
+
+
+func (executor *Executor) CopyStdinToTTY() {
+    var err error
+    _,err = io.Copy(executor.tty, os.Stdin )
+    if err != nil {
+        log.Error("copy error: %s",err)
+    }
+}
+
