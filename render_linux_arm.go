@@ -49,7 +49,7 @@ type Renderer struct {
 
 const DEBUG_CLOCK  = false
 const DEBUG_MODE   = true
-const DEBUG_BUFFER = false
+const DEBUG_BUFFER = true
 const DEBUG_DIAG   = false
 const DEBUG_MEMORY = false
 const DEBUG_MESSAGES = false
@@ -275,6 +275,7 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
         case text := <-textChan:
             
             renderer.grid.Queue(text, renderer.font)
+            renderer.grid.Dump()
 //            renderer.lines.Queue(text, renderer.font )
 //            renderer.test.Queue(text)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}

@@ -17,6 +17,7 @@ import(
 type Grid struct {
 
     buffer *gfx.Buffer
+    ansi   *gfx.AnsiBuffer
     
     texture *gfx.Texture
     program *gfx.Program
@@ -428,6 +429,7 @@ func (grid *Grid) Queue(text string, font *gfx.Font) {
 		}
 	} 
 	grid.buffer.Queue( newText )
+	grid.ansi.Write( newText )
 	grid.ScheduleRefresh()
     
 }
@@ -491,12 +493,14 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
     if width,ok := config.Width(); ok && width != 0 { 
 	    grid.state.Width = width 
+        grid.ansi.Resize(grid.state.Width,grid.state.Height)   
 	} 
 
     if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
 	    grid.state.Height = height 
         log.Debug("resize %s",grid.buffer.Desc())
-        grid.buffer.Resize(height)    
+        grid.buffer.Resize(height) 
+        grid.ansi.Resize(grid.state.Width,grid.state.Height)   
     }
 
     if true {  //optimize!!
@@ -554,6 +558,7 @@ func NewGrid(config *GridConfig) *Grid {
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
     ret.buffer = gfx.NewBuffer(ret.state.Height)
+    ret.ansi = gfx.NewAnsiBuffer(ret.state.Width,ret.state.Height)
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
@@ -563,6 +568,6 @@ func NewGrid(config *GridConfig) *Grid {
 }
 
 func (grid *Grid) Desc() string { return grid.state.Desc()  }
-func (grid *Grid) Dump() string { return grid.buffer.Dump() }
+func (grid *Grid) Dump() string { return grid.ansi.Dump() }
 
 

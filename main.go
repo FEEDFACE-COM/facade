@@ -144,21 +144,6 @@ func main() {
     var executor *Executor
     
     
-//    foo := make([]byte, 37)
-//    foo[3] = 'x'
-//    foo[12] = 0x20
-//    foo[7] = 'f'
-//    foo[32] = 0xff
-//    log.Debug("foo:\n"+log.Dump(foo,0) +"foobar")
-//    log.Debug("foo+1:\n"+log.Dump(foo[1:],1) )
-//    log.Debug("foo+5:\n"+log.Dump(foo[5:],5) )
-//    log.Debug("foo+14:\n"+log.Dump(foo[14:],14) )
-//    log.Debug("foo+15:\n"+log.Dump(foo[15:],15) )
-//    log.PANIC("done")
-    
-    
-    
-    
     cmd := Command(flag.Args()[0])
 
     switch (cmd) {
