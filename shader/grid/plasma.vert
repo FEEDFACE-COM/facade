@@ -40,13 +40,15 @@ void main() {
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
 
-    float F = 0.75;
+//    float F = 0.75;
+    float F = 0.5;
 //    float x = vTileCoord.x / (tileCount.x/2.);
 //    float y = vTileCoord.y / (tileCount.y/2.);
     float x = pos.x;
     float y = pos.y;
     
-    float freq = 1./24.;
+//    float freq = 1./24.;
+    float freq = 1./8.;
     pos.y += F * cos( 2. * freq * x * PI + now         );
     pos.x += F * cos( 3. * freq * y * PI + now + PI/2. );
 	
