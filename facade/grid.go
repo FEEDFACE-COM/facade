@@ -168,26 +168,36 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 
 
 func (grid *Grid) lineForRow(row int) *gfx.Text {
-	r := uint(row)
 	
-//	if r >= grid.state.Height { 
-//		r= grid.state.Height-1 
+	if uint(row) >= 0 && uint(row) < grid.state.Height {
+    	ret := grid.ansi.LineForRow(row)
+    	if ret != nil {
+        	return ret
+        }
+    }
+    return grid.empty
+    
+    
+
+//	r := uint(row)
+////	if r >= grid.state.Height { 
+////		r= grid.state.Height-1 
+////	}
+//
+//	if r>= grid.state.Height {
+//		return grid.empty
 //	}
-
-	if r>= grid.state.Height {
-		return grid.empty
-	}
-
-	if r < 0 {
-		return grid.empty
-	}
-
-	if grid.state.Downward {
-		return grid.buffer.Tail(r)
-	} else {
-		return grid.buffer.Head(r)
-	}	
-	return grid.empty
+//
+//	if r < 0 {
+//		return grid.empty
+//	}
+//
+//	if grid.state.Downward {
+//		return grid.buffer.Tail(r)
+//	} else {
+//		return grid.buffer.Head(r)
+//	}	
+//	return grid.empty
 }
 
 
@@ -207,7 +217,7 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
                 "     by FEEDFACE.COM",
                 "                    ",
             } {
-                grid.Queue(line,font)    
+                grid.Queue(line)    
             }
             
         case "title2": 
@@ -219,14 +229,14 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
                 "  FEEDFACE.COM",
                 "              ",
             } {
-                grid.Queue(line,font)    
+                grid.Queue(line)    
             }
             
         case "title3": 
             for _,line := range []string{
                 "F A C A D E",
             } {
-                grid.Queue(line,font)    
+                grid.Queue(line)    
             }
         
         
@@ -243,7 +253,7 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
     
                     line += fmt.Sprintf("%s",d)        
                 }
-                grid.Queue(line,font)
+                grid.Queue(line)
             }
             
             
@@ -253,7 +263,7 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
             s := 0
             for r:=0; r<h; r++ {
                 line := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
-                grid.Queue(line,font)
+                grid.Queue(line)
                 s += 1
             }
             
@@ -261,7 +271,7 @@ func (grid *Grid) Fill(font *gfx.Font, fill string) {
         case "clear":
         	h := int(grid.state.Height)
         	for r:=0; r<h; r++ {
-	        	grid.Queue("",font)
+	        	grid.Queue("")
 	        }
 
     }    
@@ -411,25 +421,25 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
 
 
 
-func (grid *Grid) Queue(text string, font *gfx.Font) {
-    newText := gfx.NewText(text)
-    fun := func() { 
-	    grid.empty = gfx.NewText("") 
-	    grid.ScheduleRefresh()
-	}
-    if grid.scroller.Once(fun) {
-		tmp := grid.buffer.Head(0)
+func (grid *Grid) Queue(text string) {
+//    newText := gfx.NewText(text)
+//    fun := func() { 
+//	    grid.empty = gfx.NewText("") 
+//	    grid.ScheduleRefresh()
+//	}
+//    if grid.scroller.Once(fun) {
+//		tmp := grid.buffer.Head(0)
 //	    if grid.state.Downward {
 //		    tmp = grid.buffer.Tail(0)
 //		}
-	    if tmp == nil {
-			grid.empty = gfx.NewText("")
-		} else {
-			grid.empty = gfx.NewText( tmp.Text )
-		}
-	} 
-	grid.buffer.Queue( newText )
-	grid.ansi.Write( newText )
+//	    if tmp == nil {
+//			grid.empty = gfx.NewText("")
+//		} else {
+//			grid.empty = gfx.NewText( tmp.Text )
+//		}
+//	} 
+//	grid.buffer.Queue( newText )
+	grid.ansi.Write( []byte(text) )
 	grid.ScheduleRefresh()
     
 }
