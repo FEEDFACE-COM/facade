@@ -170,9 +170,9 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 func (grid *Grid) lineForRow(row int) *gfx.Text {
 	
 	if uint(row) >= 0 && uint(row) < grid.state.Height {
-    	ret := grid.ansi.LineForRow(row)
-    	if ret != nil {
-        	return ret
+    	str := grid.ansi.LineForRow(row)
+    	if str != "" {
+        	return gfx.NewText(str)
         }
     }
     return grid.empty

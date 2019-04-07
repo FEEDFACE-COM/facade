@@ -90,23 +90,23 @@ func (buffer *AnsiBuffer) Dump() string {
 }
 
 
-func (buffer *AnsiBuffer) LineForRow(row int) *Text {
+func (buffer *AnsiBuffer) LineForRow(row int) string {
     r := uint(row)
     if r >= buffer.rows {
         log.Error("line for row %d > rows %d",row,buffer.rows)
-        return nil
+        return ""
     }
     
-    txt := ""
+    ret := ""
     for c:=uint(0); c<buffer.cols;c++ {
         chr := buffer.buf[r][c]
         if chr < ' ' || chr >= 0x7f {
             chr = ' '
         }
-        txt += fmt.Sprintf("%c",chr)
+        ret += fmt.Sprintf("%c",chr)
     }
     
-    return NewText(txt)
+    return ret
     
 }
 
