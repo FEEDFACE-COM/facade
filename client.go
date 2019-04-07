@@ -13,7 +13,7 @@ import (
     facade "./facade"
 )
 
-const DEBUG_CLIENT = true
+const DEBUG_CLIENT = false
 
 type Client   struct {
     host string

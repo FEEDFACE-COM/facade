@@ -28,10 +28,15 @@ type AnsiBuffer struct {
 func makeBuffer(cols,rows uint) [][]rune {
     ret := make([][]rune, rows)
     for r:=uint(0); r<rows; r++ { 
-        ret[r] = make([]rune, cols)
-        for c:=uint(0); c<cols; c++ { 
-            ret[r][c] = ' '
-        }
+        ret[r] = makeRow(cols)
+    }
+    return ret
+}
+
+func makeRow(cols uint) []rune {
+    ret := make([]rune,cols)
+    for c:=uint(0); c<cols; c++ { 
+        ret[c] = rune(' ')
     }
     return ret
 }
@@ -82,110 +87,215 @@ func (buffer *AnsiBuffer) Dump() string {
     return ret
 }
 
-func (buffer *AnsiBuffer) Consume(chr rune) {
+//func (buffer *AnsiBuffer) Consume(chr rune) {
+//    i,j := buffer.i, buffer.j
+//    rows,cols := buffer.rows,buffer.cols
+//    buf := buffer.buf
+//    switch (chr) {
+//        
+//        case '\n':
+//            j += 1
+//            i = 0
+//        
+//        case '\t':
+//        case '\r':
+//        
+//        default:
+//            buf[j][i] = chr
+//            i += 1
+//            if i == cols {
+//                i = 0
+//                j += 1
+//            }
+//    }
+//    
+//    i %= cols
+//    j %= rows
+//    
+//    
+//    buffer.i,buffer.j = i,j
+//}
+
+
+
+
+
+func (buffer *AnsiBuffer) writeString(text string) {
     i,j := buffer.i, buffer.j
     rows,cols := buffer.rows,buffer.cols
     buf := buffer.buf
-    switch (chr) {
+
+    cnt := 0
+
+    var runes []rune = []rune(text)
+    for _,run := range(runes) {
         
-        case '\n':
-            j += 1
-            i = 0
-        
-        case '\t':
-        case '\r':
-        
-        default:
-            buf[j][i] = chr
-            i += 1
-            if i == cols {
+        switch (run) {
+            case '\n':
+                log.Debug("LF")
                 i = 0
                 j += 1
-            }
+                if j >= rows-1 {  // last row
+                    j = rows-1
+                    //shift all rows up one
+                    for r:=uint(0); r<rows-1; r++ {
+                        buf[r] = buf[r+1]        
+                    }
+                    //new empty last row
+                    buf[j] = makeRow(cols)
+
+
+                } else {
+                    //new empty last row
+                    buf[j] = makeRow(cols)
+                    // clear row remainder
+//                    for c:=0;c<int(cols);c++ { 
+//                        buf[j][c] = rune(' ') 
+//                    }
+                }
+
+            
+            
+            case '\t':
+                log.Debug("TAB")
+                TABWIDTH := 8
+                for c:=0;c<TABWIDTH;c++ {
+                    buf[j][i] = rune(' ')
+                    cnt += 1
+                    i += 1
+                    if i >= cols {
+                        i = 0
+                        j += 1
+                        if j >= rows {
+                             j = rows-1 
+                        }
+                        break
+                    }
+                }
+            
+            case '\r':
+                log.Debug("CR")
+            
+            case '\a':
+                log.Debug("BEL")
+            
+            case '\b':
+                log.Debug("BS")
+                i -= 1
+                if i <= 0 { i = 0 }
+                buf[j][i] = rune(' ')
+                
+            
+            default:
+                if run>=' ' && run<='~' {
+//                    log.Debug("0x%04x '%c'",run,run)
+                }
+                buf[j][i] = run
+                cnt += 1
+                i += 1
+                if i >= cols {
+                    j += 1
+                    if j >= rows { j = rows-1 }
+                }
+                i %= cols
+
+        }
+        
     }
-    
+
     i %= cols
     j %= rows
     
     
     buffer.i,buffer.j = i,j
-}
-
-func (buffer *AnsiBuffer) WriteText(text string) {
-    i,j := buffer.i, buffer.j
-    rows,cols := buffer.rows,buffer.cols
-//    buf := buffer.buf
-
-    for _,c := range(text) {
-        log.Debug("write %c",c) 
+    
+    if cnt > 0 {
+        log.Debug("print %d runes.",cnt)
     }
-
-    i %= cols
-    j %= rows
-    
-    
-    buffer.i,buffer.j = i,j
 }
 
 func (buffer *AnsiBuffer) Write(raw []byte) {
     var err error 
-//    strip, err := ansi.Strip(raw)
-//    if err != nil {
-//        log.Error("fail ansi strip: %s",err)
-//        return
-//    }
-//    log.Debug("ansi strip: " + string(strip) )
-
     log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0))
 
     var ptr []byte = raw
     var rem []byte = raw
     off := 0
     var seq *ansi.S
+    chr := []byte{}
+    str := string(chr)
+
 
     for rem != nil {
         rem,seq,err = ansi.Decode( ptr )
-        if err != nil || seq == nil {
+        if err != nil {
             log.Debug("fail ansi decode: %s",err)
+            break
+        }
+        if seq == nil {
+//            log.Debug("ansi decode empty seq")
             break
         }
     
         if seq.Type == "" {
                 s := []byte(seq.String())
                 l := len(s)
-                log.Debug("text %d byte:\n%s",l,log.Dump(s,0,off))
-                buffer.WriteText(string(s))
-//                os.Stdout.Write( s )
+                chr = append(chr, s ...)
                 off += l
                 ptr = rem
 
         } else if seq.Type == "C1" {
-            
-            s := ptr[0:2]
-            log.Debug("c1:\n%s",log.Dump(s,0,off))
-            buffer.WriteText(string(s))
-//            os.Stdout.Write(s)
-            off += 2
-            ptr = ptr[2:]   
-                
-        } else {
-            l := len(ptr) - len(rem)
-            s := ptr[:l]
-            str := ""
-            str += fmt.Sprintf(" %x ",seq.Code)
-            
-//            name := ansi.Name(
-//            str += ansi.S
 
-            str += " "
+            s := ptr[0:1]
+            chr = append(chr,s ...)
+
+//            log.Debug("c1 byte:\n%s",log.Dump(s,0,off))
+            off += 1
+            ptr = ptr[1:]
+                
+        } else if seq.Type == "C0" {
+            
+            log.Debug("C0 byte.")
+            
+        } else if seq.Type == "CSI" {
+            
+            //flush
+            str = string(chr)
+            buffer.writeString(str)    
+            chr,str = []byte{}, string(chr)
+            
+            l := len(ptr) - len(rem)
+            tmp := ""
             for _,v := range(seq.Params) {
-                str += string(v)
+                tmp += string(v) + ", "
             }
-            log.Debug("ansi %s %s:\n%s",seq.Type,str,log.Dump(s,0,off))
+            
+            sequence,ok := ansi.Table[seq.Code]
+            if ok {
+                log.Debug("ansi %s %-32s: %s( %s)",seq.Type,sequence.Desc,sequence.Name,tmp)
+            } else {    
+                log.Debug("ansi %s 0x%x not in table",seq.Type,seq.Code)
+            }
             off += l
             ptr = rem
+            
+////            foo := ansi.SGR
+//            foo := seq.Code
+//            bar := ansi.Table[foo]
+//            log.Debug(" %s %s %s",bar.Name,bar.Desc,bar.Type)
+
+        } else {
+            log.Error("unknown sequence type %s",seq.Type)    
         }
+        
+        
+        
     }
+    //flush
+    str = string(chr)
+    buffer.writeString(str)    
+    chr,str = []byte{}, string(chr)
+    
     
   
 }
