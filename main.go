@@ -5,6 +5,8 @@ import (
     "fmt"
     "strings"
     "flag"
+//    "bufio"
+//    "io"
     "os"    
     "os/signal"
     "runtime"
@@ -47,6 +49,7 @@ var (
     confPort       uint     = 0xfcc
     connectHost    string   = "fcd.hq.feedface.com"
     connectTimeout float64  = 5.0
+    readTimeout    float64  = 0.0
     listenHost     string   = "0.0.0.0"
 //    daemonize      bool     = false
 )
@@ -90,14 +93,22 @@ func main() {
     for _,cmd := range []Command{PIPE,CONF,EXEC} {
         flags[cmd].UintVar(&confPort, "cp", confPort, "connect to `port` for config" )
         flags[cmd].StringVar(&connectHost, "h", connectHost, "connect to `host`" )
-        flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout after `seconds`") 
+        flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout connect after `seconds`") 
     }
 
-    if RENDERER_AVAILABLE {
+    if flags[RECV] != nil {
         flags[RECV].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
         flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
         flags[RECV].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
 //        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+        flags[RECV].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`") 
+    }
+
+    if flags[TEST] != nil {
+        flags[TEST].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
+        flags[TEST].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
+        flags[TEST].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
+        flags[TEST].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`") 
     }
     
     {
@@ -133,6 +144,20 @@ func main() {
     var executor *Executor
     
     
+//    foo := make([]byte, 37)
+//    foo[3] = 'x'
+//    foo[12] = 0x20
+//    foo[7] = 'f'
+//    foo[32] = 0xff
+//    log.Debug("foo:\n"+log.Dump(foo,0) +"foobar")
+//    log.Debug("foo+1:\n"+log.Dump(foo[1:],1) )
+//    log.Debug("foo+5:\n"+log.Dump(foo[5:],5) )
+//    log.Debug("foo+14:\n"+log.Dump(foo[14:],14) )
+//    log.Debug("foo+15:\n"+log.Dump(foo[15:],15) )
+//    log.PANIC("done")
+    
+    
+    
     
     cmd := Command(flag.Args()[0])
 
@@ -143,7 +168,7 @@ func main() {
                 os.Exit(-2)    
             }
             fallthrough
-        case PIPE, CONF, EXEC:
+        case PIPE, CONF, EXEC, TEST:
             flags[cmd].Usage = func() { ShowHelpCommand(cmd,flags) }
             flags[cmd].Parse( flag.Args()[1:] )
     }
@@ -155,7 +180,7 @@ func main() {
             scanner = NewScanner()
             
         case RECV:
-            server = NewServer(listenHost,confPort,textPort)
+            server = NewServer(listenHost,confPort,textPort,readTimeout)
             renderer = NewRenderer(directory)
 
         case PIPE:
@@ -169,7 +194,7 @@ func main() {
             executor = NewExecutor(client)
 
         case TEST:
-            server = NewServer(listenHost,confPort,textPort)
+            server = NewServer(listenHost,confPort,textPort,readTimeout)
             tester = NewTester("foo")
 
         case INFO:
@@ -297,10 +322,22 @@ func main() {
         case EXEC:
             if client == nil { log.PANIC("client not available") }
             if executor == nil { log.PANIC("executor not available") }
-            if config != nil {
-                client.SendConf(config)
+            for config != nil { 
+                err = client.SendConf(config)
+                if err == nil {
+                    log.Debug("sent config")
+                    break
+                }
+                time.Sleep( time.Duration( 200 * time.Millisecond ) )
             }
-            err = client.OpenText()
+            for {
+                err = client.OpenText()
+                if err == nil {
+                    log.Debug("text connected")
+                    break
+                }
+                time.Sleep( time.Duration( 200 * time.Millisecond ) )
+            }
             err = executor.Execute()
             
 
@@ -310,17 +347,50 @@ func main() {
             rawTexts := make(chan facade.RawText)
             go server.ListenConf(rawConfs)
             go server.ListenText(rawTexts)
+
+//            go func() {
+//                var reader *bufio.Reader = bufio.NewReader(os.Stdin)
+//                var buf []byte = make([]byte, 1024)
+//                var text facade.RawText
+//                for  {
+//                    n,err := reader.Read(buf)
+//                    text = facade.RawText(buf[:n])
+//                    if err == io.EOF {
+//                        break
+//                    }       
+//                    if err != nil {
+//                        log.Error("fail read: %s",err)
+//                        break    
+//                    }
+//                    log.Debug("read %d byte text",len(text))
+//                    rawTexts <- text
+//                }
+//            }()
+            
             ansi := gfx.NewAnsiBuffer(20,8)
             
 
             for { 
                 select { 
                     case text := <- rawTexts:
-                        log.Debug("got text %s",text)
-                		os.Stdout.Write([]byte(text))
+//                        log.Debug("recv %d byte text",len(text))
+
+//                		os.Stdout.Write([]byte(text))
+                        ansi.Write( []byte(text) )
+//                        os.Stdout.Write( []byte("\n") )
+//                        os.Stdout.Write( []byte(ansi.Dump()) )
+
                     
                     case conf := <- rawConfs:
-                        log.Debug("got conf %s",conf.Desc())
+                        log.Debug("recv conf %s",conf.Desc())
+                        if grid,ok := conf.Grid(); ok {
+                            var w,h uint = 0,0
+                            w,_ = grid.Width()
+                            h,_ = grid.Height()
+                            if w!=0 && h!= 0 {
+                                ansi.Resize(w,h)    
+                            }
+                        }
                     
                     case <- time.After( 1 * time.Second ):
                         log.Debug(ansi.Desc() )    
