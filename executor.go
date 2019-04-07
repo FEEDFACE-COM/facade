@@ -10,6 +10,7 @@ import(
 	"io"
 	"bufio"
 	"fmt"
+	gfx "./gfx"
 	"os/signal"
 	"github.com/kr/pty"
 	"golang.org/x/crypto/ssh/terminal"
@@ -100,7 +101,7 @@ func (executor *Executor) Execute() error {
 }    
 
 func (executor *Executor) ReadTTY() {
-
+    ansi := gfx.NewAnsiBuffer(20,8)
 	reader := bufio.NewReader( executor.tty )
 	var buf []byte = make([]byte, 1024)
 	for {
@@ -111,7 +112,10 @@ func (executor *Executor) ReadTTY() {
 			break
 		}
 		os.Stdout.Write(buf[0:n])
+        ansi.Write(buf[0:n])
 		executor.client.SendText(buf[0:n])
+//        os.Stdout.Write( []byte(ansi.Dump()+"\n") )
+        log.Debug(ansi.Dump())
     }
 }
 

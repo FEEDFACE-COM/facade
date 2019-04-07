@@ -5,6 +5,8 @@ import (
     "fmt"
     "net"    
     "time"
+    "io"
+//    "os"
     "bufio"
     "encoding/json"
 //    "encoding/gob"
@@ -21,11 +23,12 @@ type Server   struct {
     host string
     confPort uint
     textPort uint
+    timeout float64
 }
 
 
-func NewServer(host string, confPort uint, textPort uint) (*Server) { 
-    return &Server{host:host, confPort: confPort, textPort: textPort} 
+func NewServer(host string, confPort uint, textPort uint, timeout float64) (*Server) { 
+    return &Server{host:host, confPort: confPort, textPort: textPort, timeout: timeout} 
 }
 
 func (server *Server) ListenConf(confChan chan facade.Config) {
@@ -70,6 +73,11 @@ func (server *Server) ListenText(textChan chan facade.RawText) {
         if DEBUG_ACCEPT {
             log.Debug("accept text from %s",textConn.RemoteAddr().String())    
         }
+        if server.timeout == 0.0 {
+            textConn.SetReadDeadline( time.Time{} )
+        } else {
+            textConn.SetReadDeadline(time.Now().Add( 1 * time.Second ) )
+        }
         go server.ReceiveText(textConn, textChan)
 
     }
@@ -85,7 +93,6 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
     }()
     decoder := json.NewDecoder(confConn)
     config := make(facade.Config)
-    confConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
     err := decoder.Decode(&config)
     if err != nil {
         log.Error("fail to decode %s: %s",confConn.RemoteAddr().String(),err)
@@ -104,18 +111,38 @@ func (server *Server) ReceiveText(textConn net.Conn, textChan chan facade.RawTex
         }
         textConn.Close() 
     }()
-    scanner := bufio.NewScanner(textConn)
-    for scanner.Scan() {
-        textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
-        text := scanner.Text()
-        if DEBUG_RECV {
-            log.Debug("receive text %s",text)
-        }
-        textChan <- facade.RawText(text)
+    
+	var buf []byte = make([]byte, 1024)
+	reader := bufio.NewReader( textConn )
+	for {
+        n,err := reader.Read(buf)
+		if err == io.EOF { break }
+		if err != nil {
+			log.Debug("read %s error: %s",textConn.RemoteAddr().String(),err)
+			break
+		}
+        textChan <- facade.RawText(buf[0:n])
+//		os.Stdout.Write(buf[0:n])
     }
-    err := scanner.Err()
-    if err != nil {
-        log.Error("fail to scan %s: %s",textConn.RemoteAddr().String(),err)
-    }
+    
+//    scanner := bufio.NewScanner(textConn)
+//    for scanner.Scan() {
+//        if server.timeout == 0.0 {
+//            textConn.SetReadDeadline( time.Time{} )
+//        } else {
+//            textConn.SetReadDeadline(time.Now().Add( 1 * time.Second ) )
+//        }
+//        
+////        textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
+//        text := scanner.Text()
+//        if DEBUG_RECV {
+//            log.Debug("receive text %s",text)
+//        }
+//        textChan <- facade.RawText(text)
+//    }
+//    err := scanner.Err()
+//    if err != nil {
+//        log.Error("fail to scan %s: %s",textConn.RemoteAddr().String(),err)
+//    }
 }
 
