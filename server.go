@@ -70,9 +70,7 @@ func (server *Server) ListenText(textChan chan facade.RawText) {
             log.Error("fail accept on %s: %s",textListenStr,err)    
             continue
         }
-        if DEBUG_ACCEPT {
-            log.Debug("accept text from %s",textConn.RemoteAddr().String())    
-        }
+        if DEBUG_ACCEPT { log.Debug("accept text from %s",textConn.RemoteAddr().String()) }
         if server.timeout == 0.0 {
             textConn.SetReadDeadline( time.Time{} )
         } else {
@@ -86,10 +84,8 @@ func (server *Server) ListenText(textChan chan facade.RawText) {
 
 func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config) {
     defer func() { 
-        if DEBUG_ACCEPT {
-            log.Debug("close conf %s",confConn.RemoteAddr().String());
-        }
-            confConn.Close() 
+        if DEBUG_ACCEPT { log.Debug("close conf %s",confConn.RemoteAddr().String()) }
+        confConn.Close() 
     }()
     decoder := json.NewDecoder(confConn)
     config := make(facade.Config)
@@ -106,13 +102,11 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
 
 func (server *Server) ReceiveText(textConn net.Conn, textChan chan facade.RawText) {
     defer func() { 
-        if DEBUG_ACCEPT {
-            log.Debug("close text %s",textConn.RemoteAddr().String());
-        }
+        if DEBUG_ACCEPT { log.Debug("close text %s",textConn.RemoteAddr().String()); }
         textConn.Close() 
     }()
-    
-	var buf []byte = make([]byte, 1024)
+    const BUFFER_SIZE = 1024
+	var buf []byte = make([]byte, BUFFER_SIZE)
 	reader := bufio.NewReader( textConn )
 	for {
         n,err := reader.Read(buf)

@@ -47,11 +47,11 @@ type Renderer struct {
     
 }
 
-const DEBUG_CLOCK  = false
-const DEBUG_MODE   = true
-const DEBUG_BUFFER = true
-const DEBUG_DIAG   = false
-const DEBUG_MEMORY = false
+const DEBUG_CLOCK    = false
+const DEBUG_MODE     = false
+const DEBUG_BUFFER   = true
+const DEBUG_DIAG     = false
+const DEBUG_MEMORY   = false
 const DEBUG_MESSAGES = false
 
 
@@ -274,8 +274,8 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
     select {
         case text := <-textChan:
             
-            renderer.grid.Queue(text, renderer.font)
-            renderer.grid.Dump()
+            renderer.grid.Queue(text)
+            if DEBUG_BUFFER { log.Debug( renderer.grid.Dump() ) }
 //            renderer.lines.Queue(text, renderer.font )
 //            renderer.test.Queue(text)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
@@ -318,13 +318,13 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
     }
     
     
-    if DEBUG_BUFFER {
+//    if DEBUG_BUFFER {
 //        log.Debug(renderer.buffer.Dump())    
-        switch renderer.state.Mode { 
-            case facade.GRID:
-                log.Debug( renderer.grid.Dump() )
-        } 
-    }
+//        switch renderer.state.Mode { 
+//            case facade.GRID:
+//                log.Debug( renderer.grid.Dump() )
+//        } 
+//    }
     
     if DEBUG_MODE {
         tmp := ""

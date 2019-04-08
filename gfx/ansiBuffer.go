@@ -12,6 +12,8 @@ import(
 
 )
 
+const DEBUG_ANSI = false
+
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
 
@@ -87,38 +89,26 @@ func (buffer *AnsiBuffer) Dump() string {
     return ret
 }
 
-//func (buffer *AnsiBuffer) Consume(chr rune) {
-//    i,j := buffer.i, buffer.j
-//    rows,cols := buffer.rows,buffer.cols
-//    buf := buffer.buf
-//    switch (chr) {
-//        
-//        case '\n':
-//            j += 1
-//            i = 0
-//        
-//        case '\t':
-//        case '\r':
-//        
-//        default:
-//            buf[j][i] = chr
-//            i += 1
-//            if i == cols {
-//                i = 0
-//                j += 1
-//            }
-//    }
-//    
-//    i %= cols
-//    j %= rows
-//    
-//    
-//    buffer.i,buffer.j = i,j
-//}
 
-
-
-
+func (buffer *AnsiBuffer) LineForRow(row int) *Text {
+    r := uint(row)
+    if r >= buffer.rows {
+        log.Error("line for row %d > rows %d",row,buffer.rows)
+        return nil
+    }
+    
+    txt := ""
+    for c:=uint(0); c<buffer.cols;c++ {
+        chr := buffer.buf[r][c]
+        if chr < ' ' || chr >= 0x7f {
+            chr = ' '
+        }
+        txt += fmt.Sprintf("%c",chr)
+    }
+    
+    return NewText(txt)
+    
+}
 
 func (buffer *AnsiBuffer) writeString(text string) {
     i,j := buffer.i, buffer.j
@@ -132,7 +122,7 @@ func (buffer *AnsiBuffer) writeString(text string) {
         
         switch (run) {
             case '\n':
-                log.Debug("LF")
+                if DEBUG_ANSI { log.Debug("LF") }
                 i = 0
                 j += 1
                 if j >= rows-1 {  // last row
@@ -157,7 +147,7 @@ func (buffer *AnsiBuffer) writeString(text string) {
             
             
             case '\t':
-                log.Debug("TAB")
+                if DEBUG_ANSI { log.Debug("TAB") }
                 TABWIDTH := 8
                 for c:=0;c<TABWIDTH;c++ {
                     buf[j][i] = rune(' ')
@@ -174,13 +164,13 @@ func (buffer *AnsiBuffer) writeString(text string) {
                 }
             
             case '\r':
-                log.Debug("CR")
+                if DEBUG_ANSI { log.Debug("CR") }
             
             case '\a':
-                log.Debug("BEL")
+                if DEBUG_ANSI { log.Debug("BEL") }
             
             case '\b':
-                log.Debug("BS")
+                if DEBUG_ANSI { log.Debug("BS") }
                 i -= 1
                 if i <= 0 { i = 0 }
                 buf[j][i] = rune(' ')
@@ -210,13 +200,13 @@ func (buffer *AnsiBuffer) writeString(text string) {
     buffer.i,buffer.j = i,j
     
     if cnt > 0 {
-        log.Debug("print %d runes.",cnt)
+        if DEBUG_ANSI { log.Debug("print %d runes.",cnt) }
     }
 }
 
 func (buffer *AnsiBuffer) Write(raw []byte) {
     var err error 
-    log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0))
+    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
 
     var ptr []byte = raw
     var rem []byte = raw
@@ -229,7 +219,7 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
     for rem != nil {
         rem,seq,err = ansi.Decode( ptr )
         if err != nil {
-            log.Debug("fail ansi decode: %s",err)
+            if DEBUG_ANSI { log.Debug("fail ansi decode: %s",err) }
             break
         }
         if seq == nil {
@@ -249,13 +239,13 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
             s := ptr[0:1]
             chr = append(chr,s ...)
 
-//            log.Debug("c1 byte:\n%s",log.Dump(s,0,off))
+//            if DEBUG_ANSI { log.Debug("c1 byte:\n%s",log.Dump(s,0,off)) }
             off += 1
             ptr = ptr[1:]
                 
         } else if seq.Type == "C0" {
             
-            log.Debug("C0 byte.")
+            if DEBUG_ANSI { log.Debug("C0 byte.") }
             
         } else if seq.Type == "CSI" {
             
@@ -272,9 +262,9 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
             
             sequence,ok := ansi.Table[seq.Code]
             if ok {
-                log.Debug("ansi %s %-32s: %s( %s)",seq.Type,sequence.Desc,sequence.Name,tmp)
+                if DEBUG_ANSI { log.Debug("ansi %s %-32s: %s( %s)",seq.Type,sequence.Desc,sequence.Name,tmp) }
             } else {    
-                log.Debug("ansi %s 0x%x not in table",seq.Type,seq.Code)
+                if DEBUG_ANSI { log.Debug("ansi %s 0x%x not in table",seq.Type,seq.Code) }
             }
             off += l
             ptr = rem
