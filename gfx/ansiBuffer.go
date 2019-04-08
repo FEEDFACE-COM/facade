@@ -173,7 +173,7 @@ func (buffer *AnsiBuffer) writeString(text string) {
                 if DEBUG_ANSI { log.Debug("BS") }
                 i -= 1
                 if i <= 0 { i = 0 }
-                buf[j][i] = rune(' ')
+//                buf[j][i] = rune(' ')
                 
             
             default:

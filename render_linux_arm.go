@@ -275,7 +275,7 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
         case text := <-textChan:
             
             renderer.grid.Queue(text)
-            if DEBUG_BUFFER { log.Debug( renderer.grid.Dump() ) }
+            if DEBUG_BUFFER { log.Debug( "%s", renderer.grid.Dump() ) }
 //            renderer.lines.Queue(text, renderer.font )
 //            renderer.test.Queue(text)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
@@ -319,10 +319,10 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
     
     
 //    if DEBUG_BUFFER {
-//        log.Debug(renderer.buffer.Dump())    
+//        log.Debug("%s",renderer.buffer.Dump())    
 //        switch renderer.state.Mode { 
 //            case facade.GRID:
-//                log.Debug( renderer.grid.Dump() )
+//                log.Debug( "%s", renderer.grid.Dump() )
 //        } 
 //    }
     
