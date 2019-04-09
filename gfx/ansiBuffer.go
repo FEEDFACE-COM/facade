@@ -43,6 +43,9 @@ func makeRow(cols uint) []rune {
     return ret
 }
 
+
+
+
 func NewAnsiBuffer(cols, rows uint) *AnsiBuffer {
     ret := &AnsiBuffer{cols:cols, rows:rows}
     ret.buf = makeBuffer(cols,rows)
@@ -110,6 +113,9 @@ func (buffer *AnsiBuffer) LineForRow(row int) string {
     
 }
 
+
+
+
 func (buffer *AnsiBuffer) writeString(text string) {
     i,j := buffer.i, buffer.j
     rows,cols := buffer.rows,buffer.cols
@@ -138,32 +144,36 @@ func (buffer *AnsiBuffer) writeString(text string) {
                 } else {
                     //new empty last row
                     buf[j] = makeRow(cols)
-                    // clear row remainder
-//                    for c:=0;c<int(cols);c++ { 
-//                        buf[j][c] = rune(' ') 
-//                    }
                 }
 
             
             
             case '\t':
                 if DEBUG_ANSI { log.Debug("TAB") }
+
                 TABWIDTH := 8
-                for c:=0;c<TABWIDTH;c++ {
-                    if (int(i) % TABWIDTH == 0 ) {
-                        break
-                    }
+                for c:=0; c<TABWIDTH ; c++ {
+
+
                     buf[j][i] = rune(' ')
                     cnt += 1
+
                     i += 1
+
+                    if int(i) % TABWIDTH == 0 { //hit tab stop
+                        break
+                    }
+
+
+
                     if i >= cols {
                         i = 0
                         j += 1
                         if j >= rows {
                              j = rows-1 
                         }
-                        break
                     }
+                    
                 }
             
             case '\r':
@@ -207,7 +217,7 @@ func (buffer *AnsiBuffer) writeString(text string) {
 
 func (buffer *AnsiBuffer) Write(raw []byte) {
     var err error 
-    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
+//    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
 
     var ptr []byte = raw
     var rem []byte = raw
