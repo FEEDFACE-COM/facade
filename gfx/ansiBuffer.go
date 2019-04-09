@@ -176,8 +176,6 @@ func (buffer *AnsiBuffer) writeString(text string) {
                 if DEBUG_ANSI { log.Debug("BS") }
                 i -= 1
                 if i <= 0 { i = 0 }
-//                buf[j][i] = rune(' ')
-                
             
             default:
                 if run>=' ' && run<='~' {
@@ -278,9 +276,10 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
 //            log.Debug(" %s %s %s",bar.Name,bar.Desc,bar.Type)
 
         } else {
+
             log.Error("unknown sequence type %s",seq.Type)  
             ptr = rem
-              
+
         }
         
         
