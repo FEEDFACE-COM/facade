@@ -12,7 +12,7 @@ import(
 
 )
 
-const DEBUG_ANSI = false
+const DEBUG_ANSI = true
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
@@ -150,6 +150,9 @@ func (buffer *AnsiBuffer) writeString(text string) {
                 if DEBUG_ANSI { log.Debug("TAB") }
                 TABWIDTH := 8
                 for c:=0;c<TABWIDTH;c++ {
+                    if (int(i) % TABWIDTH == 0 ) {
+                        break
+                    }
                     buf[j][i] = rune(' ')
                     cnt += 1
                     i += 1
@@ -247,7 +250,7 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
             
             if DEBUG_ANSI { log.Debug("C0 byte.") }
             
-        } else if seq.Type == "CSI" {
+        } else if seq.Type == "CSI" || seq.Type == "IF" {
             
             //flush
             str = string(chr)
@@ -275,7 +278,9 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
 //            log.Debug(" %s %s %s",bar.Name,bar.Desc,bar.Type)
 
         } else {
-            log.Error("unknown sequence type %s",seq.Type)    
+            log.Error("unknown sequence type %s",seq.Type)  
+            ptr = rem
+              
         }
         
         

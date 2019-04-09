@@ -309,13 +309,9 @@ func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
 
 func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
-    if DEBUG_CLOCK   {
-        log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev))
-    }
+    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
-    if DEBUG_DIAG {
-        log.Debug( MemUsage() )    
-    }
+    if DEBUG_DIAG { log.Debug( MemUsage() ) }
     
     
 //    if DEBUG_BUFFER {
@@ -345,9 +341,9 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
 
 func (renderer *Renderer) SanitizeText(raw facade.RawText) string {
-    const TABWIDTH = 8
+//    const TABWIDTH = 8
     ret := string(raw)
-    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
+//    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
     return ret
 }
 
@@ -364,9 +360,7 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 
     for {
         rawText := <-rawChan
-        if DEBUG_MESSAGES {
-            log.Debug("process raw text: %s",string(rawText))
-        }
+        if DEBUG_MESSAGES { log.Debug("process raw text: %s",string(rawText)) }
         text := renderer.SanitizeText(rawText)
         
         renderer.mutex.Lock()
@@ -387,9 +381,7 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
-        if DEBUG_MESSAGES {
-            log.Debug("process raw: %s",rawConf.Desc())
-        }
+        if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
         conf := renderer.SanitizeConfig(rawConf)
 
         renderer.mutex.Lock()
