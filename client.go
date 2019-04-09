@@ -13,7 +13,7 @@ import (
     facade "./facade"
 )
 
-const DEBUG_CLIENT = false
+const DEBUG_CLIENT = true
 
 type Client   struct {
     host string
@@ -72,45 +72,32 @@ func (client *Client) SendText(text []byte) error {
     var err error
     _, err = client.textConn.Write(text) 
     if err != nil {
-        log.Error("fail to write to %s: %s",client.textConnStr,err)
+        if DEBUG_CLIENT { log.Error("fail to write to %s: %s",client.textConnStr,err) }
         return log.NewError("fail to write to %s",client.textConnStr)
     }
-    if DEBUG_CLIENT {
-        log.Debug("sent %d byte text",len(text))
-    }
+    if DEBUG_CLIENT { log.Debug("sent %d byte text:\n%s",len(text),log.Dump(text,0,0)) }
     return nil
 }
 
 func (client *Client) SendConf(config *facade.Config) error { 
     confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
-    if DEBUG_CLIENT {
-//        log.Debug("config %s",config.Desc())
-        log.Debug("dial %s",confConnStr) 
-    }
+    if DEBUG_CLIENT { log.Debug("dial %s",confConnStr) }
     conn, err := net.Dial("tcp", confConnStr)
     if err != nil {
-        if DEBUG_CLIENT {
-            log.Error("fail to dial %s: %s",confConnStr,err)
-        }
+        if DEBUG_CLIENT { log.Error("fail to dial %s: %s",confConnStr,err) }
         return log.NewError("fail to dial %s",confConnStr)
     }
     defer func() { 
-        if DEBUG_CLIENT {
-            log.Debug("close %s",conn.RemoteAddr().String());
-        }
+        if DEBUG_CLIENT { log.Debug("close %s",conn.RemoteAddr().String()); }
         conn.Close()
     }()
     encoder := json.NewEncoder(conn)
     err = encoder.Encode( *config )
     if err != nil {
-        if DEBUG_CLIENT {
-            log.Error("fail to encode %s: %s",config.Desc(),err)
-        }
+        if DEBUG_CLIENT { log.Error("fail to encode %s: %s",config.Desc(),err) }
         return log.NewError("fail to encode %s",config.Desc())
     }
-    if DEBUG_CLIENT {
-        log.Debug("sent conf %s",config.Desc())
-    }
+    if DEBUG_CLIENT { log.Debug("sent conf %s",config.Desc()) }
     return nil
 }
 

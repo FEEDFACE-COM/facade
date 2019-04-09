@@ -47,11 +47,11 @@ type Renderer struct {
     
 }
 
-const DEBUG_CLOCK  = false
-const DEBUG_MODE   = true
-const DEBUG_BUFFER = true
-const DEBUG_DIAG   = false
-const DEBUG_MEMORY = false
+const DEBUG_CLOCK    = false
+const DEBUG_MODE     = false
+const DEBUG_BUFFER   = true
+const DEBUG_DIAG     = false
+const DEBUG_MEMORY   = false
 const DEBUG_MESSAGES = false
 
 
@@ -274,8 +274,8 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
     select {
         case text := <-textChan:
             
-            renderer.grid.Queue(text, renderer.font)
-            renderer.grid.Dump()
+            renderer.grid.Queue(text)
+            if DEBUG_BUFFER { log.Debug( "%s", renderer.grid.Dump() ) }
 //            renderer.lines.Queue(text, renderer.font )
 //            renderer.test.Queue(text)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
@@ -309,22 +309,18 @@ func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
 
 func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
-    if DEBUG_CLOCK   {
-        log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev))
-    }
+    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
-    if DEBUG_DIAG {
-        log.Debug( MemUsage() )    
-    }
+    if DEBUG_DIAG { log.Debug( MemUsage() ) }
     
     
-    if DEBUG_BUFFER {
-//        log.Debug(renderer.buffer.Dump())    
-        switch renderer.state.Mode { 
-            case facade.GRID:
-                log.Debug( renderer.grid.Dump() )
-        } 
-    }
+//    if DEBUG_BUFFER {
+//        log.Debug("%s",renderer.buffer.Dump())    
+//        switch renderer.state.Mode { 
+//            case facade.GRID:
+//                log.Debug( "%s", renderer.grid.Dump() )
+//        } 
+//    }
     
     if DEBUG_MODE {
         tmp := ""
@@ -345,9 +341,9 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
 
 func (renderer *Renderer) SanitizeText(raw facade.RawText) string {
-    const TABWIDTH = 8
+//    const TABWIDTH = 8
     ret := string(raw)
-    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
+//    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
     return ret
 }
 
@@ -364,9 +360,7 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 
     for {
         rawText := <-rawChan
-        if DEBUG_MESSAGES {
-            log.Debug("process raw text: %s",string(rawText))
-        }
+        if DEBUG_MESSAGES { log.Debug("process raw text: %s",string(rawText)) }
         text := renderer.SanitizeText(rawText)
         
         renderer.mutex.Lock()
@@ -387,9 +381,7 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
-        if DEBUG_MESSAGES {
-            log.Debug("process raw: %s",rawConf.Desc())
-        }
+        if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
         conf := renderer.SanitizeConfig(rawConf)
 
         renderer.mutex.Lock()
