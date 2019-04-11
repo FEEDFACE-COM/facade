@@ -101,7 +101,7 @@ func (executor *Executor) Execute() error {
 }    
 
 func (executor *Executor) ReadTTY() {
-    ansi := gfx.NewAnsiBuffer(executor.cols,executor.rows)
+    ansi := gfx.NewTermBuffer(executor.cols,executor.rows)
 	reader := bufio.NewReader( executor.tty )
 	var buf []byte = make([]byte, 1024)
 	for {

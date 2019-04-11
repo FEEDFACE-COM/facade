@@ -21,7 +21,7 @@ type pos struct {
     x,y uint
 }
 
-type AnsiBuffer struct {
+type TermBuffer struct {
     cols uint
     rows  uint
     buf [][]rune
@@ -51,22 +51,22 @@ func makeRow(cols uint) []rune {
 
 
 
-func NewAnsiBuffer(cols, rows uint) *AnsiBuffer {
-    ret := &AnsiBuffer{cols:cols, rows:rows}
+func NewTermBuffer(cols, rows uint) *TermBuffer {
+    ret := &TermBuffer{cols:cols, rows:rows}
     ret.buf = makeBuffer(cols,rows)
     ret.cursor = pos{0,0}
 
     return ret
 }
 
-func (buffer *AnsiBuffer) Desc() string {
-    return fmt.Sprintf("ansi[%dx%d]",buffer.cols,buffer.rows)
+func (buffer *TermBuffer) Desc() string {
+    return fmt.Sprintf("term[%dx%d]",buffer.cols,buffer.rows)
 }
 
 
 
 
-func (buffer *AnsiBuffer) Resize(cols, rows uint) {
+func (buffer *TermBuffer) Resize(cols, rows uint) {
     buf := makeBuffer(cols,rows)
     for r:=uint(0); r<rows && r<buffer.rows; r++ {
         for c:=uint(0); c<cols && c<buffer.cols; c++ {
@@ -82,7 +82,7 @@ func (buffer *AnsiBuffer) Resize(cols, rows uint) {
 }
 
 
-func (buffer *AnsiBuffer) Dump() string {
+func (buffer *TermBuffer) Dump() string {
     ret := ""
     ret += fmt.Sprintf("cursor %02d,%02d\n",buffer.cursor.x,buffer.cursor.y)
     ret += "+ "
@@ -111,7 +111,7 @@ func (buffer *AnsiBuffer) Dump() string {
 }
 
 
-func (buffer *AnsiBuffer) LineForRow(row int) string {
+func (buffer *TermBuffer) LineForRow(row int) string {
     r := uint(row)
     if r >= buffer.rows {
         log.Error("line for row %d > rows %d",row,buffer.rows)
@@ -134,14 +134,14 @@ func (buffer *AnsiBuffer) LineForRow(row int) string {
 
 
 
-func (buffer *AnsiBuffer) Scroll() {
+func (buffer *TermBuffer) Scroll() {
     for r:=uint(0); r<buffer.rows-1; r++ {
         buffer.buf[r] = buffer.buf[r+1]        
     }
     buffer.buf[buffer.rows-1] = makeRow(buffer.cols)
 }
 
-func (buffer *AnsiBuffer) writeString(text string) {
+func (buffer *TermBuffer) writeString(text string) {
     cur := buffer.cursor
     rows,cols := buffer.rows,buffer.cols
     buf := buffer.buf
@@ -239,7 +239,7 @@ func (buffer *AnsiBuffer) writeString(text string) {
 
 
 
-func (buffer *AnsiBuffer) Write(raw []byte) {
+func (buffer *TermBuffer) Write(raw []byte) {
     var err error 
 //    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
 
@@ -332,7 +332,7 @@ func (buffer *AnsiBuffer) Write(raw []byte) {
 
 
 
-func (buffer *AnsiBuffer) handleSequence(seq *ansi.Sequence) {
+func (buffer *TermBuffer) handleSequence(seq *ansi.Sequence) {
 
     cur := buffer.cursor
     rows,cols := buffer.rows,buffer.cols

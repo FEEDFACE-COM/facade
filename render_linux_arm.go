@@ -40,7 +40,7 @@ type Renderer struct {
     
     axis *gfx.Axis
 
-    buffer *gfx.Buffer
+//    buffer *gfx.Buffer
     mutex *sync.Mutex
     directory string
     
@@ -51,7 +51,7 @@ const DEBUG_CLOCK    = false
 const DEBUG_MODE     = false
 const DEBUG_BUFFER   = true
 const DEBUG_DIAG     = false
-const DEBUG_MEMORY   = false
+const DEBUG_MEMORY   = true
 const DEBUG_MESSAGES = false
 
 
@@ -59,7 +59,7 @@ const DEBUG_MESSAGES = false
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
     ret.mutex = &sync.Mutex{}
-    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
+//    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
     return ret
 }
 
@@ -348,10 +348,6 @@ func (renderer *Renderer) SanitizeText(raw facade.RawText) string {
 }
 
 
-func (renderer *Renderer) SanitizeConfig(raw facade.Config) facade.Config {
-    ret := raw
-    return ret
-}
 
 
 
@@ -360,12 +356,12 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 
     for {
         rawText := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process raw text: %s",string(rawText)) }
-        text := renderer.SanitizeText(rawText)
+        if DEBUG_MESSAGES { log.Debug("process raw text: %s",rawText) }
+        text := rawText.Sanitize()
         
-        renderer.mutex.Lock()
-        renderer.buffer.Queue( gfx.NewText(text) )
-        renderer.mutex.Unlock()
+//        renderer.mutex.Lock()
+//        renderer.buffer.Queue( gfx.NewText(text) )
+//        renderer.mutex.Unlock()
         
         textChan <- text
         
@@ -382,11 +378,11 @@ func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan 
     for {
         rawConf := <-rawChan
         if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
-        conf := renderer.SanitizeConfig(rawConf)
+        conf := rawConf.Sanitize()
 
-        renderer.mutex.Lock()
-        // prep some stuff i guess?
-        renderer.mutex.Unlock()
+//        renderer.mutex.Lock()
+//        // prep some stuff i guess?
+//        renderer.mutex.Unlock()
         
         confChan <- conf
 

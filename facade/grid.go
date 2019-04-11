@@ -17,7 +17,7 @@ import(
 type Grid struct {
 
     buffer *gfx.Buffer
-    ansi   *gfx.AnsiBuffer
+    termBuffer   *gfx.TermBuffer
     
     texture *gfx.Texture
     program *gfx.Program
@@ -170,7 +170,7 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 func (grid *Grid) lineForRow(row int) *gfx.Text {
 	
 	if uint(row) >= 0 && uint(row) < grid.state.Height {
-    	str := grid.ansi.LineForRow(row)
+    	str := grid.termBuffer.LineForRow(row)
     	if str != "" {
         	return gfx.NewText(str)
         }
@@ -439,7 +439,7 @@ func (grid *Grid) Queue(text string) {
 //		}
 //	} 
 //	grid.buffer.Queue( newText )
-	grid.ansi.Write( []byte(text) )
+	grid.termBuffer.Write( []byte(text) )
 	grid.ScheduleRefresh()
     
 }
@@ -503,14 +503,14 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
     if width,ok := config.Width(); ok && width != 0 { 
 	    grid.state.Width = width 
-        grid.ansi.Resize(grid.state.Width,grid.state.Height)   
+        grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
 	} 
 
     if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
 	    grid.state.Height = height 
         log.Debug("resize %s",grid.buffer.Desc())
         grid.buffer.Resize(height) 
-        grid.ansi.Resize(grid.state.Width,grid.state.Height)   
+        grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
     }
 
     if true {  //optimize!!
@@ -568,7 +568,7 @@ func NewGrid(config *GridConfig) *Grid {
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
     ret.buffer = gfx.NewBuffer(ret.state.Height)
-    ret.ansi = gfx.NewAnsiBuffer(ret.state.Width,ret.state.Height)
+    ret.termBuffer = gfx.NewTermBuffer(ret.state.Width,ret.state.Height)
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
@@ -578,6 +578,6 @@ func NewGrid(config *GridConfig) *Grid {
 }
 
 func (grid *Grid) Desc() string { return grid.state.Desc()  }
-func (grid *Grid) Dump() string { return grid.ansi.Dump() }
+func (grid *Grid) Dump() string { return grid.termBuffer.Dump() }
 
 

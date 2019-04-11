@@ -352,7 +352,7 @@ func main() {
 //                }
 //            }()
             
-            ansi := gfx.NewAnsiBuffer(20,8)
+            ansi := gfx.NewTermBuffer(20,8)
             
 
             for { 
