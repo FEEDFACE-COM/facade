@@ -33,7 +33,7 @@ LDFLAGS = -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION
 default: build
 
 help:
-	@echo "### Usage ###"
+	@echo "#Usage"
 	@echo " make build    # build static executable"
 	@echo " make info     # show build info"
 	@echo " make assets   # build fonts and shaders"
@@ -42,14 +42,14 @@ help:
 
 
 info: 
-	@echo "### Version Info ###"
+	@echo "#Version Info"
 	@echo " name       ${BUILD_NAME}"
 	@echo " version    ${BUILD_VERSION}"
 	@echo " platform   ${BUILD_PLATFORM}"
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo ""
-	@echo "### Build Variables ###"
+	@echo "#Sources"
 	@echo " source     ${SOURCES}"
 	@echo "  asset     ${ASSETS}"
 	@echo ""
