@@ -32,15 +32,17 @@ type Renderer struct {
     state facade.State
 
     grid *facade.Grid
-//    lines *facade.Lines
-//    test *facade.Test
+
     font *gfx.Font
     camera *gfx.Camera
     mask *gfx.Mask
     
     axis *gfx.Axis
 
-//    buffer *gfx.Buffer
+    
+    lineBuffer *gfx.LineBuffer
+    termBuffer *gfx.TermBuffer
+    
     mutex *sync.Mutex
     directory string
     
@@ -59,7 +61,8 @@ const DEBUG_MESSAGES = false
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
     ret.mutex = &sync.Mutex{}
-//    ret.buffer = gfx.NewBuffer(BUFFER_SIZE)
+    ret.lineBuffer = gfx.NewLineBuffer(BUFFER_SIZE)
+    ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
     return ret
 }
 
@@ -137,7 +140,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 			if cfg,ok := config.Grid(); ok {
 				gridConfig.ApplyConfig(&cfg)
 			}	
-			renderer.grid = facade.NewGrid( gridConfig )
+			renderer.grid = facade.NewGrid( gridConfig, renderer.lineBuffer, renderer.termBuffer )
 			renderer.grid.Init(renderer.camera,renderer.font)
 			renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
 	}
@@ -274,10 +277,12 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
     select {
         case text := <-textChan:
             
-            renderer.grid.Queue(text)
+            
+            renderer.lineBuffer.Queue( gfx.NewText(text) )
+            renderer.termBuffer.Write( []byte(text) )
+        	renderer.grid.ScheduleRefresh()
+        	
             if DEBUG_BUFFER { log.Debug( "%s", renderer.grid.Dump() ) }
-//            renderer.lines.Queue(text, renderer.font )
-//            renderer.test.Queue(text)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
         default:
@@ -338,14 +343,6 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 }
 
 //
-
-
-func (renderer *Renderer) SanitizeText(raw facade.RawText) string {
-//    const TABWIDTH = 8
-    ret := string(raw)
-//    ret = strings.Replace(ret, "	", strings.Repeat(" ", TABWIDTH), -1)
-    return ret
-}
 
 
 

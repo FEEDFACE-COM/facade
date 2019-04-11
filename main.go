@@ -180,7 +180,7 @@ func main() {
 
         case TEST:
             server = NewServer(listenHost,confPort,textPort,readTimeout)
-            tester = NewTester("foo")
+            tester = NewTester(directory)
 
         case INFO:
             ShowVersion()
@@ -310,7 +310,7 @@ func main() {
             for config != nil { 
                 err = client.SendConf(config)
                 if err == nil {
-                    log.Debug("sent config")
+                    log.Debug("sent config %s",config.Desc())
                     break
                 }
                 time.Sleep( time.Duration( 200 * time.Millisecond ) )
@@ -318,7 +318,7 @@ func main() {
             for {
                 err = client.OpenText()
                 if err == nil {
-                    log.Debug("text connected")
+                    log.Debug("connected text.")
                     break
                 }
                 time.Sleep( time.Duration( 200 * time.Millisecond ) )
@@ -332,71 +332,14 @@ func main() {
             rawTexts := make(chan facade.RawText)
             go server.ListenConf(rawConfs)
             go server.ListenText(rawTexts)
-
-//            go func() {
-//                var reader *bufio.Reader = bufio.NewReader(os.Stdin)
-//                var buf []byte = make([]byte, 1024)
-//                var text facade.RawText
-//                for  {
-//                    n,err := reader.Read(buf)
-//                    text = facade.RawText(buf[:n])
-//                    if err == io.EOF {
-//                        break
-//                    }       
-//                    if err != nil {
-//                        log.Error("fail read: %s",err)
-//                        break    
-//                    }
-//                    log.Debug("read %d byte text",len(text))
-//                    rawTexts <- text
-//                }
-//            }()
             
-            ansi := gfx.NewTermBuffer(20,8)
-            
+            str := "FEEDFACE.COM"
+            if modeFlags.NArg() > 0 {
+                str = strings.Join(modeFlags.Args()," ")
+            }
+            tester.Configure(config)
+            err = tester.Test(str,rawConfs,rawTexts)
 
-            for { 
-                select { 
-                    case text := <- rawTexts:
-//                        log.Debug("recv %d byte text",len(text))
-
-//                		os.Stdout.Write([]byte(text))
-                        ansi.Write( []byte(text) )
-//                        os.Stdout.Write( []byte("\n") )
-//                        os.Stdout.Write( []byte(ansi.Dump()) )
-
-                    
-                    case conf := <- rawConfs:
-                        log.Debug("recv conf %s",conf.Desc())
-                        if grid,ok := conf.Grid(); ok {
-                            var w,h uint = 0,0
-                            w,_ = grid.Width()
-                            h,_ = grid.Height()
-                            if w!=0 && h!= 0 {
-                                ansi.Resize(w,h)    
-                            }
-                        }
-                    
-                    case <- time.After( 1 * time.Second ):
-                        log.Debug(ansi.Desc() )    
-                    
-                    default:
-                        //nop
-                }
-
-//            for {
-//                time.Sleep( time.Duration( int64(time.Second)) )
-//            }            
-        
-            if tester == nil { log.PANIC("tester not available") }
-//            str := "FEEDFACE.COM"
-//            if modeFlags.NArg() > 0 {
-//                str = strings.Join(modeFlags.Args()," ")
-//            }
-//            tester.Configure(config)
-//            err = tester.Test(str)
-
-        }
 
         default:
             log.PANIC("inconsistent command")

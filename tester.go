@@ -8,6 +8,7 @@ import (
     "bufio"
     "image/png"
     "image"
+    "time"
 //    "errors"
     log "./log"
     gfx "./gfx"
@@ -59,7 +60,8 @@ func (tester *Tester) testTextTex(str string) (*image.RGBA,error) {
 
 
 
-func (tester *Tester) Test(str string) error {
+func (tester *Tester) Test(str string, confChan chan facade.Config, textChan chan facade.RawText) error {
+    var err error
     switch tester.mode {
         case facade.GRID:
             test,_ := tester.testCharMap()
@@ -68,8 +70,12 @@ func (tester *Tester) Test(str string) error {
         case facade.LINES:
             test,_ := tester.testTextTex(str)
             SaveRGBA(test,fmt.Sprintf("%s/test/text-%s-%s.png",tester.directory,tester.name,str))
+            
+        default:
+            err = tester.testAnsi(confChan,textChan)
+            
     }
-    return nil
+    return err
 }
 
 
@@ -95,5 +101,46 @@ func SaveRGBA(img *image.RGBA,outPath string)  {
     log.Info("wrote image to %s",outPath)
     
 }
+
+
+func (tester *Tester) testAnsi(rawConfs chan facade.Config, rawTexts chan facade.RawText) error {
+    term := gfx.NewTermBuffer(20,8)
+    for { 
+        select { 
+            case text := <- rawTexts:
+    //                        log.Debug("recv %d byte text",len(text))
+    
+    //                		os.Stdout.Write([]byte(text))
+                term.Write( []byte(text) )
+    //                        os.Stdout.Write( []byte("\n") )
+    //                        os.Stdout.Write( []byte(ansi.Dump()) )
+    
+            
+            case conf := <- rawConfs:
+                log.Debug("recv conf %s",conf.Desc())
+                if grid,ok := conf.Grid(); ok {
+                    var w,h uint = 0,0
+                    w,_ = grid.Width()
+                    h,_ = grid.Height()
+                    if w!=0 && h!= 0 {
+                        term.Resize(w,h)    
+                    }
+                }
+            
+            case <- time.After( 1 * time.Second ):
+                log.Debug(term.Desc() )    
+            
+            default:
+                //nop
+        }
+    
+    //            for {
+    //                time.Sleep( time.Duration( int64(time.Second)) )
+    //            }            
+    }
+    return nil
+}
+
+
 
 

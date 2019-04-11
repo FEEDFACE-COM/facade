@@ -16,7 +16,7 @@ import(
 
 type Grid struct {
 
-    buffer *gfx.Buffer
+    lineBuffer *gfx.LineBuffer
     termBuffer   *gfx.TermBuffer
     
     texture *gfx.Texture
@@ -134,7 +134,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	offset := int32(0)
 
     if grid.state.Downward { // need to skip first row
-        if grid.buffer.Tail(0) != nil {
+        if grid.lineBuffer.Tail(0) != nil {
             offset = int32(grid.state.Width)
         }
     }
@@ -202,79 +202,79 @@ func (grid *Grid) lineForRow(row int) *gfx.Text {
 
 
 func (grid *Grid) Fill(font *gfx.Font, fill string) {
-    
-    switch fill {
-    
-    	//todo: cheeck widht, switch different titles
-    	//also, clear!
-        case "title": 
-            for _,line := range []string{
-                "                    ",
-                " _  _   _  _   _   _",
-                "|_ |_| /  |_| | \\ |_", 
-                "|  | | \\_ | | |_/ |_",
-                "                    ",
-                "     by FEEDFACE.COM",
-                "                    ",
-            } {
-                grid.Queue(line)    
-            }
-            
-        case "title2": 
-            for _,line := range []string{
-                "              ",
-                "F A C A D E   ",
-                "              ",
-                "            by",
-                "  FEEDFACE.COM",
-                "              ",
-            } {
-                grid.Queue(line)    
-            }
-            
-        case "title3": 
-            for _,line := range []string{
-                "F A C A D E",
-            } {
-                grid.Queue(line)    
-            }
-        
-        
-        case "grid":
-            w,h := int(grid.state.Width), int(grid.state.Height)
+//    
+//    switch fill {
+//    
+//    	//todo: cheeck widht, switch different titles
+//    	//also, clear!
+//        case "title": 
+//            for _,line := range []string{
+//                "                    ",
+//                " _  _   _  _   _   _",
+//                "|_ |_| /  |_| | \\ |_", 
+//                "|  | | \\_ | | |_/ |_",
+//                "                    ",
+//                "     by FEEDFACE.COM",
+//                "                    ",
+//            } {
+//                grid.Queue(line)    
+//            }
+//            
+//        case "title2": 
+//            for _,line := range []string{
+//                "              ",
+//                "F A C A D E   ",
+//                "              ",
+//                "            by",
+//                "  FEEDFACE.COM",
+//                "              ",
+//            } {
+//                grid.Queue(line)    
+//            }
+//            
+//        case "title3": 
+//            for _,line := range []string{
+//                "F A C A D E",
+//            } {
+//                grid.Queue(line)    
+//            }
+//        
+//        
+//        case "grid":
+//            w,h := int(grid.state.Width), int(grid.state.Height)
 //            for r:=0; r<h-1; r++ {
-            for r:=0; r<h; r++ {
-                line := ""
-                for c:=0; c<w; c++ {
-                    d := "."
-                    if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
-                    if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
-                    if c % 5 == 0 && r % 5 == 0 { d = "#" }
-    
-                    line += fmt.Sprintf("%s",d)        
-                }
-                grid.Queue(line)
-            }
-            
-            
-        case "alpha":
-            w,h := int(grid.state.Width), int(grid.state.Height)
-            alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
-            s := 0
-            for r:=0; r<h; r++ {
-                line := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
-                grid.Queue(line)
-                s += 1
-            }
-            
-            
-        case "clear":
-        	h := int(grid.state.Height)
-        	for r:=0; r<h; r++ {
-	        	grid.Queue("")
-	        }
-
-    }    
+//            for r:=0; r<h; r++ {
+//                line := ""
+//                for c:=0; c<w; c++ {
+//                    d := "."
+//                    if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
+//                    if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
+//                    if c % 5 == 0 && r % 5 == 0 { d = "#" }
+//    
+//                    line += fmt.Sprintf("%s",d)        
+//                }
+//                grid.Queue(line)
+//            }
+//            
+//            
+//        case "alpha":
+//            w,h := int(grid.state.Width), int(grid.state.Height)
+//            alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
+//            s := 0
+//            for r:=0; r<h; r++ {
+//                line := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
+//                grid.Queue(line)
+//                s += 1
+//            }
+//            
+//            
+//        case "clear":
+//        	h := int(grid.state.Height)
+//        	for r:=0; r<h; r++ {
+//	        	grid.Queue("")
+//	        }
+//
+//    }    
 }
 
 
@@ -420,30 +420,30 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
 
 
 
-
-func (grid *Grid) Queue(text string) {
-//    newText := gfx.NewText(text)
-//    fun := func() { 
-//	    grid.empty = gfx.NewText("") 
-//	    grid.ScheduleRefresh()
-//	}
-//    if grid.scroller.Once(fun) {
-//		tmp := grid.buffer.Head(0)
-//	    if grid.state.Downward {
-//		    tmp = grid.buffer.Tail(0)
-//		}
-//	    if tmp == nil {
-//			grid.empty = gfx.NewText("")
-//		} else {
-//			grid.empty = gfx.NewText( tmp.Text )
-//		}
-//	} 
-//	grid.buffer.Queue( newText )
-	grid.termBuffer.Write( []byte(text) )
-	grid.ScheduleRefresh()
-    
-}
-
+//
+//func (grid *Grid) Queue(text string) {
+////    newText := gfx.NewText(text)
+////    fun := func() { 
+////	    grid.empty = gfx.NewText("") 
+////	    grid.ScheduleRefresh()
+////	}
+////    if grid.scroller.Once(fun) {
+////		tmp := grid.buffer.Head(0)
+////	    if grid.state.Downward {
+////		    tmp = grid.buffer.Tail(0)
+////		}
+////	    if tmp == nil {
+////			grid.empty = gfx.NewText("")
+////		} else {
+////			grid.empty = gfx.NewText( tmp.Text )
+////		}
+////	} 
+////	grid.buffer.Queue( newText )
+//	grid.termBuffer.Write( []byte(text) )
+//	grid.ScheduleRefresh()
+//    
+//}
+//
 
 func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 
@@ -508,8 +508,8 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
     if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
 	    grid.state.Height = height 
-        log.Debug("resize %s",grid.buffer.Desc())
-        grid.buffer.Resize(height) 
+        log.Debug("resize %s",grid.lineBuffer.Desc())
+        grid.lineBuffer.Resize(height) 
         grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
     }
 
@@ -562,13 +562,15 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 
 
-func NewGrid(config *GridConfig) *Grid {
+func NewGrid(config *GridConfig, lineBuffer *gfx.LineBuffer, termBuffer *gfx.TermBuffer) *Grid {
     ret := &Grid{}
     ret.state = GridDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
-    ret.buffer = gfx.NewBuffer(ret.state.Height)
-    ret.termBuffer = gfx.NewTermBuffer(ret.state.Width,ret.state.Height)
+//    ret.buffer = gfx.NewBuffer(ret.state.Height)
+//    ret.termBuffer = gfx.NewTermBuffer(ret.state.Width,ret.state.Height)
+    ret.lineBuffer = lineBuffer
+    ret.termBuffer = termBuffer
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")

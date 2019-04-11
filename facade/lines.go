@@ -17,7 +17,7 @@ import(
 type Lines struct {
     config LinesConfig
 
-    buffer *gfx.Buffer 
+    buffer *gfx.LineBuffer 
     program *gfx.Program
 
 
@@ -158,7 +158,7 @@ func NewLines(config *LinesConfig) *Lines {
         config = NewLinesConfig()
     }
     ret := &Lines{config: *config}
-    ret.buffer = gfx.NewBuffer(config.Height)
+    ret.buffer = gfx.NewLineBuffer(config.Height)
     ret.program = gfx.GetProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret

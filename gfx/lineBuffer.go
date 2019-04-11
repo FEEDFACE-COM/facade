@@ -10,7 +10,7 @@ import(
 
         
 
-type Buffer struct {
+type LineBuffer struct {
     count uint
     head  uint
     tail  uint
@@ -20,8 +20,8 @@ type Buffer struct {
 
 const DEBUG_BUFFER = false
 
-func NewBuffer(count uint) *Buffer {
-    ret := &Buffer{}
+func NewLineBuffer(count uint) *LineBuffer {
+    ret := &LineBuffer{}
     if count == 0 { count = 1 }
     ret.count = count
     ret.head = 0
@@ -34,7 +34,7 @@ func NewBuffer(count uint) *Buffer {
 
 
 
-func (buffer *Buffer) Resize(newCount uint) {
+func (buffer *LineBuffer) Resize(newCount uint) {
     log.Debug("resize %s -> %d",buffer.Desc(),newCount)
     if newCount == 0 { newCount = 1 }
 
@@ -84,7 +84,7 @@ func (buffer *Buffer) Resize(newCount uint) {
 
 
 
-func (buffer *Buffer) Queue(newItem *Text) {
+func (buffer *LineBuffer) Queue(newItem *Text) {
 
     if buffer.items[buffer.tail] == nil && newItem != nil {
         buffer.items[buffer.tail] = newItem
@@ -124,13 +124,13 @@ func (buffer *Buffer) Queue(newItem *Text) {
 
 
 
-func (buffer *Buffer) Tail(off uint) *Text {
+func (buffer *LineBuffer) Tail(off uint) *Text {
     // off /= buffer.count   // probably?
     idx := buffer.count + buffer.tail - off
     return buffer.items[idx % buffer.count]    
 }
 
-func (buffer *Buffer) Head(off uint) *Text {
+func (buffer *LineBuffer) Head(off uint) *Text {
     idx := buffer.count + buffer.head + off
     return buffer.items[idx % buffer.count]    
 }
@@ -140,13 +140,13 @@ func (buffer *Buffer) Head(off uint) *Text {
 
 
 
-func (buffer *Buffer) Desc() string { 
+func (buffer *LineBuffer) Desc() string { 
     ret := fmt.Sprintf("buffer[%d]",buffer.count)
     return ret
 }
 
 
-func (buffer *Buffer) Dump() string {
+func (buffer *LineBuffer) Dump() string {
     ret := ""
     
     for i:= uint(0);i<buffer.count;i++ {
