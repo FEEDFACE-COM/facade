@@ -515,7 +515,7 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y -= scroller;
+    pos.x -= 2.*scroller;
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
 

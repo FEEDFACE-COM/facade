@@ -17,7 +17,7 @@ import(
 type Lines struct {
     config LinesConfig
 
-    buffer *gfx.LineBuffer 
+    buffer *gfx.RingBuffer 
     program *gfx.Program
 
 
@@ -54,7 +54,8 @@ func (lines *Lines) generateData() {
 func (lines *Lines) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     newText.RenderTexture(font)
-    lines.buffer.Queue( newText )
+    lines.buffer.WriteText( newText )
+//    lines.buffer.Queue( newText )
     lines.generateData()
 //    log.Debug("queued text: %s",text)
 }
@@ -158,7 +159,7 @@ func NewLines(config *LinesConfig) *Lines {
         config = NewLinesConfig()
     }
     ret := &Lines{config: *config}
-    ret.buffer = gfx.NewLineBuffer(config.Height)
+    ret.buffer = gfx.NewRingBuffer(config.Height)
     ret.program = gfx.GetProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret
