@@ -1,11 +1,20 @@
 
-// +build linux,arm
 
 package gfx
 
 import(
+//    "image"
     log "../log"    
 )
+
+//type TextTexture interface {
+//    
+//    Close()
+//    LoadRGBA(*image.RGBA)
+//    
+//}
+//
+
 
 type Text struct {
     Text string
