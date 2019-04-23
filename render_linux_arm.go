@@ -22,9 +22,6 @@ import (
 
 const RENDERER_AVAILABLE = true
 
-const FRAME_RATE = 60.0
-
-const BUFFER_SIZE = 80
 
 type Renderer struct {
     screen gfx.Size
@@ -48,13 +45,6 @@ type Renderer struct {
     
     
 }
-
-const DEBUG_CLOCK    = false
-const DEBUG_MODE     = false
-const DEBUG_GRID     = true
-const DEBUG_DIAG     = false
-const DEBUG_MEMORY   = false
-const DEBUG_MESSAGES = true
 
 
 
