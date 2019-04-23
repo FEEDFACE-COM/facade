@@ -12,6 +12,10 @@ type Text struct {
     Texture *Texture
 }
 
+func (text *Text) Bytes() []byte {
+    return []byte( text.Text )
+}
+
 func (text *Text) Close() {
     if text.Texture != nil { text.Texture.Close() }
 }

@@ -107,11 +107,12 @@ func (tester *Tester) testAnsi(rawConfs chan facade.Config, rawTexts chan facade
     term := gfx.NewTermBuffer(20,8)
     for { 
         select { 
-            case text := <- rawTexts:
+            case txt := <- rawTexts:
     //                        log.Debug("recv %d byte text",len(text))
     
     //                		os.Stdout.Write([]byte(text))
-                term.Write( []byte(text) )
+                text := gfx.NewText( string(txt) )
+                term.WriteText( text )
     //                        os.Stdout.Write( []byte("\n") )
     //                        os.Stdout.Write( []byte(ansi.Dump()) )
     

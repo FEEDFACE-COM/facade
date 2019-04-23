@@ -12,7 +12,7 @@ import(
 
 )
 
-const DEBUG_ANSI = true
+const DEBUG_ANSI = false
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
@@ -141,6 +141,19 @@ func (buffer *TermBuffer) Scroll() {
     buffer.buf[buffer.rows-1] = makeRow(buffer.cols)
 }
 
+
+func (buffer *TermBuffer) WriteText(text *Text) {
+
+    buffer.writeBytes( text.Bytes() ) 
+   
+}
+
+func (buffer *TermBuffer) WriteString(str string) {
+    
+    buffer.writeBytes( []byte(str) )
+}
+
+
 func (buffer *TermBuffer) writeString(text string) {
     cur := buffer.cursor
     rows,cols := buffer.rows,buffer.cols
@@ -239,7 +252,7 @@ func (buffer *TermBuffer) writeString(text string) {
 
 
 
-func (buffer *TermBuffer) Write(raw []byte) {
+func (buffer *TermBuffer) writeBytes(raw []byte) {
     var err error 
 //    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
 

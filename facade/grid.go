@@ -13,10 +13,12 @@ import(
 	"github.com/go-gl/mathgl/mgl32"    
 )
 
+const USE_TERMBUFFER = false
+
 
 type Grid struct {
 
-    lineBuffer *gfx.LineBuffer
+    ringBuffer *gfx.RingBuffer
     termBuffer   *gfx.TermBuffer
     
     texture *gfx.Texture
@@ -134,7 +136,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	offset := int32(0)
 
     if grid.state.Downward { // need to skip first row
-        if grid.lineBuffer.Tail(0) != nil {
+        if grid.ringBuffer.Tail(0) != nil {
             offset = int32(grid.state.Width)
         }
     }
@@ -168,41 +170,56 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 
 
 
-func (grid *Grid) lineForRow(row int) *gfx.Text {
-	
-	if uint(row) >= 0 && uint(row) < grid.state.Height {
-    	str := grid.termBuffer.LineForRow(row)
-    	if str != "" {
-        	return gfx.NewText(str)
-        }
-    }
-    return grid.empty
-    
-    
 
-//	r := uint(row)
-////	if r >= grid.state.Height { 
-////		r= grid.state.Height-1 
-////	}
-//
-//	if r>= grid.state.Height {
-//		return grid.empty
-//	}
-//
-//	if r < 0 {
-//		return grid.empty
-//	}
-//
-//	if grid.state.Downward {
-//		return grid.buffer.Tail(r)
-//	} else {
-//		return grid.buffer.Head(r)
-//	}	
-//	return grid.empty
+
+
+
+
+func (grid *Grid) textForRow(row int) *gfx.Text {
+	
+	
+    if USE_TERMBUFFER {
+	
+        if uint(row) >= 0 && uint(row) < grid.state.Height {
+            str := grid.termBuffer.LineForRow(row)
+            if str != "" {
+                return gfx.NewText(str)
+            }
+        }
+        return grid.empty
+    
+    }    
+    
+    if ! USE_TERMBUFFER {
+        r := uint(row)
+    //	if r >= grid.state.Height { 
+    //		r= grid.state.Height-1 
+    //	}
+    
+        if r>= grid.state.Height {
+            return grid.empty
+        }
+    
+        if r < 0 {
+            return grid.empty
+        }
+    
+        if grid.state.Downward {
+            return grid.ringBuffer.Tail(r)
+        } else {
+            return grid.ringBuffer.Head(r)
+        }	
+        return grid.empty
+
+    }
+    
+    
+    return grid.empty
 }
 
 
-func (grid *Grid) Fill(font *gfx.Font, fill string) {
+
+func (grid *Grid) Fill(fill string) {
 //    
 //    switch fill {
 //    
@@ -316,7 +333,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
         tmp += "\n"
         y:= -1 * (r-h/2)
 
-        var line = grid.lineForRow(r)
+        var line = grid.textForRow(r)
         for c:=0; c<w; c++ {
 //            x:= c-w/2 + (1-w%2)
             x:= c-w/2 + (w%2)
@@ -509,8 +526,8 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
     if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
 	    grid.state.Height = height 
-        log.Debug("resize %s",grid.lineBuffer.Desc())
-        grid.lineBuffer.Resize(height) 
+        log.Debug("resize %s",grid.ringBuffer.Desc())
+        grid.ringBuffer.Resize(height) 
         grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
     }
 
@@ -552,7 +569,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     
 
     if fill,ok := config.Fill(); ok {
-        grid.Fill(font,fill)
+        grid.Fill(fill)
     }
 	
 	grid.ScheduleRefresh()
@@ -563,14 +580,14 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 
 
-func NewGrid(config *GridConfig, lineBuffer *gfx.LineBuffer, termBuffer *gfx.TermBuffer) *Grid {
+func NewGrid(config *GridConfig, ringBuffer *gfx.RingBuffer, termBuffer *gfx.TermBuffer) *Grid {
     ret := &Grid{}
     ret.state = GridDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
 //    ret.buffer = gfx.NewBuffer(ret.state.Height)
 //    ret.termBuffer = gfx.NewTermBuffer(ret.state.Width,ret.state.Height)
-    ret.lineBuffer = lineBuffer
+    ret.ringBuffer = ringBuffer
     ret.termBuffer = termBuffer
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
@@ -581,6 +598,13 @@ func NewGrid(config *GridConfig, lineBuffer *gfx.LineBuffer, termBuffer *gfx.Ter
 }
 
 func (grid *Grid) Desc() string { return grid.state.Desc()  }
-func (grid *Grid) Dump() string { return grid.termBuffer.Dump() }
+
+func (grid *Grid) Dump() string { 
+    if USE_TERMBUFFER {
+        return grid.termBuffer.Dump() 
+    } else { 
+        return grid.ringBuffer.Dump()
+    }
+}
 
 

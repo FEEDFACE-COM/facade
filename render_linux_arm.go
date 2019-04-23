@@ -40,7 +40,7 @@ type Renderer struct {
     axis *gfx.Axis
 
     
-    lineBuffer *gfx.LineBuffer
+    ringBuffer *gfx.RingBuffer
     termBuffer *gfx.TermBuffer
     
     mutex *sync.Mutex
@@ -51,17 +51,17 @@ type Renderer struct {
 
 const DEBUG_CLOCK    = false
 const DEBUG_MODE     = false
-const DEBUG_BUFFER   = true
+const DEBUG_GRID     = true
 const DEBUG_DIAG     = false
-const DEBUG_MEMORY   = true
-const DEBUG_MESSAGES = false
+const DEBUG_MEMORY   = false
+const DEBUG_MESSAGES = true
 
 
 
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
     ret.mutex = &sync.Mutex{}
-    ret.lineBuffer = gfx.NewLineBuffer(BUFFER_SIZE)
+    ret.ringBuffer = gfx.NewRingBuffer(10) //FIXME
     ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
     return ret
 }
@@ -140,7 +140,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 			if cfg,ok := config.Grid(); ok {
 				gridConfig.ApplyConfig(&cfg)
 			}	
-			renderer.grid = facade.NewGrid( gridConfig, renderer.lineBuffer, renderer.termBuffer )
+			renderer.grid = facade.NewGrid( gridConfig, renderer.ringBuffer, renderer.termBuffer )
 			renderer.grid.Init(renderer.camera,renderer.font)
 			renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
 	}
@@ -275,14 +275,21 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 func (renderer *Renderer) ProcessTexts(textChan chan string) {
 
     select {
-        case text := <-textChan:
+        case txt := <-textChan:
             
             
-            renderer.lineBuffer.Queue( gfx.NewText(text) )
-            renderer.termBuffer.Write( []byte(text) )
+            text := gfx.NewText( txt )
+            
+            renderer.ringBuffer.WriteText( text )
+            renderer.termBuffer.WriteText( text )
+//
+//            
+////            renderer.ringBuffer.Queue( gfx.NewText(text) )
+////            renderer.termBuffer.Write( []byte(text) )
         	renderer.grid.ScheduleRefresh()
         	
-            if DEBUG_BUFFER { log.Debug( "%s", renderer.grid.Dump() ) }
+        	
+            if DEBUG_GRID { log.Debug( "%s", renderer.grid.Dump() ) }
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
         default:

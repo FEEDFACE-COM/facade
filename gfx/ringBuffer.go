@@ -5,12 +5,13 @@ package gfx
 
 import(
     "fmt"
+    "strings"
     log "../log"
 )
 
         
 
-type LineBuffer struct {
+type RingBuffer struct {
     count uint
     head  uint
     tail  uint
@@ -18,10 +19,10 @@ type LineBuffer struct {
 }
 
 
-//const DEBUG_BUFFER = false
+const DEBUG_BUFFER = false
 
-func NewLineBuffer(count uint) *LineBuffer {
-    ret := &LineBuffer{}
+func NewRingBuffer(count uint) *RingBuffer {
+    ret := &RingBuffer{}
     if count == 0 { count = 1 }
     ret.count = count
     ret.head = 0
@@ -34,7 +35,7 @@ func NewLineBuffer(count uint) *LineBuffer {
 
 
 
-func (buffer *LineBuffer) Resize(newCount uint) {
+func (buffer *RingBuffer) Resize(newCount uint) {
     log.Debug("resize %s -> %d",buffer.Desc(),newCount)
     if newCount == 0 { newCount = 1 }
 
@@ -80,12 +81,25 @@ func (buffer *LineBuffer) Resize(newCount uint) {
 }
 
 
+func (buffer *RingBuffer) WriteText(text *Text) {
+
+    text.Text = strings.Trim(text.Text, "\n")
+
+    buffer.queue( text )
+    
+}
+
+
+func (buffer *RingBuffer) WriteString(str string) {
+
+    s := strings.Trim(str, "\n")
+    buffer.queue( NewText(s) )
+    
+}
 
 
 
-
-func (buffer *LineBuffer) Queue(newItem *Text) {
-
+func (buffer *RingBuffer) queue(newItem *Text) {
     if buffer.items[buffer.tail] == nil && newItem != nil {
         buffer.items[buffer.tail] = newItem
         if DEBUG_BUFFER {
@@ -110,7 +124,7 @@ func (buffer *LineBuffer) Queue(newItem *Text) {
     //adjust buffer info        
     buffer.head = (buffer.head+1)%buffer.count
     buffer.tail = (buffer.tail+1)%buffer.count
-    
+
     if DEBUG_BUFFER {
         tmp := ""
         if newItem != nil { tmp = newItem.Desc() }
@@ -124,13 +138,13 @@ func (buffer *LineBuffer) Queue(newItem *Text) {
 
 
 
-func (buffer *LineBuffer) Tail(off uint) *Text {
+func (buffer *RingBuffer) Tail(off uint) *Text {
     // off /= buffer.count   // probably?
     idx := buffer.count + buffer.tail - off
     return buffer.items[idx % buffer.count]    
 }
 
-func (buffer *LineBuffer) Head(off uint) *Text {
+func (buffer *RingBuffer) Head(off uint) *Text {
     idx := buffer.count + buffer.head + off
     return buffer.items[idx % buffer.count]    
 }
@@ -140,16 +154,17 @@ func (buffer *LineBuffer) Head(off uint) *Text {
 
 
 
-func (buffer *LineBuffer) Desc() string { 
+func (buffer *RingBuffer) Desc() string { 
     ret := fmt.Sprintf("buffer[%d]",buffer.count)
     return ret
 }
 
 
-func (buffer *LineBuffer) Dump() string {
+func (buffer *RingBuffer) Dump() string {
     ret := ""
-    
-    for i:= uint(0);i<buffer.count;i++ {
+    ret += fmt.Sprintf("ring[%d]\n",buffer.count)
+    for i:= buffer.count-1; i-1>uint(0);i-- {
+//    for i:= uint(0); i<buffer.count;i++ {
         idx := ( i ) % buffer.count 
         item := buffer.items[ idx ]
 
@@ -157,10 +172,11 @@ func (buffer *LineBuffer) Dump() string {
         s1 := fmt.Sprintf("%d", ((buffer.count+buffer.tail-idx)%buffer.count)%10)
         s2 := ""
         
-        if buffer.head == i { s0 = "H" }
-        if buffer.tail == i { s1 = "T" }
+        t0,t1 := " "," "
+        if buffer.head == i { t0 = "H" }
+        if buffer.tail == i { t1 = "T" }
         if item != nil { s2 = (*item).Desc() }
-        ret += fmt.Sprintf("  %s%s %s\n",s0,s1,s2) 
+        ret += fmt.Sprintf("  %s%s %s%s %s\n",t0,t1,s0,s1,s2) 
     }
     return ret
 }
