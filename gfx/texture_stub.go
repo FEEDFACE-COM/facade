@@ -1,4 +1,6 @@
 
+// +build !linux !arm
+
 package gfx
 
 
@@ -8,14 +10,7 @@ import (
     
 )
 
-type Texture struct {
-    Name string
-    Size struct{Width float32; Height float32}
-    
-    rgba *image.RGBA
-    texture uint32 
-    textureUniform int32
-}
+type Texture struct { Name string }
 
 
 func NewTexture(name string) *Texture {
