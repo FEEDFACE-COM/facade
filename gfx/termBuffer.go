@@ -252,6 +252,22 @@ func (buffer *TermBuffer) Write(raw []byte) {
 
 
     for rem != nil {
+        
+        if len(ptr) >= 3 { 
+        
+            switch ( string(ptr[:3]) ) {
+             
+                case "\033(B":
+                    log.Debug("skip 3 byte setusg0")
+                    ptr = ptr[3:]
+                    continue   
+                
+            }
+            
+        }
+        
+        
+        
         rem,seq,err = ansi.Decode( ptr )
         if err != nil {
             if DEBUG_ANSI { 

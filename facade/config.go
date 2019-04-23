@@ -80,7 +80,7 @@ func (config *Config) Sanitize() Config {
 
 func (text *RawText) Sanitize() string {
     ret := string(*text)
-    log.Debug("sanitize text %s (IMPLEMENT ME!)",strings.Trim(string(ret), "\n\r\t"))
+    log.Debug("sanitize %d byte text (IMPLEMENT ME!)",len(ret))
     return ret
 }
 
