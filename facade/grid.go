@@ -150,6 +150,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
         gl.LineWidth(3.0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
         off := offset
+        // REM, use single gl.DrawElements call instead (create indice array before)
         for r:=0; r<int(grid.state.Height+1); r++ {
             for c:=0; c<int(grid.state.Width); c++ {
                 gl.DrawArrays(gl.LINE_STRIP,int32(off*2*3), int32(1*2*3))
