@@ -220,8 +220,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
-        renderer.ProcessTexts(textChan)
-        renderer.ProcessConfs(confChan)
+        renderer.ProcessText(textChan)
+        renderer.ProcessConf(confChan)
 
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
@@ -272,7 +272,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 }
 
 
-func (renderer *Renderer) ProcessTexts(textChan chan string) {
+func (renderer *Renderer) ProcessText(textChan chan string) {
 
     select {
         case txt := <-textChan:
@@ -299,7 +299,7 @@ func (renderer *Renderer) ProcessTexts(textChan chan string) {
 
 
 
-func (renderer *Renderer) ProcessConfs(confChan chan facade.Config) {
+func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
     
     select {
         case conf := <-confChan:
@@ -356,7 +356,7 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
 
 
-func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan string) error {
+func (renderer *Renderer) ProcessRawTexts(rawChan chan facade.RawText, textChan chan string) error {
 
     for {
         rawText := <-rawChan
@@ -378,7 +378,7 @@ func (renderer *Renderer) ProcessText(rawChan chan facade.RawText, textChan chan
 
 
 
-func (renderer *Renderer) ProcessConf(rawChan chan facade.Config, confChan chan facade.Config) error {
+func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
         if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }

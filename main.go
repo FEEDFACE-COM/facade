@@ -17,6 +17,21 @@ import (
 )
 
 
+const DEBUG_CLOCK    = false
+const DEBUG_MODE     = false
+const DEBUG_GRID     = true
+const DEBUG_DIAG     = false
+const DEBUG_MEMORY   = false
+const DEBUG_MESSAGES = true
+
+
+const FRAME_RATE = 60.0
+const BUFFER_SIZE = 80
+
+
+
+
+
 const AUTHOR = `
    _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
   |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
@@ -268,7 +283,7 @@ func main() {
             rawTexts := make(chan facade.RawText)
             texts := make(chan string)
             go scanner.ScanText(rawTexts)
-            go renderer.ProcessText(rawTexts,texts)
+            go renderer.ProcessRawTexts(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
             err = renderer.Render(nil, texts)
@@ -284,8 +299,8 @@ func main() {
             texts := make(chan string)
             go server.ListenConf(rawConfs)
             go server.ListenText(rawTexts)
-            go renderer.ProcessConf(rawConfs,confs)
-            go renderer.ProcessText(rawTexts,texts)
+            go renderer.ProcessRawConfs(rawConfs,confs)
+            go renderer.ProcessRawTexts(rawTexts,texts)
             runtime.LockOSThread()
             renderer.Init(config) 
             err = renderer.Render(confs, texts)
@@ -327,18 +342,30 @@ func main() {
             
 
         case TEST:
+            log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
+            if tester == nil { log.PANIC("tester not available") }
             rawConfs := make(chan facade.Config)
             rawTexts := make(chan facade.RawText)
+            confs := make(chan facade.Config)
+            texts := make(chan string)
+
             go server.ListenConf(rawConfs)
             go server.ListenText(rawTexts)
             
-            str := "FEEDFACE.COM"
-            if modeFlags.NArg() > 0 {
-                str = strings.Join(modeFlags.Args()," ")
-            }
-            tester.Configure(config)
-            err = tester.Test(str,rawConfs,rawTexts)
+            go tester.ProcessRawConfs(rawConfs,confs)
+            go tester.ProcessRawTexts(rawTexts,texts)
+
+            runtime.LockOSThread()
+            tester.Init(config) 
+            err = tester.Test(confs, texts)
+            
+//            str := "FEEDFACE.COM"
+//            if modeFlags.NArg() > 0 {
+//                str = strings.Join(modeFlags.Args()," ")
+//            }
+//            tester.Configure(config)
+//            err = tester.Test(str,rawConfs,rawTexts)
 
 
         default:

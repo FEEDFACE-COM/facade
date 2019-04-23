@@ -20,6 +20,7 @@ const (
     LINES Mode = "lines"
     WORD  Mode = "word"
     CHAR  Mode = "char"   
+    DRAFT Mode = "draft"
     TEST  Mode = "test" 
 )
 
@@ -88,15 +89,20 @@ func (text *RawText) Sanitize() string {
 func NewState(mode Mode) *State {
 	ret := Defaults
 	switch mode {
-		case GRID, LINES, TEST:
+		case GRID, DRAFT, TEST:
 			ret.Mode = mode
 	}
+	
 	switch ret.Mode {
 		case GRID: ret.Grid = &GridState{}
 	}
+	
+	if ret.Mode != TEST {
+        ret.Camera = &gfx.CameraState{}
+        ret.Mask = &gfx.MaskState{}
+    }
+    	
 	ret.Font = &gfx.FontState{}
-	ret.Camera = &gfx.CameraState{}
-	ret.Mask = &gfx.MaskState{}
 	return &ret	
 }
 
