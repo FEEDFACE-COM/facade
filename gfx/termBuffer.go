@@ -84,7 +84,7 @@ func (buffer *TermBuffer) Resize(cols, rows uint) {
 
 func (buffer *TermBuffer) Dump() string {
     ret := ""
-    ret += fmt.Sprintf("cursor %02d,%02d\n",buffer.cursor.x,buffer.cursor.y)
+//    ret += fmt.Sprintf("cursor %02d,%02d\n",buffer.cursor.x,buffer.cursor.y)
     ret += "+ "
     for c:=0; c<int(buffer.cols); c++ { ret += "-" }
     ret += " +\n"
@@ -102,7 +102,7 @@ func (buffer *TermBuffer) Dump() string {
     for c:=0; c<int(buffer.cols); c++ { ret += "-" }
     ret += " +\n  "
     for c:=0; c<int(buffer.cols); c++ { 
-        if c % 10 == 0 { ret += fmt.Sprintf("%01d",(c/10)%10) 
+        if true || c % 10 == 0 { ret += fmt.Sprintf("%01d",(c/10)%10) 
         } else { ret += " " }
     }
     ret += "\n  "

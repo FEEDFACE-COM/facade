@@ -8,7 +8,7 @@ import(
     log "../log"
 )
 
-        
+const DEBUG_RING = false        
 
 type RingBuffer struct {
     count uint
@@ -18,7 +18,6 @@ type RingBuffer struct {
 }
 
 
-const DEBUG_BUFFER = false
 
 func NewRingBuffer(count uint) *RingBuffer {
     ret := &RingBuffer{}
@@ -101,7 +100,7 @@ func (buffer *RingBuffer) WriteString(str string) {
 func (buffer *RingBuffer) queue(newItem *Text) {
     if buffer.items[buffer.tail] == nil && newItem != nil {
         buffer.items[buffer.tail] = newItem
-        if DEBUG_BUFFER {
+        if DEBUG_RING {
             tmp := ""
             if newItem != nil { tmp = newItem.Desc() }
             log.Debug("jump %s\n%s",tmp,buffer.Dump())
@@ -124,7 +123,7 @@ func (buffer *RingBuffer) queue(newItem *Text) {
     buffer.head = (buffer.head+1)%buffer.count
     buffer.tail = (buffer.tail+1)%buffer.count
 
-    if DEBUG_BUFFER {
+    if DEBUG_RING {
         tmp := ""
         if newItem != nil { tmp = newItem.Desc() }
         log.Debug("queue %s\n%s",tmp,buffer.Dump())

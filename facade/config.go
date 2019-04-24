@@ -34,6 +34,7 @@ type RawText string
 type State struct {
 	Mode    Mode
 	Grid   *GridState
+	Test   *TestState
 	Font   *gfx.FontState
 	Camera *gfx.CameraState
 	Mask   *gfx.MaskState
@@ -49,6 +50,7 @@ var Defaults = State{
 const (
 	facadeMode   = "mode"
 	facadeGrid   = "grid"
+	facadeTest   = "test"
 	facadeFont   = "font"
 	facadeCamera = "camera"	
 	facadeMask   = "mask"
@@ -59,6 +61,7 @@ type Config gfx.Config
 
 func (config *Config) Mode()   (Mode,bool)              { ret,ok := (*config)[facadeMode].(string);                   return             Mode(ret),ok }
 func (config *Config) Grid()   (GridConfig,bool)        { ret,ok := (*config)[facadeGrid].(map[string]interface{});   return       GridConfig(ret),ok }
+func (config *Config) Test()   (TestConfig,bool)        { ret,ok := (*config)[facadeTest].(map[string]interface{});   return       TestConfig(ret),ok }
 func (config *Config) Font()   (gfx.FontConfig,bool)    { ret,ok := (*config)[facadeFont].(map[string]interface{});   return   gfx.FontConfig(ret),ok }
 func (config *Config) Camera() (gfx.CameraConfig,bool)  { ret,ok := (*config)[facadeCamera].(map[string]interface{}); return gfx.CameraConfig(ret),ok }
 func (config *Config) Mask()   (gfx.MaskConfig,bool)    { ret,ok := (*config)[facadeMask].(map[string]interface{});   return   gfx.MaskConfig(ret),ok }
@@ -66,6 +69,7 @@ func (config *Config) Debug()  (bool,bool)              { ret,ok := (*config)[fa
 
 func (config *Config) SetMode(val Mode)               { (*config)[facadeMode] = string(val) }
 func (config *Config) SetGrid(val GridConfig)         { (*config)[facadeGrid] = map[string]interface{}(val) }
+func (config *Config) SetTest(val TestConfig)         { (*config)[facadeTest] = map[string]interface{}(val) }
 func (config *Config) SetFont(val gfx.FontConfig)     { (*config)[facadeFont] = map[string]interface{}(val) }
 func (config *Config) SetCamera(val gfx.CameraConfig) { (*config)[facadeCamera] = map[string]interface{}(val) }
 func (config *Config) SetMask(val gfx.MaskConfig)     { (*config)[facadeMask] = map[string]interface{}(val) }
@@ -95,6 +99,7 @@ func NewState(mode Mode) *State {
 	
 	switch ret.Mode {
 		case GRID: ret.Grid = &GridState{}
+		case TEST: ret.Test = &TestState{}
 	}
 	
 	if ret.Mode != TEST {
@@ -108,13 +113,9 @@ func NewState(mode Mode) *State {
 
 
 
-//func (delta *Delta) Clean() {
-////    if delta.Grid() != nil { delta.Grid().Clean() }     //???????
-//}
-
-
 func (state *State) AddFlags(flags *flag.FlagSet) {
     if state.Grid != nil { state.Grid.AddFlags(flags) }
+    if state.Test != nil { state.Test.AddFlags(flags) }
     if state.Font != nil { state.Font.AddFlags(flags) }
     if state.Camera != nil { state.Camera.AddFlags(flags) }
     if state.Mask != nil { state.Mask.AddFlags(flags) }

@@ -124,6 +124,7 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.mask = gfx.NewMask(maskConfig,renderer.screen)
     renderer.mask.Init()
 
+    //initialize mode, REM this should probably init all modes
 	switch renderer.state.Mode {
 		case facade.GRID:
 			gridConfig := facade.GridDefaults.Config()

@@ -21,7 +21,10 @@ type Tester struct {
 
     font *gfx.Font; 
     
+    test *facade.Test;
+    
     ringBuffer *gfx.RingBuffer
+    textBuffer *gfx.TextBuffer
     termBuffer *gfx.TermBuffer
 
     mutex *sync.Mutex
@@ -44,6 +47,34 @@ func (tester *Tester) Init(config *facade.Config) error {
         tester.directory = os.Getenv("HOME") + tester.directory[1:]
     }
     gfx.SetFontDirectory(tester.directory+"/font")
+    
+    var err error
+    
+    //setup things 
+	tester.state = facade.Defaults
+    tester.state.ApplyConfig(config)
+    
+	fontConfig := gfx.FontDefaults.Config()
+	if cfg,ok := config.Font(); ok {
+		fontConfig.ApplyConfig( &cfg )	
+	}
+	tester.font,err = gfx.GetFont( fontConfig )
+    if err != nil {
+        log.PANIC("no default font: %s",err)    
+    }
+	tester.font.Init()
+	
+	
+	testConfig := facade.TestDefaults.Config()
+    if cfg,ok := config.Test(); ok {
+        testConfig.ApplyConfig(&cfg)
+    }	
+    tester.test = facade.NewTest( testConfig, tester.ringBuffer, tester.termBuffer )
+    tester.test.Init(tester.font)
+    tester.test.Configure(testConfig,tester.font)
+
+    
+    gfx.ClockReset()
     return nil   
 }
 
@@ -186,6 +217,7 @@ func (tester *Tester) PrintDebug(prev gfx.Clock) {
 
     if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
 
+    if DEBUG_BUFFER { log.Debug("%s",tester.termBuffer.Dump() ) }
 
 }
 
