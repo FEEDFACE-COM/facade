@@ -126,6 +126,6 @@ func NewDraft(config *DraftConfig) *Draft {
 }
 
 
-func (draft *Test) Desc() string { return draft.config.Desc() }
-func (draft *Test) Dump() string { return draft.config.Desc() }
+func (draft *Draft) Desc() string { return draft.config.Desc() }
+func (draft *Draft) Dump() string { return draft.config.Desc() }
 
