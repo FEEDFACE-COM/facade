@@ -9,19 +9,28 @@ import(
 type Test struct {
     ringBuffer *gfx.RingBuffer
     termBuffer   *gfx.TermBuffer
+    textBuffer *gfx.TextBuffer
     
     state TestState
+    refreshChan chan bool
+    
     
 }
 
+func (test *Test) Width() uint { return test.state.Width }
 
-func NewTest(config *TestConfig, ringBuffer *gfx.RingBuffer, termBuffer *gfx.TermBuffer) *Test {
+func NewTest(config *TestConfig, ringBuffer *gfx.RingBuffer, termBuffer *gfx.TermBuffer, textBuffer *gfx.TextBuffer) *Test {
 
     ret := &Test{}
     ret.state = TestDefaults
+    ret.state.ApplyConfig(config)
+    ret.refreshChan = make( chan bool, 1 )
     ret.ringBuffer = ringBuffer
     ret.termBuffer = termBuffer
-    ret.state.ApplyConfig(config)
+    ret.textBuffer = textBuffer
+    ret.ringBuffer.Resize(ret.state.Height) 
+    ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
+    ret.textBuffer.Resize(ret.state.Height)
     return ret
 
 }
@@ -54,3 +63,25 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
 
 func (test *Test) Desc() string { return test.state.Desc() }
 
+func (test *Test) ScheduleRefresh() {
+
+    select { case test.refreshChan <- true: ; default: ; }
+	
+}
+
+
+func (test *Test) checkRefresh() bool {
+	ret := false
+	for { //read all messages from channel
+		select {
+			case refresh := <- test.refreshChan:
+				if refresh {
+					ret = true
+				}
+
+			default:
+				return ret
+		}
+	}
+	return ret
+}

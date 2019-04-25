@@ -176,7 +176,6 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 
     if tmp,ok := config.Grid(); ok {
 		renderer.grid.Configure(&tmp,renderer.camera,renderer.font)    
-	    
 	}
 	
 	if debug,ok := config.Debug(); ok {

@@ -36,6 +36,7 @@ func NewTester(directory string) *Tester {
     ret.mutex = &sync.Mutex{}
     ret.ringBuffer = gfx.NewRingBuffer(10) //FIXME
     ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
+    ret.textBuffer = gfx.NewTextBuffer(10) //FIXME
     return ret    
 }
 
@@ -69,7 +70,7 @@ func (tester *Tester) Init(config *facade.Config) error {
     if cfg,ok := config.Test(); ok {
         testConfig.ApplyConfig(&cfg)
     }	
-    tester.test = facade.NewTest( testConfig, tester.ringBuffer, tester.termBuffer )
+    tester.test = facade.NewTest( testConfig, tester.ringBuffer, tester.termBuffer, tester.textBuffer )
     tester.test.Init(tester.font)
     tester.test.Configure(testConfig,tester.font)
 
@@ -96,6 +97,12 @@ func (tester *Tester) Configure(config *facade.Config) error {
 			tester.font = newFont
 		}
 	}
+
+
+    if tmp,ok := config.Test(); ok {
+		tester.test.Configure(&tmp,tester.font)    
+	}
+	
     
     return nil
 
@@ -113,6 +120,7 @@ func (tester *Tester) ProcessText(textChan chan string) {
             text := gfx.NewText( txt )
             tester.ringBuffer.WriteText( text )
             tester.termBuffer.WriteText( text )
+            tester.textBuffer.WriteText( text )
         	
         default:
             //nop    
@@ -217,7 +225,7 @@ func (tester *Tester) PrintDebug(prev gfx.Clock) {
 
     if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
 
-    if DEBUG_BUFFER { log.Debug("%s",tester.termBuffer.Dump() ) }
+    if DEBUG_BUFFER { log.Debug("%s",tester.textBuffer.Dump( tester.test.Width()) ) }
 
 }
 

@@ -144,14 +144,19 @@ func (state *State) CheckFlags(flags *flag.FlagSet) *Config {
 		gridConfig,ok := state.Grid.CheckFlags(flags)  
 		if ok { ret.SetGrid( *gridConfig ) }
 	}
+	if state.Test != nil { 
+		testConfig,ok := state.Test.CheckFlags(flags)  
+		if ok { ret.SetTest( *testConfig ) }
+	}
 	return &ret
 }
 
 
 func (config *Config) Desc() string {
-    ret := "conf["
+    ret := "facade["
     if mode,ok := config.Mode(); ok { ret += string(mode) + " " }
     if grid,ok := config.Grid(); ok { ret += grid.Desc() + " " }
+    if test,ok := config.Test(); ok { ret += test.Desc() + " " }
     if font,ok := config.Font(); ok { ret += font.Desc() + " "  }
     if camera,ok := config.Camera(); ok  { ret += camera.Desc() + " " }
     if mask,ok := config.Mask(); ok  { ret += mask.Desc() + " " }
