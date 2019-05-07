@@ -51,7 +51,7 @@ func (buffer *TextBuffer) WriteString(str string) {
 }
 
 func (buffer *TextBuffer) Resize(newCount uint) {
-    log.Debug("resize[%d] %s",newCount,buffer.Desc())
+    log.Debug("resize %s -> %d",buffer.Desc(),newCount)
     if newCount == 0 { newCount = 1 }
     
     newItems := make( []*Text, newCount )
@@ -96,18 +96,26 @@ func (buffer *TextBuffer) Resize(newCount uint) {
 }
 
 func (buffer *TextBuffer) Desc() string { 
-    return fmt.Sprintf("text[%d]",buffer.count )
+    return fmt.Sprintf("textbuffer[%d]",buffer.count )
 }
 
 
-func (buffer *TextBuffer) Dump(width uint) string {
+func (buffer *TextBuffer) Dump(width,height uint) string {
     ret := ""
-    ret += fmt.Sprintf("text[%d]\n",buffer.count)
+//    ret += fmt.Sprintf("text[%d]\n",buffer.count)
     for i := uint(0); i<buffer.count;i++ {
+        
+        if i == height {
+            for j:=uint(0); j<width; j++ {
+                ret += "-"    
+            }
+            ret += "\n"
+        }
         
         item := buffer.items[ i ]
         if item == nil {
-            break
+            ret += fmt.Sprintf("#%02d\n",i)
+            continue
         }
         
         txt := (*item).Desc()
@@ -115,7 +123,7 @@ func (buffer *TextBuffer) Dump(width uint) string {
         txt1 := ""
         if l := uint(len(txt0)); l >= width {
             txt0 = txt[:width]
-            txt1 = txt[width:]
+            txt1 = ""//txt[width:]
         }
         ret += fmt.Sprintf("#%02d [%s]%s\n",i,txt0,txt1)
     }

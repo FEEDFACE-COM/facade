@@ -198,14 +198,27 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
 
     log.Debug("test %s",tester.state.Desc())
     for {
-        verbose := gfx.ClockDebug()
+        verboseFrame := gfx.ClockDebug()
         tester.mutex.Lock()
 
         tester.ProcessText(textChan)
         tester.ProcessConf(confChan)
 
-        if verbose { 
-            tester.PrintDebug(prev); 
+        if verboseFrame { 
+            if DEBUG_CLOCK  { 
+                log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
+            }
+            if DEBUG_BUFFER { 
+                if tester.test.Buffer() == facade.TERMBUFFER {
+                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
+                    os.Stdout.Write( []byte( "\n" ) )
+                } else if tester.test.Buffer() == facade.TEXTBUFFER {
+                    w,h := tester.test.Width(), tester.test.Height()
+                    os.Stdout.Write( []byte( tester.textBuffer.Dump( w,h ) ) ) 
+                    os.Stdout.Write( []byte( "\n" ) )
+                }
+                
+            }
             prev = *gfx.NewClock() 
         }
 
@@ -220,14 +233,6 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
 }
 
 
-
-func (tester *Tester) PrintDebug(prev gfx.Clock) {
-
-    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
-
-    if DEBUG_BUFFER { log.Debug("%s",tester.textBuffer.Dump( tester.test.Width()) ) }
-
-}
 
 
 

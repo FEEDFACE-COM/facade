@@ -18,6 +18,9 @@ type Test struct {
 }
 
 func (test *Test) Width() uint { return test.state.Width }
+func (test *Test) Height() uint { return test.state.Height }
+func (test *Test) Buffer() BufferName { return test.state.Buffer }
+func (test *Test) BufLen() uint { return test.state.BufLen }
 
 func NewTest(config *TestConfig, ringBuffer *gfx.RingBuffer, termBuffer *gfx.TermBuffer, textBuffer *gfx.TextBuffer) *Test {
 
@@ -55,8 +58,19 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
     if height,ok := config.Height(); ok && height != 0 && height != test.state.Height { 
 	    test.state.Height = height 
         test.ringBuffer.Resize(test.state.Height) 
+        test.textBuffer.Resize(test.state.Height + test.state.BufLen)
         test.termBuffer.Resize(test.state.Width,test.state.Height)   
     }
+    
+    if buflen,ok := config.BufLen(); ok && buflen != 0 && buflen != test.state.BufLen {
+        test.state.BufLen = buflen
+        test.textBuffer.Resize(test.state.Height + test.state.BufLen)
+    }
+    
+    if buffer,ok := config.Buffer(); ok && buffer != test.state.Buffer {
+        test.state.Buffer = buffer    
+    }
+    
     
 }
 

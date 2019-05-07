@@ -30,7 +30,7 @@ type Grid struct {
     
     state GridState
     
-    empty *gfx.Text
+//    empty *gfx.Text
         
     refreshChan chan bool
 }
@@ -175,7 +175,7 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 
 
 
-func (grid *Grid) textForRow(row int) *gfx.Text {
+func (grid *Grid) textForRow(row int) string {
 	
 	
     if USE_TERMBUFFER {
@@ -183,10 +183,10 @@ func (grid *Grid) textForRow(row int) *gfx.Text {
         if uint(row) >= 0 && uint(row) < grid.state.Height {
             str := grid.termBuffer.LineForRow(row)
             if str != "" {
-                return gfx.NewText(str)
+                return str
             }
         }
-        return grid.empty
+        return ""
     
     }    
     
@@ -197,24 +197,24 @@ func (grid *Grid) textForRow(row int) *gfx.Text {
     //	}
     
         if r>= grid.state.Height {
-            return grid.empty
+            return ""
         }
     
         if r < 0 {
-            return grid.empty
+            return ""
         }
     
         if grid.state.Downward {
-            return grid.ringBuffer.Tail(r)
+            return grid.ringBuffer.Tail(r).text
         } else {
-            return grid.ringBuffer.Head(r)
+            return grid.ringBuffer.Head(r).text
         }	
-        return grid.empty
+        return ""
 
     }
     
     
-    return grid.empty
+    return ""
 }
 
 
@@ -340,8 +340,8 @@ func (grid *Grid) generateData(font *gfx.Font) {
             
             chr := byte(' ')
             if DEBUG_GRID { chr = byte('#') }
-            if line != nil && int(c) < len(line.Text) {
-                chr = line.Text[c]
+            if line != nil && int(c) < len(line) {
+                chr = line[c]
             }    
 
             tileCoord := gfx.Coord{X: x, Y:y}
@@ -401,7 +401,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
     grid.object.Init()
     grid.LoadShaders()
 
-	grid.empty.RenderTexture(font)
+//	grid.empty.RenderTexture(font)
 	grid.ScheduleRefresh()        
 
 }
@@ -536,7 +536,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         grid.RenderMap(font)
 //        grid.texture.TexImage()
 		
-		grid.empty.RenderTexture(font)
+//		grid.empty.RenderTexture(font)
     }
 
 	{
@@ -593,7 +593,7 @@ func NewGrid(config *GridConfig, ringBuffer *gfx.RingBuffer, termBuffer *gfx.Ter
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
     ret.scroller = gfx.NewScroller(ret.state.Scroll,float32(ret.state.Speed))
-    ret.empty = gfx.NewText("")
+//    ret.empty = gfx.NewText("")
     return ret
 }
 

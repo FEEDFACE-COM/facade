@@ -60,7 +60,7 @@ func NewTermBuffer(cols, rows uint) *TermBuffer {
 }
 
 func (buffer *TermBuffer) Desc() string {
-    return fmt.Sprintf("term[%dx%d]",buffer.cols,buffer.rows)
+    return fmt.Sprintf("termbuffer[%dx%d]",buffer.cols,buffer.rows)
 }
 
 
@@ -102,11 +102,12 @@ func (buffer *TermBuffer) Dump() string {
     for c:=0; c<int(buffer.cols); c++ { ret += "-" }
     ret += " +\n  "
     for c:=0; c<int(buffer.cols); c++ { 
-        if true || c % 10 == 0 { ret += fmt.Sprintf("%01d",(c/10)%10) 
+        if c % 10 == 0 { ret += fmt.Sprintf("%01d",(c/10)%10) 
         } else { ret += " " }
     }
     ret += "\n  "
     for c:=0; c<int(buffer.cols); c++ { ret += fmt.Sprintf("%01d",c%10) }
+    ret += "\n"
     return ret
 }
 

@@ -17,7 +17,7 @@ import (
 )
 
 
-const DEBUG_CLOCK    = true
+const DEBUG_CLOCK    = false
 const DEBUG_MODE     = false
 const DEBUG_GRID     = true
 const DEBUG_DIAG     = false

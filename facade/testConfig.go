@@ -9,6 +9,14 @@ import (
 const (
 	testWidth    = "width"
 	testHeight   = "height"
+	testBuffer   = "buffer"
+	testBufLen   = "buflen"
+)
+
+type BufferName string
+const (
+    TERMBUFFER BufferName = "term"
+    TEXTBUFFER BufferName = "text"
 )
 
 
@@ -21,10 +29,14 @@ func NewTestConfig() *TestConfig {
 }
 
 
-func (config *TestConfig) Width()     (uint,bool) { ret,ok := (*config)[testWidth   ].(float64); return uint(ret), ok }
-func (config *TestConfig) Height()    (uint,bool) { ret,ok := (*config)[testHeight  ].(float64); return uint(ret), ok }
-func (config *TestConfig) SetWidth(   val uint)    { (*config)[testWidth]    = float64(val) }
-func (config *TestConfig) SetHeight(  val uint)    { (*config)[testHeight]   = float64(val) }
+func (config *TestConfig) Width()     (uint,bool)       { ret,ok := (*config)[testWidth   ].(float64); return uint(ret), ok }
+func (config *TestConfig) Height()    (uint,bool)       { ret,ok := (*config)[testHeight  ].(float64); return uint(ret), ok }
+func (config *TestConfig) Buffer()    (BufferName,bool) { ret,ok := (*config)[testBuffer  ].(string); return BufferName(ret), ok }
+func (config *TestConfig) BufLen()    (uint,bool)       { ret,ok := (*config)[testBufLen  ].(float64); return uint(ret), ok }
+func (config *TestConfig) SetWidth(   val uint)      { (*config)[testWidth]    = float64(val) }
+func (config *TestConfig) SetHeight(  val uint)      { (*config)[testHeight]   = float64(val) }
+func (config *TestConfig) SetBuffer( val BufferName) { (*config)[testBuffer]   =  string(val) }  
+func (config *TestConfig) SetBufLen( val uint)       { (*config)[testBufLen]   =  float64(val) }  
 
 
 
@@ -46,6 +58,12 @@ func (config *TestConfig) Desc() string {
 	    if hok { ret += fmt.Sprintf("%d",h) }
 	    if wok || hok { ret += " " }
 	}
+	{
+        buf,bok := config.Buffer()
+        if bok { ret += string(buf) + " " }	
+    	l,lok := config.BufLen()
+    	if lok { ret += fmt.Sprintf("%d ",l) }
+    }
 	ret += "]"
 	return ret
 }
@@ -55,18 +73,24 @@ func (config *TestConfig) Desc() string {
 type TestState struct {
     Width uint
     Height uint   
+    Buffer BufferName
+    BufLen uint
 }
 
 
 var TestDefaults = TestState{
     Width:       25,
     Height:       8,
+    Buffer: TEXTBUFFER,
+    BufLen:       0,
 }    
 
 
 func (state *TestState) AddFlags(flags *flag.FlagSet) {
     flags.UintVar(&state.Width,"w",state.Width,"test width")
     flags.UintVar(&state.Height,"h",state.Height,"test height")
+    flags.StringVar( (*string)(&state.Buffer), "buf",string(state.Buffer),"test buffer")
+    flags.UintVar(&state.BufLen,"l",state.BufLen,"test buffer length")
 }
 
 func (state *TestState) CheckFlags(flags *flag.FlagSet) (*TestConfig,bool) {
@@ -75,6 +99,10 @@ func (state *TestState) CheckFlags(flags *flag.FlagSet) (*TestConfig,bool) {
 	flags.Visit( func(f *flag.Flag) {
 		if f.Name == "w" { ok = true; ret.SetWidth( state.Width ) }
 		if f.Name == "h" { ok = true; ret.SetHeight( state.Height ) }
+		if f.Name == "buf" { 
+    		  ok = true; ret.SetBuffer( state.Buffer) 
+        }
+		if f.Name == "l" { ok = true; ret.SetBufLen( state.BufLen ) }
 	})
 	return &ret,ok
 }
@@ -87,6 +115,8 @@ func (state *TestState) Config() *TestConfig {
 	ret := make(TestConfig)
 	ret.SetWidth(state.Width)
 	ret.SetHeight(state.Height)
+	ret.SetBuffer(state.Buffer)
+	ret.SetBufLen(state.BufLen)
 	return &ret	
 }
 
@@ -95,6 +125,8 @@ func (state *TestState) ApplyConfig(config *TestConfig) bool {
 	changed := false
 	if tmp,ok := config.Width();    ok { if state.Width    != tmp { changed = true }; state.Width = tmp }
 	if tmp,ok := config.Height();   ok { if state.Height   != tmp { changed = true }; state.Height = tmp }
+	if tmp,ok := config.Buffer();   ok { if state.Buffer   != tmp { changed = true }; state.Buffer = tmp }
+	if tmp,ok := config.BufLen();   ok { if state.BufLen   != tmp { changed = true }; state.BufLen = tmp }
 	return changed
 }
 
