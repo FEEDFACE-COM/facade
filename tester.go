@@ -23,7 +23,6 @@ type Tester struct {
     
     test *facade.Test;
     
-    ringBuffer *gfx.RingBuffer
     textBuffer *gfx.TextBuffer
     termBuffer *gfx.TermBuffer
 
@@ -34,7 +33,6 @@ type Tester struct {
 func NewTester(directory string) *Tester { 
     ret := &Tester{directory: directory} 
     ret.mutex = &sync.Mutex{}
-    ret.ringBuffer = gfx.NewRingBuffer(10) //FIXME
     ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
     ret.textBuffer = gfx.NewTextBuffer(10) //FIXME
     return ret    
@@ -70,7 +68,7 @@ func (tester *Tester) Init(config *facade.Config) error {
     if cfg,ok := config.Test(); ok {
         testConfig.ApplyConfig(&cfg)
     }	
-    tester.test = facade.NewTest( testConfig, tester.ringBuffer, tester.termBuffer, tester.textBuffer )
+    tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.textBuffer )
     tester.test.Init(tester.font)
     tester.test.Configure(testConfig,tester.font)
 
@@ -113,14 +111,14 @@ func (tester *Tester) Configure(config *facade.Config) error {
 
 
 
-
+//rem, should not need this, can do directly?
 func (tester *Tester) ProcessText(textChan chan string) {
     select {
         case txt := <-textChan:
-            text := gfx.NewText( txt )
-            tester.ringBuffer.WriteText( text )
-            tester.termBuffer.WriteText( text )
-            tester.textBuffer.WriteText( text )
+            // REM needs to be all bytes even before!!
+            raw := []byte(txt)
+            tester.termBuffer.WriteBytes( raw )
+            tester.textBuffer.WriteBytes( raw )
         	
         default:
             //nop    
@@ -128,7 +126,7 @@ func (tester *Tester) ProcessText(textChan chan string) {
 }
 
 
-
+//rem, should not need this, can do directly?
 func (tester *Tester) ProcessConf(confChan chan facade.Config) {
     select {
         case conf := <-confChan:
@@ -141,6 +139,9 @@ func (tester *Tester) ProcessConf(confChan chan facade.Config) {
 
 
 func (tester *Tester) ProcessRawTexts(rawChan chan facade.RawText, textChan chan string) error {
+
+    //basically we can just fill the text/term buffers in this function
+    //no need to write to textChan?
 
     for {
         rawText := <-rawChan

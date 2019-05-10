@@ -26,7 +26,7 @@ type TermBuffer struct {
     rows  uint
     buf [][]rune
     cursor pos
-    i,j uint
+//    i,j uint
     
 }
 
@@ -67,6 +67,7 @@ func (buffer *TermBuffer) Desc() string {
 
 
 func (buffer *TermBuffer) Resize(cols, rows uint) {
+    log.Debug("resize %dx%d %s",cols,rows,buffer.Desc())
     buf := makeBuffer(cols,rows)
     for r:=uint(0); r<rows && r<buffer.rows; r++ {
         for c:=uint(0); c<cols && c<buffer.cols; c++ {
@@ -140,18 +141,6 @@ func (buffer *TermBuffer) Scroll() {
         buffer.buf[r] = buffer.buf[r+1]        
     }
     buffer.buf[buffer.rows-1] = makeRow(buffer.cols)
-}
-
-
-func (buffer *TermBuffer) WriteText(text *Text) {
-
-    buffer.writeBytes( text.Bytes() ) 
-   
-}
-
-func (buffer *TermBuffer) WriteString(str string) {
-    
-    buffer.writeBytes( []byte(str) )
 }
 
 
@@ -252,8 +241,7 @@ func (buffer *TermBuffer) writeString(text string) {
 }
 
 
-
-func (buffer *TermBuffer) writeBytes(raw []byte) {
+func (buffer *TermBuffer) WriteBytes(raw []byte) {
     var err error 
 //    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
 

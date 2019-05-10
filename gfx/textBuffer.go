@@ -1,5 +1,4 @@
 
-
 package gfx
 
 import(
@@ -9,123 +8,139 @@ import(
 )
 
 
-
+type Row []rune
 
 type TextBuffer struct {
-    count uint
+    rows uint
     index uint
-    items []*Text
+    buf []*Row
 }
 
 
-func NewTextBuffer(count uint) *TextBuffer {
+func NewTextBuffer(rows uint) *TextBuffer {
     ret := &TextBuffer{}
-    if count == 0 { count = 1 }
-    ret.count = count
+    if rows == 0 { rows = 1 }
+    ret.rows = rows
     ret.index = 0
-    ret.items = make( []*Text, ret.count )
+    ret.buf = make( []*Row, ret.rows )
     return ret
 }
 
 
-func (buffer *TextBuffer) WriteText(text *Text) {
-    if buffer.index >= buffer.count {
+
+func (buffer *TextBuffer) dequeueRow() {
+    // REM, implement me (triggered by scroll timer)    
+}
+
+func (buffer *TextBuffer) queueRow(row Row) {
+    if buffer.index >= buffer.rows {
         log.Error("buffer overflow!")
         return   
     }
-    buffer.items[buffer.index] = text
+    buffer.buf[buffer.index] = &row
     buffer.index += 1
 }
 
-
-func (buffer *TextBuffer) WriteString(str string) {
+// REM THIS IS BAD AND DIRTY AND NEEDS REWRITING
+func (buffer *TextBuffer) WriteBytes(raw []byte) {
     
+    
+    //rem, we will need to split bytes by newline and append resulting rows
+    //but then also keep remaining bytes around until next time we're called??
+    
+    str := string(raw)    
+
     lines := strings.Split(str, "\n")
     for _,line := range(lines) {
     
-        text := NewText( line )
-        buffer.WriteText( text )
+        row := []rune( line )
+        buffer.queueRow( Row(row) )
         
     }
-    
+
 }
 
-func (buffer *TextBuffer) Resize(newCount uint) {
-    log.Debug("resize %s -> %d",buffer.Desc(),newCount)
-    if newCount == 0 { newCount = 1 }
-    
-    newItems := make( []*Text, newCount )
-    if newCount < buffer.count {
 
-//        d := buffer.count - newCount
+func (buffer *TextBuffer) Resize(newRows uint) {
+    log.Debug("resize %d %s",newRows,buffer.Desc())
+    if newRows == 0 { newRows = 1 }
+    
+    newBuf := make( []*Row, newRows )
+    if newRows < buffer.rows {
+
+//        d := buffer.row - newRows
 
         // copy as many items as fit
         var idx uint = 0
-        for ; idx<newCount && idx<buffer.count; idx++ {
-            newItems[idx] = buffer.items[idx]
+        for ; idx<newRows && idx<buffer.rows; idx++ {
+            newBuf[idx] = buffer.buf[idx]
         }
 
-        if buffer.index >= newCount {
-            buffer.index = newCount-1
+        if buffer.index >= newRows {
+            buffer.index = newRows-1
         }
                 
-        //cleanup remaining items
-        for j:=idx; j<buffer.count; j++ {
-            if buffer.items[j] != nil {
-                buffer.items[j].Close()    
-            }
-        }
 
-
-    } else if newCount > buffer.count {
+    } else if newRows > buffer.rows {
 
         // copy all items
-        d := newCount - buffer.count
-        for idx:= uint(0); idx<buffer.count; idx++ {
-            newItems[ (idx+d) % newCount ] = buffer.items[idx]
+        d := newRows - buffer.rows
+        for idx:= uint(0); idx<buffer.rows; idx++ {
+            newBuf[ (idx+d) % newRows ] = buffer.buf[idx]
         } 
         
-        buffer.index = buffer.count
+        buffer.index = buffer.rows
     }        
     
     //adjust buffer info
-    buffer.count = newCount
-    buffer.items = newItems
+    buffer.rows = newRows
+    buffer.buf = newBuf
     
     
 }
 
 func (buffer *TextBuffer) Desc() string { 
-    return fmt.Sprintf("textbuffer[%d]",buffer.count )
+    return fmt.Sprintf("textbuffer[%d]",buffer.rows )
 }
 
 
 func (buffer *TextBuffer) Dump(width,height uint) string {
     ret := ""
-//    ret += fmt.Sprintf("text[%d]\n",buffer.count)
-    for i := uint(0); i<buffer.count;i++ {
+//    ret += fmt.Sprintf("text[%d]\n",buffer.rows)
+    for i := uint(0); i<buffer.rows;i++ {
         
-        if i == height {
-            for j:=uint(0); j<width; j++ {
-                ret += "-"    
+        
+        ret += fmt.Sprintf(" %02d | ",i)
+        
+        row := buffer.buf[ i ]
+        if row != nil {
+            for c:=uint(0); c<width && c<uint(len(*row)); c++ {
+                ret += fmt.Sprintf("%c",(*row)[c]) 
             }
+//            txt := (*item).Desc()
+//            ret += fmt.Sprintf("%s",txt[:width])
+        } 
+        ret += "\n"
+        
+            
+        
+
+        if i == height-1 {
+            ret += " ---+-"
+            for c:=uint(0); c<width; c++ { ret += "-" }
             ret += "\n"
+//            continue
         }
         
-        item := buffer.items[ i ]
-        if item == nil {
-            ret += fmt.Sprintf("#%02d\n",i)
-            continue
-        }
-        
-        txt := (*item).Desc()
-        txt0 := txt
-        txt1 := ""
-        if l := uint(len(txt0)); l >= width {
-            txt0 = txt[:width]
-            txt1 = ""//txt[width:]
-        }
-        ret += fmt.Sprintf("#%02d [%s]%s\n",i,txt0,txt1)
+
+//
+//        txt0 := txt
+//        txt1 := ""
+//        if l := uint(len(txt0)); l >= width {
+//            txt0 = txt[:width]
+//            txt1 = ""//txt[width:]
+//        }
+//        ret += fmt.Sprintf("#%02d [%s]%s\n",i,txt0,txt1)
     }
     return ret
 }
