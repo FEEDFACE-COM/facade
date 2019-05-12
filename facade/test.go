@@ -8,7 +8,7 @@ import(
 
 type Test struct {
     termBuffer   *gfx.TermBuffer
-    textBuffer *gfx.TextBuffer
+    lineBuffer *gfx.LineBuffer
     
     state TestState
     refreshChan chan bool
@@ -21,16 +21,16 @@ func (test *Test) Height() uint { return test.state.Height }
 func (test *Test) Buffer() BufferName { return test.state.Buffer }
 func (test *Test) BufLen() uint { return test.state.BufLen }
 
-func NewTest(config *TestConfig, termBuffer *gfx.TermBuffer, textBuffer *gfx.TextBuffer) *Test {
+func NewTest(config *TestConfig, termBuffer *gfx.TermBuffer, lineBuffer *gfx.LineBuffer) *Test {
 
     ret := &Test{}
     ret.state = TestDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
     ret.termBuffer = termBuffer
-    ret.textBuffer = textBuffer
+    ret.lineBuffer = lineBuffer
     ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
-    ret.textBuffer.Resize(ret.state.Height)
+    ret.lineBuffer.Resize(ret.state.Height)
     return ret
 
 }
@@ -54,13 +54,13 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
 
     if height,ok := config.Height(); ok && height != 0 { 
 	    test.state.Height = height 
-        test.textBuffer.Resize(test.state.Height + test.state.BufLen)
+        test.lineBuffer.Resize(test.state.Height + test.state.BufLen)
         test.termBuffer.Resize(test.state.Width,test.state.Height)   
     }
     
     if buflen,ok := config.BufLen(); ok && buflen != 0 {
         test.state.BufLen = buflen
-        test.textBuffer.Resize(test.state.Height + test.state.BufLen)
+        test.lineBuffer.Resize(test.state.Height + test.state.BufLen)
     }
     
     if buffer,ok := config.Buffer(); ok && buffer != test.state.Buffer {

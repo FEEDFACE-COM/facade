@@ -23,7 +23,7 @@ type Tester struct {
     
     test *facade.Test;
     
-    textBuffer *gfx.TextBuffer
+    lineBuffer *gfx.LineBuffer
     termBuffer *gfx.TermBuffer
 
     mutex *sync.Mutex
@@ -34,7 +34,7 @@ func NewTester(directory string) *Tester {
     ret := &Tester{directory: directory} 
     ret.mutex = &sync.Mutex{}
     ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
-    ret.textBuffer = gfx.NewTextBuffer(10) //FIXME
+    ret.lineBuffer = gfx.NewLineBuffer(10) //FIXME
     return ret    
 }
 
@@ -68,7 +68,7 @@ func (tester *Tester) Init(config *facade.Config) error {
     if cfg,ok := config.Test(); ok {
         testConfig.ApplyConfig(&cfg)
     }	
-    tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.textBuffer )
+    tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.lineBuffer )
     tester.test.Init(tester.font)
     tester.test.Configure(testConfig,tester.font)
 
@@ -118,7 +118,7 @@ func (tester *Tester) ProcessText(textChan chan string) {
             // REM needs to be all bytes even before!!
             raw := []byte(txt)
             tester.termBuffer.WriteBytes( raw )
-            tester.textBuffer.WriteBytes( raw )
+            tester.lineBuffer.WriteBytes( raw )
         	
         default:
             //nop    
@@ -215,7 +215,7 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
                     os.Stdout.Write( []byte( "\n" ) )
                 } else if tester.test.Buffer() == facade.TEXTBUFFER {
                     w,h := tester.test.Width(), tester.test.Height()
-                    os.Stdout.Write( []byte( tester.textBuffer.Dump( w,h ) ) ) 
+                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( w,h ) ) ) 
                     os.Stdout.Write( []byte( "\n" ) )
                 }
                 
