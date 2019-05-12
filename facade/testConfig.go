@@ -94,7 +94,7 @@ type TestState struct {
 var TestDefaults = TestState{
     Width:       25,
     Height:       8,
-    Buffer: TEXTBUFFER,
+    Buffer: LINEBUFFER,
     BufLen:       2,
     Speed:      1.0,
 }
