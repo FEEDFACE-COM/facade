@@ -270,7 +270,7 @@ func main() {
         
     }
 
-    log.Debug("delta "+config.Desc())
+//    log.Debug("delta "+config.Desc())
     
     
     

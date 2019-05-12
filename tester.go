@@ -213,7 +213,7 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
                 if tester.test.Buffer() == facade.TERMBUFFER {
                     os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
                     os.Stdout.Write( []byte( "\n" ) )
-                } else if tester.test.Buffer() == facade.TEXTBUFFER {
+                } else if tester.test.Buffer() == facade.LINEBUFFER {
                     w,h := tester.test.Width(), tester.test.Height()
                     os.Stdout.Write( []byte( tester.lineBuffer.Dump( w,h ) ) ) 
                     os.Stdout.Write( []byte( "\n" ) )

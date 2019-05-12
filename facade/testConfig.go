@@ -18,7 +18,7 @@ const (
 type BufferName string
 const (
     TERMBUFFER BufferName = "term"
-    TEXTBUFFER BufferName = "text"
+    LINEBUFFER BufferName = "line"
 )
 
 
