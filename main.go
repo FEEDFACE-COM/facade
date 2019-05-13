@@ -359,13 +359,13 @@ func main() {
 
             runtime.LockOSThread()
             tester.Init(config) 
+            tester.Configure(config)
             err = tester.Test(confs, texts)
             
 //            str := "FEEDFACE.COM"
 //            if modeFlags.NArg() > 0 {
 //                str = strings.Join(modeFlags.Args()," ")
 //            }
-//            tester.Configure(config)
 //            err = tester.Test(str,rawConfs,rawTexts)
 
 

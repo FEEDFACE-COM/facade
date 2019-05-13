@@ -13,6 +13,8 @@ type Test struct {
     state TestState
     refreshChan chan bool
     
+//    scroller *Scroller
+    
     
 }
 
@@ -27,10 +29,11 @@ func NewTest(config *TestConfig, termBuffer *gfx.TermBuffer, lineBuffer *gfx.Lin
     ret.state = TestDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
+//    ret.scroller = gfx.NewScroller(float32(ret.state.Speed))
     ret.termBuffer = termBuffer
     ret.lineBuffer = lineBuffer
     ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
-    ret.lineBuffer.Resize(ret.state.Height)
+    ret.lineBuffer.Resize(ret.state.Height+ret.state.BufLen,ret.state.Height)
     return ret
 
 }
@@ -54,13 +57,13 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
 
     if height,ok := config.Height(); ok && height != 0 { 
 	    test.state.Height = height 
-        test.lineBuffer.Resize(test.state.Height + test.state.BufLen)
+        test.lineBuffer.Resize(test.state.Height+test.state.BufLen,test.state.Height)
         test.termBuffer.Resize(test.state.Width,test.state.Height)   
     }
     
     if buflen,ok := config.BufLen(); ok && buflen != 0 {
         test.state.BufLen = buflen
-        test.lineBuffer.Resize(test.state.Height + test.state.BufLen)
+        test.lineBuffer.Resize(test.state.Height+test.state.BufLen,test.state.Height)
     }
     
     if buffer,ok := config.Buffer(); ok && buffer != test.state.Buffer {

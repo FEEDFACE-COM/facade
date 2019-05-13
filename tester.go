@@ -34,7 +34,7 @@ func NewTester(directory string) *Tester {
     ret := &Tester{directory: directory} 
     ret.mutex = &sync.Mutex{}
     ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
-    ret.lineBuffer = gfx.NewLineBuffer(10) //FIXME
+    ret.lineBuffer = gfx.NewLineBuffer(10,8) //FIXME
     return ret    
 }
 
@@ -110,20 +110,20 @@ func (tester *Tester) Configure(config *facade.Config) error {
 
 
 
-
+//
 //rem, should not need this, can do directly?
-func (tester *Tester) ProcessText(textChan chan string) {
-    select {
-        case txt := <-textChan:
-            // REM needs to be all bytes even before!!
-            raw := []byte(txt)
-            tester.termBuffer.WriteBytes( raw )
-            tester.lineBuffer.WriteBytes( raw )
-        	
-        default:
-            //nop    
-    }
-}
+//func (tester *Tester) ProcessText(textChan chan string) {
+//    select {
+//        case txt := <-textChan:
+//            // REM needs to be all bytes even before!!
+//            raw := []byte(txt)
+//            tester.termBuffer.WriteBytes( raw )
+//            tester.lineBuffer.WriteBytes( raw )
+//        	
+//        default:
+//            //nop    
+//    }
+//}
 
 
 //rem, should not need this, can do directly?
@@ -145,14 +145,20 @@ func (tester *Tester) ProcessRawTexts(rawChan chan facade.RawText, textChan chan
 
     for {
         rawText := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process raw text: %s",rawText) }
-        text := rawText.Sanitize()
+        n := len(rawText)
+        if DEBUG_MESSAGES { log.Debug("process %d byte:\n%s",n,log.Dump(rawText,n,0)) }
+//        text := rawText.Sanitize()
+
+            tester.termBuffer.WriteBytes( rawText )
+            tester.lineBuffer.ProcessBytes( rawText )
+
+
         
 //        tester.mutex.Lock()
 //        tester.buffer.Queue( gfx.NewText(text) )
 //        tester.mutex.Unlock()
         
-        textChan <- text
+//        textChan <- text
         
     }
     return nil    
@@ -202,7 +208,7 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
         verboseFrame := gfx.ClockDebug()
         tester.mutex.Lock()
 
-        tester.ProcessText(textChan)
+//        tester.ProcessText(textChan)
         tester.ProcessConf(confChan)
 
         if verboseFrame { 

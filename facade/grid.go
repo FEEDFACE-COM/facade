@@ -65,6 +65,9 @@ func (grid *Grid) checkRefresh() bool {
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
+
+    // REM maybe also if grid.checkReconfig then grid.Configure??
+
     
     if grid.checkRefresh() {
 

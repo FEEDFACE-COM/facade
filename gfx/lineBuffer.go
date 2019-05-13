@@ -8,41 +8,45 @@ import(
 )
 
 
-type Row []rune
+type Line []rune
 
 type LineBuffer struct {
-    rows uint
-    index uint
-    line []*Row
+    count uint
+    delim uint // index to first line not on screen
+    next uint  // index to add next line 
+    buf []*Line
+    raw []byte
 }
 
 
-func NewLineBuffer(rows uint) *LineBuffer {
+func NewLineBuffer(count,delim uint) *LineBuffer {
     ret := &LineBuffer{}
-    if rows == 0 { rows = 1 }
-    ret.rows = rows
-    ret.index = 0
-    ret.line = make( []*Row, ret.rows )
+    if count == 0 { count = 1 }
+    if delim >= count { delim = count - 1 }
+    ret.count = count
+    ret.delim = delim
+    ret.buf = make( []*Line, ret.count )
+    ret.next = ret.delim
     return ret
 }
 
 
 
-func (buffer *LineBuffer) dequeueRow() {
+func (buffer *LineBuffer) dequeueLine() {
     // REM, implement me (triggered by scroll timer)    
 }
 
-func (buffer *LineBuffer) queueRow(row Row) {
-    if buffer.index >= buffer.rows {
+func (buffer *LineBuffer) queueLine(row Line) {
+    if buffer.next >= buffer.count {
         log.Error("buffer overflow!")
         return   
     }
-    buffer.line[buffer.index] = &row
-    buffer.index += 1
+    buffer.buf[buffer.next] = &row
+    buffer.next += 1
 }
 
 // REM THIS IS BAD AND DIRTY AND NEEDS REWRITING
-func (buffer *LineBuffer) WriteBytes(raw []byte) {
+func (buffer *LineBuffer) ProcessBytes(raw []byte) {
     
     
     //rem, we will need to split bytes by newline and append resulting rows
@@ -54,63 +58,63 @@ func (buffer *LineBuffer) WriteBytes(raw []byte) {
     for _,line := range(lines) {
     
         row := []rune( line )
-        buffer.queueRow( Row(row) )
+        buffer.queueLine( Line(row) )
         
     }
 
 }
 
 
-func (buffer *LineBuffer) Resize(newRows uint) {
-    log.Debug("resize %d %s",newRows,buffer.Desc())
-    if newRows == 0 { newRows = 1 }
+func (buffer *LineBuffer) Resize(newCount,newDelim uint) {
+    log.Debug("resize %d,%d %s",newCount,newDelim,buffer.Desc())
+    if newCount == 0 { return }
     
-    newBuf := make( []*Row, newRows )
-    if newRows < buffer.rows {
+    newBuf := make( []*Line, newCount )
+    if newCount < buffer.count {
 
-//        d := buffer.row - newRows
+//        d := buffer.row - newCount
 
         // copy as many items as fit
         var idx uint = 0
-        for ; idx<newRows && idx<buffer.rows; idx++ {
-            newBuf[idx] = buffer.line[idx]
+        for ; idx<newCount && idx<buffer.count; idx++ {
+            newBuf[idx] = buffer.buf[idx]
         }
 
-        if buffer.index >= newRows {
-            buffer.index = newRows-1
+        if buffer.next >= newCount {
+            buffer.next = newCount-1
         }
                 
 
-    } else if newRows > buffer.rows {
+    } else if newCount > buffer.count {
 
         // copy all items
-        d := newRows - buffer.rows
-        for idx:= uint(0); idx<buffer.rows; idx++ {
-            newBuf[ (idx+d) % newRows ] = buffer.line[idx]
+        d := newCount - buffer.count
+        for idx:= uint(0); idx<buffer.count; idx++ {
+            newBuf[ (idx+d) % newCount ] = buffer.buf[idx]
         } 
         
-        buffer.index = buffer.rows
+        buffer.next = buffer.count
     }        
     
     //adjust buffer info
-    buffer.rows = newRows
-    buffer.line = newBuf
+    buffer.count = newCount
+    buffer.buf = newBuf
     
     
 }
 
 func (buffer *LineBuffer) Desc() string { 
-    return fmt.Sprintf("linebuffer[%d]",buffer.rows )
+    return fmt.Sprintf("linebuffer[%d]",buffer.count )
 }
 
 
 func (buffer *LineBuffer) Dump(width,height uint) string {
     ret := ""
-    for i := uint(0); i<buffer.rows;i++ {
+    for i := uint(0); i<buffer.count;i++ {
         
         ret += fmt.Sprintf(" %02d | ",i)
         
-        row := buffer.line[ i ]
+        row := buffer.buf[ i ]
         if row != nil {
             for c:=uint(0); c<width && c<uint(len(*row)); c++ {
                 ret += fmt.Sprintf("%c",(*row)[c]) 
@@ -119,7 +123,7 @@ func (buffer *LineBuffer) Dump(width,height uint) string {
         ret += "\n"
         
             
-        if i == height-1 {
+        if i == buffer.delim-1 {
             ret += " ---+-"
             for c:=uint(0); c<width; c++ { ret += "-" }
             ret += "\n"

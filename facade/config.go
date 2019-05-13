@@ -29,7 +29,7 @@ var Modes = []Mode{GRID,LINES,TEST}
 
 
 
-type RawText string
+type RawText []byte
 
 type State struct {
 	Mode    Mode
