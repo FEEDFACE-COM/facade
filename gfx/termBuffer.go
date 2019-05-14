@@ -96,7 +96,13 @@ func (buffer *TermBuffer) Dump() string {
             ret += fmt.Sprintf("%c",buffer.buf[r][c])
             if c == buffer.cursor.x && r == buffer.cursor.y { ret += "\033[27m" }
         }
-        ret += fmt.Sprintf(" | %02d\n",r)
+        ret += " | "
+        if r % 10 == 0 {
+            ret += fmt.Sprintf("%01d",(r/10)%10)
+        } else {
+            ret += " "
+        }
+        ret += fmt.Sprintf("%01d\n",r%10)
     }
     ret += "+ "
 //    for c:=0; c<int(buffer.cols); c++ { ret += "-" }
