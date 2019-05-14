@@ -12,7 +12,9 @@ BUILD_DEBUG    ?= false
 
 
 
-SOURCES=$(wildcard *.go */*.go) 
+#SOURCES=$(filter-out tester.go facade/test.go , $(wildcard *.go */*.go) )
+SOURCES=$(wildcard *.go */*.go)
+
 ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
 
