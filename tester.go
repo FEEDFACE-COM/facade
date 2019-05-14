@@ -33,8 +33,6 @@ type Tester struct {
 func NewTester(directory string) *Tester { 
     ret := &Tester{directory: directory} 
     ret.mutex = &sync.Mutex{}
-    ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
-    ret.lineBuffer = gfx.NewLineBuffer(10,8) //FIXME
     return ret    
 }
 
@@ -67,7 +65,16 @@ func (tester *Tester) Init(config *facade.Config) error {
 	testConfig := facade.TestDefaults.Config()
     if cfg,ok := config.Test(); ok {
         testConfig.ApplyConfig(&cfg)
-    }	
+    }
+    
+    width,_ := testConfig.Width()
+    height,_ := testConfig.Height()
+    buflen,_ := testConfig.BufLen()
+    
+    tester.termBuffer = gfx.NewTermBuffer(width,height) 
+    tester.lineBuffer = gfx.NewLineBuffer(height,buflen) 
+    
+    
     tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.lineBuffer )
     tester.test.Init(tester.font)
     tester.test.Configure(testConfig,tester.font)
@@ -220,8 +227,7 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
                     os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
                     os.Stdout.Write( []byte( "\n" ) )
                 } else if tester.test.Buffer() == facade.LINEBUFFER {
-                    w,h := tester.test.Width(), tester.test.Height()
-                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( w,h ) ) ) 
+                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
                     os.Stdout.Write( []byte( "\n" ) )
                 }
                 

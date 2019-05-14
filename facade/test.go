@@ -33,7 +33,7 @@ func NewTest(config *TestConfig, termBuffer *gfx.TermBuffer, lineBuffer *gfx.Lin
     ret.termBuffer = termBuffer
     ret.lineBuffer = lineBuffer
     ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
-    ret.lineBuffer.Resize(ret.state.Height+ret.state.BufLen,ret.state.Height)
+    ret.lineBuffer.Resize(ret.state.Height,ret.state.BufLen)
     return ret
 
 }
@@ -55,15 +55,15 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
         test.termBuffer.Resize(test.state.Width,test.state.Height)   
 	} 
 
-    if height,ok := config.Height(); ok && height != 0 { 
+    if height,ok := config.Height(); ok && height != 0 && height != test.state.Height { 
 	    test.state.Height = height 
-        test.lineBuffer.Resize(test.state.Height+test.state.BufLen,test.state.Height)
+        test.lineBuffer.Resize(test.state.Height,test.state.BufLen)
         test.termBuffer.Resize(test.state.Width,test.state.Height)   
     }
     
-    if buflen,ok := config.BufLen(); ok && buflen != 0 {
+    if buflen,ok := config.BufLen(); ok && buflen != 0 && buflen != test.state.BufLen {
         test.state.BufLen = buflen
-        test.lineBuffer.Resize(test.state.Height+test.state.BufLen,test.state.Height)
+        test.lineBuffer.Resize(test.state.Height,test.state.BufLen)
     }
     
     if buffer,ok := config.Buffer(); ok && buffer != test.state.Buffer {

@@ -11,38 +11,102 @@ import(
 type Line []rune
 
 type LineBuffer struct {
-    count uint
-    delim uint // index to first line not on screen
-    next uint  // index to add next line 
+    rows uint // lines on screen
+    off  uint // lines off screen
     buf []*Line
-    raw []byte
+
+    
+    timer *Timer
+
 }
 
 
-func NewLineBuffer(count,delim uint) *LineBuffer {
+func NewLineBuffer(rows,off uint) *LineBuffer {
+    if rows == 0 { rows = 1 }
+    if off == 0 { off = 1 }
+    total := rows + off
     ret := &LineBuffer{}
-    if count == 0 { count = 1 }
-    if delim >= count { delim = count - 1 }
-    ret.count = count
-    ret.delim = delim
-    ret.buf = make( []*Line, ret.count )
-    ret.next = ret.delim
+    ret.rows = rows
+    ret.off = off
+    ret.buf = make( []*Line, total )
     return ret
 }
 
 
 
 func (buffer *LineBuffer) dequeueLine() {
-    // REM, implement me (triggered by scroll timer)    
+    head := ""
+    if buffer.buf[0] != nil {
+        head = string( *buffer.buf[0] )
+    }
+    log.Debug("dequeue %s %s",buffer.Desc(),head)
+    total := buffer.rows + buffer.off
+    idx := uint(0)
+    for ; idx<total-1; idx++ {
+        buffer.buf[idx] = buffer.buf[idx+1]
+    }
+    buffer.buf[idx] = nil
+    
+    if buffer.buf[buffer.rows] != nil {
+        buffer.scrollOnce( 1.0 ) // REM take from config
+    }
+    
+    
+    // REM, schedule refresh
+    
 }
 
-func (buffer *LineBuffer) queueLine(row Line) {
-    if buffer.next >= buffer.count {
-        log.Error("buffer overflow!")
-        return   
+
+
+
+func (buffer *LineBuffer) scrollOnce(duration float64) {
+    if buffer.timer != nil {
+        log.Error("SCROLLING WITH EXISTING TIMER")
+        return    
     }
-    buffer.buf[buffer.next] = &row
-    buffer.next += 1
+    buffer.timer = NewTimer( duration, false )
+    buffer.timer.Fun = func() {
+        UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+        buffer.dequeueLine()
+
+    }
+    buffer.timer.Start()
+}
+
+
+func (buffer *LineBuffer) queueLine(row Line) {
+    log.Debug("queue %s %s",buffer.Desc(),string(row))
+    total := buffer.rows + buffer.off
+
+    idx := buffer.rows
+
+    if buffer.buf[idx] == nil { //first offscreen slot available
+        
+        buffer.buf[idx] = &row
+        buffer.scrollOnce( 1.0 ) // REM take from config
+        
+        
+    } else { // first offscreen slot full, find next available
+        
+     
+        for ;idx<total;idx++ {
+            if buffer.buf[idx] == nil {
+                break
+            }    
+        }
+        
+        if idx >= total {
+            log.Error("overflow %s",buffer.Desc())
+            return
+        }
+        
+        buffer.buf[idx] = &row
+        
+    }
+    
+    // REM, schedule refresh
+
 }
 
 // REM THIS IS BAD AND DIRTY AND NEEDS REWRITING
@@ -57,73 +121,77 @@ func (buffer *LineBuffer) ProcessBytes(raw []byte) {
     lines := strings.Split(str, "\n")
     for _,line := range(lines) {
     
-        row := []rune( line )
-        buffer.queueLine( Line(row) )
+        tmp := []rune( line )
+        if len(tmp) > 0 {
+            buffer.queueLine( Line(tmp) )
+        }
         
     }
 
 }
 
 
-func (buffer *LineBuffer) Resize(newCount,newDelim uint) {
-    log.Debug("resize %d,%d %s",newCount,newDelim,buffer.Desc())
-    if newCount == 0 { return }
-    
-    newBuf := make( []*Line, newCount )
-    if newCount < buffer.count {
+func (buffer *LineBuffer) Resize(newRows,newOff uint) {
+    log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc())
 
-//        d := buffer.row - newCount
+    if newRows == 0 { newRows = 1 }
+    if newOff == 0 { newOff = 1 }
+
+    oldTotal := buffer.rows + buffer.off
+    newTotal := newRows + newOff
+    newBuf := make( []*Line, newTotal )
+
+
+
+    if newTotal < oldTotal {
 
         // copy as many items as fit
         var idx uint = 0
-        for ; idx<newCount && idx<buffer.count; idx++ {
+        for ; idx<newTotal && idx<oldTotal; idx++ {
             newBuf[idx] = buffer.buf[idx]
         }
 
-        if buffer.next >= newCount {
-            buffer.next = newCount-1
-        }
                 
 
-    } else if newCount > buffer.count {
+    } else if newTotal >= oldTotal {
 
         // copy all items
-        d := newCount - buffer.count
-        for idx:= uint(0); idx<buffer.count; idx++ {
-            newBuf[ (idx+d) % newCount ] = buffer.buf[idx]
+        d := newTotal - oldTotal
+        for idx:= uint(0); idx<oldTotal; idx++ {
+            newBuf[ (idx+d) % newTotal ] = buffer.buf[idx]
         } 
         
-        buffer.next = buffer.count
     }        
     
     //adjust buffer info
-    buffer.count = newCount
+    buffer.rows = newRows
+    buffer.off  = newOff
     buffer.buf = newBuf
     
     
 }
 
 func (buffer *LineBuffer) Desc() string { 
-    return fmt.Sprintf("linebuffer[%d]",buffer.count )
+    return fmt.Sprintf("linebuffer[%d+%d]",buffer.rows,buffer.off )
 }
 
 
-func (buffer *LineBuffer) Dump(width,height uint) string {
+func (buffer *LineBuffer) Dump(width uint) string {
     ret := ""
-    for i := uint(0); i<buffer.count;i++ {
+    for i := uint(0); i<buffer.rows+buffer.off;i++ {
         
         ret += fmt.Sprintf(" %02d | ",i)
         
-        row := buffer.buf[ i ]
-        if row != nil {
-            for c:=uint(0); c<width && c<uint(len(*row)); c++ {
-                ret += fmt.Sprintf("%c",(*row)[c]) 
+        line := buffer.buf[ i ]
+        if line != nil {
+            for c:=uint(0); c<width && c<uint(len(*line)); c++ {
+                ret += fmt.Sprintf("%c",(*line)[c]) 
             }
         } 
         ret += "\n"
         
             
-        if i == buffer.delim-1 {
+        if i == buffer.rows-1 {
             ret += " ---+-"
             for c:=uint(0); c<width; c++ { ret += "-" }
             ret += "\n"

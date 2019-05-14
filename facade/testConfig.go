@@ -58,16 +58,17 @@ func (config *TestConfig) Desc() string {
     {
     	w,wok := config.Width(); 
 	    h,hok := config.Height();
+    	l,lok := config.BufLen()
 	    if wok { ret += fmt.Sprintf("%d",w) }
-    	if wok || hok { ret += "x" }
+    	if wok || hok || lok { ret += "x" }
 	    if hok { ret += fmt.Sprintf("%d",h) }
-	    if wok || hok { ret += " " }
-	}
+	    if lok { ret += fmt.Sprintf("+%d",l) }
+	    if wok || hok || lok { ret += " " }
+    }
+
 	{
         buf,bok := config.Buffer()
         if bok { ret += string(buf) + " " }	
-    	l,lok := config.BufLen()
-    	if lok { ret += fmt.Sprintf("%d ",l) }
     }
     
     {

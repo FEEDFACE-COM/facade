@@ -5,11 +5,12 @@ package gfx
 import (
     "time"
     "fmt"
-//    log "../log"
+    log "../log"
 )
 
 const DEBUG_FRAMES = 90
 const CLOCK_RATE = 1.0
+
 
 var clockStart time.Time
 
@@ -39,13 +40,16 @@ func ClockReset() {
 
 
 func RegisterTimer(timer *Timer) {
+    //TODO: replace with hashmap!
     clockTimers = append(clockTimers, timer )    
-//    log.Debug("register %s",(*timer).Desc())
+    if DEBUG_TIMER { log.Debug("register %s",(*timer).Desc()) }
 }
 
 
 func UnRegisterTimer(timer *Timer) {
+    //TODO: replace with hashmap!
     var ct []*Timer
+    if DEBUG_TIMER { log.Debug("deregister %s",(*timer).Desc()) }
     for _,v := range( clockTimers ) {
         if v != timer {
             ct = append(ct,v)

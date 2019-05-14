@@ -6,9 +6,11 @@ package gfx
 import (
     "fmt"
     math "../math32"
+    log "../log"
 )
 
 
+const DEBUG_TIMER = true
 
 
 type Timer struct {
@@ -53,6 +55,7 @@ func (timer *Timer) Start() {
     timer.start = NOW()
     timer.fader = 0.0
     timer.count = 0    
+    if DEBUG_TIMER { log.Debug("start %s",timer.Desc()) }
 }
 
 
@@ -63,16 +66,19 @@ func (timer *Timer) Update() bool {
     d := timer.duration
     
     timer.fader = math.Clamp( t/d )
-    timer.count += 1
     
     //triggered?
     if NOW() > timer.start+timer.duration {
+
+        if DEBUG_TIMER { log.Debug("trigger %s",timer.Desc()) }
+
 
         if timer.Fun != nil {
             timer.Fun()
         }
      
         if timer.repeat {
+            timer.count += 1
             timer.start = NOW()
         }
      
