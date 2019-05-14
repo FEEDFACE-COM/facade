@@ -11,13 +11,10 @@ import(
 type Line []rune
 
 type LineBuffer struct {
-    rows uint // lines on screen
-    off  uint // lines off screen
+    rows uint // lines on screen, min 1
+    off  uint // lines off screen, min 1
     buf []*Line
-
-    
     timer *Timer
-
 }
 
 
@@ -35,6 +32,8 @@ func NewLineBuffer(rows,off uint) *LineBuffer {
 
 
 func (buffer *LineBuffer) dequeueLine() {
+    // probably should lock mutex?
+    
     head := ""
     if buffer.buf[0] != nil {
         head = string( *buffer.buf[0] )
@@ -57,7 +56,13 @@ func (buffer *LineBuffer) dequeueLine() {
 }
 
 
-
+func (buffer *LineBuffer) GetLine(idx uint) Line {
+    // probably should lock mutex?
+    if idx > buffer.rows {
+        log.Error("no line %d in %s",idx,buffer.Desc())
+    }
+    return *(buffer.buf[idx])
+}
 
 func (buffer *LineBuffer) scrollOnce(duration float64) {
     if buffer.timer != nil {
@@ -76,10 +81,13 @@ func (buffer *LineBuffer) scrollOnce(duration float64) {
 
 
 func (buffer *LineBuffer) queueLine(row Line) {
+    // probably should lock mutex?
     log.Debug("queue %s %s",buffer.Desc(),string(row))
     total := buffer.rows + buffer.off
 
     idx := buffer.rows
+
+
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
@@ -115,6 +123,9 @@ func (buffer *LineBuffer) ProcessBytes(raw []byte) {
     
     //rem, we will need to split bytes by newline and append resulting rows
     //but then also keep remaining bytes around until next time we're called??
+    
+    //rem, also remove ansi colors and most ansi controls
+    //and obvs remove any vt2x0 chars
     
     str := string(raw)    
 
