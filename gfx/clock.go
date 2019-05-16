@@ -8,7 +8,7 @@ import (
     log "../log"
 )
 
-const DEBUG_FRAMES = 90
+const VERBOSE_FRAMES = 90
 const CLOCK_RATE = 1.0
 
 
@@ -61,7 +61,7 @@ func UnRegisterTimer(timer *Timer) {
 
 
 
-func ClockDebug() bool { return clockFrame % DEBUG_FRAMES == 0 }
+func ClockVerboseFrame() bool { return clockFrame % VERBOSE_FRAMES == 0 }
 
 
 func ClockDelta(prev Clock) float32 { 
