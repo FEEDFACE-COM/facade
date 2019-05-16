@@ -7,8 +7,8 @@ import(
 )
 
 type Test struct {
-    termBuffer   *gfx.TermBuffer
-    lineBuffer *gfx.LineBuffer
+    termBuffer *TermBuffer
+    lineBuffer *LineBuffer
     
     state TestState
     refreshChan chan bool
@@ -23,13 +23,13 @@ func (test *Test) Height() uint { return test.state.Height }
 func (test *Test) Buffer() BufferName { return test.state.Buffer }
 func (test *Test) BufLen() uint { return test.state.BufLen }
 
-func NewTest(config *TestConfig, termBuffer *gfx.TermBuffer, lineBuffer *gfx.LineBuffer) *Test {
+func NewTest(config *TestConfig, termBuffer *TermBuffer, lineBuffer *LineBuffer) *Test {
 
     ret := &Test{}
     ret.state = TestDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
-//    ret.scroller = gfx.NewScroller(float32(ret.state.Speed))
+//    ret.scroller = NewScroller(float32(ret.state.Speed))
     ret.termBuffer = termBuffer
     ret.lineBuffer = lineBuffer
     ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   

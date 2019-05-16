@@ -3,6 +3,7 @@ package facade
 
 import(
     "fmt"
+    gfx "../gfx"
     log "../log"
     "github.com/pborman/ansi"
 )
@@ -14,7 +15,7 @@ type LineBuffer struct {
     rows uint // lines on screen, min 1
     off  uint // lines off screen, min 1
     buf []*Line
-    timer *Timer
+    timer *gfx.Timer
     rem []rune
 }
 
@@ -71,9 +72,9 @@ func (buffer *LineBuffer) scrollOnce(duration float64) {
         log.Error("SCROLLING WITH EXISTING TIMER")
         return    
     }
-    buffer.timer = NewTimer( float32(duration), false )
+    buffer.timer = gfx.NewTimer( float32(duration), false )
     buffer.timer.Fun = func() {
-        UnRegisterTimer(buffer.timer)
+        gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
         buffer.dequeueLine()
 

@@ -23,8 +23,8 @@ type Tester struct {
     
     test *facade.Test;
     
-    lineBuffer *gfx.LineBuffer
-    termBuffer *gfx.TermBuffer
+    lineBuffer *facade.LineBuffer
+    termBuffer *facade.TermBuffer
 
     mutex *sync.Mutex
     directory string
@@ -71,8 +71,8 @@ func (tester *Tester) Init(config *facade.Config) error {
     height,_ := testConfig.Height()
     buflen,_ := testConfig.BufLen()
     
-    tester.termBuffer = gfx.NewTermBuffer(width,height) 
-    tester.lineBuffer = gfx.NewLineBuffer(height,buflen) 
+    tester.termBuffer = facade.NewTermBuffer(width,height) 
+    tester.lineBuffer = facade.NewLineBuffer(height,buflen) 
     
     
     tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.lineBuffer )
