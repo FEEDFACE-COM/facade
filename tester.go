@@ -186,24 +186,23 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
     log.Debug("test %s",tester.state.Desc())
     for {
-        verboseFrame := gfx.ClockDebug()
         tester.mutex.Lock()
 
         tester.ProcessConf(confChan)
 
-        if verboseFrame { 
+        if DEBUG_BUFFER {
+            if tester.test.Buffer() == facade.TERMBUFFER {
+                os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
+            } else if tester.test.Buffer() == facade.LINEBUFFER {
+                os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
+            }
+            os.Stdout.Write( []byte( "\n" ) )
+            os.Stdout.Sync()
+        }
+        
+        if gfx.ClockVerboseFrame() { 
             if DEBUG_CLOCK  { 
                 log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
-            }
-            if true || DEBUG_BUFFER {  //REM not always
-                if tester.test.Buffer() == facade.TERMBUFFER {
-                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
-                    os.Stdout.Write( []byte( "\n" ) )
-                } else if tester.test.Buffer() == facade.LINEBUFFER {
-                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
-                    os.Stdout.Write( []byte( "\n" ) )
-                }
-                
             }
             prev = *gfx.NewClock() 
         }

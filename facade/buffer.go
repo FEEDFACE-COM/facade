@@ -57,19 +57,32 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
     
     var tmp []byte = []byte{}
     
+    if DEBUG_BUFFER { log.Debug("process raw %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
+    
     for ptr != nil && len(ptr) > 0 {
 
 
         rem,seq,err = ansi.Decode(ptr)
         if err != nil {
-            log.Error("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
-            return rem, log.NewError("fail ansi decode")    
+            
+            switch err {
+            
+                case ansi.LoneEscape:
+                    log.Warning("ansi lone escape: %s",log.Dump(ptr,0,0)) 
+                    sendBytes(tmp, bufChan)
+                    return ptr, log.NewError("ansi lone escape")    
+                    
+                case ansi.UnknownEscape:
+                    log.Warning("ansi unknown %d byte sequence: 0x%x",len(seq.Code),seq.Code)    
+            
+                default:
+                    log.Error("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
+                    return rem, log.NewError("fail ansi decode")    
+                
+            }
+            
         }
 
-//        if seq == nil {
-//            log.Error("ansi sequence nil")
-//            return ptr, log.newError("ansi sequence nil")
-//        }
         
         switch seq.Type {
     
@@ -89,7 +102,6 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 if DEBUG_BUFFER { log.Debug("process ansi C1 byte: 0x%02x",ptr[0]) }
                 if ptr[0] >= 0x80 && ptr[0] <= 0x9f {
                     tmp = append(tmp, ptr[0] )
-                    ptr = ptr[1:]    
                 }
             case "CSI", "IF":
                 sendBytes(tmp, bufChan)
@@ -101,7 +113,25 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 } else {
                     log.Error("ansi %s 0x%x not in table",seq.Type,seq.Code)
                 }
-                
+
+            case "ESC":
+                log.Debug("got escape, here's 16 byte: %s",log.Dump(ptr,16,0))
+                log.Debug("       and remainn 16 byte: %s",log.Dump(rem,16,0))
+                switch seq.Code {
+                    case "\033(":
+                        if len(rem) >= 1 { //no full sequence, return ptr to pick up more
+                            rem = rem[1:]
+                            log.Debug("vt100 0x%x skip %d byte: 0x%x",len(seq.Code),seq.Code)
+                        } else {
+                            sendBytes(tmp, bufChan)
+                            return ptr, log.NewError("ansi short escape sequence")
+                        }
+                    
+                    default:
+                        log.Warning("vt100 unknown %d byte:  0x%x ",len(seq.Code),seq.Code)
+                    
+                }
+                                
             
             default:
                 log.Error("ansi unknown sequence type %s",seq.Type)

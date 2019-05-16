@@ -129,7 +129,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
         switch (run) {
             
             case '\n':
-                if DEBUG_TERMBUFFER { log.Debug("LF") }
+//                if DEBUG_TERMBUFFER { log.Debug("LF") }
                 cur.x = 1
                 cur.y += 1
                 if cur.y > max.y {  // scroll last row
@@ -142,7 +142,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             
             case '\t':
-                if DEBUG_TERMBUFFER { log.Debug("TAB") }
+//                if DEBUG_TERMBUFFER { log.Debug("TAB") }
 
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
@@ -151,31 +151,36 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     cnt += 1
                     cur.x += 1
 
-                    if int(cur.x) % TABWIDTH == 0 { //hit tab stop
+                    if int(cur.x) % TABWIDTH == 1 { //hit tab stop
                         break
                     }
 
                     if cur.x > max.x {
-                        cur.x = 1
-                        cur.y += 1
-                        if cur.y > max.y {
-                            cur.y = max.y
-                            buffer.scroll()
-                        }
+                        break
                     }
-                    
                 }
+                if cur.x > max.x {
+                    cur.x = 1
+                    cur.y += 1
+                    if cur.y > max.y {
+                        cur.y = max.y
+                        buffer.scroll()
+                }
+            }
+                
             
             case '\r':
-                if DEBUG_TERMBUFFER { log.Debug("CR") }
+//                if DEBUG_TERMBUFFER { log.Debug("CR") }
+                cur.x = 1
             
             case '\a':
                 if DEBUG_TERMBUFFER { log.Debug("BEL") }
             
             case '\b':
-                if DEBUG_TERMBUFFER { log.Debug("BS") }
+//                if DEBUG_TERMBUFFER { log.Debug("BS") }
                 cur.x -= 1
                 if cur.x <= 1 { cur.x = 1 }
+
             
             default:
                 buf[cur.y][cur.x] = run
@@ -199,7 +204,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
     buffer.cursor = cur
     
     if cnt > 0 {
-        if DEBUG_TERMBUFFER { log.Debug("print %d runes.",cnt) }
+        if DEBUG_TERMBUFFER { log.Debug("print %d runes %s",cnt,buffer.Desc()) }
     }
 }
 
@@ -215,7 +220,17 @@ func (buffer *TermBuffer) setCursor(x,y uint) {
     buffer.cursor = pos{x,y}
 }
 
-
+func (buffer *TermBuffer) eraseLine(val uint) {
+    if DEBUG_TERMBUFFER { log.Debug("erase line(%d) %s",val,buffer.Desc()) }
+    switch val {
+        case 0:
+            for c:=buffer.cursor.x; c<=buffer.max.x; c++ {
+                buffer.buf[buffer.cursor.y][c] = rune(' ')    
+            }
+        default:
+            log.Warning("NOT IMPLEMENTED: erase line(%d)",val)
+    }
+}
 
 func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
     // lock mutex?
@@ -236,7 +251,14 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             fmt.Sscanf(seq.Params[0],"%d",&x)
             fmt.Sscanf(seq.Params[1],"%d",&y)
             buffer.setCursor(x,y)
-            
+
+        case ansi.Table[ansi.EL]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.eraseLine(val)
+
+        case ansi.Table[ansi.SGR]:
+            break
             
         default:
             if DEBUG_TERMBUFFER {             
@@ -290,7 +312,7 @@ func (buffer *TermBuffer) Dump() string {
     ret += "\n "
     for c:=uint(1); c<=buffer.max.x; c++ { ret += fmt.Sprintf("%01d",c%10) }
     ret += "\n"
-    ret += fmt.Sprintf("cursor %2d,%2d max %2dx%2d\n",buffer.cursor.x,buffer.cursor.y,buffer.max.x,buffer.max.y)
+    ret += fmt.Sprintf("cursor %2d,%2d\n",buffer.cursor.x,buffer.cursor.y)
     return ret
 }
 
