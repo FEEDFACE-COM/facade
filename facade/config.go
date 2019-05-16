@@ -6,7 +6,7 @@ import (
 	"strings"
     "flag"
     gfx "../gfx"
-    log "../log"
+//    log "../log"
 )
 
 var DEFAULT_MODE Mode = GRID
@@ -76,18 +76,18 @@ func (config *Config) SetMask(val gfx.MaskConfig)     { (*config)[facadeMask] = 
 func (config *Config) SetDebug(val bool)              { (*config)[facadeDebug] = val }
 
 
-func (config *Config) Sanitize() Config {
-    ret := *config
-    log.Debug("sanitize config %s (IMPLEMENT ME!)",ret.Desc())
-    return ret
-}
+//func (config *Config) Sanitize() Config {
+//    ret := *config
+//    log.Debug("sanitize config %s (IMPLEMENT ME!)",ret.Desc())
+//    return ret
+//}
 
 
-func (text *RawText) Sanitize() string {
-    ret := string(*text)
-    log.Debug("sanitize %d byte text (IMPLEMENT ME!)",len(ret))
-    return ret
-}
+//func (text *RawText) Sanitize() string {
+//    ret := string(*text)
+//    log.Debug("sanitize %d byte text (IMPLEMENT ME!)",len(ret))
+//    return ret
+//}
 
 
 func NewState(mode Mode) *State {

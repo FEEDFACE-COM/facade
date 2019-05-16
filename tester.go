@@ -137,11 +137,11 @@ func (tester *Tester) ProcessBufferItems(bufChan chan facade.BufferItem) error {
 //        if DEBUG_MESSAGES { log.Debug("buffer %s",item.Desc()) }
         text, seq := item.Text, item.Seq
         if text != nil && len(text) > 0 {
-//            tester.lineBuffer.ProcessRunes( text )
+            tester.lineBuffer.ProcessRunes( text )
             tester.termBuffer.ProcessRunes( text )    
         }
         if seq != nil {
-//            tester.lineBuffer.ProcessSequence( seq )
+            tester.lineBuffer.ProcessSequence( seq )
             tester.termBuffer.ProcessSequence( seq )
         }
     }
@@ -154,13 +154,12 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
     for {
         rawConf := <-rawChan
         if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
-        conf := rawConf.Sanitize()
 
 //        tester.mutex.Lock()
 //        // prep some stuff i guess?
 //        tester.mutex.Unlock()
         
-        confChan <- conf
+        confChan <- rawConf
 
     }
     return nil

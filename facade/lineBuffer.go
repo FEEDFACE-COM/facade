@@ -175,16 +175,16 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
                 tmp = []rune{}
             
             case '\t':
-                if DEBUG_LINEBUFFER { log.Debug("TAB") }
+//                if DEBUG_LINEBUFFER { log.Debug("TAB") }
             
             case '\r':
-                if DEBUG_LINEBUFFER { log.Debug("CR") }
+//                if DEBUG_LINEBUFFER { log.Debug("CR") }
             
             case '\a':
                 if DEBUG_LINEBUFFER { log.Debug("BEL") }
             
             case '\b':
-                if DEBUG_LINEBUFFER { log.Debug("BS") }
+//                if DEBUG_LINEBUFFER { log.Debug("BS") }
             
             default:
                 tmp = append(tmp, r)

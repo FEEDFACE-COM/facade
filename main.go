@@ -295,9 +295,9 @@ func main() {
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
             rawConfs := make(chan facade.Config)
-//            rawTexts := make(chan facade.RawText)
             confs := make(chan facade.Config)
-//            texts := make(chan string)
+//            bufChan := make(chan facade.BufferItem)
+
             go server.ListenConf(rawConfs)
 //            go server.ListenText(rawTexts)
             go renderer.ProcessRawConfs(rawConfs,confs)
