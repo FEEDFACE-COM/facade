@@ -3,8 +3,8 @@ package gfx
 
 import(
     "fmt"
-    "strings"
     log "../log"
+    "github.com/pborman/ansi"
 )
 
 
@@ -15,6 +15,7 @@ type LineBuffer struct {
     off  uint // lines off screen, min 1
     buf []*Line
     timer *Timer
+    rem []rune
 }
 
 
@@ -26,6 +27,7 @@ func NewLineBuffer(rows,off uint) *LineBuffer {
     ret.rows = rows
     ret.off = off
     ret.buf = make( []*Line, total )
+    ret.rem = []rune{}
     return ret
 }
 
@@ -69,7 +71,7 @@ func (buffer *LineBuffer) scrollOnce(duration float64) {
         log.Error("SCROLLING WITH EXISTING TIMER")
         return    
     }
-    buffer.timer = NewTimer( duration, false )
+    buffer.timer = NewTimer( float32(duration), false )
     buffer.timer.Fun = func() {
         UnRegisterTimer(buffer.timer)
         buffer.timer = nil
@@ -82,7 +84,6 @@ func (buffer *LineBuffer) scrollOnce(duration float64) {
 
 func (buffer *LineBuffer) queueLine(row Line) {
     // probably should lock mutex?
-    log.Debug("queue %s %s",buffer.Desc(),string(row))
     total := buffer.rows + buffer.off
 
     idx := buffer.rows
@@ -91,6 +92,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
+        log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row))
         buffer.buf[idx] = &row
         buffer.scrollOnce( 1.0 ) // REM take from config
         
@@ -108,7 +110,8 @@ func (buffer *LineBuffer) queueLine(row Line) {
             log.Error("overflow %s",buffer.Desc())
             return
         }
-        
+
+        log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row))
         buffer.buf[idx] = &row
         
     }
@@ -117,29 +120,98 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
 }
 
-// REM THIS IS BAD AND DIRTY AND NEEDS REWRITING
-func (buffer *LineBuffer) ProcessBytes(raw []byte) {
-    
-    
-    //rem, we will need to split bytes by newline and append resulting rows
-    //but then also keep remaining bytes around until next time we're called??
-    
-    //rem, also remove ansi colors and most ansi controls
-    //and obvs remove any vt2x0 chars
-    
-    str := string(raw)    
 
-    lines := strings.Split(str, "\n")
-    for _,line := range(lines) {
+func (buffer LineBuffer) processRunes(runes []rune) {
+    runes = append(buffer.rem, runes ...)
     
-        tmp := []rune( line )
-        if len(tmp) > 0 {
-            buffer.queueLine( Line(tmp) )
+    tmp := []rune{}
+    
+    for _,r := range(runes) {
+        
+        switch r {
+            
+            case '\n':
+                buffer.queueLine ( Line(tmp) )
+                tmp = []rune{}
+            
+            default:
+                tmp = append(tmp, r)
+            
+            
         }
+
         
     }
-
+    buffer.rem = tmp
 }
+
+
+func (buffer *LineBuffer) ProcessBytes(raw []byte) {
+    var err error
+    var seq *ansi.S
+
+    var ptr []byte = raw
+    var rem []byte = raw
+    
+    var tmp []rune = []rune{}
+    
+    for rem != nil {
+
+
+        rem,seq,err = ansi.Decode(ptr)
+        if err != nil {
+            log.Error("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
+            break    
+        }
+
+        if seq == nil {
+            log.Error("ansi sequence nil")
+            break
+        }
+        
+        switch seq.Type {
+    
+            case "":  // no sequence
+                s := []rune( seq.String() )
+                tmp = append(tmp, []rune(s) ... )
+                if DEBUG_ANSI { log.Debug("plain %s",string(s)) }
+
+            case "C0":
+                if DEBUG_ANSI { log.Debug("ansi C0 byte: '%c' %02x",ptr[0],ptr[0]) }
+            case "C1":
+                if DEBUG_ANSI { log.Debug("ansi C1 byte: '%c' %02x",ptr[0],ptr[0]) }
+                // The C1 control set has both a two byte and a single byte representation.  The
+                // two byte representation is an Escape followed by a byte in the range of 0x40
+                // to 0x5f.  They may also be specified by a single byte in the range of 0x80 -
+                // 0x9f. 
+                if ptr[0] >= 0x80 && ptr[0] <= 0x9f {
+                    
+                }
+                log.Debug("codes: %x",seq.Code)
+            case "CSI", "IF":
+                params := ""
+                for _,v := range(seq.Params) { 
+                    params += string(v) + ", "
+                }
+                sequence, ok := ansi.Table[seq.Code]
+                if !ok {
+                    log.Error("ansi %s 0x%x not in table",seq.Type,seq.Code)    
+                } else {
+                    if DEBUG_ANSI { log.Debug("ansi %s %s: %s(%s)",seq.Type,sequence.Desc,sequence.Name,params) }
+                }
+            
+            default:
+                log.Error("ansi unknown sequence type %s",seq.Type)
+        }
+
+        ptr = rem
+        
+    }
+    
+    buffer.processRunes(tmp)
+    
+}
+
 
 
 func (buffer *LineBuffer) Resize(newRows,newOff uint) {

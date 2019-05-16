@@ -12,7 +12,7 @@ import(
 
 )
 
-const DEBUG_ANSI = false
+const DEBUG_ANSI = true
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
@@ -25,9 +25,7 @@ type TermBuffer struct {
     cols uint
     rows  uint
     buf [][]rune
-    cursor pos
-//    i,j uint
-    
+    cursor pos    
 }
 
 
@@ -86,17 +84,17 @@ func (buffer *TermBuffer) Resize(cols, rows uint) {
 func (buffer *TermBuffer) Dump() string {
     ret := ""
 //    ret += fmt.Sprintf("cursor %02d,%02d\n",buffer.cursor.x,buffer.cursor.y)
-    ret += "+ "
+    ret += "+"
     for c:=0; c<int(buffer.cols); c++ { ret += "-" }
-    ret += " +\n"
+    ret += "+\n"
     for r:=uint(0); r<buffer.rows; r++ {
-        ret += "| "
+        ret += "|"
         for c:=uint(0); c<buffer.cols; c++ {
             if c == buffer.cursor.x && r == buffer.cursor.y { ret += "\033[7m" }
             ret += fmt.Sprintf("%c",buffer.buf[r][c])
             if c == buffer.cursor.x && r == buffer.cursor.y { ret += "\033[27m" }
         }
-        ret += " | "
+        ret += "| "
         if r % 10 == 0 {
             ret += fmt.Sprintf("%01d",(r/10)%10)
         } else {
@@ -104,15 +102,14 @@ func (buffer *TermBuffer) Dump() string {
         }
         ret += fmt.Sprintf("%01d\n",r%10)
     }
-    ret += "+ "
-//    for c:=0; c<int(buffer.cols); c++ { ret += "-" }
+    ret += "+"
     for c:=0; c<int(buffer.cols); c++ { ret += "-" }
-    ret += " +\n  "
+    ret += "+\n "
     for c:=0; c<int(buffer.cols); c++ { 
         if c % 10 == 0 { ret += fmt.Sprintf("%01d",(c/10)%10) 
         } else { ret += " " }
     }
-    ret += "\n  "
+    ret += "\n "
     for c:=0; c<int(buffer.cols); c++ { ret += fmt.Sprintf("%01d",c%10) }
     ret += "\n"
     return ret
@@ -150,15 +147,13 @@ func (buffer *TermBuffer) Scroll() {
 }
 
 
-func (buffer *TermBuffer) writeString(text string) {
+func (buffer *TermBuffer) processRunes(runes []rune) {
     cur := buffer.cursor
     rows,cols := buffer.rows,buffer.cols
     buf := buffer.buf
 
     cnt := 0
 
-    var runes []rune = []rune(text)
-    
     
     for _,run := range(runes) {
         
@@ -218,6 +213,7 @@ func (buffer *TermBuffer) writeString(text string) {
                 if cur.x <= 0 { cur.x = 0 }
             
             default:
+                log.Debug("rune %c",run)
                 buf[cur.y][cur.x] = run
                 cnt += 1
                 
@@ -247,119 +243,83 @@ func (buffer *TermBuffer) writeString(text string) {
 }
 
 
-func (buffer *TermBuffer) WriteBytes(raw []byte) {
-    var err error 
-//    if DEBUG_ANSI { log.Debug("write %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
+
+
+
+func (buffer *TermBuffer) ProcessBytes(raw []byte) {
+    var err error
+    var seq *ansi.S
 
     var ptr []byte = raw
     var rem []byte = raw
-    off := 0
-    var seq *ansi.S
-    chr := []byte{}
-    str := string(chr)
-
-
-    for rem != nil {
-        
-        if len(ptr) >= 3 { 
-        
-            switch ( string(ptr[:3]) ) {
-             
-                case "\033(B":
-                    log.Debug("skip 3 byte setusg0")
-                    ptr = ptr[3:]
-                    continue   
-                
-            }
-            
-        }
-        
-        
-        
-        rem,seq,err = ansi.Decode( ptr )
-        if err != nil {
-            if DEBUG_ANSI { 
-                log.Debug("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
-            }
-            break
-        }
-        if seq == nil {
-//            log.Debug("ansi decode empty seq")
-            break
-        }
     
-        if seq.Type == "" {
-                s := []byte(seq.String())
-                l := len(s)
-                chr = append(chr, s ...)
-                off += l
-                ptr = rem
+    var tmp []rune = []rune{}
+    var str string = ""
+    
+    for rem != nil {
 
-        } else if seq.Type == "C1" {
 
-            s := ptr[0:1]
-            chr = append(chr,s ...)
+        rem,seq,err = ansi.Decode(ptr)
+        if err != nil {
+            log.Error("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
+            break    
+        }
 
-            if DEBUG_ANSI { log.Debug("c1 byte:\n%s",log.Dump(s,0,off)) }
-            off += 1
-            ptr = ptr[1:]
-                
-        } else if seq.Type == "C0" {
-            
-            if DEBUG_ANSI { log.Debug("C0 byte.") }
-            
-        } else if seq.Type == "CSI" || seq.Type == "IF" {
-            
-            //flush
-            str = string(chr)
-            buffer.writeString(str)    
-            chr,str = []byte{}, string(chr)
-            
-            l := len(ptr) - len(rem)
-            tmp := ""
-            for _,v := range(seq.Params) {
-                tmp += string(v) + ", "
-            }
-            
-            sequence,ok := ansi.Table[seq.Code]
-            if !ok {
-                if DEBUG_ANSI { log.Debug("ansi %s 0x%x not in table",seq.Type,seq.Code) }
-                off += l
-                ptr = rem
-                continue
-            }
-                
-            if DEBUG_ANSI { log.Debug("ansi %s %s: %s( %s)",seq.Type,sequence.Desc,sequence.Name,tmp) }
-            buffer.handleSequence( sequence )
-
-            off += l
-            ptr = rem
-
-        } else {
-
-            log.Error("unknown sequence type %s",seq.Type)  
-            ptr = rem
-
+        if seq == nil {
+            log.Error("ansi sequence nil")
+            break
         }
         
-        
+        switch seq.Type {
+    
+            case "":  // no sequence
+                s := []rune( seq.String() )
+                tmp = append(tmp, []rune(s) ... )
+                str = str + seq.String()
+                if DEBUG_ANSI { log.Debug("plain %s",string(s)) }
+
+            case "C0":
+                if DEBUG_ANSI { log.Debug("ansi C0 byte.") }
+            case "C1":
+                if DEBUG_ANSI { log.Debug("ansi C1 byte.") }
+
+            case "CSI", "IF":
+            
+                buffer.processRunes(tmp)
+                tmp = []rune{}
+
+                params := ""
+                for _,v := range(seq.Params) { 
+                    params += string(v) + ", "
+                }
+                sequence, ok := ansi.Table[seq.Code]
+                if !ok {
+                    log.Error("ansi %s 0x%x not in table",seq.Type,seq.Code)    
+                } else {
+                    if DEBUG_ANSI { log.Debug("ansi %s %s: %s(%s)",seq.Type,sequence.Desc,sequence.Name,params) }
+                    buffer.processSequence(sequence)
+                }
+            
+            default:
+                log.Error("ansi unknown sequence type %s",seq.Type)
+        }
+
+        ptr = rem
         
     }
-    //flush
-    str = string(chr)
-    buffer.writeString(str)    
-    chr,str = []byte{}, string(chr)
     
+    buffer.processRunes(tmp)
     
-  
 }
 
 
 
-func (buffer *TermBuffer) handleSequence(seq *ansi.Sequence) {
+
+
+func (buffer *TermBuffer) processSequence(seq *ansi.Sequence) {
 
     cur := buffer.cursor
-    rows,cols := buffer.rows,buffer.cols
+    cols,rows := buffer.cols,buffer.rows
     buf := buffer.buf
     
     switch seq {

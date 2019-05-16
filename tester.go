@@ -117,22 +117,6 @@ func (tester *Tester) Configure(config *facade.Config) error {
 
 
 
-//
-//rem, should not need this, can do directly?
-//func (tester *Tester) ProcessText(textChan chan string) {
-//    select {
-//        case txt := <-textChan:
-//            // REM needs to be all bytes even before!!
-//            raw := []byte(txt)
-//            tester.termBuffer.WriteBytes( raw )
-//            tester.lineBuffer.WriteBytes( raw )
-//        	
-//        default:
-//            //nop    
-//    }
-//}
-
-
 //rem, should not need this, can do directly?
 func (tester *Tester) ProcessConf(confChan chan facade.Config) {
     select {
@@ -145,27 +129,16 @@ func (tester *Tester) ProcessConf(confChan chan facade.Config) {
 }
 
 
-func (tester *Tester) ProcessRawTexts(rawChan chan facade.RawText, textChan chan string) error {
+func (tester *Tester) ProcessRawTexts(rawChan chan facade.RawText) error {
 
-    //basically we can just fill the text/term buffers in this function
-    //no need to write to textChan?
 
     for {
         rawText := <-rawChan
         n := len(rawText)
         if DEBUG_MESSAGES { log.Debug("process %d byte:\n%s",n,log.Dump(rawText,n,0)) }
-//        text := rawText.Sanitize()
 
-            tester.termBuffer.WriteBytes( rawText )
+//            tester.termBuffer.ProcessBytes( rawText )
             tester.lineBuffer.ProcessBytes( rawText )
-
-
-        
-//        tester.mutex.Lock()
-//        tester.buffer.Queue( gfx.NewText(text) )
-//        tester.mutex.Unlock()
-        
-//        textChan <- text
         
     }
     return nil    
