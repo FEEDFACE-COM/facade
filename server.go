@@ -16,7 +16,7 @@ import (
 
 
 const DEBUG_ACCEPT = false
-const DEBUG_RECV =   true
+const DEBUG_RECV =   false
 
 
 type Server   struct {
@@ -52,7 +52,7 @@ func (server *Server) ListenConf(confChan chan facade.Config) {
     }
 }
 
-func (server *Server) ListenText(textChan chan facade.RawText) { 
+func (server *Server) ListenText(bufChan chan facade.BufferItem) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
@@ -74,7 +74,7 @@ func (server *Server) ListenText(textChan chan facade.RawText) {
         } else {
             textConn.SetReadDeadline(time.Now().Add( 1 * time.Second ) )
         }
-        go server.ReceiveText(textConn, textChan)
+        go server.ReceiveText(textConn, bufChan)
 
     }
 }
@@ -96,23 +96,29 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
     confChan <- config
 }
 
-func (server *Server) ReceiveText(textConn net.Conn, textChan chan facade.RawText) {
+func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferItem) {
     defer func() { 
         if DEBUG_ACCEPT { log.Debug("close text %s",textConn.RemoteAddr().String()); }
         textConn.Close() 
     }()
     const BUFFER_SIZE = 1024
 	var buf []byte = make([]byte, BUFFER_SIZE)
+	var rem []byte = []byte{}
+	var tmp []byte
 	reader := bufio.NewReader( textConn )
 	for {
         n,err := reader.Read(buf)
 		if err == io.EOF { break }
 		if err != nil {
-			log.Debug("read %s error: %s",textConn.RemoteAddr().String(),err)
+			log.Error("read %s error: %s",textConn.RemoteAddr().String(),err)
 			break
 		}
-        textChan <- facade.RawText(buf[0:n])
         if DEBUG_RECV { log.Debug("recv %d byte:\n%s",n,log.Dump(buf,n,0)) }
+		tmp = append(rem, buf[:n] ... )
+		rem, err = facade.ProcessRaw(tmp, bufChan)
+		if err != nil {
+            log.Error("process error: %s",err)    		
+        }
     }
     
 //    scanner := bufio.NewScanner(textConn)

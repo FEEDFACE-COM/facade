@@ -129,23 +129,24 @@ func (tester *Tester) ProcessConf(confChan chan facade.Config) {
 }
 
 
-func (tester *Tester) ProcessRawTexts(rawChan chan facade.RawText) error {
 
+func (tester *Tester) ProcessBufferItems(bufChan chan facade.BufferItem) error {
 
     for {
-        rawText := <-rawChan
-        n := len(rawText)
-        if DEBUG_MESSAGES { log.Debug("process %d byte:\n%s",n,log.Dump(rawText,n,0)) }
-
-//            tester.termBuffer.ProcessBytes( rawText )
-            tester.lineBuffer.ProcessBytes( rawText )
-        
+        item := <- bufChan    
+//        if DEBUG_MESSAGES { log.Debug("buffer %s",item.Desc()) }
+        text, seq := item.Text, item.Seq
+        if text != nil && len(text) > 0 {
+//            tester.lineBuffer.ProcessRunes( text )
+            tester.termBuffer.ProcessRunes( text )    
+        }
+        if seq != nil {
+//            tester.lineBuffer.ProcessSequence( seq )
+            tester.termBuffer.ProcessSequence( seq )
+        }
     }
-    return nil    
-    
+    return nil
 }
-
-
 
 
 
@@ -178,7 +179,7 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 
 
-func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) error {
+func (tester *Tester) Test(confChan chan facade.Config) error {
     const FRAME_RATE = 60.
     gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
@@ -188,14 +189,13 @@ func (tester *Tester) Test(confChan chan facade.Config, textChan chan string) er
         verboseFrame := gfx.ClockDebug()
         tester.mutex.Lock()
 
-//        tester.ProcessText(textChan)
         tester.ProcessConf(confChan)
 
         if verboseFrame { 
             if DEBUG_CLOCK  { 
                 log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
             }
-            if DEBUG_BUFFER { 
+            if true || DEBUG_BUFFER {  //REM not always
                 if tester.test.Buffer() == facade.TERMBUFFER {
                     os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
                     os.Stdout.Write( []byte( "\n" ) )

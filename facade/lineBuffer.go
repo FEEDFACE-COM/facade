@@ -8,6 +8,7 @@ import(
     "github.com/pborman/ansi"
 )
 
+const DEBUG_LINEBUFFER = false
 
 type Line []rune
 
@@ -33,6 +34,16 @@ func NewLineBuffer(rows,off uint) *LineBuffer {
 }
 
 
+func (buffer *LineBuffer) GetLine(idx uint) []rune {
+    // REM probably should lock mutex?
+    if idx > buffer.rows {
+        log.Error("no line %d in %s",idx,buffer.Desc())
+        return []rune{}
+    }
+    return []rune( *(buffer.buf[idx]) )
+}
+
+
 
 func (buffer *LineBuffer) dequeueLine() {
     // probably should lock mutex?
@@ -41,7 +52,7 @@ func (buffer *LineBuffer) dequeueLine() {
     if buffer.buf[0] != nil {
         head = string( *buffer.buf[0] )
     }
-    log.Debug("dequeue %s %s",buffer.Desc(),head)
+    if DEBUG_LINEBUFFER { log.Debug("dequeue %s %s",buffer.Desc(),head) }
     total := buffer.rows + buffer.off
     idx := uint(0)
     for ; idx<total-1; idx++ {
@@ -59,17 +70,11 @@ func (buffer *LineBuffer) dequeueLine() {
 }
 
 
-func (buffer *LineBuffer) GetLine(idx uint) Line {
-    // probably should lock mutex?
-    if idx > buffer.rows {
-        log.Error("no line %d in %s",idx,buffer.Desc())
-    }
-    return *(buffer.buf[idx])
-}
+
 
 func (buffer *LineBuffer) scrollOnce(duration float64) {
     if buffer.timer != nil {
-        log.Error("SCROLLING WITH EXISTING TIMER")
+        log.Error("refuse scroll with existing timer")
         return    
     }
     buffer.timer = gfx.NewTimer( float32(duration), false )
@@ -84,22 +89,19 @@ func (buffer *LineBuffer) scrollOnce(duration float64) {
 
 
 func (buffer *LineBuffer) queueLine(row Line) {
-    // probably should lock mutex?
+    // REM probably should lock mutex?
     total := buffer.rows + buffer.off
 
     idx := buffer.rows
 
-
-
     if buffer.buf[idx] == nil { //first offscreen slot available
         
-        log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row))
+        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
         buffer.buf[idx] = &row
         buffer.scrollOnce( 1.0 ) // REM take from config
         
         
     } else { // first offscreen slot full, find next available
-        
      
         for ;idx<total;idx++ {
             if buffer.buf[idx] == nil {
@@ -108,11 +110,11 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
         
         if idx >= total {
-            log.Error("overflow %s",buffer.Desc())
+            log.Warning("overflow %s",buffer.Desc())
             return
         }
 
-        log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row))
+        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
         buffer.buf[idx] = &row
         
     }
@@ -122,18 +124,67 @@ func (buffer *LineBuffer) queueLine(row Line) {
 }
 
 
-func (buffer LineBuffer) processRunes(runes []rune) {
-    runes = append(buffer.rem, runes ...)
-    
+
+func (buffer *LineBuffer) Clear() {
+    // probably should lock mutex?
+    if DEBUG_LINEBUFFER { log.Debug("clear %s",buffer.Desc()) }
+    buffer.buf = make( []*Line, buffer.rows + buffer.off)    
+}
+
+
+
+func (buffer *LineBuffer) ProcessSequence(seq *ansi.S) {
+    //lock mutex?
+
+    sequence, ok := ansi.Table[seq.Code]
+    if !ok {
+        return
+        //unlcok tho?
+    }
+
+    switch sequence {
+
+        case ansi.Table[ansi.ED]: 
+            buffer.Clear()
+            
+        default:
+            if DEBUG_LINEBUFFER {             
+                tmp := ""
+                for _,v := range(seq.Params) { 
+                    tmp += string(v) + ", "
+                }
+                log.Debug("sequence unhandled: %s %s(%s)",sequence.Desc,sequence.Name,tmp)
+            }
+
+    }    
+}
+
+func (buffer *LineBuffer) ProcessRunes(runes []rune) {
+
+    rem := append(buffer.rem, runes ...)
     tmp := []rune{}
+//    log.Debug("REM %s",string(rem))
     
-    for _,r := range(runes) {
+    
+    for _,r := range(rem) {
         
         switch r {
             
             case '\n':
                 buffer.queueLine ( Line(tmp) )
                 tmp = []rune{}
+            
+            case '\t':
+                if DEBUG_LINEBUFFER { log.Debug("TAB") }
+            
+            case '\r':
+                if DEBUG_LINEBUFFER { log.Debug("CR") }
+            
+            case '\a':
+                if DEBUG_LINEBUFFER { log.Debug("BEL") }
+            
+            case '\b':
+                if DEBUG_LINEBUFFER { log.Debug("BS") }
             
             default:
                 tmp = append(tmp, r)
@@ -147,76 +198,10 @@ func (buffer LineBuffer) processRunes(runes []rune) {
 }
 
 
-func (buffer *LineBuffer) ProcessBytes(raw []byte) {
-    var err error
-    var seq *ansi.S
-
-    var ptr []byte = raw
-    var rem []byte = raw
-    
-    var tmp []rune = []rune{}
-    
-    for rem != nil {
-
-
-        rem,seq,err = ansi.Decode(ptr)
-        if err != nil {
-            log.Error("fail ansi decode: %s\n%s",err,log.Dump(ptr,0,0)) 
-            break    
-        }
-
-        if seq == nil {
-            log.Error("ansi sequence nil")
-            break
-        }
-        
-        switch seq.Type {
-    
-            case "":  // no sequence
-                s := []rune( seq.String() )
-                tmp = append(tmp, []rune(s) ... )
-                if DEBUG_ANSI { log.Debug("plain %s",string(s)) }
-
-            case "C0":
-                if DEBUG_ANSI { log.Debug("ansi C0 byte: '%c' %02x",ptr[0],ptr[0]) }
-            case "C1":
-                if DEBUG_ANSI { log.Debug("ansi C1 byte: '%c' %02x",ptr[0],ptr[0]) }
-                // The C1 control set has both a two byte and a single byte representation.  The
-                // two byte representation is an Escape followed by a byte in the range of 0x40
-                // to 0x5f.  They may also be specified by a single byte in the range of 0x80 -
-                // 0x9f. 
-                if ptr[0] >= 0x80 && ptr[0] <= 0x9f {
-                    
-                }
-                log.Debug("codes: %x",seq.Code)
-            case "CSI", "IF":
-                params := ""
-                for _,v := range(seq.Params) { 
-                    params += string(v) + ", "
-                }
-                sequence, ok := ansi.Table[seq.Code]
-                if !ok {
-                    log.Error("ansi %s 0x%x not in table",seq.Type,seq.Code)    
-                } else {
-                    if DEBUG_ANSI { log.Debug("ansi %s %s: %s(%s)",seq.Type,sequence.Desc,sequence.Name,params) }
-                }
-            
-            default:
-                log.Error("ansi unknown sequence type %s",seq.Type)
-        }
-
-        ptr = rem
-        
-    }
-    
-    buffer.processRunes(tmp)
-    
-}
-
 
 
 func (buffer *LineBuffer) Resize(newRows,newOff uint) {
-    log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc())
+    if DEBUG_LINEBUFFER { log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc()) }
 
     if newRows == 0 { newRows = 1 }
     if newOff == 0 { newOff = 1 }
