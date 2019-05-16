@@ -37,8 +37,8 @@ type Renderer struct {
     axis *gfx.Axis
 
     
-    ringBuffer *gfx.RingBuffer
-    termBuffer *gfx.TermBuffer
+    lineBuffer *facade.LineBuffer
+    termBuffer *facade.TermBuffer
     
     mutex *sync.Mutex
     directory string
@@ -51,8 +51,6 @@ type Renderer struct {
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
     ret.mutex = &sync.Mutex{}
-    ret.ringBuffer = gfx.NewRingBuffer(10) //FIXME
-    ret.termBuffer = gfx.NewTermBuffer(10,10) //FIXME
     return ret
 }
 
@@ -124,13 +122,24 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     renderer.mask = gfx.NewMask(maskConfig,renderer.screen)
     renderer.mask.Init()
 
+
+
+    gridConfig := facade.GridDefaults.Config()
+    if cfg,ok := config.Grid(); ok {
+        gridConfig.ApplyConfig(&cfg)
+    }	
+
+    width,_ := gridConfig.Width()
+    height,_ := gridConfig.Height()
+    buflen,_ := gridConfig.BufLen()
+
+
+    renderer.termBuffer = facade.NewTermBuffer(width,height) 
+    renderer.lineBuffer = facade.NewLineBuffer(height,buflen) 
+
     //initialize mode, REM this should probably init all modes
 	switch renderer.state.Mode {
 		case facade.GRID:
-			gridConfig := facade.GridDefaults.Config()
-			if cfg,ok := config.Grid(); ok {
-				gridConfig.ApplyConfig(&cfg)
-			}	
 			renderer.grid = facade.NewGrid( gridConfig, renderer.ringBuffer, renderer.termBuffer )
 			renderer.grid.Init(renderer.camera,renderer.font)
 			renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
@@ -188,7 +197,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 }
 
 
-func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan string) error {
+func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
     gl.Disable(gl.DEPTH_TEST)
@@ -205,7 +214,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
     log.Debug("render %s",renderer.state.Desc())
     for {
         
-        verbose := gfx.ClockDebug()
+        verboseFrame := gfx.ClockVerboseFrame()
         
         renderer.mutex.Lock()
         piglet.MakeCurrent()
@@ -224,11 +233,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE)
         switch renderer.state.Mode {
             case facade.GRID:
-                renderer.grid.Render(renderer.camera, renderer.font, renderer.state.Debug, verbose )
-//            case facade.LINES:
-//                renderer.lines.Render(renderer.camera, renderer.debug, verbose )
-//            case facade.TEST:
-//                renderer.test.Render(renderer.camera, renderer.debug, verbose)
+                renderer.grid.Render(renderer.camera, renderer.font, renderer.state.Debug, verboseFrame )
         }
       
         if renderer.state.Debug {renderer.axis.Render(renderer.camera, renderer.state.Debug) }
@@ -238,8 +243,13 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
         gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA,gl.ZERO,gl.ONE)
         renderer.mask.Render(renderer.state.Debug)
         
-        if verbose { 
-            renderer.PrintDebug(prev); 
+        
+        if DEBUG_BUFFER {
+            renderer.dumpBuffers()    
+        }
+        
+        if verboseFrame { 
+            renderer.printDebug(prev); 
             prev = *gfx.NewClock() 
         }
 
@@ -262,30 +272,30 @@ func (renderer *Renderer) Render(confChan chan facade.Config, textChan chan stri
 }
 
 
-func (renderer *Renderer) ProcessText(textChan chan string) {
-
-    select {
-        case txt := <-textChan:
-            
-            
-            text := gfx.NewText( txt )
-            
-            renderer.ringBuffer.WriteText( text )
+//func (renderer *Renderer) ProcessText(textChan chan string) {
+//
+//    select {
+//        case txt := <-textChan:
+//            
+//            
+//            text := gfx.NewText( txt )
+//            
+//            renderer.ringBuffer.WriteText( text )
 //            renderer.termBuffer.WriteText( text )
 //
 //            
 ////            renderer.ringBuffer.Queue( gfx.NewText(text) )
 ////            renderer.termBuffer.Write( []byte(text) )
-        	renderer.grid.ScheduleRefresh()
-        	
-        	
-            if DEBUG_GRID { log.Debug( "%s", renderer.grid.Dump() ) }
-            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
-        
-        default:
-            //nop    
-    }
-}
+//        	renderer.grid.ScheduleRefresh()
+//        	
+//        	
+//            if DEBUG_GRID { log.Debug( "%s", renderer.grid.Dump() ) }
+//            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
+//        
+//        default:
+//            //nop    
+//    }
+//}
 
 
 
@@ -309,21 +319,12 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 
 
-func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
+func (renderer *Renderer) printDebug(prev gfx.Clock) {
 
     if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
     if DEBUG_DIAG { log.Debug( MemUsage() ) }
-    
-    
-//    if DEBUG_BUFFER {
-//        log.Debug("%s",renderer.buffer.Dump())    
-//        switch renderer.state.Mode { 
-//            case facade.GRID:
-//                log.Debug( "%s", renderer.grid.Dump() )
-//        } 
-//    }
-    
+        
     if DEBUG_MODE {
         tmp := ""
         switch renderer.state.Mode { 
@@ -343,26 +344,27 @@ func (renderer *Renderer) PrintDebug(prev gfx.Clock) {
 
 
 
-
-
-
-func (renderer *Renderer) ProcessRawTexts(rawChan chan facade.RawText, textChan chan string) error {
+func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) error {
 
     for {
-        rawText := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process raw text: %s",rawText) }
-        text := rawText.Sanitize()
-        
-//        renderer.mutex.Lock()
-//        renderer.buffer.Queue( gfx.NewText(text) )
-//        renderer.mutex.Unlock()
-        
-        textChan <- text
-        
+        item := <- bufChan    
+        if DEBUG_MESSAGES { log.Debug("buffer %s",item.Desc()) }
+        text, seq := item.Text, item.Seq
+        if text != nil && len(text) > 0 {
+            renderer.lineBuffer.ProcessRunes( text )
+            renderer.termBuffer.ProcessRunes( text )    
+        }
+        if seq != nil {
+            renderer.lineBuffer.ProcessSequence( seq )
+            renderer.termBuffer.ProcessSequence( seq )
+        }
     }
-    return nil    
-    
+    return nil
 }
+
+
+
+
 
 
 
@@ -371,14 +373,14 @@ func (renderer *Renderer) ProcessRawTexts(rawChan chan facade.RawText, textChan 
 func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
-        conf := rawConf.Sanitize()
+        if DEBUG_MESSAGES { log.Debug("process %s",rawConf.Desc()) }
+
 
 //        renderer.mutex.Lock()
 //        // prep some stuff i guess?
 //        renderer.mutex.Unlock()
         
-        confChan <- conf
+        confChan <- rawConf
 
     }
     return nil

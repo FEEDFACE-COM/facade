@@ -281,13 +281,12 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-//            rawTexts := make(chan facade.RawText)
-//            texts := make(chan string)
-//            go scanner.ScanText(rawTexts)
-//            go renderer.ProcessRawTexts(rawTexts,texts)
+            bufChan := make(chan facade.BufferItem)
+            go scanner.ScanText(bufChan)
+            go renderer.ProcessBufferItems(bufChan)
             runtime.LockOSThread()
             renderer.Init(config) 
-//            err = renderer.Render(nil, texts)
+            err = renderer.Render(nil)
             
 
         case RECV:
@@ -296,15 +295,15 @@ func main() {
             if renderer == nil { log.PANIC("renderer not available") }
             rawConfs := make(chan facade.Config)
             confs := make(chan facade.Config)
-//            bufChan := make(chan facade.BufferItem)
+            bufChan := make(chan facade.BufferItem)
 
             go server.ListenConf(rawConfs)
-//            go server.ListenText(rawTexts)
+            go server.ListenText(bufChan)
             go renderer.ProcessRawConfs(rawConfs,confs)
-//            go renderer.ProcessRawTexts(rawTexts,texts)
+            go renderer.ProcessBufferItems(bufChan)
             runtime.LockOSThread()
             renderer.Init(config) 
-//            err = renderer.Render(confs, texts)
+            err = renderer.Render(confs)
                     
         case PIPE:
             if client == nil { log.PANIC("client not available") }

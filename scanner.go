@@ -21,15 +21,21 @@ func NewScanner() *Scanner {
 }
 
 
-func (scanner *Scanner) ScanText(textChan chan facade.RawText) {
+func (scanner *Scanner) ScanText(bufChan chan facade.BufferItem) {
+    var err error 
+	var rem []byte = []byte{}
+	var tmp []byte
     for scanner.scanner.Scan() {
-        text := scanner.scanner.Text()
-//        log.Debug("scan  %s",text)
-        textChan <- facade.RawText(text)
+        buf := scanner.scanner.Text()
+		tmp = append(rem, buf ... )
+		_, err = facade.ProcessRaw(tmp, bufChan)
+		if err != nil {
+            log.Error("process error: %s",err)    		
+        }
     }    
-    err := scanner.scanner.Err()
+    err = scanner.scanner.Err()
     if err != nil {
-        log.Error("error scanning: %s",err)
+        log.Error("scanning error: %s",err)
     }
 }
 
