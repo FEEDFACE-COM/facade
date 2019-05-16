@@ -69,6 +69,8 @@ func (executor *Executor) Execute() error {
     log.Debug("resize %dx%d",size.Cols,size.Rows)
     str := fmt.Sprintf("\033[8;%d;%dt",size.Rows,size.Cols)
     os.Stdout.Write( []byte(str))
+    log.Debug("reset")
+    os.Stdout.Write( []byte("\033[H\033[2J") )
     
 	
 	
