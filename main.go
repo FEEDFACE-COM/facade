@@ -355,7 +355,7 @@ func main() {
             go server.ListenText(rawTexts)
             
             go tester.ProcessRawConfs(rawConfs,confs)
-            go tester.ProcessRawTexts(rawTexts,texts)
+            go tester.ProcessRawTexts(rawTexts)
 
             runtime.LockOSThread()
             tester.Init(config) 

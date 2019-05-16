@@ -10,11 +10,10 @@ import (
 )
 
 
-const DEBUG_TIMER = true
+const DEBUG_TIMER = false
 
 
 type Timer struct {
-    Name string
 
     count uint
     fader float32
@@ -70,6 +69,8 @@ func (timer *Timer) Update() bool {
     //triggered?
     if NOW() > timer.start+timer.duration {
 
+        timer.count += 1
+
         if DEBUG_TIMER { log.Debug("trigger %s",timer.Desc()) }
 
 
@@ -78,7 +79,6 @@ func (timer *Timer) Update() bool {
         }
      
         if timer.repeat {
-            timer.count += 1
             timer.start = NOW()
         }
      
@@ -90,5 +90,5 @@ func (timer *Timer) Update() bool {
 
 
 func (timer *Timer) Desc() string { 
-    return fmt.Sprintf("t[%s "+/*%4.2f↺ */"%4.2f⤢ %d#]",timer.Name,timer.fader,timer.count)
+    return fmt.Sprintf("timer[%4.2f⤢ #%d]",timer.fader,timer.count)
 }

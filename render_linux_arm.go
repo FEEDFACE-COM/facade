@@ -271,7 +271,7 @@ func (renderer *Renderer) ProcessText(textChan chan string) {
             text := gfx.NewText( txt )
             
             renderer.ringBuffer.WriteText( text )
-            renderer.termBuffer.WriteText( text )
+//            renderer.termBuffer.WriteText( text )
 //
 //            
 ////            renderer.ringBuffer.Queue( gfx.NewText(text) )
