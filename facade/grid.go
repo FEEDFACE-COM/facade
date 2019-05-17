@@ -5,6 +5,7 @@ package facade
 
 import(
     "fmt"
+    "strings"
 //    "math"
     gfx "../gfx"
     log "../log"
@@ -177,80 +178,97 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 
 
 
-func (grid *Grid) Fill(fill string) {
-//    
-//    switch fill {
-//    
-//    	//todo: cheeck widht, switch different titles
-//    	//also, clear!
-//        case "title": 
-//            for _,line := range []string{
-//                "                    ",
-//                " _  _   _  _   _   _",
-//                "|_ |_| /  |_| | \\ |_", 
-//                "|  | | \\_ | | |_/ |_",
-//                "                    ",
-//                "     by FEEDFACE.COM",
-//                "                    ",
-//            } {
-//                grid.Queue(line)    
-//            }
-//            
-//        case "title2": 
-//            for _,line := range []string{
-//                "              ",
-//                "F A C A D E   ",
-//                "              ",
-//                "            by",
-//                "  FEEDFACE.COM",
-//                "              ",
-//            } {
-//                grid.Queue(line)    
-//            }
-//            
-//        case "title3": 
-//            for _,line := range []string{
-//                "F A C A D E",
-//            } {
-//                grid.Queue(line)    
-//            }
-//        
-//        
-//        case "grid":
-//            w,h := int(grid.state.Width), int(grid.state.Height)
-//            for r:=0; r<h-1; r++ {
-//            for r:=0; r<h; r++ {
-//                line := ""
-//                for c:=0; c<w; c++ {
-//                    d := "."
-//                    if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
-//                    if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
-//                    if c % 5 == 0 && r % 5 == 0 { d = "#" }
-//    
-//                    line += fmt.Sprintf("%s",d)        
-//                }
-//                grid.Queue(line)
-//            }
-//            
-//            
-//        case "alpha":
-//            w,h := int(grid.state.Width), int(grid.state.Height)
-//            alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
-//            s := 0
-//            for r:=0; r<h; r++ {
-//                line := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
-//                grid.Queue(line)
-//                s += 1
-//            }
-//            
-//            
-//        case "clear":
-//        	h := int(grid.state.Height)
-//        	for r:=0; r<h; r++ {
-//	        	grid.Queue("")
-//	        }
-//
-//    }    
+func (grid *Grid) fill(name string) []string {
+    
+    switch name {
+    
+    	//todo: cheeck widht, switch different titles
+    	//also, clear!
+
+    	
+        case "title":
+            return strings.Split(`
+ _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
+|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
+|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
+`,           
+            "\n")[1:]
+
+    	
+    	
+        case "title2": 
+            return strings.Split(`
+ _  _   _  _   _   _
+|_ |_| /  |_| | \ |_
+|  | | \_ | | |_/ |_
+                    
+     by FEEDFACE.COM
+`,           
+            "\n")[1:]
+
+            
+            
+        case "title3": 
+            return strings.Split(`
+              
+F A C A D E   
+              
+            by
+  FEEDFACE.COM
+              
+`,           
+             "\n")[1:]
+
+            
+        case "title4": 
+            return []string{
+                "F A C A D E",
+            }
+        
+        
+        
+        case "grid":
+            ret := []string{}
+            w,h := int(grid.state.Width), int(grid.state.Height)
+            for r:=0; r<h; r++ {
+                tmp := ""
+                for c:=0; c<w; c++ {
+                    d := "."
+                    if c % 5 == 0 { d = fmt.Sprintf("%d",r%10) }
+                    if r % 5 == 0 { d = fmt.Sprintf("%d",c%10) }
+                    if c % 5 == 0 && r % 5 == 0 { d = "#" }
+                    tmp += fmt.Sprintf("%s",d)
+                }
+                ret = append(ret, tmp )
+            }
+            return ret
+            
+            
+        case "alpha":
+            ret := []string{}
+            w,h := int(grid.state.Width), int(grid.state.Height)
+            alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
+            s := 0
+            for r:=0; r<h; r++ {
+                tmp := alpha[ s%len(alpha) : min(s+w,len(alpha)-1) ]
+                ret = append(ret, tmp )
+                s += 1
+            }
+            return ret
+            
+            
+        case "clear":
+            ret := []string{}
+        	h := int(grid.state.Height)
+        	for r:=0; r<h; r++ {
+	        	ret = append(ret, "" )
+	        }
+	        return ret
+
+    }    
+
+    return []string{}
+
 }
 
 
@@ -552,8 +570,13 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     }
     
 
-    if fill,ok := config.Fill(); ok {
-        grid.Fill(fill)
+    if fillName,ok := config.Fill(); ok {
+        
+        fillStr := grid.fill( fillName )
+
+        grid.lineBuffer.Fill( fillStr )
+        grid.termBuffer.Fill( fillStr )
+
     }
 	
 	grid.ScheduleRefresh()

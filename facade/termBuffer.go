@@ -59,6 +59,33 @@ func NewTermBuffer(cols, rows uint) *TermBuffer {
     return ret
 }
 
+
+func (buffer *TermBuffer) Fill(fill []string) {
+
+    // lock lock lock
+
+    rows := uint( len(fill) )
+    
+    for r := uint(0); r<rows && r < buffer.rows; r++ {
+    
+        line := Line( fill[r] )
+        
+        cols := uint( len(line) )
+        
+        for c := uint(0); c<cols && c < buffer.cols; c++ {
+        
+            buffer.buf[r+1][c+1] = line[c]
+            
+        }
+        
+        
+    }
+
+    buffer.cursor = pos{1,buffer.max.y}    
+    
+}
+
+
 func (buffer *TermBuffer) Resize(cols, rows uint) {
     if DEBUG_TERMBUFFER { log.Debug("resize %dx%d %s",cols,rows,buffer.Desc()) }
     max := pos{cols,rows}

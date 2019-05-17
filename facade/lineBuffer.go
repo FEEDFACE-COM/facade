@@ -14,7 +14,7 @@ const DEBUG_LINEBUFFER = true
 
 type LineBuffer struct {
     rows uint // lines on screen, min 1
-    off  uint // lines off screen, min 1
+    off  uint // lines off screen, min 0
     buf []*Line
     rem []rune
     
@@ -31,7 +31,6 @@ type LineBuffer struct {
 
 func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     if rows == 0 { rows = 1 }
-    if off == 0 { off = 1 }
     total := rows + off
     ret := &LineBuffer{}
     ret.rows = rows
@@ -112,7 +111,38 @@ func (buffer *LineBuffer) scrollOnce() {
 }
 
 
+func (buffer *LineBuffer) pushLine(row Line) {
+    // lock lock lock
+    
+    //dont want timer to mess with new buffer
+    if buffer.timer != nil {
+        gfx.UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+    }
+
+    total := buffer.rows + buffer.off // buffer.off should be zero
+    
+    r := uint(0)
+    for ; r < total-1; r++ {
+        buffer.buf[r] = buffer.buf[r+1]
+    }
+    buffer.buf[r] = &   row
+    if DEBUG_LINEBUFFER { log.Debug("push #%d %s %s",r,buffer.Desc(),string(row)) }
+
+    select { case buffer.refreshChan <- true: ; default: ; }
+
+}
+
+
 func (buffer *LineBuffer) queueLine(row Line) {
+    
+    if buffer.off == 0 {
+        buffer.pushLine(row)
+        return
+    }
+    
+    
+    
     // REM probably should lock mutex?
     total := buffer.rows + buffer.off
 
@@ -222,7 +252,29 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
     buffer.rem = tmp
 }
 
+func (buffer *LineBuffer) Fill(fill []string) {
+    
+    // lock lock lock
 
+    //dont want timer to mess with new buffer
+    if buffer.timer != nil {
+        gfx.UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+    }
+
+    
+    rows := uint( len(fill) )
+    if DEBUG_LINEBUFFER { log.Debug("fill %d lines %s",rows,buffer.Desc()) }
+    
+    for r := uint(0); r<rows && r < buffer.rows; r++ {
+        
+        line := Line( fill[r] )
+        buffer.buf[r] = &line
+
+        
+    }
+    
+}
 
 
 func (buffer *LineBuffer) Resize(newRows,newOff uint) {
@@ -230,7 +282,6 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
     if DEBUG_LINEBUFFER { log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc()) }
 
     if newRows == 0 { newRows = 1 }
-    if newOff == 0 { newOff = 1 }
 
     oldTotal := buffer.rows + buffer.off
     newTotal := newRows + newOff
@@ -286,7 +337,7 @@ func (buffer *LineBuffer) Dump(width uint) string {
     ret := ""
     for i := uint(0); i<buffer.rows+buffer.off;i++ {
         
-        ret += fmt.Sprintf(" %02d | ",i)
+        ret += fmt.Sprintf("%2d |",i)
         
         line := buffer.buf[ i ]
         if line != nil {
@@ -298,7 +349,7 @@ func (buffer *LineBuffer) Dump(width uint) string {
         
             
         if i == buffer.rows-1 {
-            ret += " ---+-"
+            ret += "---+"
             for c:=uint(0); c<width; c++ { ret += "-" }
             ret += "\n"
         }
