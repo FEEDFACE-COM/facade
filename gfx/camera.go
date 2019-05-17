@@ -45,7 +45,11 @@ func NewCamera(config *CameraConfig, screen Size) *Camera {
     ret.state.ApplyConfig(config)
     return ret
 }
+
+func (camera *Camera) Projection() *float32 { return &camera.projection[0] }
+func (camera *Camera) View() *float32 { return &camera.view[0] }
     
+//rem remove:    
 func (camera *Camera) Uniform(program *Program) {
 	camera.projectionUniform,_ = program.UniformMatrix4fv(PROJECTION, 1, &camera.projection[0] )
 	camera.viewUniform,_ = program.UniformMatrix4fv(VIEW, 1, &camera.view[0] )

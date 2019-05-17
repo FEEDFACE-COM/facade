@@ -4,23 +4,29 @@ package facade
 import(
     "fmt"
     gfx "../gfx"
+    math "../math32"
     log "../log"
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = false
+const DEBUG_LINEBUFFER = true
 
 
 type LineBuffer struct {
     rows uint // lines on screen, min 1
     off  uint // lines off screen, min 1
     buf []*Line
-    timer *gfx.Timer
     rem []rune
+    
+    timer *gfx.Timer
+    Speed float32
+
 
     refreshChan chan bool
     
 }
+
+
 
 
 func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
@@ -52,7 +58,18 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
     return *ret
 }
 
-
+func (buffer *LineBuffer) GetScroller(downward bool) float32 {
+    ret := float32(0.0)
+    
+    if buffer.timer != nil {
+        ret = 1. - math.EaseInEaseOut( buffer.timer.Fader() )
+    }
+    
+    if downward {
+        ret *= -1.
+    }
+    return ret   
+}
 
 func (buffer *LineBuffer) dequeueLine() {
     // probably should lock mutex?
@@ -70,7 +87,7 @@ func (buffer *LineBuffer) dequeueLine() {
     buffer.buf[idx] = nil
     
     if buffer.buf[buffer.rows] != nil {
-        buffer.scrollOnce( 1.0 ) // REM take from config
+        buffer.scrollOnce()
     }
     
         
@@ -79,14 +96,12 @@ func (buffer *LineBuffer) dequeueLine() {
 }
 
 
-
-
-func (buffer *LineBuffer) scrollOnce(duration float64) {
+func (buffer *LineBuffer) scrollOnce() {
     if buffer.timer != nil {
         log.Error("refuse scroll with existing timer")
         return    
     }
-    buffer.timer = gfx.NewTimer( float32(duration), false )
+    buffer.timer = gfx.NewTimer( float32(buffer.Speed), false )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
@@ -105,9 +120,9 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
-        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("next #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
         buffer.buf[idx] = &row
-        buffer.scrollOnce( 1.0 ) // REM take from config
+        buffer.scrollOnce() 
         
         
     } else { // first offscreen slot full, find next available
@@ -157,13 +172,14 @@ func (buffer *LineBuffer) ProcessSequence(seq *ansi.S) {
             buffer.Clear()
             
         default:
-            if DEBUG_LINEBUFFER {             
-                tmp := ""
-                for _,v := range(seq.Params) { 
-                    tmp += string(v) + ", "
-                }
-                log.Debug("sequence unhandled: %s %s(%s)",sequence.Desc,sequence.Name,tmp)
-            }
+//            if DEBUG_LINEBUFFER {             
+//                tmp := ""
+//                for _,v := range(seq.Params) { 
+//                    tmp += string(v) + ", "
+//                }
+//                log.Debug("sequence unhandled: %s %s(%s)",sequence.Desc,sequence.Name,tmp)
+//            }
+            break
 
     }    
 }
@@ -190,7 +206,7 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
 //                if DEBUG_LINEBUFFER { log.Debug("CR") }
             
             case '\a':
-                if DEBUG_LINEBUFFER { log.Debug("BEL") }
+//                if DEBUG_LINEBUFFER { log.Debug("BEL") }
             
             case '\b':
 //                if DEBUG_LINEBUFFER { log.Debug("BS") }
@@ -210,6 +226,7 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
 
 
 func (buffer *LineBuffer) Resize(newRows,newOff uint) {
+    //lock lock lock
     if DEBUG_LINEBUFFER { log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc()) }
 
     if newRows == 0 { newRows = 1 }
@@ -217,29 +234,39 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
 
     oldTotal := buffer.rows + buffer.off
     newTotal := newRows + newOff
+    
+    oldBuf := buffer.buf
     newBuf := make( []*Line, newTotal )
 
 
+    //dont want timer to mess with new buffer
+    if buffer.timer != nil {
+        gfx.UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+    }
 
-    if newTotal < oldTotal {
 
-        // copy as many items as fit
-        var idx uint = 0
-        for ; idx<newTotal && idx<oldTotal; idx++ {
-            newBuf[idx] = buffer.buf[idx]
+
+
+    //start with newest buffered lines in old buffer
+    //copy to new buffer starting at newest visible line
+    var oidx int = int(oldTotal-1)
+    var nidx int = int(newRows-1)
+    
+    for ; oidx >=0 && nidx >= 0;  {
+        
+        if oldBuf[oidx] == nil { //skip nil lines
+            oidx -= 1
+            continue    
         }
+        
+        newBuf[nidx] = oldBuf[oidx]
+        oidx -= 1
+        nidx -= 1
+        
+    }
 
                 
-
-    } else if newTotal >= oldTotal {
-
-        // copy all items
-        d := newTotal - oldTotal
-        for idx:= uint(0); idx<oldTotal; idx++ {
-            newBuf[ (idx+d) % newTotal ] = buffer.buf[idx]
-        } 
-        
-    }        
     
     //adjust buffer info
     buffer.rows = newRows
@@ -248,6 +275,7 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
     
     
 }
+
 
 func (buffer *LineBuffer) Desc() string { 
     return fmt.Sprintf("linebuffer[%d+%d]",buffer.rows,buffer.off )

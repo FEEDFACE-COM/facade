@@ -135,6 +135,8 @@ func (texture *Texture) TexImage() error {
     return nil
 }
 
+
+//rem remove?
 func (texture *Texture) Uniform(program *Program) {
     texture.textureUniform,_ = program.Uniform1i(TEXTURE,0) // REM, should be index not 0 ?
 }

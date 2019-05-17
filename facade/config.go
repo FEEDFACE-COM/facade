@@ -119,7 +119,7 @@ func (state *State) AddFlags(flags *flag.FlagSet) {
     if state.Font != nil { state.Font.AddFlags(flags) }
     if state.Camera != nil { state.Camera.AddFlags(flags) }
     if state.Mask != nil { state.Mask.AddFlags(flags) }
-    flags.BoolVar(&state.Debug,"D",state.Debug,"Draw Debug" )
+    flags.BoolVar(&state.Debug,"D",state.Debug,"debug draw" )
 }	
 
 

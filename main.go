@@ -18,7 +18,7 @@ import (
 
 
 const DEBUG_CLOCK    = false
-const DEBUG_MODE     = false
+const DEBUG_MODE     = true
 const DEBUG_GRID     = true
 const DEBUG_DIAG     = false
 const DEBUG_MEMORY   = false
@@ -394,10 +394,12 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
     fmt.Fprintf(os.Stderr,"  %s %s %s [%s]%s\n",BUILD_NAME,cmd,mode,switches,flags)
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flagset.VisitAll( func( f *flag.Flag) {
-        name,_ := flag.UnquoteUsage(f)
-//      tmp := ""
-//      tmp += fmt.Sprintf(" (%s)",f.DefValue)
-        fmt.Fprintf(os.Stderr,"  -%s\t%s\t\t%s\n",f.Name,f.Usage,name)
+        tmp,_ := flag.UnquoteUsage(f)
+        typ := ""
+        if tmp != "" {
+            typ = fmt.Sprintf("(%s)",tmp)
+        }
+        fmt.Fprintf(os.Stderr,"  -%-8s %-24s %-8s\n",f.Name,f.Usage,typ)
     })
 //    flagset.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")

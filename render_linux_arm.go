@@ -275,11 +275,13 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         renderer.mask.Render(renderer.state.Debug)
         
         
-        if DEBUG_DUMP {
-            renderer.dumpBuffers()    
-        }
         
         if verboseFrame { 
+
+            if DEBUG_DUMP {
+                renderer.dumpBuffers()    
+            }
+
             renderer.printDebug(prev); 
             prev = *gfx.NewClock() 
         }
@@ -301,34 +303,6 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
     }
     return nil
 }
-
-
-//func (renderer *Renderer) ProcessText(textChan chan string) {
-//
-//    select {
-//        case txt := <-textChan:
-//            
-//            
-//            text := gfx.NewText( txt )
-//            
-//            renderer.ringBuffer.WriteText( text )
-//            renderer.termBuffer.WriteText( text )
-//
-//            
-////            renderer.ringBuffer.Queue( gfx.NewText(text) )
-////            renderer.termBuffer.Write( []byte(text) )
-//        	renderer.grid.ScheduleRefresh()
-//        	
-//        	
-//            if DEBUG_GRID { log.Debug( "%s", renderer.grid.Dump() ) }
-//            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
-//        
-//        default:
-//            //nop    
-//    }
-//}
-
-
 
 func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
     
@@ -362,11 +336,17 @@ func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) err
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
+            if DEBUG_DUMP {
+                renderer.dumpBuffers()    
+            }
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
+            if DEBUG_DUMP {
+                renderer.dumpBuffers()    
+            }
         }
     }
     return nil

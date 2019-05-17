@@ -12,7 +12,7 @@ import(
 
 )
 
-const DEBUG_TERMBUFFER = true
+const DEBUG_TERMBUFFER = false
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 

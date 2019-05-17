@@ -71,6 +71,7 @@ func (scroller *Scroller) Desc() string {
     return fmt.Sprintf("scroll[%s]",tmp)
 }
 
+
 func (scroller *Scroller) SetScrollSpeed(scroll bool, speed float32) {
     scroller.Scroll = scroll
     scroller.Speed = speed

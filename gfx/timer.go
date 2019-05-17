@@ -10,7 +10,7 @@ import (
 )
 
 
-const DEBUG_TIMER = false
+const DEBUG_TIMER = true
 
 
 type Timer struct {

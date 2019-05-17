@@ -25,11 +25,8 @@ type Grid struct {
     object *gfx.Object
     data []float32
     
-    scroller *gfx.Scroller
     
     state GridState
-    
-//    empty *gfx.Text
         
     refreshChan chan bool
 }
@@ -105,8 +102,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     clocknow := float32( gfx.NOW() )
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
-        
-    grid.scroller.Uniform(grid.program, grid.state.Downward)
+
+    scroller := float32( grid.lineBuffer.GetScroller( grid.state.Downward ) )
+    grid.program.Uniform1f(gfx.SCROLLER,scroller)
+
     camera.Uniform(grid.program)
     
     grid.texture.Uniform(grid.program)
@@ -175,50 +174,6 @@ func (grid *Grid) Height() uint { return grid.state.Height }
 
 
 
-
-
-
-
-func (grid *Grid) textForRow(row int) string {
-	
-//    if USE_TERMBUFFER {
-//	
-//        if uint(row) >= 0 && uint(row) < grid.state.Height {
-//            str := grid.termBuffer.LineForRow(row)
-//            if str != "" {
-//                return str
-//            }
-//        }
-//        return ""
-//    
-//    }    
-//    
-//    if ! USE_TERMBUFFER {
-//        r := uint(row)
-//    //	if r >= grid.state.Height { 
-//    //		r= grid.state.Height-1 
-//    //	}
-//    
-//        if r>= grid.state.Height {
-//            return ""
-//        }
-//    
-//        if r < 0 {
-//            return ""
-//        }
-//    
-//        if grid.state.Downward {
-//            return grid.ringBuffer.Tail(r).text
-//        } else {
-//            return grid.ringBuffer.Head(r).text
-//        }	
-//        return ""
-//
-//    }
-//    
-//    
-    return ""
-}
 
 
 
@@ -564,13 +519,21 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 		if tmp,ok := config.Downward(); ok { grid.state.Downward = tmp }	
 	}
 
+//	{
+//		changed := false
+//	    scroll,speed := grid.state.Scroll, grid.state.Speed
+//    	if tmp,ok := config.Scroll(); ok { changed = true; grid.state.Scroll = tmp }
+//	    if tmp,ok := config.Speed(); ok { changed = true; grid.state.Speed = tmp }    
+//    	if changed {
+//	        grid.scroller.SetScrollSpeed(grid.state.Scroll, float32(grid.state.Speed))
+//    	}
+//    }
+
 	{
 		changed := false
-//	    scroll,speed := grid.state.Scroll, grid.state.Speed
-    	if tmp,ok := config.Scroll(); ok { changed = true; grid.state.Scroll = tmp }
 	    if tmp,ok := config.Speed(); ok { changed = true; grid.state.Speed = tmp }    
     	if changed {
-	        grid.scroller.SetScrollSpeed(grid.state.Scroll, float32(grid.state.Speed))
+	        grid.lineBuffer.Speed = float32(grid.state.Speed)
     	}
     }
     
@@ -606,15 +569,11 @@ func NewGrid(config *GridConfig, lineBuffer *LineBuffer, termBuffer *TermBuffer)
     ret.state = GridDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
-//    ret.buffer = gfx.NewBuffer(ret.state.Height)
-//    ret.termBuffer = gfx.NewTermBuffer(ret.state.Width,ret.state.Height)
     ret.lineBuffer = lineBuffer
     ret.termBuffer = termBuffer
     ret.program = gfx.GetProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
-    ret.scroller = gfx.NewScroller(ret.state.Scroll,float32(ret.state.Speed))
-//    ret.empty = gfx.NewText("")
     return ret
 }
 

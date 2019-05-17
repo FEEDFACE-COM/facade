@@ -17,7 +17,7 @@ const (
 	gridWidth    = "width"
 	gridHeight   = "height"
 	gridDownward = "downward"
-	gridScroll   = "scroll"
+//	gridScroll   = "scroll"
 	gridSpeed    = "speed"
 	gridBufLen   = "buflen"
 	gridTerm     = "term"
@@ -33,7 +33,7 @@ type GridConfig gfx.Config
 func (config *GridConfig) Width()     (uint,bool) { ret,ok := (*config)[gridWidth   ].(float64); return uint(ret), ok }
 func (config *GridConfig) Height()    (uint,bool) { ret,ok := (*config)[gridHeight  ].(float64); return uint(ret), ok }
 func (config *GridConfig) Downward()  (bool,bool) { ret,ok := (*config)[gridDownward].(bool);    return      ret , ok }
-func (config *GridConfig) Scroll()    (bool,bool) { ret,ok := (*config)[gridScroll  ].(bool);    return      ret , ok }
+//func (config *GridConfig) Scroll()    (bool,bool) { ret,ok := (*config)[gridScroll  ].(bool);    return      ret , ok }
 func (config *GridConfig) Speed()  (float64,bool) { ret,ok := (*config)[gridSpeed   ].(float64); return      ret , ok }
 func (config *GridConfig) BufLen()    (uint,bool) { ret,ok := (*config)[gridBufLen  ].(float64); return uint(ret), ok }
 func (config *GridConfig) Term()      (bool,bool) { ret,ok := (*config)[gridTerm    ].(bool);    return      ret , ok }
@@ -44,7 +44,7 @@ func (config *GridConfig) Fill()    (string,bool) { ret,ok := (*config)[gridFill
 func (config *GridConfig) SetWidth(   val uint)    { (*config)[gridWidth]    = float64(val) }
 func (config *GridConfig) SetHeight(  val uint)    { (*config)[gridHeight]   = float64(val) }
 func (config *GridConfig) SetDownward(val bool)    { (*config)[gridDownward] =         val  }
-func (config *GridConfig) SetScroll(  val bool)    { (*config)[gridScroll]   =         val  }
+//func (config *GridConfig) SetScroll(  val bool)    { (*config)[gridScroll]   =         val  }
 func (config *GridConfig) SetSpeed(   val float64) { (*config)[gridSpeed]    =         val  }
 func (config *GridConfig) SetBufLen(  val uint)    { (*config)[gridBufLen]   = float64(val) }  
 func (config *GridConfig) SetTerm(    val bool)    { (*config)[gridTerm]     =         val  }
@@ -64,20 +64,28 @@ func (config *GridConfig) Desc() string {
 	    if wok || hok { ret += " " }
 	}
     
-    if tmp,ok := config.Downward(); ok { if tmp { ret += "↓ " } else { ret += "↑ " } }
     {
-		s,sok := config.Scroll();
-		p,pok := config.Speed();
-		if sok { if s { ret += "→" } else { ret += "↛" } }
-		if pok { ret += fmt.Sprintf("%.1f",p) }
-		if pok || sok { ret += " " }
+        term,tok := config.Term(); 
+        buflen,bok := config.BufLen();
+        if bok { ret += fmt.Sprintf("+%d ",buflen) }
+        if tok && term { ret += "TT " }
+    }
+    
+    {
+        tmp := "↑"
+        dwn,dok := config.Downward(); 
+		spd,pok := config.Speed();
+        if dok && dwn { tmp = "↓" } 
+		if pok { ret += fmt.Sprintf("%.1f",spd) }
+        if dok { ret += tmp }
+		if dok || pok { ret += " " }
 	}
 	{
-		v, vok := config.Vert()
-		f, fok := config.Frag()
-		if vok { ret += v }
+		vert, vok := config.Vert()
+		frag, fok := config.Frag()
+		if vok { ret += vert }
 		if vok || fok { ret += "," }
-		if fok { ret += f }
+		if fok { ret += frag }
 		if vok || fok { ret += " " }	
 	}
     if tmp,ok := config.Fill(); ok { ret += tmp + " " } 
@@ -91,7 +99,7 @@ func (config *GridConfig) ApplyConfig(cfg *GridConfig) {
 	if tmp,ok := cfg.Width(); ok { config.SetWidth(tmp) }	
 	if tmp,ok := cfg.Height(); ok { config.SetHeight(tmp) }	
 	if tmp,ok := cfg.Downward(); ok { config.SetDownward(tmp) }	
-	if tmp,ok := cfg.Scroll(); ok { config.SetScroll(tmp) }	
+//	if tmp,ok := cfg.Scroll(); ok { config.SetScroll(tmp) }	
 	if tmp,ok := cfg.Speed(); ok { config.SetSpeed(tmp) }	
 	if tmp,ok := cfg.BufLen(); ok { config.SetBufLen(tmp) }	
 	if tmp,ok := cfg.Term(); ok { config.SetTerm(tmp) }	
@@ -109,7 +117,7 @@ type GridState struct {
     Height uint
     
     Downward bool
-    Scroll bool
+//    Scroll bool
     Speed float64
     
     BufLen uint
@@ -124,7 +132,7 @@ var GridDefaults = GridState{
     Width:        0,
     Height:       8,
     Downward: false,
-    Scroll:    true,
+//    Scroll:    true,
     Speed:      0.4,
     BufLen:       2,
     Term:     false,
@@ -136,13 +144,13 @@ var GridDefaults = GridState{
 func (state *GridState) AddFlags(flags *flag.FlagSet) {
     flags.UintVar(&state.Width,"w",state.Width,"grid width")
     flags.UintVar(&state.Height,"h",state.Height,"grid height")
-    flags.BoolVar(&state.Downward,"d",state.Downward,"downward")
-    flags.BoolVar(&state.Scroll,"s",state.Scroll,"scroll")
-    flags.Float64Var(&state.Speed,"S",state.Speed,"scroll speed")
-    flags.UintVar(&state.BufLen,"l",state.BufLen,"buffer lines")
-    flags.BoolVar(&state.Term,"t",state.Term,"ansi terminal")
-    flags.StringVar(&state.Vert,"V",state.Vert,"vertex shader")
-    flags.StringVar(&state.Frag,"F",state.Frag,"fragment shader")
+    flags.BoolVar(&state.Downward,"down",state.Downward,"downward")
+//    flags.BoolVar(&state.Scroll,"s",state.Scroll,"scroll")
+    flags.Float64Var(&state.Speed,"speed",state.Speed,"scroll speed")
+    flags.UintVar(&state.BufLen,"buffer",state.BufLen,"buffer lines")
+    flags.BoolVar(&state.Term,"term",state.Term,"ansi terminal")
+    flags.StringVar(&state.Vert,"vert",state.Vert,"vertex shader")
+    flags.StringVar(&state.Frag,"frag",state.Frag,"fragment shader")
     flags.StringVar(&state.Fill,"fill",state.Fill,"fill pattern")
 }
 
@@ -153,13 +161,13 @@ func (state *GridState) CheckFlags(flags *flag.FlagSet) (*GridConfig,bool) {
 	flags.Visit( func(f *flag.Flag) {
 		if f.Name == "w" { ok = true; ret.SetWidth( state.Width ) }
 		if f.Name == "h" { ok = true; ret.SetHeight( state.Height ) }
-		if f.Name == "d" { ok = true; ret.SetDownward( state.Downward ) }
-		if f.Name == "s" { ok = true; ret.SetScroll( state.Scroll ) }
-		if f.Name == "S" { ok = true; ret.SetSpeed( state.Speed ) }
-		if f.Name == "l" { ok = true; ret.SetBufLen( state.BufLen ) }
-		if f.Name == "t" { ok = true; ret.SetTerm( state.Term ) }
-		if f.Name == "V" { ok = true; ret.SetVert( state.Vert ) }
-		if f.Name == "F" { ok = true; ret.SetFrag( state.Frag ) }
+		if f.Name == "down" { ok = true; ret.SetDownward( state.Downward ) }
+//		if f.Name == "s" { ok = true; ret.SetScroll( state.Scroll ) }
+		if f.Name == "speed" { ok = true; ret.SetSpeed( state.Speed ) }
+		if f.Name == "buffer" { ok = true; ret.SetBufLen( state.BufLen ) }
+		if f.Name == "term" { ok = true; ret.SetTerm( state.Term ) }
+		if f.Name == "vert" { ok = true; ret.SetVert( state.Vert ) }
+		if f.Name == "frag" { ok = true; ret.SetFrag( state.Frag ) }
 		if f.Name == "fill" { ok = true; ret.SetFill( state.Fill ) }
 	})
 	return &ret,ok
@@ -184,7 +192,7 @@ func (state *GridState) Config() *GridConfig {
 	ret.SetWidth(state.Width)
 	ret.SetHeight(state.Height)
 	ret.SetDownward(state.Downward)
-	ret.SetScroll(state.Scroll)
+//	ret.SetScroll(state.Scroll)
 	ret.SetSpeed(state.Speed)
 	ret.SetBufLen(state.BufLen)
 	ret.SetTerm(state.Term)
@@ -199,7 +207,7 @@ func (state *GridState) ApplyConfig(config *GridConfig) bool {
 	if tmp,ok := config.Width();    ok { if state.Width    != tmp { changed = true }; state.Width = tmp }
 	if tmp,ok := config.Height();   ok { if state.Height   != tmp { changed = true }; state.Height = tmp }
 	if tmp,ok := config.Downward(); ok { if state.Downward != tmp { changed = true }; state.Downward = tmp }
-	if tmp,ok := config.Scroll();   ok { if state.Scroll   != tmp { changed = true }; state.Scroll = tmp }
+//	if tmp,ok := config.Scroll();   ok { if state.Scroll   != tmp { changed = true }; state.Scroll = tmp }
 	if tmp,ok := config.Speed();    ok { if state.Speed    != tmp { changed = true }; state.Speed = tmp }
 	if tmp,ok := config.BufLen();   ok { if state.BufLen   != tmp { changed = true }; state.BufLen = tmp }
 	if tmp,ok := config.Term();     ok { if state.Term     != tmp { changed = true }; state.Term = tmp }
