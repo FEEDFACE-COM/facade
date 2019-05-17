@@ -22,7 +22,7 @@ const DEBUG_MODE     = false
 const DEBUG_GRID     = true
 const DEBUG_DIAG     = false
 const DEBUG_MEMORY   = false
-const DEBUG_MESSAGES = true
+const DEBUG_MESSAGES = false
 const DEBUG_BUFFER   = true
 
 

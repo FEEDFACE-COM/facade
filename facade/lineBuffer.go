@@ -10,7 +10,6 @@ import(
 
 const DEBUG_LINEBUFFER = false
 
-type Line []rune
 
 type LineBuffer struct {
     rows uint // lines on screen, min 1
@@ -18,10 +17,13 @@ type LineBuffer struct {
     buf []*Line
     timer *gfx.Timer
     rem []rune
+
+    refreshChan chan bool
+    
 }
 
 
-func NewLineBuffer(rows,off uint) *LineBuffer {
+func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     if rows == 0 { rows = 1 }
     if off == 0 { off = 1 }
     total := rows + off
@@ -30,17 +32,24 @@ func NewLineBuffer(rows,off uint) *LineBuffer {
     ret.off = off
     ret.buf = make( []*Line, total )
     ret.rem = []rune{}
+    ret.refreshChan = refreshChan
     return ret
 }
 
 
-func (buffer *LineBuffer) GetLine(idx uint) []rune {
+func (buffer *LineBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?
-    if idx > buffer.rows {
+    if idx == buffer.rows {
+        return Line{}    
+    } else if idx > buffer.rows {
         log.Error("no line %d in %s",idx,buffer.Desc())
-        return []rune{}
+        return Line{}
     }
-    return []rune( *(buffer.buf[idx]) )
+    ret := buffer.buf[idx]
+    if ret == nil {
+        return Line{}
+    }
+    return *ret
 }
 
 
@@ -64,8 +73,8 @@ func (buffer *LineBuffer) dequeueLine() {
         buffer.scrollOnce( 1.0 ) // REM take from config
     }
     
-    
-    // REM, schedule refresh
+        
+    select { case buffer.refreshChan <- true: ; default: ; }
     
 }
 
@@ -119,7 +128,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
         
     }
     
-    // REM, schedule refresh
+    select { case buffer.refreshChan <- true: ; default: ; }
 
 }
 

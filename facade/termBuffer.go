@@ -76,39 +76,21 @@ func (buffer *TermBuffer) Resize(cols, rows uint) {
 
 
 
-func (buffer *TermBuffer) GetLine(idx uint) []rune {
+func (buffer *TermBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?
-    if idx+1 >= buffer.rows {
+    if idx == buffer.rows {
+        return Line{}
+    } else if idx >= buffer.rows {
         log.Error("no line %d in %s",idx,buffer.Desc())
-        return []rune{}
+        return Line{}
     }
-    return buffer.buf[idx+1]
+    return buffer.buf[idx+1][1:]
 }
-
-//func (buffer *TermBuffer) LineForRow(row int) string {
-//    r := uint(row)
-//    if r >= buffer.rows {
-//        log.Error("line for row %d > rows %d",row,buffer.rows)
-//        return ""
-//    }
-//    
-//    ret := ""
-//    for c:=uint(0); c<buffer.cols;c++ {
-//        chr := buffer.buf[r][c]
-//        if chr < ' ' || chr >= 0x7f {
-//            chr = ' '
-//        }
-//        ret += fmt.Sprintf("%c",chr)
-//    }
-//    
-//    return ret
-//    
-//}
-
 
 
 
 func (buffer *TermBuffer) scroll() {
+    if DEBUG_TERMBUFFER { log.Debug("scroll %s",buffer.Desc() ) }
     for r:=uint(1); r<buffer.max.y; r++ {
         buffer.buf[r] = buffer.buf[r+1]
     }
@@ -129,14 +111,14 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
         switch (run) {
             
             case '\n':
-//                if DEBUG_TERMBUFFER { log.Debug("LF") }
+                if DEBUG_TERMBUFFER { log.Debug("LF %d,%d",cur.x,cur.y) }
                 cur.x = 1
                 cur.y += 1
                 if cur.y > max.y {  // scroll last row
                     cur.y = max.y
                     buffer.scroll()
                 } else { //new empty last row
-                    buf[ cur.y ] = makeRow(max.x)
+                    buf[ cur.y ] = makeRow(max.x)  //for ps ax output??
                 }
 
             

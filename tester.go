@@ -28,11 +28,16 @@ type Tester struct {
 
     mutex *sync.Mutex
     directory string
+    
+    refreshChan chan bool
+        
+    
 }
 
 func NewTester(directory string) *Tester { 
     ret := &Tester{directory: directory} 
     ret.mutex = &sync.Mutex{}
+    ret.refreshChan = make( chan bool, 1 )
     return ret    
 }
 
@@ -72,7 +77,7 @@ func (tester *Tester) Init(config *facade.Config) error {
     buflen,_ := testConfig.BufLen()
     
     tester.termBuffer = facade.NewTermBuffer(width,height) 
-    tester.lineBuffer = facade.NewLineBuffer(height,buflen) 
+    tester.lineBuffer = facade.NewLineBuffer(height,buflen,tester.refreshChan) 
     
     
     tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.lineBuffer )

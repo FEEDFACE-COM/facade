@@ -22,6 +22,7 @@ import (
 
 const RENDERER_AVAILABLE = true
 
+const DEBUG_DUMP = true
 
 type Renderer struct {
     screen gfx.Size
@@ -43,6 +44,7 @@ type Renderer struct {
     mutex *sync.Mutex
     directory string
     
+    refreshChan chan bool
     
 }
 
@@ -51,7 +53,32 @@ type Renderer struct {
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
     ret.mutex = &sync.Mutex{}
+    ret.refreshChan = make( chan bool, 1 )
     return ret
+}
+
+
+func (renderer *Renderer) ScheduleRefresh() {
+
+    select { case renderer.refreshChan <- true: ; default: ; }
+	
+}
+
+
+func (renderer *Renderer) checkRefresh() bool {
+	ret := false
+	for { //read all messages from channel
+		select {
+			case refresh := <- renderer.refreshChan:
+				if refresh {
+					ret = true
+				}
+
+			default:
+				return ret
+		}
+	}
+	return ret
 }
 
 
@@ -135,12 +162,12 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
 
     renderer.termBuffer = facade.NewTermBuffer(width,height) 
-    renderer.lineBuffer = facade.NewLineBuffer(height,buflen) 
+    renderer.lineBuffer = facade.NewLineBuffer(height,buflen,renderer.refreshChan) 
 
     //initialize mode, REM this should probably init all modes
 	switch renderer.state.Mode {
 		case facade.GRID:
-			renderer.grid = facade.NewGrid( gridConfig, renderer.ringBuffer, renderer.termBuffer )
+			renderer.grid = facade.NewGrid( gridConfig, renderer.lineBuffer, renderer.termBuffer )
 			renderer.grid.Init(renderer.camera,renderer.font)
 			renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
 	}
@@ -219,9 +246,13 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         renderer.mutex.Lock()
         piglet.MakeCurrent()
         
-        renderer.ProcessText(textChan)
         renderer.ProcessConf(confChan)
-
+        if renderer.checkRefresh() {
+            switch renderer.state.Mode {
+                case facade.GRID:
+                    renderer.grid.GenerateData(renderer.font)
+            }
+        }
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
@@ -244,7 +275,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         renderer.mask.Render(renderer.state.Debug)
         
         
-        if DEBUG_BUFFER {
+        if DEBUG_DUMP {
             renderer.dumpBuffers()    
         }
         
@@ -262,7 +293,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
         e := gl.GetError()
 //        e := uint32(gl.NO_ERROR)
-        if e != gl.NO_ERROR && verbose { 
+        if e != gl.NO_ERROR && verboseFrame { 
             log.Error("post render gl error: %s",gl.ErrorString(e)) 
         }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
@@ -319,29 +350,6 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 
 
-func (renderer *Renderer) printDebug(prev gfx.Clock) {
-
-    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
-    
-    if DEBUG_DIAG { log.Debug( MemUsage() ) }
-        
-    if DEBUG_MODE {
-        tmp := ""
-        switch renderer.state.Mode { 
-            case facade.GRID:
-                tmp = renderer.grid.Desc()
-        }
-		tmp2 := ""
-		if renderer.state.Debug {
-			tmp2 = " DEBUG"	
-		}
-        log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
-    }
-    
-}
-
-//
-
 
 
 func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) error {
@@ -353,10 +361,12 @@ func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) err
         if text != nil && len(text) > 0 {
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
+            renderer.ScheduleRefresh()
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
+            renderer.ScheduleRefresh()
         }
     }
     return nil
@@ -385,6 +395,39 @@ func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan c
     }
     return nil
 }
+
+
+
+
+func (renderer *Renderer) printDebug(prev gfx.Clock) {
+
+    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
+    
+    if DEBUG_DIAG { log.Debug( MemUsage() ) }
+        
+    if DEBUG_MODE {
+        tmp := ""
+        switch renderer.state.Mode { 
+            case facade.GRID:
+                tmp = renderer.grid.Desc()
+        }
+		tmp2 := ""
+		if renderer.state.Debug {
+			tmp2 = " DEBUG"	
+		}
+        log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+    }
+    
+}
+
+func (renderer *Renderer) dumpBuffers() {
+    if renderer.state.Mode  == facade.GRID {
+        os.Stdout.Write( []byte( renderer.grid.Dump() ) )        
+    }
+    os.Stdout.Write( []byte( "\n" ) )
+    os.Stdout.Sync()
+}
+
 
 
 

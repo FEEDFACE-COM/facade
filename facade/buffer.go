@@ -9,6 +9,8 @@ import(
 
 const DEBUG_BUFFER = true
 
+type Line []rune
+
 type BufferItem struct {
     Text []rune
     Seq  *ansi.S
@@ -111,7 +113,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     if DEBUG_BUFFER { log.Debug("process ansi: %s %s",seq.Type,s.Name) }
                     sendSequence(seq, bufChan)
                 } else {
-                    log.Error("ansi %s 0x%x not in table",seq.Type,seq.Code)
+                    log.Warning("ansi %s 0x%x not in table",seq.Type,seq.Code)
                 }
 
             case "ESC":
@@ -121,7 +123,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     case "\033(":
                         if len(rem) >= 1 { //no full sequence, return ptr to pick up more
                             rem = rem[1:]
-                            log.Debug("vt100 0x%x skip %d byte: 0x%x",len(seq.Code),seq.Code)
+                            if DEBUG_BUFFER { log.Debug("vt100 0x%x skip %d byte: 0x%x",len(seq.Code),seq.Code) }
                         } else {
                             sendBytes(tmp, bufChan)
                             return ptr, log.NewError("ansi short escape sequence")
@@ -134,7 +136,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                                 
             
             default:
-                log.Error("ansi unknown sequence type %s",seq.Type)
+                log.Warning("ansi unknown sequence type %s",seq.Type)
         }
 
         ptr = rem
