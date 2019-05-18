@@ -22,7 +22,7 @@ import (
 
 const RENDERER_AVAILABLE = true
 
-const DEBUG_DUMP = true
+const DEBUG_DUMP = false
 
 type Renderer struct {
     screen gfx.Size

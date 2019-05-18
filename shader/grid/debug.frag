@@ -26,12 +26,12 @@ void main() {
 
     if ( vGridCoord.y == 0.0 ) { // oldest line
         col.r *= 0.0;
-        if ( ! DEBUG ) { col.a *= (1.-vScroller); }
+        if ( ! DEBUG ) { col.a *= (1.- abs(vScroller)); }
     }
     
     if ( vGridCoord.y == tileCount.y ) { // newest line
         col.g *= 0.0;
-        if ( ! DEBUG ) { col.a *= vScroller; }
+        if ( ! DEBUG ) { col.a *= abs(vScroller); }
     }
     
     if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {

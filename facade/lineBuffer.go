@@ -9,7 +9,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = true
+const DEBUG_LINEBUFFER = false
 
 
 type LineBuffer struct {
