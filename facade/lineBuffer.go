@@ -44,7 +44,7 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
 
 func (buffer *LineBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?
-    if idx == buffer.rows {
+    if idx == buffer.rows && buffer.buf[idx] == nil {
         return Line{}    
     } else if idx > buffer.rows {
         log.Error("no line %d in %s",idx,buffer.Desc())
@@ -57,17 +57,13 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
     return *ret
 }
 
-func (buffer *LineBuffer) GetScroller(downward bool) float32 {
-    ret := float32(0.0)
+func (buffer *LineBuffer) GetScroller() float32 {
     
     if buffer.timer != nil {
-        ret = 1. - math.EaseInEaseOut( buffer.timer.Fader() )
+        return math.EaseInEaseOut( buffer.timer.Fader() )
     }
     
-    if downward {
-        ret *= -1.
-    }
-    return ret   
+    return float32(0.0)  
 }
 
 func (buffer *LineBuffer) dequeueLine() {
@@ -150,7 +146,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
-        if DEBUG_LINEBUFFER { log.Debug("next #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("next #%d %s %s",idx,buffer.Desc(),string(row)) }
         buffer.buf[idx] = &row
         buffer.scrollOnce() 
         
@@ -168,7 +164,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
             return
         }
 
-        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx-buffer.rows,buffer.Desc(),string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row)) }
         buffer.buf[idx] = &row
         
     }

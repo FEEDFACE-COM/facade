@@ -26,7 +26,7 @@ type Size struct {
     H float32  
 }
 
-func (p *Point) Desc() string { return fmt.Sprintf("(%5.1f %5.1f)",p.X,p.Y) }
+func (p *Point) Desc() string { return fmt.Sprintf("(%5.1f/%5.1f)",p.X,p.Y) }
 type Point struct {
     X float32
     Y float32    

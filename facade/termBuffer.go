@@ -102,6 +102,9 @@ func (buffer *TermBuffer) Resize(cols, rows uint) {
 }
 
 
+func (buffer *TermBuffer) GetCursor() (uint,uint) {
+    return buffer.cursor.x-1,buffer.cursor.y-1
+}
 
 func (buffer *TermBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?

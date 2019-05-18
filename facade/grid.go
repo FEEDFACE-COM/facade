@@ -88,23 +88,31 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
-    tileOffset := mgl32.Vec2{}
+    tileOffset := mgl32.Vec2{-1., -1.}
     if grid.state.Width % 2 == 0 { //even columns
         tileOffset[0] = 0.5
-    } else {// odd columns
-        tileOffset[0] = -1.
     }
     if grid.state.Height % 2 == 0 { //even rows
         tileOffset[1] = -0.5
-    } else { // odd rows
-        tileOffset[1] = -1.
     }
     grid.program.Uniform2fv(gfx.TILEOFFSET, 1, &tileOffset[0] );
+
+
+    cursorPos := mgl32.Vec2{-1., -1.}
+    if grid.state.Term {
+        x,y := grid.termBuffer.GetCursor()
+        cursorPos[0] = float32(x)
+        cursorPos[1] = float32(y)
+    }
+    grid.program.Uniform2fv(gfx.CURSORPOS, 1, &cursorPos[0] );
 
     clocknow := float32( gfx.NOW() )
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
 
-    scroller := float32( grid.lineBuffer.GetScroller( grid.state.Downward ) )
+    scroller := float32(0.0)
+    if ! grid.state.Term {
+        scroller = -1. * float32( grid.lineBuffer.GetScroller() )
+    }
     grid.program.Uniform1f(gfx.SCROLLER,scroller)
 
     camera.Uniform(grid.program)
@@ -131,9 +139,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 //	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
     grid.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
     
-    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2)*4, (0)*4 )
-	grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2)*4, (3)*4 )
-    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2)*4, (3+2)*4 )
+    grid.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+2+2)*4, (0)*4 )
+	grid.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+2+2)*4, (3)*4 )
+    grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2+2)*4, (3+2)*4 )
+    grid.program.VertexAttribPointer(gfx.GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4 )
     
     
     count := int32(grid.state.Width*(grid.state.Height+1))
@@ -275,23 +284,32 @@ F A C A D E
 func min(a,b int) int { if a < b { return a; }; return b; }
 
 
-func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOffset gfx.Point, maxSize gfx.Size) []float32 {
+func gridVertices(
+    tileSize     gfx.Size,  // dimensions of the tile
+    glyphSize    gfx.Size,  // dimensions of the glyph
+    maxGlyphSize gfx.Size,  // max dimension of glyph in font
+    gridCoord    gfx.Coord, // row/col coord of tile
+    tilePos      gfx.Point, // position of tile in grid 
+    texOffset    gfx.Point, // glyph offset in texture
+) []float32 {
     
-    w, h := size.W, size.H
-    x, y := float32(tileCoord.X), float32(tileCoord.Y)
+    col,row := float32(gridCoord.X), float32(gridCoord.Y)
+    
+    w, h := tileSize.W, tileSize.H
+    x, y := tilePos.X, tilePos.Y
     ox, oy := texOffset.X, texOffset.Y
 
     th := 1./float32(gfx.GlyphRows)
-    tw := glyphSize.W / ( maxSize.W * float32(gfx.GlyphCols) )
+    tw := glyphSize.W / ( maxGlyphSize.W * float32(gfx.GlyphCols) )
 
     return []float32{
-        //vertex                     //texcoords        // tile coords
-        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
-        -w/2, -h/2, 0,                 0+ox, th+oy,      x, y,
-         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,
-         w/2, -h/2, 0,                tw+ox, th+oy,      x, y,
-         w/2,  h/2, 0,                tw+ox,  0+oy,      x, y,
-        -w/2,  h/2, 0,                 0+ox,  0+oy,      x, y,
+        //vertex            //texcoords        // tile coords     // grid coords
+        -w/2,  h/2, 0,        0+ox,  0+oy,      x, y,             col,row,
+        -w/2, -h/2, 0,        0+ox, th+oy,      x, y,             col,row,
+         w/2, -h/2, 0,       tw+ox, th+oy,      x, y,             col,row,
+         w/2, -h/2, 0,       tw+ox, th+oy,      x, y,             col,row,
+         w/2,  h/2, 0,       tw+ox,  0+oy,      x, y,             col,row,
+        -w/2,  h/2, 0,        0+ox,  0+oy,      x, y,             col,row,
         
     }
     
@@ -299,41 +317,39 @@ func gridVertices(size gfx.Size, glyphSize gfx.Size, tileCoord gfx.Coord, texOff
 
 
 
-const DEBUG_DATA = false
+const DEBUG_DATA = true
 
 func (grid *Grid) GenerateData(font *gfx.Font) {
     grid.data = []float32{}
-    tmp := fmt.Sprintf("generate %s %s",grid.Desc(),font.Desc())
-    w,h := int(grid.state.Width), int(grid.state.Height+1)
-    for r:=0; r<h; r++ {
-        tmp += "\n"
-        y:= -1 * (r-h/2)
-
-        var line Line = Line("")
+    if DEBUG_DATA { log.Debug("generate %s %s",grid.Desc(),font.Desc()) }
+    
+    width, height := int(grid.state.Width), int(grid.state.Height)
+    
+    for row:=0; row<=height; row++ {
+        y := -1 * (row - height/2)
+        
+        line := Line("")
         if grid.state.Term {
-            line = grid.termBuffer.GetLine( uint(r) )    
+            line = grid.termBuffer.GetLine( uint(row) )    
         } else {
-            line = grid.lineBuffer.GetLine( uint(r) )
+            line = grid.lineBuffer.GetLine( uint(row) )
         }
-        for c:=0; c<w; c++ {
-//            x:= c-w/2 + (1-w%2)
-            x:= c-w/2 + (w%2)
+        if DEBUG_DATA { log.Debug("%s",string(line)) }
+        
+        for col:=0; col<width; col++ {
+            x := col - width/2 + (width%2)
+            run := rune('#')
+            if col < len(line) {
+                run = line[col]
+            }
             
-            run := rune(' ')
-            if DEBUG_GRID { run = rune('#') }
-            if int(c) < len(line) {
-                run = line[c]
-            }    
-
-            tileCoord := gfx.Coord{X: x, Y:y}
+            gridCoord := gfx.Coord{col,row}
+            tilePos := gfx.Point{ float32(x), float32(y) }
             glyphCoord := getGlyphCoord( run )
             glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
+            maxGlyphSize := font.MaxSize() 
 
-
-            maxSize := font.MaxSize()
-
-
-            size := gfx.Size{
+            tileSize := gfx.Size{
                 W: glyphSize.W / glyphSize.H,
                 H: glyphSize.H / glyphSize.H,
             }
@@ -343,15 +359,65 @@ func (grid *Grid) GenerateData(font *gfx.Font) {
                 Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
             }
 
-            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
+            grid.data = append(grid.data, gridVertices(tileSize,glyphSize,maxGlyphSize,gridCoord,tilePos,texOffset)... )
 
+            
+        }
+
+        
+    }
+    grid.object.BufferData( len(grid.data)*4,grid.data )
+    
+    
+    
+//    w,h := int(grid.state.Width), int(grid.state.Height+1)
+//    for r:=0; r<h; r++ {
+//        tmp += "\n"
+//        y:= -1 * (r-h/2)
+//
+//        var line Line = Line("")
+//        if grid.state.Term {
+//            line = grid.termBuffer.GetLine( uint(r) )    
+//        } else {
+//            line = grid.lineBuffer.GetLine( uint(r) )
+//        }
+//        for c:=0; c<w; c++ {
+//            x:= c-w/2 + (1-w%2)
+//            x:= c-w/2 + (w%2)
+//            
+//            run := rune(' ')
+//            if DEBUG_GRID { run = rune('#') }
+//            if int(c) < len(line) {
+//                run = line[c]
+//            }    
+//
+//            tileCoord := gfx.Coord{X: x, Y:y}
+//            glyphCoord := getGlyphCoord( run )
+//            glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
+//
+//
+//            maxSize := font.MaxSize()
+//
+//
+//            size := gfx.Size{
+//                W: glyphSize.W / glyphSize.H,
+//                H: glyphSize.H / glyphSize.H,
+//            }
+//            
+//            texOffset := gfx.Point{
+//                X: float32(glyphCoord.X) / (gfx.GlyphCols),
+//                Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
+//            }
+//
+//            grid.data = append(grid.data, gridVertices(size,glyphSize,tileCoord,texOffset,maxSize)... )
+//
 //            tmp += fmt.Sprintf("%+d/%+d    ",x,y)
 //            tmp += fmt.Sprintf(" %.0fx%0.f    ",float32(glyphSize.W),float32(glyphSize.H))
-            tmp += fmt.Sprintf("%c|",run)
-        } 
-    }
-    if DEBUG_DATA { log.Debug(tmp) }
-    grid.object.BufferData( len(grid.data)*4,grid.data )
+//            tmp += fmt.Sprintf("%c|",run)
+//        } 
+//    }
+//    if DEBUG_DATA { log.Debug(tmp) }
+//    grid.object.BufferData( len(grid.data)*4,grid.data )
 }
 
 
@@ -423,31 +489,6 @@ func (grid *Grid) RenderMap(font *gfx.Font) error {
 
 
 
-
-//
-//func (grid *Grid) Queue(text string) {
-////    newText := gfx.NewText(text)
-////    fun := func() { 
-////	    grid.empty = gfx.NewText("") 
-////	    grid.ScheduleRefresh()
-////	}
-////    if grid.scroller.Once(fun) {
-////		tmp := grid.buffer.Head(0)
-////	    if grid.state.Downward {
-////		    tmp = grid.buffer.Tail(0)
-////		}
-////	    if tmp == nil {
-////			grid.empty = gfx.NewText("")
-////		} else {
-////			grid.empty = gfx.NewText( tmp.Text )
-////		}
-////	} 
-////	grid.buffer.Queue( newText )
-//	grid.termBuffer.Write( []byte(text) )
-//	grid.ScheduleRefresh()
-//    
-//}
-//
 
 func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 

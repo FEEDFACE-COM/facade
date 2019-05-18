@@ -35,6 +35,7 @@ const (
     TILECOUNT   UniformName = "tileCount"
     TILESIZE    UniformName = "tileSize"
     TILEOFFSET  UniformName = "tileOffset"
+    CURSORPOS   UniformName = "cursorPos"
     SCROLLER    UniformName = "scroller"
     DOWNWARD    UniformName = "downward"
     CLOCKNOW    UniformName = "now"
@@ -46,6 +47,7 @@ const (
     COLOR      AttribName = "color"    
     TEXCOORD   AttribName = "texCoord"
     TILECOORD  AttribName = "tileCoord"
+    GRIDCOORD  AttribName = "gridCoord"
 )
 
 
