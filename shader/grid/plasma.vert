@@ -14,10 +14,12 @@ uniform float downward;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
+varying vec2 vGridCoord;
 
 varying float vScroller;
 
@@ -30,6 +32,7 @@ void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
     vScroller = abs(scroller);
+    vGridCoord = gridCoord;
     
     vec4 pos = vec4(vertex,1);
 
