@@ -88,7 +88,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
-    tileOffset := mgl32.Vec2{-1., -1.}
+    tileOffset := mgl32.Vec2{-1., 0.0}
     if grid.state.Width % 2 == 0 { //even columns
         tileOffset[0] = 0.5
     }
