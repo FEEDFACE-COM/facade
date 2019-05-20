@@ -56,7 +56,6 @@ const (
     HELP    Command = "help"
     TEST    Command = "test"
 )
-var commands = []Command{CONF,PIPE,EXEC,TEST}
 
 
 
@@ -93,6 +92,7 @@ func main() {
 
     flags := make(map[Command] *flag.FlagSet)
 
+    var commands = []Command{CONF,PIPE,EXEC,INFO,TEST}
     if RENDERER_AVAILABLE {
         commands = append(commands, READ)
         commands = append(commands, RECV)
@@ -269,8 +269,6 @@ func main() {
         executor.SetArgs(args[1:])
         
     }
-
-//    log.Debug("delta "+config.Desc())
     
     
     
@@ -360,12 +358,6 @@ func main() {
             tester.Configure(config)
             err = tester.Test(confs)
             
-//            str := "FEEDFACE.COM"
-//            if modeFlags.NArg() > 0 {
-//                str = strings.Join(modeFlags.Args()," ")
-//            }
-//            err = tester.Test(str,rawConfs,rawTexts)
-
 
         default:
             log.PANIC("inconsistent command")
@@ -401,14 +393,16 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
         }
         fmt.Fprintf(os.Stderr,"  -%-8s %-24s %-8s\n",f.Name,f.Usage,typ)
     })
-//    flagset.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
 }
 
 
 
 func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
-    modes := JoinModes(facade.Modes,"|")
+    modes := []string{}
+    for _,m := range( []facade.Mode{ facade.GRID } ) { 
+        modes = append(modes, string(m) )
+    }
     switches := "-"
     flags := ""
     flagSetMap[cmd].VisitAll( func(f *flag.Flag) { 
@@ -420,7 +414,7 @@ func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
 
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s [%s] %s  %s\n",BUILD_NAME,cmd,switches,flags,modes)
+    fmt.Fprintf(os.Stderr,"  %s %s [%s] %s    %s\n",BUILD_NAME,cmd,switches,flags,strings.Join(modes," | "))
     ShowModes()
 
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
@@ -431,12 +425,13 @@ func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
 func ShowCommands() {
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if RENDERER_AVAILABLE {
-        fmt.Fprintf(os.Stderr,"%6s     %s\n",READ,"read stdin and display")
-        fmt.Fprintf(os.Stderr,"%6s     %s\n",RECV,"receive and display ")
+        fmt.Fprintf(os.Stderr,"%6s     %s\n",READ,"read text from stdin and render")
+        fmt.Fprintf(os.Stderr,"%6s     %s\n",RECV,"receive text from network and render ")
     }
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"pipe stdin to remote")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"configure remote")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",EXEC,"execute")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"read text from stdin and send to server")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"change configuration of server")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",EXEC,"execute command and send stdout,stderr to server")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",INFO,"show available shaders and fonts ")
 }
 
 
@@ -452,33 +447,26 @@ func ShowHelp() {
         if name != "" { name = "="+name }
         if len(f.Name) >=  1 { flags +=    " [-"+f.Name+name+"]" }
     })
-    cmds := JoinCommands(commands,"|")
-    modes := JoinModes(facade.Modes,"|")
+    cmds := []string{}
+        if RENDERER_AVAILABLE {
+        for _,c := range( []Command{READ,RECV}){
+            cmds = append(cmds, string(c) )
+        }
+    }
+    for _,c := range( []Command{PIPE,CONF,EXEC,INFO}){
+        cmds = append(cmds, string(c) )
+    }
 
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s  %s  %s\n",BUILD_NAME,flags,cmds,modes)
+    fmt.Fprintf(os.Stderr,"  %s %s      %s\n",BUILD_NAME,flags,strings.Join(cmds," | "))
     ShowCommands()
-    ShowModes()
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flag.PrintDefaults()
     fmt.Fprintf(os.Stderr,"\n")
     
     
 }
-    
-func JoinCommands(cmds []Command, sep string) string { 
-    var strs []string 
-    for _,cmd := range cmds { strs = append(strs,string(cmd)) }
-    return strings.Join(strs,sep)
-}
-
-func JoinModes(modes []facade.Mode, sep string) string { 
-    var strs []string 
-    for _,mode := range modes { strs = append(strs,string(mode)) }
-    return strings.Join(strs,sep)
-}
-
 
 func ShowAssets() {
     shaders := gfx.ListShaderNames()
