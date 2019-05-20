@@ -142,8 +142,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 cur.x = 1
                 cur.y += 1
                 if cur.y > max.y {  // scroll last row
-                    if DEBUG_TERMBUFFER { log.Debug("scroll for linefeed.") }
-                    buffer.scrollLine()
+                    if DEBUG_TERMBUFFER { log.Debug("linefeed.") }
+                    buffer.lineFeed()
                     cur.y = max.y
 //                } else { //new empty last row
 //                    buf[ cur.y ] = makeRow(max.x)  //for ps ax output??
@@ -162,8 +162,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         cur.y += 1
                     }
                     if cur.y > max.y {
-                        if DEBUG_TERMBUFFER { log.Debug("scroll for tabulator.") }
-                        buffer.scrollLine()
+                        if DEBUG_TERMBUFFER { log.Debug("linefeed for tabulator.") }
+                        buffer.lineFeed()
                         cur.x = 1
                         cur.y = max.y
                     }
@@ -201,8 +201,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     cur.y += 1
                 }
                 if cur.y > max.y {
-                    if DEBUG_TERMBUFFER { log.Debug("scroll for rune.") }
-                    buffer.scrollLine()
+                    if DEBUG_TERMBUFFER { log.Debug("linefeed for rune.") }
+                    buffer.lineFeed()
                     cur.x = 1
                     cur.y = max.y
                 } 
@@ -220,11 +220,18 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
     
 }
 
-func (buffer *TermBuffer) scrollLine() {
+func (buffer *TermBuffer) lineFeed() {
     for r:=uint(1); r<buffer.max.y; r++ {
         buffer.buf[r] = buffer.buf[r+1]
     }
     buffer.buf[ buffer.max.y ] = makeRow(buffer.max.x)
+}
+
+func (buffer *TermBuffer) reverseLineFeed() {
+    for r:=uint(buffer.max.y); r>1; r-- {
+        buffer.buf[r] = buffer.buf[r-1]
+    }
+    buffer.buf[ 1 ] = makeRow(buffer.max.x)
 }
 
 
@@ -258,16 +265,17 @@ func (buffer *TermBuffer) eraseLine(val uint) {
 func (buffer *TermBuffer) insertLine(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("insert line(%d) %s",val,buffer.Desc()) }
     switch val {
-        case 1:
-            for r:=uint(buffer.max.y); r>buffer.cursor.y; r-- {
-                buffer.buf[r] = buffer.buf[r-1]
-            }
-            buffer.buf[ buffer.cursor.y ] = makeRow(buffer.max.x)
+//        case 1:
+//            for r:=uint(buffer.max.y); r>buffer.cursor.y; r-- {
+//                buffer.buf[r] = buffer.buf[r-1]
+//            }
+//            buffer.buf[ buffer.cursor.y ] = makeRow(buffer.max.x)
         default:
             log.Warning("NOT IMPLEMENTED: insert line(%d)",val)
     }
         
 }
+
 
 
 func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
@@ -303,6 +311,9 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 
         case ansi.Table[ansi.SGR]:
             break
+            
+        case ansi.Table[ansi.RI]:
+            buffer.reverseLineFeed()
             
         case ansi.Table[ansi.SM]:
             if DEBUG_TERMBUFFER { log.Debug("ignore set mode request") }
