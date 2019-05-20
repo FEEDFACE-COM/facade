@@ -48,7 +48,7 @@ func (test *Test) Init(font *gfx.Font) {
 
 func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
     if config == nil { return }
-    log.Debug("config %s",config.Desc())
+    log.Debug("test config %s",config.Desc())
 
     if width,ok := config.Width(); ok && width != 0 && width != test.state.Width { 
 	    test.state.Width = width 
@@ -70,7 +70,7 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
         test.state.Buffer = buffer
     }
     
-    
+    test.ScheduleRefresh()
 }
 
 

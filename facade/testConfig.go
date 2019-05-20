@@ -95,7 +95,7 @@ type TestState struct {
 var TestDefaults = TestState{
     Width:       25,
     Height:       8,
-    Buffer: LINEBUFFER,
+    Buffer: TERMBUFFER,
     BufLen:       2,
     Speed:      1.0,
 }
@@ -104,9 +104,9 @@ var TestDefaults = TestState{
 func (state *TestState) AddFlags(flags *flag.FlagSet) {
     flags.UintVar(&state.Width,"w",state.Width,"test width")
     flags.UintVar(&state.Height,"h",state.Height,"test height")
-    flags.StringVar( (*string)(&state.Buffer), "buf",string(state.Buffer),"test buffer")
-    flags.UintVar(&state.BufLen,"l",state.BufLen,"test buffer length")
-    flags.Float64Var(&state.Speed,"S",state.Speed,"scroll speed")
+    flags.StringVar( (*string)(&state.Buffer), "mode",string(state.Buffer),"test buffer mode")
+    flags.UintVar(&state.BufLen,"buffer",state.BufLen,"test buffer length")
+    flags.Float64Var(&state.Speed,"speed",state.Speed,"scroll speed")
 }
 
 func (state *TestState) CheckFlags(flags *flag.FlagSet) (*TestConfig,bool) {
@@ -115,9 +115,9 @@ func (state *TestState) CheckFlags(flags *flag.FlagSet) (*TestConfig,bool) {
 	flags.Visit( func(f *flag.Flag) {
 		if f.Name == "w" { ok = true; ret.SetWidth( state.Width ) }
 		if f.Name == "h" { ok = true; ret.SetHeight( state.Height ) }
-		if f.Name == "buf" { ok = true; ret.SetBuffer( state.Buffer) }
-		if f.Name == "S" { ok = true; ret.SetSpeed( state.Speed ) }
-		if f.Name == "l" { ok = true; ret.SetBufLen( state.BufLen ) }
+		if f.Name == "mode" { ok = true; ret.SetBuffer( state.Buffer) }
+		if f.Name == "speed" { ok = true; ret.SetSpeed( state.Speed ) }
+		if f.Name == "buffer" { ok = true; ret.SetBufLen( state.BufLen ) }
 	})
 	return &ret,ok
 }

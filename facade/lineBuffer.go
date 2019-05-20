@@ -160,7 +160,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
         
         if idx >= total {
-            log.Warning("overflow %s",buffer.Desc())
+            if DEBUG_LINEBUFFER { log.Warning("overflow %s",buffer.Desc()) }
             return
         }
 
@@ -214,7 +214,6 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
 
     rem := append(buffer.rem, runes ...)
     tmp := []rune{}
-//    log.Debug("REM %s",string(rem))
     
     
     for _,r := range(rem) {

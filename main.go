@@ -195,6 +195,7 @@ func main() {
             executor = NewExecutor(client)
 
         case TEST:
+            scanner = NewScanner()
             server = NewServer(listenHost,confPort,textPort,readTimeout)
             tester = NewTester(directory)
 
@@ -245,10 +246,10 @@ func main() {
 
     if cmd == EXEC {
         var ok bool
-        var grid facade.GridConfig
-        if grid,ok = config.Grid(); !ok {
-            grid = facade.GridConfig{}
-            config.SetGrid(grid)
+        var grid facade.TestConfig
+        if grid,ok = config.Test(); !ok {                           //REM, make grid!!
+            grid = facade.TestConfig{}
+            config.SetTest(grid)
 //            log.PANIC("exec without grid")
         } 
         var cols,rows = uint(40), uint(12)
@@ -281,9 +282,12 @@ func main() {
             if scanner == nil { log.PANIC("scanner not available") }
             bufChan := make(chan facade.BufferItem)
             go scanner.ScanText(bufChan)
-            go renderer.ProcessBufferItems(bufChan)
             runtime.LockOSThread()
             renderer.Init(config) 
+            
+            //start processing only after init!
+            go renderer.ProcessBufferItems(bufChan)
+            
             err = renderer.Render(nil)
             
 
@@ -297,10 +301,15 @@ func main() {
 
             go server.ListenConf(rawConfs)
             go server.ListenText(bufChan)
-            go renderer.ProcessRawConfs(rawConfs,confs)
-            go renderer.ProcessBufferItems(bufChan)
+
+
             runtime.LockOSThread()
             renderer.Init(config) 
+
+            //start processing only after init!
+            go renderer.ProcessRawConfs(rawConfs,confs)
+            go renderer.ProcessBufferItems(bufChan)
+            
             err = renderer.Render(confs)
                     
         case PIPE:
@@ -341,21 +350,28 @@ func main() {
 
         case TEST:
             log.Info(AUTHOR)
+            if scanner == nil { log.PANIC("scanner not available") }
             if server == nil { log.PANIC("server not available") }
             if tester == nil { log.PANIC("tester not available") }
             rawConfs := make(chan facade.Config)
             confs := make(chan facade.Config)
             bufChan := make(chan facade.BufferItem)
 
+            
+
             go server.ListenConf(rawConfs)
             go server.ListenText(bufChan)
-            
-            go tester.ProcessRawConfs(rawConfs,confs)
-            go tester.ProcessBufferItems(bufChan)
+            go scanner.ScanText(bufChan)
 
             runtime.LockOSThread()
             tester.Init(config) 
             tester.Configure(config)
+            
+            //start processing only after init!
+            go tester.ProcessRawConfs(rawConfs,confs)
+            go tester.ProcessBufferItems(bufChan)
+
+            
             err = tester.Test(confs)
             
 

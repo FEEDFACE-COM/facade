@@ -158,7 +158,7 @@ func (tester *Tester) ProcessBufferItems(bufChan chan facade.BufferItem) error {
 func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
     for {
         rawConf := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process raw: %s",rawConf.Desc()) }
+        if DEBUG_MESSAGES { log.Debug("process raw conf: %s",rawConf.Desc()) }
 
 //        tester.mutex.Lock()
 //        // prep some stuff i guess?

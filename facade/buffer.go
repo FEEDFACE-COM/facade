@@ -3,11 +3,12 @@
 package facade
 
 import(
+    "strings"
     log "../log"
     "github.com/pborman/ansi"
 )
 
-const DEBUG_BUFFER = false
+const DEBUG_BUFFER = true
 
 type Line []rune
 
@@ -110,26 +111,29 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if DEBUG_BUFFER { log.Debug("process ansi: %s %s",seq.Type,s.Name) }
+                    if DEBUG_BUFFER { log.Debug("process ansi: %s %s(%s)",seq.Type,s.Name,strings.Join(seq.Params,",")) }
                     sendSequence(seq, bufChan)
                 } else {
                     log.Warning("ansi %s 0x%x not in table",seq.Type,seq.Code)
                 }
 
             case "ESC":
-                log.Debug("got escape, here's 16 byte: %s",log.Dump(ptr,16,0))
-                log.Debug("       and remainn 16 byte: %s",log.Dump(rem,16,0))
+
+                if len(rem) <= 0 { // no full sequence, return ptr to pick up more
+                    log.Debug("got escape, here's 16 byte: %s",log.Dump(ptr,16,0))
+                    log.Debug("     and remaining 16 byte: %s",log.Dump(rem,16,0))
+                    sendBytes(tmp, bufChan)
+                    log.Debug("short sequence, return ptr to pick up more!")
+                    return ptr, log.NewError("ansi short escape sequence")
+                }
+
                 switch seq.Code {
-                    case "\033(":
-                        if len(rem) >= 1 { //no full sequence, return ptr to pick up more
-                            rem = rem[1:]
-                            if DEBUG_BUFFER { log.Debug("vt100 0x%x skip %d byte: 0x%x",len(seq.Code),seq.Code) }
-                        } else {
-                            sendBytes(tmp, bufChan)
-                            return ptr, log.NewError("ansi short escape sequence")
-                        }
+                    case "\033(", "\033=":
+                        log.Debug("skip unknown 2 byte sequence: 0x%0x !!",seq.Code)
                     
                     default:
+                        log.Debug("got escape, here's 16 byte: %s",log.Dump(ptr,16,0))
+                        log.Debug("     and remaining 16 byte: %s",log.Dump(rem,16,0))
                         log.Warning("vt100 unknown %d byte:  0x%x ",len(seq.Code),seq.Code)
                     
                 }
