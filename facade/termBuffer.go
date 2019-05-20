@@ -157,6 +157,17 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
 
+                    if cur.x > max.x {
+                        cur.x = 1
+                        cur.y += 1
+                    }
+                    if cur.y > max.y {
+                        if DEBUG_TERMBUFFER { log.Debug("scroll for tabulator.") }
+                        buffer.scrollLine()
+                        cur.x = 1
+                        cur.y = max.y
+                    }
+
                     buf[cur.y][cur.x] = rune(' ')
                     cur.x += 1
 
@@ -164,19 +175,11 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         break
                     }
 
-                    if cur.x > max.x {
-                        break
-                    }
+//                    if cur.x > max.x {
+//                        break
+//                    }
                 }
-                if cur.x > max.x {
-                    cur.x = 1
-                    cur.y += 1
-                    if cur.y > max.y {
-                        if DEBUG_TERMBUFFER { log.Debug("scroll for tabulator.") }
-                        buffer.scrollLine()
-                        cur.y = max.y
-                }
-            }
+//            }
                 
             
             case '\r':
@@ -193,19 +196,20 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 
             
             default:
+                if cur.x > max.x {
+                    cur.x = 1
+                    cur.y += 1
+                }
+                if cur.y > max.y {
+                    if DEBUG_TERMBUFFER { log.Debug("scroll for rune.") }
+                    buffer.scrollLine()
+                    cur.x = 1
+                    cur.y = max.y
+                } 
                 if DEBUG_TERMBUFFER { log.Debug("rune %c %d,%d",run,cur.x,cur.y) }
                 buf[cur.y][cur.x] = run
                 cur.x += 1
                 
-                if cur.x > max.x {
-                    cur.x = 1
-                    cur.y += 1
-                    if cur.y > max.y {
-                        if DEBUG_TERMBUFFER { log.Debug("scroll for rune.") }
-                        buffer.scrollLine()
-                        cur.y = max.y
-                    } 
-                }
 
         }
         
