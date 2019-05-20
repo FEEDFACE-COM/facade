@@ -138,7 +138,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
         switch (run) {
             
             case '\n':
-                if DEBUG_TERMBUFFER { log.Debug("linefeed %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("linefeed %d,%d",cur.x,cur.y) }
                 cur.x = 1
                 cur.y += 1
                 if cur.y > max.y {  // scroll last row
@@ -152,7 +152,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             
             case '\t':
-                if DEBUG_TERMBUFFER { log.Debug("tabulator %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("tabulator %d,%d",cur.x,cur.y) }
 
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
@@ -183,14 +183,14 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 
             
             case '\r':
-                if DEBUG_TERMBUFFER { log.Debug("carriage return %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("carriage return %d,%d",cur.x,cur.y) }
                 cur.x = 1
             
             case '\a':
                 if DEBUG_TERMBUFFER { log.Debug("bell.") }
             
             case '\b':
-                if DEBUG_TERMBUFFER { log.Debug("backspace %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("backspace %d,%d",cur.x,cur.y) }
                 cur.x -= 1
                 if cur.x <= 1 { cur.x = 1 }
 
@@ -206,7 +206,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     cur.x = 1
                     cur.y = max.y
                 } 
-                if DEBUG_TERMBUFFER { log.Debug("rune %c %d,%d",run,cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("rune %c %d,%d",run,cur.x,cur.y) }
                 buf[cur.y][cur.x] = run
                 cur.x += 1
                 
