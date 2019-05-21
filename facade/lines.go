@@ -104,28 +104,28 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
 
     gl.ClearColor(0.0,0.0,0.0,1.0)
 
-    model := mgl32.Ident4()
-
-    gl.ActiveTexture(gl.TEXTURE0)
-    lines.program.UseProgram(debug)
-    lines.object.BindBuffer()
-    camera.Uniform(lines.program)
-
-    lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
-    lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
-    modelUniform,_ := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+//    model := mgl32.Ident4()
+//
+//    gl.ActiveTexture(gl.TEXTURE0)
+//    lines.program.UseProgram(debug)
+//    lines.object.BindBuffer()
+//    camera.Uniform(lines.program)
+//
+//    lines.program.VertexAttribPointer(gfx.VERTEX,3,5*4,0)
+//    lines.program.VertexAttribPointer(gfx.TEXCOORD,2,5*4,3*4)
+//    modelUniform,_ := lines.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0] )
+//    
+//    var d float32 
+//    if lines.config.Height % 2 == 0 {
+//        d = float32( int(lines.config.Height/2) ) + 0.5
+//    } else {
+//        d = float32( int(lines.config.Height/2) ) + 1.0
+//    }
+//
+//
+//    model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
     
-    var d float32 
-    if lines.config.Height % 2 == 0 {
-        d = float32( int(lines.config.Height/2) ) + 0.5
-    } else {
-        d = float32( int(lines.config.Height/2) ) + 1.0
-    }
-
-
-    model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
-    
-    for i:=uint(0);i<lines.config.Height;i++ {
+//    for i:=uint(0);i<lines.config.Height;i++ {
 //        line  := lines.buffer.Tail(i)
 
 //        model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
@@ -142,7 +142,7 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
 //            gl.DrawArrays(gl.LINE_STRIP, int32(i* 2*3), 2*3)
 //        }    
         
-    }
+//    }
     
 
 
