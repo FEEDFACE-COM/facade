@@ -9,24 +9,20 @@ uniform vec2 tileOffset;
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
+
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
 
-
 bool DEBUG = debugFlag > 0.0;
-
-
-bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
-bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
 
 
 float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
@@ -35,6 +31,7 @@ float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
     vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
@@ -47,12 +44,8 @@ void main() {
     pos.y += ( tileOffset.y * tileSize.y);
     
     float F = 0.5;
-    float t = -1.;
-    if (downward == 1.0) {
-        t = 1.;
-    }
     float y  =  vTileCoord.y       / (tileCount.y/2.);
-    float yy = (vTileCoord.y + t ) / (tileCount.y/2.);
+    float yy = (vTileCoord.y - 1.0 ) / (tileCount.y/2.);
 
     float freq = 2.;
     float f0 = cos( freq * y  * PI + now + PI/2. );
