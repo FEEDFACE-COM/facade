@@ -10,26 +10,22 @@ type Test struct {
     termBuffer *TermBuffer
     lineBuffer *LineBuffer
     
-    state TestState
+    state GridState
     refreshChan chan bool
     
-//    scroller *Scroller
     
     
 }
 
 func (test *Test) Width() uint { return test.state.Width }
-func (test *Test) Height() uint { return test.state.Height }
-func (test *Test) Buffer() BufferName { return test.state.Buffer }
-func (test *Test) BufLen() uint { return test.state.BufLen }
+func (test *Test) Term() bool { return test.state.Term }
 
-func NewTest(config *TestConfig, termBuffer *TermBuffer, lineBuffer *LineBuffer) *Test {
+func NewTest(config *GridConfig, termBuffer *TermBuffer, lineBuffer *LineBuffer) *Test {
 
     ret := &Test{}
-    ret.state = TestDefaults
+    ret.state = GridDefaults
     ret.state.ApplyConfig(config)
     ret.refreshChan = make( chan bool, 1 )
-//    ret.scroller = NewScroller(float32(ret.state.Speed))
     ret.termBuffer = termBuffer
     ret.lineBuffer = lineBuffer
     ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
@@ -46,7 +42,7 @@ func (test *Test) Init(font *gfx.Font) {
 }
 
 
-func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
+func (test *Test) Configure(config *GridConfig, font *gfx.Font) {
     if config == nil { return }
     log.Debug("test config %s",config.Desc())
 
@@ -66,8 +62,8 @@ func (test *Test) Configure(config *TestConfig, font *gfx.Font) {
         test.lineBuffer.Resize(test.state.Height,test.state.BufLen)
     }
     
-    if buffer,ok := config.Buffer(); ok && buffer != test.state.Buffer {
-        test.state.Buffer = buffer
+    if term,ok := config.Term(); ok && term != test.state.Term {
+        test.state.Term = term
     }
     
     test.ScheduleRefresh()

@@ -8,7 +8,8 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_BUFFER = true
+const DEBUG_ANSI = true
+const DEBUG_ANSI_DUMP = false
 
 type Line []rune
 
@@ -60,7 +61,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
     
     var tmp []byte = []byte{}
     
-//    if DEBUG_BUFFER { log.Debug("process raw %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
+//    if DEBUG_ANSI { log.Debug("process raw %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
     
     for ptr != nil && len(ptr) > 0 {
 
@@ -91,7 +92,8 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
     
             case "":  // no ansi sequence
                 s := seq.String()
-                if DEBUG_BUFFER { log.Debug("ansi text %d byte:\n%s",len(s),log.Dump([]byte(s),len(s),0) ) }
+                if DEBUG_ANSI_DUMP { log.Debug("ansi text %d byte:\n%s",len(s),log.Dump([]byte(s),len(s),0) ) 
+                } else if DEBUG_ANSI { log.Debug("ansi text %d byte",len(s)) }
                 tmp = append(tmp, []byte(s) ... )
 
             case "C0":
@@ -99,7 +101,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if DEBUG_BUFFER { log.Debug("ansi C0 %s %s: %s",s.Name,s.Desc) }
+                    if DEBUG_ANSI { log.Debug("ansi C0 %s %s: %s",s.Name,s.Desc) }
                     sendSequence(seq, bufChan)
                 } else {
                     log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
@@ -111,14 +113,14 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 // to 0x5f.  They may also be specified by a single byte in the range of 0x80 -
                 // 0x9f. 
                 if ptr[0] >= 0x80 && ptr[0] <= 0x9f {
-                    if DEBUG_BUFFER { log.Debug("ansi skip C1 byte 0x%02x",ptr[0]) }
+                    if DEBUG_ANSI { log.Debug("ansi skip C1 byte 0x%02x",ptr[0]) }
                     tmp = append(tmp, ptr[0] )
                 } else {
                     sendBytes(tmp, bufChan)
                     tmp = []byte{}
                     s, ok := ansi.Table[seq.Code]
                     if ok {
-                        if DEBUG_BUFFER { log.Debug("ansi C1 %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
+                        if DEBUG_ANSI { log.Debug("ansi C1 %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
                         sendSequence(seq, bufChan)
                     } else {
                         log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
@@ -129,7 +131,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if DEBUG_BUFFER { log.Debug("ansi %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
+                    if DEBUG_ANSI { log.Debug("ansi %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
                     sendSequence(seq, bufChan)
                 } else {
                     log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
@@ -140,18 +142,18 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 if len(rem) < 3 { // no full sequence, return ptr to pick up more
                     sendBytes(tmp, bufChan)
                     tmp = []byte{}
-                    log.Debug("ansi short sequence, return ptr to pick up more")
+                    if DEBUG_ANSI { log.Debug("ansi short sequence, return ptr to pick up more") }
                     return ptr, log.NewError("ansi short escape sequence")
                 }
 
                 switch seq.Code {
                     case "\033(", "\033=":
-                        log.Debug("ansi skip ESC sequence 0x%0x plus one byte",seq.Code)
+                        if DEBUG_ANSI { log.Debug("ansi skip ESC sequence 0x%0x plus one byte",seq.Code) }
                         rem = rem[1:]
 
                     
                     default:
-                        log.Debug("ansi unexpected sequence 0x%x, ptr %s",seq.Code,log.Dump(ptr,16,0))
+                        if DEBUG_ANSI { log.Debug("ansi unexpected sequence 0x%x, ptr %s",seq.Code,log.Dump(ptr,16,0)) }
                         log.Warning("ansi unexpected sequence 0x%x",seq.Code)
                     
                 }

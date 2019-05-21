@@ -246,10 +246,10 @@ func main() {
 
     if cmd == EXEC {
         var ok bool
-        var grid facade.TestConfig
-        if grid,ok = config.Test(); !ok {                           //REM, make grid!!
-            grid = facade.TestConfig{}
-            config.SetTest(grid)
+        var grid facade.GridConfig
+        if grid,ok = config.Grid(); !ok {                           //REM, make grid!!
+            grid = facade.GridConfig{}
+            config.SetGrid(grid)
 //            log.PANIC("exec without grid")
         } 
         var cols,rows = uint(40), uint(12)

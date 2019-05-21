@@ -25,6 +25,7 @@ type Executor struct{
 }
 
 const DEBUG_EXEC = true
+const DEBUG_EXEC_DUMP = false
 
 func NewExecutor(client *Client) *Executor { 
 	return &Executor{path:"", args:[]string{}, client:client} 
@@ -114,7 +115,8 @@ func (executor *Executor) ReadTTY() {
 			log.Debug("read stdout error: %s",err)
 			break
 		}
-		if DEBUG_EXEC { log.Debug("read tty %d byte:\n%s",n,log.Dump(buf,n,0)) }
+		if DEBUG_EXEC_DUMP { log.Debug("read %d byte tty:\n%s",n,log.Dump(buf,n,0)) 
+        } else if DEBUG_EXEC { log.Debug("read %d byte tty",n) }
 		os.Stdout.Write(buf[0:n])
 		executor.client.SendText(buf[0:n])
 

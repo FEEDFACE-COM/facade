@@ -12,6 +12,7 @@ import (
 
 
 const DEBUG_READ = false
+const DEBUG_READ_DUMP = false
 
 type Scanner struct {
     reader *bufio.Reader   
@@ -41,7 +42,8 @@ func (scanner *Scanner) ScanText(bufChan chan facade.BufferItem) {
 			log.Error("read stdin error: %s",err)
 			break
 		}
-        if DEBUG_READ { log.Debug("read %d byte:\n%s",n,log.Dump(buf,n,0)) }
+        if DEBUG_READ_DUMP { log.Debug("read %d byte:\n%s",n,log.Dump(buf,n,0)) 
+        } else if DEBUG_READ { log.Debug("read %d byte",n) }
 
 		tmp = append(rem, buf[:n] ... )
 		rem, err = facade.ProcessRaw(tmp, bufChan)

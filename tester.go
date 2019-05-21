@@ -67,22 +67,22 @@ func (tester *Tester) Init(config *facade.Config) error {
 	tester.font.Init()
 	
 	
-	testConfig := facade.TestDefaults.Config()
-    if cfg,ok := config.Test(); ok {
-        testConfig.ApplyConfig(&cfg)
+	gridConfig := facade.GridDefaults.Config()
+    if cfg,ok := config.Grid(); ok {
+        gridConfig.ApplyConfig(&cfg)
     }
     
-    width,_ := testConfig.Width()
-    height,_ := testConfig.Height()
-    buflen,_ := testConfig.BufLen()
+    width,_ := gridConfig.Width()
+    height,_ := gridConfig.Height()
+    buflen,_ := gridConfig.BufLen()
     
     tester.termBuffer = facade.NewTermBuffer(width,height) 
     tester.lineBuffer = facade.NewLineBuffer(height,buflen,tester.refreshChan) 
     
     
-    tester.test = facade.NewTest( testConfig, tester.termBuffer, tester.lineBuffer )
+    tester.test = facade.NewTest( gridConfig, tester.termBuffer, tester.lineBuffer )
     tester.test.Init(tester.font)
-    tester.test.Configure(testConfig,tester.font)
+    tester.test.Configure(gridConfig,tester.font)
 
     
     gfx.ClockReset()
@@ -109,7 +109,7 @@ func (tester *Tester) Configure(config *facade.Config) error {
 	}
 
 
-    if tmp,ok := config.Test(); ok {
+    if tmp,ok := config.Grid(); ok {
 		tester.test.Configure(&tmp,tester.font)    
 	}
 	
@@ -195,9 +195,9 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
         tester.ProcessConf(confChan)
 
         if DEBUG_BUFFER {
-            if tester.test.Buffer() == facade.TERMBUFFER {
+            if tester.test.Term() {
                 os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
-            } else if tester.test.Buffer() == facade.LINEBUFFER {
+            } else {
                 os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
             }
             os.Stdout.Write( []byte( "\n" ) )

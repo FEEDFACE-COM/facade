@@ -14,6 +14,7 @@ import (
 )
 
 const DEBUG_CLIENT = true
+const DEBUG_CLIENT_DUMP = false
 
 type Client   struct {
     host string
@@ -75,7 +76,8 @@ func (client *Client) SendText(text []byte) error {
         if DEBUG_CLIENT { log.Error("fail to write to %s: %s",client.textConnStr,err) }
         return log.NewError("fail to write to %s",client.textConnStr)
     }
-    if DEBUG_CLIENT { log.Debug("sent %d byte text:\n%s",len(text),log.Dump(text,0,0)) }
+    if DEBUG_CLIENT_DUMP { log.Debug("sent %d byte text:\n%s",len(text),log.Dump(text,0,0)) 
+    } else if DEBUG_CLIENT { log.Debug("sent %d byte text",len(text)) }
     return nil
 }
 
