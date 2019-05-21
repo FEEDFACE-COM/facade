@@ -9,7 +9,6 @@ uniform vec2 tileOffset;
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
 

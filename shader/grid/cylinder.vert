@@ -8,16 +8,16 @@ uniform vec2 tileCount;
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
 
 
@@ -47,6 +47,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
     vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
@@ -57,7 +58,7 @@ void main() {
     
 
     // c = 2π * r <=> c/2π = r //
-    float r = c / TAU;
+    float r = 1. * c / TAU;
     
     float a;
 //    a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
