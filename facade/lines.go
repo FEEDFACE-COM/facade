@@ -17,7 +17,7 @@ import(
 type Lines struct {
     config LinesConfig
 
-    buffer *gfx.RingBuffer 
+//    buffer *gfx.RingBuffer 
     program *gfx.Program
 
 
@@ -34,15 +34,15 @@ func (lines *Lines) generateData() {
     
     for i:=uint(0);i<lines.config.Height;i++ {
 
-        item := lines.buffer.Tail(i)
-        var w,h float32
-        if item == nil {
-            w,h = 0.0,0.0
-        } else {
-            w = item.Texture.Size.Width / item.Texture.Size.Height
-            h = item.Texture.Size.Height / item.Texture.Size.Height
-        }
-        lines.data = append(lines.data, gfx.QuadVertices(w,h)...   )
+//        item := lines.buffer.Tail(i)
+//        var w,h float32
+//        if item == nil {
+//            w,h = 0.0,0.0
+//        } else {
+//            w = item.Texture.Size.Width / item.Texture.Size.Height
+//            h = item.Texture.Size.Height / item.Texture.Size.Height
+//        }
+//        lines.data = append(lines.data, gfx.QuadVertices(w,h)...   )
     }
     lines.object.BufferData(len(lines.data)*4,lines.data)
 
@@ -54,7 +54,7 @@ func (lines *Lines) generateData() {
 func (lines *Lines) Queue(text string, font *gfx.Font) {
     newText := gfx.NewText(text)
     newText.RenderTexture(font)
-    lines.buffer.WriteText( newText )
+//    lines.buffer.WriteText( newText )
 //    lines.buffer.Queue( newText )
     lines.generateData()
 //    log.Debug("queued text: %s",text)
@@ -71,7 +71,7 @@ func (lines *Lines) Configure(config *LinesConfig) {
     log.Debug("config %s",config.Desc())
     
     if config.Height != old.Height {
-        lines.buffer.Resize(config.Height)
+//        lines.buffer.Resize(config.Height)
         lines.generateData()
     }
 
@@ -126,7 +126,7 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     model = model.Mul4( mgl32.Translate3D(0.0,-d,0.0) )
     
     for i:=uint(0);i<lines.config.Height;i++ {
-        line  := lines.buffer.Tail(i)
+//        line  := lines.buffer.Tail(i)
 
         model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
         gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
@@ -159,7 +159,7 @@ func NewLines(config *LinesConfig) *Lines {
         config = NewLinesConfig()
     }
     ret := &Lines{config: *config}
-    ret.buffer = gfx.NewRingBuffer(config.Height)
+//    ret.buffer = gfx.NewRingBuffer(config.Height)
     ret.program = gfx.GetProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret
@@ -169,10 +169,10 @@ func (lines *Lines) Desc() string { return lines.config.Desc() }
 
 func (lines *Lines) Dump() string {
     ret := lines.config.Desc()
-    if lines.buffer.Tail(0) != nil {
-        ret += " '" + (*lines.buffer.Tail(0)).Desc() + "'"
-    }
-    return lines.buffer.Dump()   
+//    if lines.buffer.Tail(0) != nil {
+//        ret += " '" + (*lines.buffer.Tail(0)).Desc() + "'"
+//    }
+//    return lines.buffer.Dump()   
 }
 
 
