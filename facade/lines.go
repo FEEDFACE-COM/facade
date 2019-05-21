@@ -128,19 +128,19 @@ func (lines *Lines) Render(camera *gfx.Camera, debug, verbose bool) {
     for i:=uint(0);i<lines.config.Height;i++ {
 //        line  := lines.buffer.Tail(i)
 
-        model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
-        gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
-        
-        if true && line != nil { //textures
-            line.Texture.BindTexture()
-            gl.DrawArrays(gl.TRIANGLES, int32(i* 2*3), 2*3)
-
-        }
-        if false && line != nil { //lines
-            gl.LineWidth(3.0)
-            lines.white.BindTexture()
-            gl.DrawArrays(gl.LINE_STRIP, int32(i* 2*3), 2*3)
-        }    
+//        model = model.Mul4( mgl32.Translate3D(0.0,1.0,0.0) )
+//        gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+//        
+//        if true && line != nil { //textures
+//            line.Texture.BindTexture()
+//            gl.DrawArrays(gl.TRIANGLES, int32(i* 2*3), 2*3)
+//
+//        }
+//        if false && line != nil { //lines
+//            gl.LineWidth(3.0)
+//            lines.white.BindTexture()
+//            gl.DrawArrays(gl.LINE_STRIP, int32(i* 2*3), 2*3)
+//        }    
         
     }
     
