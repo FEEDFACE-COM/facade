@@ -173,6 +173,7 @@ func (lines *Lines) Dump() string {
 //        ret += " '" + (*lines.buffer.Tail(0)).Desc() + "'"
 //    }
 //    return lines.buffer.Dump()   
+    return ret
 }
 
 
