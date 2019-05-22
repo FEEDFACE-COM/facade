@@ -8,7 +8,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_ANSI = true
+const DEBUG_ANSI = false
 const DEBUG_ANSI_DUMP = false
 
 type Line []rune

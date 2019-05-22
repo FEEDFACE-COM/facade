@@ -26,8 +26,11 @@ type TermBuffer struct {
     cols uint    // lines on screen
     rows  uint   // runes per line
     max pos      // max row / column
-    buf [][]rune  // cols+1 x rows+1
+    buffer [][]rune  // cols+1 x rows+1
     cursor pos    
+    
+    altbuffer *[][]rune
+    altcursor *pos
 }
 
 
@@ -54,7 +57,7 @@ func makeRow(cols uint) []rune {
 func NewTermBuffer(cols, rows uint) *TermBuffer {
     ret := &TermBuffer{cols:cols, rows:rows}
     ret.max = pos{cols,rows}
-    ret.buf = makeBuffer(cols,rows)
+    ret.buffer = makeBuffer(cols,rows)
     ret.cursor = pos{1,1}
 
     return ret
@@ -75,7 +78,7 @@ func (buffer *TermBuffer) Fill(fill []string) {
         
         for c := uint(0); c<cols && c < buffer.cols; c++ {
         
-            buffer.buf[r+1][c+1] = line[c]
+            buffer.buffer[r+1][c+1] = line[c]
             
         }
         
@@ -93,13 +96,18 @@ func (buffer *TermBuffer) Resize(cols, rows uint) {
     buf := makeBuffer(cols,rows)
     for r:=uint(1); r<max.y && r<buffer.max.y; r++ {
         for c:=uint(1); c<max.x && c<buffer.max.x; c++ {
-            buf[r][c] = buffer.buf[r][c]
+            buf[r][c] = buffer.buffer[r][c]
         }
     }
     buffer.cols, buffer.rows = cols,rows
-    buffer.buf = buf
+    buffer.buffer = buf
     buffer.max = max
     buffer.cursor = pos{1,1}
+    
+    //throw away alternate buffer/cursor
+    buffer.altbuffer = nil
+    buffer.altcursor = nil
+    
 }
 
 
@@ -115,7 +123,7 @@ func (buffer *TermBuffer) GetLine(idx uint) Line {
         log.Error("no line %d in %s",idx,buffer.Desc())
         return Line{}
     }
-    return buffer.buf[idx+1][1:]
+    return buffer.buffer[idx+1][1:]
 }
 
 
@@ -125,11 +133,11 @@ func (buffer *TermBuffer) GetLine(idx uint) Line {
 
 
 func (buffer *TermBuffer) ProcessRunes(runes []rune) {
-    buf := buffer.buf
+    buf := buffer.buffer
     max := buffer.max
 
 
-    if DEBUG_TERMBUFFER { log.Debug("%s process %d runes",buffer.Desc(),len(runes)) }
+//    if DEBUG_TERMBUFFER { log.Debug("%s process %d runes",buffer.Desc(),len(runes)) }
 
     
     for _,run := range(runes) {
@@ -182,7 +190,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 
             
             case '\r':
-                if DEBUG_TERMBUFFER { log.Debug("%s carriage return",buffer.Desc()) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s carriage return",buffer.Desc()) }
                 buffer.cursor.x = 1
             
             case '\a':
@@ -216,18 +224,70 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
     
 }
 
+
+
+func (buffer *TermBuffer) saveBuffer() {
+    if DEBUG_TERMBUFFER { log.Debug("%s save buffer",buffer.Desc()) }
+    alt := makeBuffer(buffer.cols,buffer.rows)
+    for r:=uint(0); r<buffer.rows; r++ {
+        for c:=uint(0); c<buffer.cols; c++ {
+            alt[r][c] = buffer.buffer[r][c]
+        }
+    }
+    buffer.altbuffer = &alt
+}
+
+func (buffer *TermBuffer) restoreBuffer() {
+    if buffer.altbuffer == nil {
+        log.Warning("%s cannot restore nil buffer",buffer.Desc())
+        return
+    }
+    // rem check for same size!!
+    if DEBUG_TERMBUFFER { log.Debug("%s restore buffer",buffer.Desc()) }
+
+    var alt [][]rune = *(buffer.altbuffer)
+    for r:=uint(0); r<buffer.rows; r++ {
+        for c:=uint(0); c<buffer.cols; c++ {
+            buffer.buffer[r][c] = alt[r][c]
+        }
+    }
+    buffer.altbuffer = nil
+}
+
+
+func (buffer *TermBuffer) saveCursor() {
+    if DEBUG_TERMBUFFER { log.Debug("%s save cursor",buffer.Desc()) }
+    alt := pos{ buffer.cursor.x, buffer.cursor.y }
+    buffer.altcursor = &alt
+}
+
+
+func (buffer *TermBuffer) restoreCursor() {
+    if buffer.altcursor == nil {
+        log.Warning("%s cannot restore nil cursor",buffer.Desc())
+        return
+    }
+    if DEBUG_TERMBUFFER { log.Debug("%s restore cursor",buffer.Desc()) }
+    buffer.cursor = pos{buffer.altcursor.x, buffer.altcursor.y }
+    buffer.altcursor = nil
+}
+
+
+
+
+
 func (buffer *TermBuffer) lineFeed() {
     for r:=uint(1); r<buffer.max.y; r++ {
-        buffer.buf[r] = buffer.buf[r+1]
+        buffer.buffer[r] = buffer.buffer[r+1]
     }
-    buffer.buf[ buffer.max.y ] = makeRow(buffer.max.x)
+    buffer.buffer[ buffer.max.y ] = makeRow(buffer.max.x)
 }
 
 func (buffer *TermBuffer) reverseLineFeed() {
     for r:=uint(buffer.max.y); r>1; r-- {
-        buffer.buf[r] = buffer.buf[r-1]
+        buffer.buffer[r] = buffer.buffer[r-1]
     }
-    buffer.buf[ 1 ] = makeRow(buffer.max.x)
+    buffer.buffer[ 1 ] = makeRow(buffer.max.x)
 }
 
 
@@ -236,28 +296,28 @@ func (buffer *TermBuffer) reverseLineFeed() {
 
 func (buffer *TermBuffer) clear() {
     if DEBUG_TERMBUFFER { log.Debug("%s clear",buffer.Desc()) }
-    buffer.buf = makeBuffer(buffer.cols,buffer.rows)
+    buffer.buffer = makeBuffer(buffer.cols,buffer.rows)
 }
 
 func (buffer *TermBuffer) erasePage(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s erase page(%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s erase page %d",buffer.Desc(),val) }
     switch val {
         case 2:
-            buffer.buf = makeBuffer(buffer.cols,buffer.rows)
+            buffer.buffer = makeBuffer(buffer.cols,buffer.rows)
             buffer.cursor = pos{1,1}
         default:
-            log.Warning("NOT IMPLEMENTED: erase page(%d)",val)
+            log.Warning("NOT IMPLEMENTED: erase page %d",val)
     }
 }
 
 
 func (buffer *TermBuffer) setCursor(x,y uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s set cursor(%d,%d)",buffer.Desc(),x,y) }
+    if DEBUG_TERMBUFFER { log.Debug("%s set cursor %d,%d",buffer.Desc(),x,y) }
     buffer.cursor = pos{x,y}
 }
 
 func (buffer *TermBuffer) cursorUp(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s cursor up (%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s cursor up %d",buffer.Desc(),val) }
     if int(buffer.cursor.y) - int(val) >= 1 {
         buffer.cursor.y = buffer.cursor.y - val
     }
@@ -266,20 +326,20 @@ func (buffer *TermBuffer) cursorUp(val uint) {
 
 
 func (buffer *TermBuffer) eraseLine(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s erase line(%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s erase line %d",buffer.Desc(),val) }
     switch val {
         case 0:
             for c:=buffer.cursor.x; c<=buffer.max.x; c++ {
-                buffer.buf[buffer.cursor.y][c] = rune(' ')    
+                buffer.buffer[buffer.cursor.y][c] = rune(' ')    
             }
         default:
-            log.Warning("NOT IMPLEMENTED: erase line(%d)",val)
+            log.Warning("NOT IMPLEMENTED: erase line %d",val)
     }
 }
 
 
 func (buffer *TermBuffer) insertLine(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s insert line(%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s insert line %d",buffer.Desc(),val) }
     switch val {
 //        case 1:
 //            for r:=uint(buffer.max.y); r>buffer.cursor.y; r-- {
@@ -287,13 +347,13 @@ func (buffer *TermBuffer) insertLine(val uint) {
 //            }
 //            buffer.buf[ buffer.cursor.y ] = makeRow(buffer.max.x)
         default:
-            log.Warning("NOT IMPLEMENTED: insert line(%d)",val)
+            log.Warning("NOT IMPLEMENTED: insert line %d",val)
     }
         
 }
 
 func (buffer *TermBuffer) linePositionAbsolute(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s line position absolute(%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s line position absolute %d",buffer.Desc(),val) }
     //FIXME: probably need to implement data mode and others..?
     buffer.cursor.x = 1
     buffer.cursor.y = val
@@ -301,8 +361,30 @@ func (buffer *TermBuffer) linePositionAbsolute(val uint) {
 
 
 func (buffer *TermBuffer) cursorCharacterAbsolute(val uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s cursor character absolute(%d)",buffer.Desc(),val) }
+    if DEBUG_TERMBUFFER { log.Debug("%s cursor character absolute %d",buffer.Desc(),val) }
     buffer.cursor.x = val
+}
+
+
+
+func (buffer *TermBuffer) setMode(val string) {
+            switch val {
+                case "?1049":
+                    buffer.saveBuffer()
+                    buffer.saveCursor()
+                default:
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore set mode '%s'",buffer.Desc(),customModeName(val)) }
+            }
+}
+
+func (buffer *TermBuffer) resetMode(val string) {
+            switch val {
+                case "?1049":
+                    buffer.restoreBuffer()
+                    buffer.restoreCursor()
+                default:
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),customModeName(val)) }
+            }
 }
 
 
@@ -354,22 +436,20 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.cursorCharacterAbsolute(val)
-
-        case ansi.Table[ansi.SGR]:
-            break
             
         case ansi.Table[ansi.RI]:
             buffer.reverseLineFeed()
             
         case ansi.Table[ansi.SM]:
-            var val string = modeName( seq.Params[0] )
-            if DEBUG_TERMBUFFER { log.Debug("%s set mode(%s) IGNORED",buffer.Desc(),val) }
-
+            var val string = seq.Params[0]
+            buffer.setMode(val)
 
         case ansi.Table[ansi.RM]:
-            var val string = modeName( seq.Params[0] )
-            if DEBUG_TERMBUFFER { log.Debug("%s reset mode(%s) IGNORED",buffer.Desc(),val) }
+            var val string = seq.Params[0]
+            buffer.resetMode(val)
 
+        case ansi.Table[ansi.SGR]:
+            break
             
         default:
             if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s(%s) %s",buffer.Desc(),sequence.Name,strings.Join(seq.Params,","),sequence.Desc) }
@@ -386,7 +466,8 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 // https://chromium.googlesource.com/apps/libapps/+/a5fb83c190aa9d74f4a9bca233dac6be2664e9e9/hterm/doc/ControlSequences.md
 
 
-func modeName(val string) string {
+
+func customModeName(val string) string {
 
     switch val {
         case "?1":
@@ -396,7 +477,7 @@ func modeName(val string) string {
         case "?25":
             return "Show Cursor"
         case "?2004": 
-            return "Set bracketed paste mode"
+            return "Bracketed Paste Mode"
         case "?1049":
             return "Use Alternate Screen Buffer / Save cursor as in DECSC"
         default:
@@ -408,7 +489,11 @@ func modeName(val string) string {
 
 
 func (buffer *TermBuffer) Desc() string {
-    return fmt.Sprintf("termbuffer[%dx%d %d,%d]",buffer.cols,buffer.rows,buffer.cursor.x,buffer.cursor.y)
+    alt := ""
+    if buffer.altbuffer != nil || buffer.altcursor != nil {
+        alt =  " alt"
+    }
+    return fmt.Sprintf("termbuffer[%2dx%-2d %2d,%-2d%s]",buffer.cols,buffer.rows,buffer.cursor.x,buffer.cursor.y,alt)
 }
 
 func (buffer *TermBuffer) Dump() string {
@@ -420,7 +505,7 @@ func (buffer *TermBuffer) Dump() string {
         ret += "|"
         for c:=uint(1); c<=buffer.max.x; c++ {
             if c == buffer.cursor.x && r == buffer.cursor.y { ret += "\033[7m" }
-            ret += fmt.Sprintf("%c",buffer.buf[r][c])
+            ret += fmt.Sprintf("%c",buffer.buffer[r][c])
             if c == buffer.cursor.x && r == buffer.cursor.y { ret += "\033[27m" }
         }
         ret += "| "
