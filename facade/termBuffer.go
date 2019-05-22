@@ -137,7 +137,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
     max := buffer.max
 
 
-//    if DEBUG_TERMBUFFER { log.Debug("%s process %d runes",buffer.Desc(),len(runes)) }
+    if DEBUG_TERMBUFFER { log.Debug("%s process %d runes",buffer.Desc(),len(runes)) }
 
     
     for _,run := range(runes) {
@@ -145,11 +145,12 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
         switch (run) {
             
             case '\n':
-//                if DEBUG_TERMBUFFER { log.Debug("linefeed %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
                 buffer.cursor.x = 1
                 buffer.cursor.y += 1
-                if buffer.cursor.y > max.y {  // scroll last row
-                    if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
+                if buffer.cursor.y >= max.y {  // scroll last row
+                    if DEBUG_TERMBUFFER { log.Debug("%s feed for linefeed",buffer.Desc()) }
+                    buffer.buffer[buffer.max.y] = makeRow(buffer.max.x)
                     buffer.lineFeed()
                     buffer.cursor.y = max.y
 //                } else { //new empty last row
@@ -169,7 +170,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         buffer.cursor.y += 1
                     }
                     if buffer.cursor.y > max.y {
-                        if DEBUG_TERMBUFFER { log.Debug("%s linefeed for tabulator",buffer.Desc()) }
+                        if DEBUG_TERMBUFFER { log.Debug("%s feed for tabulator",buffer.Desc()) }
                         buffer.lineFeed()
                         buffer.cursor.x = 1
                         buffer.cursor.y = max.y
@@ -197,7 +198,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 if DEBUG_TERMBUFFER { log.Debug("%s bell.",buffer.Desc()) }
             
             case '\b':
-                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
                 buffer.cursor.x -= 1
                 if buffer.cursor.x <= 1 { buffer.cursor.x = 1 }
 
@@ -208,7 +209,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.cursor.y += 1
                 }
                 if buffer.cursor.y > max.y {
-                    if DEBUG_TERMBUFFER { log.Debug("%s linefeed for rune",buffer.Desc()) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s feed for rune",buffer.Desc()) }
                     buffer.lineFeed()
                     buffer.cursor.x = 1
                     buffer.cursor.y = max.y
@@ -324,6 +325,23 @@ func (buffer *TermBuffer) cursorUp(val uint) {
 
 }
 
+func (buffer *TermBuffer) cursorRight(val uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s cursor up %d",buffer.Desc(),val) }
+    if buffer.cursor.x + val <= buffer.max.x {
+        buffer.cursor.x = buffer.cursor.x + val
+    }
+
+}
+
+func (buffer *TermBuffer) deleteLine(val uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s delete line %d",buffer.Desc(),val) }
+    log.Warning("NOT IMPLEMENTED: delete line %d",val)
+}
+
+
+func (buffer *TermBuffer) deleteCharacter(val uint) {
+    log.Warning("NOT IMPLEMENTED: delete character %d",val)
+}
 
 func (buffer *TermBuffer) eraseLine(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s erase line %d",buffer.Desc(),val) }
@@ -340,15 +358,7 @@ func (buffer *TermBuffer) eraseLine(val uint) {
 
 func (buffer *TermBuffer) insertLine(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s insert line %d",buffer.Desc(),val) }
-    switch val {
-//        case 1:
-//            for r:=uint(buffer.max.y); r>buffer.cursor.y; r-- {
-//                buffer.buf[r] = buffer.buf[r-1]
-//            }
-//            buffer.buf[ buffer.cursor.y ] = makeRow(buffer.max.x)
-        default:
-            log.Warning("NOT IMPLEMENTED: insert line %d",val)
-    }
+    log.Warning("NOT IMPLEMENTED: insert line %d",val)
         
 }
 
@@ -373,7 +383,7 @@ func (buffer *TermBuffer) setMode(val string) {
                     buffer.saveBuffer()
                     buffer.saveCursor()
                 default:
-                    if DEBUG_TERMBUFFER { log.Debug("%s ignore set mode '%s'",buffer.Desc(),customModeName(val)) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore set mode '%s'",buffer.Desc(),ansiModeName(val)) }
             }
 }
 
@@ -383,7 +393,7 @@ func (buffer *TermBuffer) resetMode(val string) {
                     buffer.restoreBuffer()
                     buffer.restoreCursor()
                 default:
-                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),customModeName(val)) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),ansiModeName(val)) }
             }
 }
 
@@ -414,6 +424,12 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.cursorUp(val)
+            
+        case ansi.Table[ansi.CUF]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.cursorRight(val)
+            
 
         case ansi.Table[ansi.EL]:
             var val uint
@@ -424,6 +440,17 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.insertLine(val)
+        
+        case ansi.Table[ansi.DL]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.deleteLine(val)
+
+
+        case ansi.Table[ansi.DCH]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.deleteCharacter(val)
         
 
         case ansi.Table[ansi.VPA]:
@@ -458,32 +485,6 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 
 }
 
-
-
-
-// https://www.real-world-systems.com/docs/ANSIcode.html
-// https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html
-// https://chromium.googlesource.com/apps/libapps/+/a5fb83c190aa9d74f4a9bca233dac6be2664e9e9/hterm/doc/ControlSequences.md
-
-
-
-func customModeName(val string) string {
-
-    switch val {
-        case "?1":
-            return "Application Cursor Keys"
-        case "?12":
-            return "Start Blinking Cursor"
-        case "?25":
-            return "Show Cursor"
-        case "?2004": 
-            return "Bracketed Paste Mode"
-        case "?1049":
-            return "Use Alternate Screen Buffer / Save cursor as in DECSC"
-        default:
-            return "UNKOWN"
-    }
-}
 
 
 

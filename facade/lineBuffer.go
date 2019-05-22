@@ -198,13 +198,6 @@ func (buffer *LineBuffer) ProcessSequence(seq *ansi.S) {
             buffer.Clear()
             
         default:
-//            if DEBUG_LINEBUFFER {             
-//                tmp := ""
-//                for _,v := range(seq.Params) { 
-//                    tmp += string(v) + ", "
-//                }
-//                log.Debug("sequence unhandled: %s %s(%s)",sequence.Desc,sequence.Name,tmp)
-//            }
             break
 
     }    

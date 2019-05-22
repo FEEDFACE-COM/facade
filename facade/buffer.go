@@ -63,6 +63,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
     
 //    if DEBUG_ANSI { log.Debug("process raw %d byte:\n%s",len(raw),log.Dump(raw,0,0)) }
     
+    
     for ptr != nil && len(ptr) > 0 {
 
 
@@ -81,6 +82,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
             
                 default:
                     log.Error("ansi fail decode: %s\n%s",err,log.Dump(ptr,0,0)) 
+                    sendBytes(tmp, bufChan)
                     return rem, log.NewError("ansi fail decode")    
                 
             }
@@ -104,7 +106,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     if DEBUG_ANSI { log.Debug("ansi C0 %s %s",s.Desc,s.Name) }
                     sendSequence(seq, bufChan)
                 } else {
-                    log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
+                    log.Warning("ansi unknown C0 sequence 0x%x",seq.Code)
                 }
 
             case "C1":
@@ -123,7 +125,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                         if DEBUG_ANSI { log.Debug("ansi C1 %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                         sendSequence(seq, bufChan)
                     } else {
-                        log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
+                        log.Warning("ansi unknown C1 sequence 0x%x",seq.Code)
                     }
                 }
             case "CSI", "ICF", "CS":
@@ -131,14 +133,10 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if seq.Code == ansi.SM  || seq.Code == ansi.RM {
-                        if DEBUG_ANSI { log.Debug("ansi %s(%s): %s",s.Name,strings.Join(seq.Params,","),log.Dump(ptr,len(ptr)-len(rem),0)) }
-                    }
-                    
                     if DEBUG_ANSI { log.Debug("ansi %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                     sendSequence(seq, bufChan)
                 } else {
-                    log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
+                    log.Warning("ansi unknown %s sequence 0x%x:\n%s",seq.Type,seq.Code,log.Dump(ptr,len(ptr)-len(rem),0))
                 }
 
             case "ESC":
@@ -175,6 +173,52 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
 
     return []byte{}, nil 
 }
+
+
+
+
+
+
+func ansiModeName(val string) string {
+
+// https://www.real-world-systems.com/docs/ANSIcode.html
+// https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html
+// https://chromium.googlesource.com/apps/libapps/+/a5fb83c190aa9d74f4a9bca233dac6be2664e9e9/hterm/doc/ControlSequences.md
+
+
+    switch val {
+
+        case "1"     : return "GUARDED AREA TRANSFER MODE"
+        case "2"     : return "KEYBOARD ACTION MODE"
+        case "3"     : return "CONTROL REPRESENTATION MODE"
+        case "4"     : return "INSERTION REPLACEMENT MODE"
+        case "5"     : return "STATUS REPORT TRANSFER MODE"
+        case "6"     : return "ERASURE MODE"
+        case "7"     : return "LINE EDITING MODE"
+        case "8"     : return "BI-DIRECTIONAL SUPPORT MODE"
+        case "9"     : return "DEVICE COMPONENT SELECT MODE"
+        case "10"    : return "CHARACTER EDITING MODE"
+        case "11"    : return "POSITIONING UNIT MODE"
+        case "12"    : return "SEND/RECEIVE MODE"
+        case "13"    : return "FORMAT EFFECTOR ACTION MODE"
+        case "14"    : return "FORMAT EFFECTOR TRANSFER MODE"
+        case "15"    : return "MULTIPLE AREA TRANSFER MODE"
+        case "16"    : return "TRANSFER TERMINATION MODE"
+        case "17"    : return "SELECTED AREA TRANSFER MODE"
+        case "18"    : return "TABULATION STOP MODE"
+        case "21"    : return "GRAPHIC RENDITION COMBINATION"
+        case "22"    : return "ZERO DEFAULT MODE"
+
+        case "?1"    : return "Application Cursor Keys"
+        case "?12"   : return "Start Blinking Cursor"
+        case "?25"   : return "Show Cursor"
+        case "?2004" : return "Bracketed Paste Mode"
+        case "?1049" : return "Use Alternate Screen Buffer / Save cursor as in DECSC"
+        
+        default:       return "????????"
+    }
+}
+
 
 
 
