@@ -256,6 +256,15 @@ func (buffer *TermBuffer) setCursor(x,y uint) {
     buffer.cursor = pos{x,y}
 }
 
+func (buffer *TermBuffer) cursorUp(val uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s cursor up (%d)",buffer.Desc(),val) }
+    if int(buffer.cursor.y) - int(val) >= 1 {
+        buffer.cursor.y = buffer.cursor.y - val
+    }
+
+}
+
+
 func (buffer *TermBuffer) eraseLine(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s erase line(%d)",buffer.Desc(),val) }
     switch val {
@@ -318,6 +327,11 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             fmt.Sscanf(seq.Params[0],"%d",&y)
             fmt.Sscanf(seq.Params[1],"%d",&x)
             buffer.setCursor(x,y)
+            
+        case ansi.Table[ansi.CUU]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.cursorUp(val)
 
         case ansi.Table[ansi.EL]:
             var val uint
@@ -348,15 +362,13 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             buffer.reverseLineFeed()
             
         case ansi.Table[ansi.SM]:
-            var val int
-            fmt.Sscanf(seq.Params[0],"%d",&val)
-            if DEBUG_TERMBUFFER { log.Debug("%s set mode(%d) IGNORED",buffer.Desc(),val) }
+            var val string = modeName( seq.Params[0] )
+            if DEBUG_TERMBUFFER { log.Debug("%s set mode(%s) IGNORED",buffer.Desc(),val) }
 
 
         case ansi.Table[ansi.RM]:
-            var val int
-            fmt.Sscanf(seq.Params[0],"%d",&val)
-            if DEBUG_TERMBUFFER { log.Debug("%s reset mode(%d) IGNORED",buffer.Desc(),val) }
+            var val string = modeName( seq.Params[0] )
+            if DEBUG_TERMBUFFER { log.Debug("%s reset mode(%s) IGNORED",buffer.Desc(),val) }
 
             
         default:
@@ -367,6 +379,30 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 }
 
 
+
+
+// https://www.real-world-systems.com/docs/ANSIcode.html
+// https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html
+// https://chromium.googlesource.com/apps/libapps/+/a5fb83c190aa9d74f4a9bca233dac6be2664e9e9/hterm/doc/ControlSequences.md
+
+
+func modeName(val string) string {
+
+    switch val {
+        case "?1":
+            return "Application Cursor Keys"
+        case "?12":
+            return "Start Blinking Cursor"
+        case "?25":
+            return "Show Cursor"
+        case "?2004": 
+            return "Set bracketed paste mode"
+        case "?1049":
+            return "Use Alternate Screen Buffer / Save cursor as in DECSC"
+        default:
+            return "UNKOWN"
+    }
+}
 
 
 

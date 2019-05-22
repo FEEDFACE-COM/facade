@@ -101,7 +101,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if DEBUG_ANSI { log.Debug("ansi C0 %s %s: %s",s.Name,s.Desc) }
+                    if DEBUG_ANSI { log.Debug("ansi C0 %s %s",s.Desc,s.Name) }
                     sendSequence(seq, bufChan)
                 } else {
                     log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
@@ -113,25 +113,29 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 // to 0x5f.  They may also be specified by a single byte in the range of 0x80 -
                 // 0x9f. 
                 if ptr[0] >= 0x80 && ptr[0] <= 0x9f {
-                    if DEBUG_ANSI { log.Debug("ansi skip C1 byte 0x%02x",ptr[0]) }
+                    if DEBUG_ANSI { log.Debug("ansi skip probable UTF8 byte 0x%02x",ptr[0]) }
                     tmp = append(tmp, ptr[0] )
                 } else {
                     sendBytes(tmp, bufChan)
                     tmp = []byte{}
                     s, ok := ansi.Table[seq.Code]
                     if ok {
-                        if DEBUG_ANSI { log.Debug("ansi C1 %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
+                        if DEBUG_ANSI { log.Debug("ansi C1 %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                         sendSequence(seq, bufChan)
                     } else {
                         log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
                     }
                 }
-            case "CSI", "IF":
+            case "CSI", "ICF", "CS":
                 sendBytes(tmp, bufChan)
                 tmp = []byte{}
                 s, ok := ansi.Table[seq.Code]
                 if ok {
-                    if DEBUG_ANSI { log.Debug("ansi %s(%s) %s",s.Name,strings.Join(seq.Params,","),s.Desc) }
+                    if seq.Code == ansi.SM  || seq.Code == ansi.RM {
+                        if DEBUG_ANSI { log.Debug("ansi %s(%s): %s",s.Name,strings.Join(seq.Params,","),log.Dump(ptr,len(ptr)-len(rem),0)) }
+                    }
+                    
+                    if DEBUG_ANSI { log.Debug("ansi %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                     sendSequence(seq, bufChan)
                 } else {
                     log.Warning("ansi unknown %s sequence 0x%x",seq.Type,seq.Code)
@@ -171,3 +175,9 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
 
     return []byte{}, nil 
 }
+
+
+
+
+
+
