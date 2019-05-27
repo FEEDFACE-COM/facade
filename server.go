@@ -110,14 +110,16 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferI
         n,err := reader.Read(buf)
 		if err == io.EOF { break }
 		if err != nil {
-			log.Error("read %s error: %s",textConn.RemoteAddr().String(),err)
+			log.Error("text read %s error: %s",textConn.RemoteAddr().String(),err)
 			break
 		}
-        if DEBUG_RECV { log.Debug("recv %d byte:\n%s",n,log.Dump(buf,n,0)) }
+        if DEBUG_RECV { log.Debug("text recv %d byte:\n%s",n,log.Dump(buf,n,0)) }
 		tmp = append(rem, buf[:n] ... )
+//		log.Debug("PROCESS %d byte:\n%s",len(tmp),log.Dump(tmp,len(tmp),0))
 		rem, err = facade.ProcessRaw(tmp, bufChan)
 		if err != nil {
-            log.Error("process error: %s",err)    		
+            log.Error("text process error: %s",err)
+//            log.Debug("RETURN %d byte:\n%s",len(rem),log.Dump(rem,len(rem),0))
         }
     }
     

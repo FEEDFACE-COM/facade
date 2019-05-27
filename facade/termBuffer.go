@@ -5,7 +5,7 @@ package facade
 import(
     "fmt"
 //    "os"
-    "strings"
+//    "strings"
     log "../log"
     "github.com/pborman/ansi"
 
@@ -23,10 +23,10 @@ type pos struct {
 }
 
 type TermBuffer struct {
-    cols uint    // lines on screen
-    rows  uint   // runes per line
-    max pos      // max row / column
+    cols uint    // runes per line
+    rows  uint   // lines on screen
     buffer [][]rune  // cols+1 x rows+1
+    max pos      // max row / column
     cursor pos    
     
     altbuffer *[][]rune
@@ -139,6 +139,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 
     if DEBUG_TERMBUFFER { log.Debug("%s process %d runes",buffer.Desc(),len(runes)) }
 
+//    tmp := []rune{}
     
     for _,run := range(runes) {
         
@@ -148,10 +149,10 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 //                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
                 buffer.cursor.x = 1
                 buffer.cursor.y += 1
-                if buffer.cursor.y >= max.y {  // scroll last row
-                    if DEBUG_TERMBUFFER { log.Debug("%s feed for linefeed",buffer.Desc()) }
-                    buffer.buffer[buffer.max.y] = makeRow(buffer.max.x)
+                if buffer.cursor.y > max.y {  // scroll last row
+                    if DEBUG_TERMBUFFER { log.Debug("%s linefeed scroll",buffer.Desc()) }
                     buffer.lineFeed()
+                    buffer.buffer[buffer.max.y] = makeRow(buffer.max.x)
                     buffer.cursor.y = max.y
 //                } else { //new empty last row
 //                    buf[ buffer.cursor.y ] = makeRow(max.x)  //for ps ax output??
@@ -160,7 +161,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             
             case '\t':
-//                if DEBUG_TERMBUFFER { log.Debug("tabulator %d,%d",cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
 
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
@@ -170,7 +171,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         buffer.cursor.y += 1
                     }
                     if buffer.cursor.y > max.y {
-                        if DEBUG_TERMBUFFER { log.Debug("%s feed for tabulator",buffer.Desc()) }
+                        if DEBUG_TERMBUFFER { log.Debug("%s tabulator scroll",buffer.Desc()) }
                         buffer.lineFeed()
                         buffer.cursor.x = 1
                         buffer.cursor.y = max.y
@@ -198,7 +199,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 if DEBUG_TERMBUFFER { log.Debug("%s bell.",buffer.Desc()) }
             
             case '\b':
-//                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
+                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
                 buffer.cursor.x -= 1
                 if buffer.cursor.x <= 1 { buffer.cursor.x = 1 }
 
@@ -209,7 +210,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.cursor.y += 1
                 }
                 if buffer.cursor.y > max.y {
-                    if DEBUG_TERMBUFFER { log.Debug("%s feed for rune",buffer.Desc()) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s rune scroll",buffer.Desc()) }
                     buffer.lineFeed()
                     buffer.cursor.x = 1
                     buffer.cursor.y = max.y
@@ -217,11 +218,15 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 //                if DEBUG_TERMBUFFER { log.Debug("rune %c %d,%d",run,cur.x,cur.y) }
                 buf[buffer.cursor.y][buffer.cursor.x] = run
                 buffer.cursor.x += 1
+//                tmp = append(tmp, run)
                 
 
         }
+
+//        buffer.trace()
         
     }
+//    if DEBUG_TERMBUFFER { log.Debug("%s wrote %d runes:\n%s",buffer.Desc(),len(tmp),log.Dump([]byte(string(tmp)),0,0)) }
     
 }
 
@@ -230,8 +235,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 func (buffer *TermBuffer) saveBuffer() {
     if DEBUG_TERMBUFFER { log.Debug("%s save buffer",buffer.Desc()) }
     alt := makeBuffer(buffer.cols,buffer.rows)
-    for r:=uint(0); r<buffer.rows; r++ {
-        for c:=uint(0); c<buffer.cols; c++ {
+    for r:=uint(0); r<=buffer.rows; r++ {
+        for c:=uint(0); c<=buffer.cols; c++ {
             alt[r][c] = buffer.buffer[r][c]
         }
     }
@@ -247,8 +252,8 @@ func (buffer *TermBuffer) restoreBuffer() {
     if DEBUG_TERMBUFFER { log.Debug("%s restore buffer",buffer.Desc()) }
 
     var alt [][]rune = *(buffer.altbuffer)
-    for r:=uint(0); r<buffer.rows; r++ {
-        for c:=uint(0); c<buffer.cols; c++ {
+    for r:=uint(0); r<=buffer.rows; r++ {
+        for c:=uint(0); c<=buffer.cols; c++ {
             buffer.buffer[r][c] = alt[r][c]
         }
     }
@@ -278,6 +283,7 @@ func (buffer *TermBuffer) restoreCursor() {
 
 
 func (buffer *TermBuffer) lineFeed() {
+    if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
     for r:=uint(1); r<buffer.max.y; r++ {
         buffer.buffer[r] = buffer.buffer[r+1]
     }
@@ -285,6 +291,7 @@ func (buffer *TermBuffer) lineFeed() {
 }
 
 func (buffer *TermBuffer) reverseLineFeed() {
+    if DEBUG_TERMBUFFER { log.Debug("%s reverse linefeed",buffer.Desc()) }
     for r:=uint(buffer.max.y); r>1; r-- {
         buffer.buffer[r] = buffer.buffer[r-1]
     }
@@ -394,6 +401,7 @@ func (buffer *TermBuffer) resetMode(val string) {
                     buffer.restoreCursor()
                 default:
                     if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),ansiModeName(val)) }
+
             }
 }
 
@@ -479,13 +487,22 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             break
             
         default:
-            if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s(%s) %s",buffer.Desc(),sequence.Name,strings.Join(seq.Params,","),sequence.Desc) }
+//            if true && DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence 0x%x",buffer.Desc(),seq.Code) }
+            if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Desc,sequence.Name) }
+//            if false && DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s(%s) %s",buffer.Desc(),sequence.Name,strings.Join(seq.Params,","),sequence.Desc) }
         
     }
+    
+//    buffer.trace()
 
 }
 
 
+//func (buffer *TermBuffer) trace() {
+//    os.Stdout.Write( []byte(buffer.Dump()) )
+//    os.Stdout.Write( []byte("\n") )
+//    os.Stdout.Sync()
+//}
 
 
 

@@ -36,7 +36,10 @@ func Dump(in []byte, count,offset int) string {
         } else {
             right += "."
         }
-        if (i+off+1) % 4 == 0 {
+        if (i+off+1) % (2*4) == 0 {
+            left += "  "
+            right += " "
+        } else if (i+off+1) % 4 == 0 {
             left += " "
         } else if (i+off+1) % (4*4) != 0 {
             left += ":"
@@ -44,10 +47,10 @@ func Dump(in []byte, count,offset int) string {
     
     }
     //fill up remaining space
-    for i:=len(left);i<len("00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 ");i++ {
+    for i:=len(left);i<len("00:00:00:00 00:00:00:00  00:00:00:00 00:00:00:00  ");i++ {
         left += " "    
     }
-    for i:=len(right);i<len("XXXXXXXXXXXXXXXX");i++ {
+    for i:=len(right);i<len("XXXXXXXX XXXXXXXX");i++ {
         right += " "    
     }
     ret += left + "    " + right
