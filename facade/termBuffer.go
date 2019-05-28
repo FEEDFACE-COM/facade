@@ -148,7 +148,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             case '\n':
 //                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
-                buffer.cursor.x = 1
+//                buffer.cursor.x = 1
                 buffer.cursor.y += 1
                 if buffer.shouldScroll() {
                     buffer.scrollLine()
@@ -163,6 +163,10 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
 
+
+                    buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = rune(' ')
+                    buffer.cursor.x += 1
+
                     if buffer.cursor.x > buffer.max.x {
                         buffer.cursor.x = 1
                         buffer.cursor.y += 1
@@ -173,10 +177,6 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         buffer.cursor.x = 1
                         buffer.cursor.y = buffer.max.y
                     }
-
-
-                    buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = rune(' ')
-                    buffer.cursor.x += 1
 
                     if int(buffer.cursor.x) % TABWIDTH == 1 { //hit tab stop
                         break
@@ -203,6 +203,11 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 
             
             default:
+//                if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
+                buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = run
+                buffer.cursor.x += 1
+
+
                 if buffer.cursor.x > buffer.max.x {
                     buffer.cursor.x = 1
                     buffer.cursor.y += 1
@@ -214,9 +219,6 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.cursor.y = buffer.max.y
                 }
             
-//                if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
-                buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = run
-                buffer.cursor.x += 1
                 
 
         }
