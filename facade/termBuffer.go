@@ -365,6 +365,14 @@ func (buffer *TermBuffer) scrollUp(cnt uint) {
     }
 }
 
+func (buffer *TermBuffer) scrollDown(cnt uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s scroll down %d",buffer.Desc(),cnt) }
+    for i:=uint(0); i < cnt; i++ {
+        buffer.scrollLineReverse()
+    }
+}
+
+
 func (buffer *TermBuffer) setCursor(x,y uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s set cursor %d,%d",buffer.Desc(),x,y) }
     buffer.cursor = pos{x,y}
@@ -389,10 +397,10 @@ func (buffer *TermBuffer) cursorRight(val uint) {
 func (buffer *TermBuffer) deleteLine(cnt uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s delete  %d lines",buffer.Desc(),cnt) }
     for i:=uint(0); i<cnt; i++ {
-        for r:=uint(buffer.cursor.y); r<buffer.max.y; r++ {
+        for r:=uint(buffer.cursor.y); r<buffer.scroll.bot; r++ {
             buffer.buffer[r] = buffer.buffer[r+1]
         }    
-        buffer.buffer[ buffer.max.y ] = makeRow(buffer.max.x)
+        buffer.buffer[ buffer.scroll.bot ] = makeRow(buffer.max.x)
     }
 }
 
@@ -558,6 +566,10 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.scrollUp(val)
             
+        case ansi.Table[ansi.SD]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.scrollDown(val)
     
                 
         case xtermTable[DECSTBM]:
@@ -631,7 +643,7 @@ func (buffer *TermBuffer) Dump() string {
     ret += "\n "
     for c:=uint(1); c<=buffer.max.x; c++ { ret += fmt.Sprintf("%01d",c%10) }
     ret += "\n"
-    ret += fmt.Sprintf("cursor %d,%d\n",buffer.cursor.x,buffer.cursor.y)
+//    ret += fmt.Sprintf("cursor %d,%d\n",buffer.cursor.x,buffer.cursor.y)
     return ret
 }
 
