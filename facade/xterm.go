@@ -71,8 +71,8 @@ func lookupSequence(code ansi.Name) (*ansi.Sequence,bool) {
     
 const (
     DECSTBM = ansi.Name("\033[r") // Set Top and Bottom Margins
+    DECKPAM = ansi.Name("\033=")  // Keypad Application Mode
 )
-
 
 
 var xtermTable = map[ansi.Name]*ansi.Sequence {
@@ -87,5 +87,15 @@ var xtermTable = map[ansi.Name]*ansi.Sequence {
                 Defaults:  []string{"1","-1"},
                 Code:      []byte{'r'},
             },
+
+// https://vt100.net/docs/vt510-rm/DECKPAM.html
+    DECKPAM: &ansi.Sequence{
+                Name:      "DECKPAM",
+                Desc:      "Keypad Application Mode",
+                Type:      ansi.ESC,
+                Code:      []byte{'='},
+            },
+
+            
 }
 

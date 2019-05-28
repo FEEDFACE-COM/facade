@@ -13,8 +13,8 @@ import(
 
 )
 
-const DEBUG_TERMBUFFER = true
-const DEBUG_TERMBUFFER_DUMP = true
+const DEBUG_TERMBUFFER = false
+const DEBUG_TERMBUFFER_DUMP = false
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
@@ -121,7 +121,7 @@ func (buffer *TermBuffer) GetLine(idx uint) Line {
     if idx == buffer.rows {
         return Line{}
     } else if idx >= buffer.rows {
-        log.Error("no line %d in %s",idx,buffer.Desc())
+        log.Warning("no line %d in %s",idx,buffer.Desc())
         return Line{}
     }
     return buffer.buffer[idx+1][1:]
@@ -141,14 +141,13 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
         log.Debug("%s process %d runes",buffer.Desc(),len(runes)) 
     }
 
-//    tmp := []rune{}
     
     for _,run := range(runes) {
         
         switch (run) {
             
             case '\n':
-                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
                 buffer.cursor.x = 1
                 buffer.cursor.y += 1
                 if buffer.shouldScroll() {
@@ -159,7 +158,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             
             case '\t':
-                if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
 
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
@@ -198,7 +197,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 if DEBUG_TERMBUFFER { log.Debug("%s bell.",buffer.Desc()) }
             
             case '\b':
-                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
                 buffer.cursor.x -= 1
                 if buffer.cursor.x <= 1 { buffer.cursor.x = 1 }
 
@@ -215,18 +214,15 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.cursor.y = buffer.max.y
                 }
             
-//                if DEBUG_TERMBUFFER { log.Debug("rune %c %d,%d",run,cur.x,cur.y) }
+//                if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
                 buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = run
                 buffer.cursor.x += 1
-//                tmp = append(tmp, run)
                 
 
         }
 
-//        buffer.trace()
         
     }
-//    if DEBUG_TERMBUFFER { log.Debug("%s wrote %d runes:\n%s",buffer.Desc(),len(tmp),log.Dump([]byte(string(tmp)),0,0)) }
     
 }
 
@@ -245,7 +241,7 @@ func (buffer *TermBuffer) saveBuffer() {
 
 func (buffer *TermBuffer) restoreBuffer() {
     if buffer.altBuffer == nil {
-        log.Warning("%s cannot restore nil buffer",buffer.Desc())
+        log.Debug("%s cannot restore nil buffer",buffer.Desc())
         return
     }
     // rem check for same size!!
@@ -270,7 +266,7 @@ func (buffer *TermBuffer) saveCursor() {
 
 func (buffer *TermBuffer) restoreCursor() {
     if buffer.altCursor == nil {
-        log.Warning("%s cannot restore nil cursor",buffer.Desc())
+        log.Debug("%s cannot restore nil cursor",buffer.Desc())
         return
     }
     if DEBUG_TERMBUFFER { log.Debug("%s restore cursor",buffer.Desc()) }
@@ -284,7 +280,7 @@ func (buffer *TermBuffer) shouldScroll() bool {
 }
 
 func (buffer *TermBuffer) scrollLine() {
-//    if DEBUG_TERMBUFFER { log.Debug("%s scroll",buffer.Desc()) }
+    if DEBUG_TERMBUFFER { log.Debug("%s scroll one line",buffer.Desc()) }
     for r:=uint(buffer.scroll.top); r<buffer.scroll.bot; r++ {
         buffer.buffer[r] = buffer.buffer[r+1]
     }
@@ -292,31 +288,13 @@ func (buffer *TermBuffer) scrollLine() {
 }
 
 func (buffer *TermBuffer) scrollLineReverse() {
-//    if DEBUG_TERMBUFFER { log.Debug("%s scroll reverse",buffer.Desc()) }
+    if DEBUG_TERMBUFFER { log.Debug("%s scroll one line reverse",buffer.Desc()) }
     for r:=uint(buffer.scroll.bot); r>buffer.scroll.top; r-- {
         buffer.buffer[r] = buffer.buffer[r-1]
     }
     buffer.buffer[ buffer.scroll.top ] = makeRow(buffer.max.x)
 }
 
-
-//func (buffer *TermBuffer) lineFeed() {
-//    if DEBUG_TERMBUFFER { log.Debug("%s scroll",buffer.Desc()) }
-//    for r:=uint(1); r<buffer.max.y; r++ {
-//        buffer.buffer[r] = buffer.buffer[r+1]
-//    }
-//    buffer.buffer[ buffer.max.y ] = makeRow(buffer.max.x)
-//}
-
-
-
-//func (buffer *TermBuffer) reverseLineFeed() {
-//    if DEBUG_TERMBUFFER { log.Debug("%s scroll reverse",buffer.Desc()) }
-//    for r:=uint(buffer.max.y); r>1; r-- {
-//        buffer.buffer[r] = buffer.buffer[r-1]
-//    }
-//    buffer.buffer[ 1 ] = makeRow(buffer.max.x)
-//}
 
 
 
@@ -343,7 +321,7 @@ func (buffer *TermBuffer) erasePage(val uint) {
             buffer.buffer = makeBuffer(buffer.cols,buffer.rows)
             buffer.cursor = pos{1,1}
         default:
-            log.Warning("NOT IMPLEMENTED: erase page %d",val)
+            log.Debug("erase page %d not implemented!!",val)
     }
 }
 
@@ -431,7 +409,7 @@ func (buffer *TermBuffer) eraseLine(val uint) {
                 buffer.buffer[buffer.cursor.y][c] = rune(' ')    
             }
         default:
-            log.Warning("NOT IMPLEMENTED: erase line %d",val)
+            log.Debug("erase line %d not implemented!!",val)
     }
 }
 
@@ -448,7 +426,6 @@ func (buffer *TermBuffer) insertLine(cnt uint) {
 
 func (buffer *TermBuffer) linePositionAbsolute(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s line position absolute %d",buffer.Desc(),val) }
-    //FIXME: probably need to implement data mode and others..?
     buffer.cursor.x = 1
     buffer.cursor.y = val
 }
@@ -467,7 +444,7 @@ func (buffer *TermBuffer) setMode(val string) {
                     buffer.saveBuffer()
                     buffer.saveCursor()
                 default:
-//                    if DEBUG_TERMBUFFER { log.Debug("%s ignore set mode '%s'",buffer.Desc(),lookupMode(val)) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore set mode '%s'",buffer.Desc(),lookupMode(val)) }
             }
 }
 
@@ -477,7 +454,7 @@ func (buffer *TermBuffer) resetMode(val string) {
                     buffer.restoreBuffer()
                     buffer.restoreCursor()
                 default:
-//                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),lookupMode(val)) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),val,lookupMode(val)) }
 
             }
 }
@@ -514,7 +491,6 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.cursorRight(val)
-            
 
         case ansi.Table[ansi.EL]:
             var val uint
@@ -531,18 +507,15 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.deleteLine(val)
 
-
         case ansi.Table[ansi.DCH]:
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.deleteCharacter(val)
-        
 
         case ansi.Table[ansi.VPA]:
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.linePositionAbsolute(val)
-
 
         case ansi.Table[ansi.CHA]:
             var val uint
@@ -551,7 +524,6 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             
         case ansi.Table[ansi.RI]:
             buffer.scrollLineReverse()
-//            buffer.reverseLineFeed()
             
         case ansi.Table[ansi.SM]:
             var val string = seq.Params[0]
@@ -570,7 +542,6 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.scrollDown(val)
-    
                 
         case xtermTable[DECSTBM]:
             var val region
@@ -579,25 +550,16 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             buffer.setScrollRegion(val.top,val.bot)
 
         case ansi.Table[ansi.SGR]:
-            break
+            break // no support for color / weight / decorations
             
         default:
-//            if true && DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence 0x%x",buffer.Desc(),seq.Code) }
-            if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Desc,sequence.Name) }
-//            if false && DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s(%s) %s",buffer.Desc(),sequence.Name,strings.Join(seq.Params,","),sequence.Desc) }
+            if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Name,sequence.Desc) }
         
     }
     
-//    buffer.trace()
-
 }
 
 
-//func (buffer *TermBuffer) trace() {
-//    os.Stdout.Write( []byte(buffer.Dump()) )
-//    os.Stdout.Write( []byte("\n") )
-//    os.Stdout.Sync()
-//}
 
 
 
@@ -643,7 +605,6 @@ func (buffer *TermBuffer) Dump() string {
     ret += "\n "
     for c:=uint(1); c<=buffer.max.x; c++ { ret += fmt.Sprintf("%01d",c%10) }
     ret += "\n"
-//    ret += fmt.Sprintf("cursor %d,%d\n",buffer.cursor.x,buffer.cursor.y)
     return ret
 }
 

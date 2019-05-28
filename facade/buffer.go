@@ -8,7 +8,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_ANSI = true
+const DEBUG_ANSI = false
 const DEBUG_ANSI_DUMP = false
 
 type Line []rune
@@ -72,20 +72,21 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
         
             case nil:
                 break
-        
+
+            case ansi.UnknownEscape:
+                break // handle below
+                
+
             case ansi.LoneEscape:
                 log.Debug("ansi lone escape: %s",log.Dump(ptr,0,0)) 
                 sendBytes(txt, bufChan)
                 return ptr, log.NewError("ansi lone escape")    
                 
-            case ansi.UnknownEscape:
-                log.Warning("ansi unknown sequence 0x%x",seq.Code)    
-                //handle below
         
             case ansi.NoST:
-                log.Warning("ansi missing terminator for sequence 0x%x",seq.Code)
+                log.Debug("ansi missing terminator for sequence 0x%x",seq.Code)
+
                 //look for terminating BEL (xterm) or ST (ansi) 
-    
                 var tmp []byte
                 for tmp = ptr; len(tmp) > 0; tmp = tmp[1:] {
                     if tmp[0] == 0x07 {  // BEL terminator (xterm)
@@ -138,7 +139,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     if DEBUG_ANSI { log.Debug("ansi C0 %s %s",s.Desc,s.Name) }
                     sendSequence(seq, bufChan)
                 } else {
-                    log.Warning("ansi unknown C0 sequence 0x%x",seq.Code)
+                    log.Debug("ansi unknown C0 sequence 0x%x",seq.Code)
                 }
 
             case "C1":
@@ -157,7 +158,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                         if DEBUG_ANSI { log.Debug("ansi C1 %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                         sendSequence(seq, bufChan)
                     } else {
-                        log.Warning("ansi unknown C1 sequence 0x%x",seq.Code)
+                        log.Debug("ansi unknown C1 sequence 0x%x",seq.Code)
                     }
                 }
             case "CSI", "ICF":
@@ -168,44 +169,47 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     if DEBUG_ANSI { log.Debug("ansi %s sequence 0x%x %s '%s'",seq.Type,seq.Code,s.Name,s.Desc) }
                     sendSequence(seq, bufChan)
                 } else {
-                    log.Warning("ansi unknown %s sequence 0x%x:\n%s",seq.Type,seq.Code,log.Dump(ptr,len(ptr)-len(rem),0))
+                    log.Debug("ansi unknown %s sequence 0x%x:\n%s",seq.Type,seq.Code,log.Dump(ptr,len(ptr)-len(rem),0))
                 }
 
 
             case "ESC":
 
-                if len(rem) < 3 { // no full sequence, return ptr to pick up more
+                if len(rem) < 2 { // no full sequence, return ptr to pick up more
                     sendBytes(txt, bufChan)
                     txt = []byte{}
                     if DEBUG_ANSI { log.Debug("ansi short escape sequence, return ptr to pick up more") }
                     return ptr, log.NewError("ansi short escape sequence")
                 }
 
-                switch seq.Code {
-                    case "\033(":
-                        if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x plus one byte",seq.Code) }
-                        rem = rem[1:]
 
 
-//                    case "\033=":
-//                        if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x plus one byte",seq.Code) }
-//                        rem = rem[1:]
+                s, ok := lookupSequence(seq.Code)
+                if ok {
 
-                    
-                    case "\033]":
-                        if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x plus one byte",seq.Code) }
+                    if DEBUG_ANSI { log.Debug("ansi ESC sequence 0x%x %s '%s'",seq.Code,s.Name,s.Desc) }
+
+                } else {
+
+                    switch seq.Code {
+                        // OpenBSD manpages have Set Character Set sequences
+                        // https://vt100.net/docs/vt510-rm/SCS.html
+                        // remove those, including the intermediate byte
+                        case "\033(", "\033)", "\033*", "\033+", "\033-", "\033.", "\033/":
+                        if DEBUG_ANSI { log.Debug("ansi skip SCS sequence 0x%0x plus one byte",seq.Code) }
                         rem = rem[1:]
                         
-                    
-                    default:
-                        if DEBUG_ANSI { log.Debug("ansi unexpected escape sequence 0x%x, ptr %s",seq.Code,log.Dump(ptr,16,0)) }
-                        log.Warning("ansi unexpected escape sequence 0x%x",seq.Code)
-                    
-                }
+                        default:
+                            if DEBUG_ANSI { log.Debug("ansi unexpected escape sequence 0x%x, ptr %s",seq.Code,log.Dump(ptr,16,0)) }
+                            log.Debug("ansi unexpected escape sequence 0x%x",seq.Code)
+                        
+                    }
                                 
-            
+                }
+                
+                
             default:
-                log.Warning("ansi unknown sequence type %s",seq.Type)
+                log.Debug("ansi unknown sequence type %s",seq.Type)
         }
 
         ptr = rem
