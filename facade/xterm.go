@@ -62,7 +62,7 @@ func lookupSequence(code ansi.Name) (*ansi.Sequence,bool) {
     if ok {
         return ret,true    
     }
-    ret, ok = Table[code]
+    ret, ok = xtermTable[code]
     if ok {
         return ret,true    
     }
@@ -75,7 +75,7 @@ const (
 
 
 
-var Table = map[ansi.Name]*ansi.Sequence {
+var xtermTable = map[ansi.Name]*ansi.Sequence {
 
 // https://vt100.net/docs/vt510-rm/DECSTBM.html
     DECSTBM: &ansi.Sequence{     

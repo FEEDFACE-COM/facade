@@ -24,7 +24,7 @@ type pos struct {
 }
 
 type region struct {
-    from,to uint
+    top,bot uint
 }
 
 type TermBuffer struct {
@@ -280,15 +280,15 @@ func (buffer *TermBuffer) restoreCursor() {
 
 
 func (buffer *TermBuffer) shouldScroll() bool {
-    return buffer.cursor.y > buffer.max.y
+    return buffer.cursor.y > buffer.scroll.bot
 }
 
 func (buffer *TermBuffer) scrollLine() {
     if DEBUG_TERMBUFFER { log.Debug("%s scroll",buffer.Desc()) }
-    for r:=uint(1); r<buffer.max.y; r++ {
+    for r:=uint(buffer.scroll.top); r<buffer.scroll.bot; r++ {
         buffer.buffer[r] = buffer.buffer[r+1]
     }
-    buffer.buffer[ buffer.max.y ] = makeRow(buffer.max.x)
+    buffer.buffer[ buffer.scroll.bot ] = makeRow(buffer.max.x)
 }
 
 
@@ -328,12 +328,12 @@ func (buffer *TermBuffer) erasePage(val uint) {
     }
 }
 
-func (buffer *TermBuffer) setScrollRegion(from,to uint) {
-    if DEBUG_TERMBUFFER { log.Debug("%s set scroll region %d-%d",buffer.Desc(),from,to) }
-    if from <= 0 || to > buffer.max.y { from = 1 }
-    if to   <= 0 || to > buffer.max.y {   to = buffer.max.y }
-    if from < to {
-        buffer.scroll = region{from,to}
+func (buffer *TermBuffer) setScrollRegion(top,bottom uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s set scroll region %d-%d",buffer.Desc(),top,bottom) }
+    if top      <= 0 || top    > buffer.max.y {    top = 1 }
+    if bottom   <= 0 || bottom > buffer.max.y { bottom = buffer.max.y }
+    if top < bottom {
+        buffer.scroll = region{top,bottom}
     }
 
     
@@ -508,7 +508,7 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             break
             
         
-        case Table[DECSTBM]:
+        case xtermTable[DECSTBM]:
             var f,t uint
             fmt.Sscanf(seq.Params[0],"%d",&f)
             fmt.Sscanf(seq.Params[1],"%d",&t)
@@ -540,8 +540,8 @@ func (buffer *TermBuffer) Desc() string {
         alt =  " alt"
     }
     scr := ""
-    if buffer.scroll.from != 1 || buffer.scroll.to != buffer.max.y {
-        scr = fmt.Sprintf(" %d-%d",buffer.scroll.from,buffer.scroll.to)
+    if buffer.scroll.top != 1 || buffer.scroll.bot != buffer.max.y {
+        scr = fmt.Sprintf(" %d-%d",buffer.scroll.top,buffer.scroll.bot)
     }
     return fmt.Sprintf("termbuffer[%2dx%-2d %2d,%-2d%s%s]",buffer.cols,buffer.rows,buffer.cursor.x,buffer.cursor.y,alt,scr)
 }
