@@ -124,7 +124,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
         
         switch seq.Type {
     
-            case "":  // no ansi sequence
+            case "":  // no sequence
                 s := seq.String()
                 if DEBUG_ANSI_DUMP { log.Debug("ansi text %d byte:\n%s",len(s),log.Dump([]byte(s),len(s),0) ) 
                 } else if DEBUG_ANSI { log.Debug("ansi text %d byte",len(s)) }
@@ -133,7 +133,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
             case "C0":
                 sendBytes(txt, bufChan)
                 txt = []byte{}
-                s, ok := ansi.Table[seq.Code]
+                s, ok := lookupSequence(seq.Code)
                 if ok {
                     if DEBUG_ANSI { log.Debug("ansi C0 %s %s",s.Desc,s.Name) }
                     sendSequence(seq, bufChan)
@@ -152,7 +152,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 } else {
                     sendBytes(txt, bufChan)
                     txt = []byte{}
-                    s, ok := ansi.Table[seq.Code]
+                    s, ok := lookupSequence(seq.Code)
                     if ok {
                         if DEBUG_ANSI { log.Debug("ansi C1 %s %s(%s)",s.Desc,s.Name,strings.Join(seq.Params,",")) }
                         sendSequence(seq, bufChan)
@@ -163,7 +163,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
             case "CSI", "ICF":
                 sendBytes(txt, bufChan)
                 txt = []byte{}
-                s, ok := ansi.Table[seq.Code]
+                s, ok := lookupSequence(seq.Code)
                 if ok {
                     if DEBUG_ANSI { log.Debug("ansi %s sequence 0x%x %s '%s'",seq.Type,seq.Code,s.Name,s.Desc) }
                     sendSequence(seq, bufChan)
@@ -171,27 +171,6 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                     log.Warning("ansi unknown %s sequence 0x%x:\n%s",seq.Type,seq.Code,log.Dump(ptr,len(ptr)-len(rem),0))
                 }
 
-
-//            case "CS":
-//                switch seq.Code {
-//                    case "\033]":
-//                        if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x until next BEL or ST",seq.Code) }
-//                        log.Debug("searching for terminating BEL or ST:\n%s",log.Dump(ptr,0,0))
-//                        
-//                        if ptr == nil {
-//                            
-//                        } else {
-//                            log.Debug("found and removed:\n%s",log.Dump(ptr,0,0))
-//                        }
-//                        
-//                        
-//                    
-//                    default:
-//                        if DEBUG_ANSI { log.Debug("ansi unexpected escape sequence 0x%x, ptr %s",seq.Code,log.Dump(ptr,16,0)) }
-//                        log.Warning("ansi unexpected escape sequence 0x%x",seq.Code)
-//                    
-//                }
-            
 
             case "ESC":
 
@@ -203,9 +182,14 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
                 }
 
                 switch seq.Code {
-                    case "\033(", "\033=":
+                    case "\033(":
                         if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x plus one byte",seq.Code) }
                         rem = rem[1:]
+
+
+//                    case "\033=":
+//                        if DEBUG_ANSI { log.Debug("ansi skip escape sequence 0x%0x plus one byte",seq.Code) }
+//                        rem = rem[1:]
 
                     
                     case "\033]":
@@ -232,57 +216,6 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
 
     return []byte{}, nil 
 }
-
-
-
-
-
-// https://www.aivosto.com/articles/control-characters.html
-// https://en.wikipedia.org/wiki/ANSI_escape_code
-// https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
-
-func ansiModeName(val string) string {
-
-// https://www.real-world-systems.com/docs/ANSIcode.html
-// https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html
-// https://chromium.googlesource.com/apps/libapps/+/a5fb83c190aa9d74f4a9bca233dac6be2664e9e9/hterm/doc/ControlSequences.md
-
-
-    switch val {
-
-        case "1"     : return "GUARDED AREA TRANSFER MODE"
-        case "2"     : return "KEYBOARD ACTION MODE"
-        case "3"     : return "CONTROL REPRESENTATION MODE"
-        case "4"     : return "INSERTION REPLACEMENT MODE"
-        case "5"     : return "STATUS REPORT TRANSFER MODE"
-        case "6"     : return "ERASURE MODE"
-        case "7"     : return "LINE EDITING MODE"
-        case "8"     : return "BI-DIRECTIONAL SUPPORT MODE"
-        case "9"     : return "DEVICE COMPONENT SELECT MODE"
-        case "10"    : return "CHARACTER EDITING MODE"
-        case "11"    : return "POSITIONING UNIT MODE"
-        case "12"    : return "SEND/RECEIVE MODE"
-        case "13"    : return "FORMAT EFFECTOR ACTION MODE"
-        case "14"    : return "FORMAT EFFECTOR TRANSFER MODE"
-        case "15"    : return "MULTIPLE AREA TRANSFER MODE"
-        case "16"    : return "TRANSFER TERMINATION MODE"
-        case "17"    : return "SELECTED AREA TRANSFER MODE"
-        case "18"    : return "TABULATION STOP MODE"
-        case "21"    : return "GRAPHIC RENDITION COMBINATION"
-        case "22"    : return "ZERO DEFAULT MODE"
-
-        case "?1"    : return "Application Cursor Keys"
-        case "?12"   : return "Start Blinking Cursor"
-        case "?25"   : return "Show Cursor"
-        case "?2004" : return "Bracketed Paste Mode"
-        case "?1049" : return "Use Alternate Screen Buffer / Save cursor as in DECSC"
-        
-        default:       return "????????"
-    }
-}
-
-
-
 
 
 
