@@ -22,7 +22,6 @@ import (
 
 const RENDERER_AVAILABLE = true
 
-const DEBUG_DUMP = false
 
 type Renderer struct {
     screen gfx.Size
@@ -278,7 +277,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         
         if verboseFrame { 
 
-            if DEBUG_DUMP {
+            if DEBUG_BUFFER {
                 renderer.dumpBuffers()    
             }
 
@@ -336,7 +335,7 @@ func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) err
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
-            if DEBUG_DUMP {
+            if DEBUG_BUFFER {
                 renderer.dumpBuffers()    
             }
         }
@@ -344,7 +343,7 @@ func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) err
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
-            if DEBUG_DUMP {
+            if DEBUG_BUFFER {
                 renderer.dumpBuffers()    
             }
         }
