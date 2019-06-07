@@ -1,0 +1,87 @@
+
+syntax = "proto3"
+
+package facade;
+
+enum Mode {
+    GRID  = 0;
+    DRAFT = 16;
+}
+
+
+service Facade {
+    rpc Configure(Config);
+    rpc Render(stream Text);
+}
+
+
+
+message Text {
+
+    bytes text       =  0;
+
+}
+
+message Config {
+    
+    bool  debug      =  0;
+    Mode  mode       =  1;
+                   
+    GridConfig grid  =  2;
+    
+    gfx.FontConfig font      = 10;
+    gfx.CameraConfig camera  = 11;
+    gfx.MaskConfig mask      = 12;
+                   
+
+}
+
+
+message GridConfig {
+
+    int32  width     =  0;
+    int32  height    =  1;
+    
+    bool   downward  =  2;
+    float  speed     =  3;
+    
+    int32  buffer    =  4;
+    bool   terminal  =  5;
+    
+    string vert      =  6;
+    string frag      =  7;
+    
+    string fill      = 16;
+
+}
+
+
+
+
+
+
+
+
+
+package gfx;
+    
+message CameraConfig {
+
+    bool  isometric = 0;
+    float zoom      = 1;
+
+}
+
+
+message FontConfig {
+    
+    string name  = 0;
+
+}
+
+message MaskConfig {
+
+    string mask = 0;
+}
+
+
