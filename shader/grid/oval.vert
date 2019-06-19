@@ -4,22 +4,23 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
+
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
-
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -46,6 +47,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
     vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
@@ -61,7 +63,7 @@ void main() {
 
     vec2 coord = vec2( 
         tileCoord.x + (tileCount.x/2.  - 1.),
-        tileCoord.y + (tileCount.y/1.  - 1.)
+        tileCoord.y + (tileCount.y/2.  - 1.)
     );
     
     vec2 grad = vec2(coord.x / tileCount.x, coord.y / tileCount.y);
@@ -76,20 +78,17 @@ void main() {
     b = zoom * radius/2.;
 
     
-
-    float phase = -1. * PI/8.; 
-    
     
 //    phase += PI/2. * (ease1( now/8. ) );
+
+    float phase = +PI/4.;
     
-    float alpha = grad.x * TAU + phase;
- 
-//    alpha += now/10.;
+    
+    float alpha = - grad.x * TAU + phase;
  
     
-    alpha = alpha * -1. + PI/4.;
         
-    pos = rotationMatrix(vec3(0., 0., 1.), alpha) * pos;
+    pos = rotationMatrix(vec3(0., 0., 1.), +  PI - alpha + PI/2.  ) * pos;
 
 
     
@@ -103,7 +102,7 @@ void main() {
     pos.y -= sin(alpha) * b;
 
     pos.z += (tileCoord.y*tileSize.y);
-    pos.z += scroller;
+    pos.z -= scroller;
 
 //    pos = rotationMatrix(vec3(-1.,1.,0.), PI/4.) * pos;
 //    pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
