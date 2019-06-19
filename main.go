@@ -244,10 +244,9 @@ func main() {
     
 
     if config.Grid != nil {
-        var gridVars facade.GridState
-        config.Grid.AddFlags( modeFlags, &gridVars )
+        config.Grid.AddFlags( modeFlags )
         modeFlags.Parse( args )
-        config.Grid.VisitFlags(modeFlags, &gridVars )
+        config.Grid.VisitFlags( modeFlags )
         log.Debug("grid %s parsed",config.Desc())
     }
 

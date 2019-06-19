@@ -46,13 +46,13 @@ message Config {
 
 message GridConfig {
 
-    bool checkWidth    = 1;  uint32 Width  = 2;
-    bool checkHeight   = 3;  uint32 Height = 4;
+    bool checkWidth    = 1;  uint64 Width  = 2;
+    bool checkHeight   = 3;  uint64 Height = 4;
 
     bool checkDownward = 5;  bool Downward = 6;
-    bool checkSpeed    = 7;    float Speed = 8;
+    bool checkSpeed    = 7;   double Speed = 8;
 
-    bool checkBuffer   = 9; uint32 Buffer  = 10;
+    bool checkBuffer   = 9; uint64 Buffer  = 10;
     bool checkTerminal = 11; bool Terminal = 12;
     
     bool checkVert     = 13; string Vert   = 14;

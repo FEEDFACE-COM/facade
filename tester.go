@@ -18,7 +18,13 @@ import (
 )
 
 type Tester struct {
-//    state facade.State
+
+    Width, Height uint
+    Speed float32
+    Terminal bool
+    Buffer uint
+    
+    Mode facade.Mode
 
     font *gfx.Font; 
     
@@ -35,11 +41,12 @@ type Tester struct {
 }
 
 func NewTester(directory string) *Tester { 
-    ret := &Tester{directory: directory} 
+    ret := &Tester{directory: directory}
     ret.mutex = &sync.Mutex{}
     ret.refreshChan = make( chan bool, 1 )
     return ret    
 }
+
 
 
 
@@ -49,6 +56,9 @@ func (tester *Tester) Init(config *facade.Config) error {
         tester.directory = os.Getenv("HOME") + tester.directory[1:]
     }
     gfx.SetFontDirectory(tester.directory+"/font")
+    
+    
+    
     
 //    var err error
     
@@ -76,19 +86,23 @@ func (tester *Tester) Init(config *facade.Config) error {
 //    }
 //    
 
-    var width,height,buflen uint  = 64, 8, 4
-    
-//    if val := grid.GetWidth(); val!=nil {  width = uint(val.GetWidth()) }
-//    if val := grid.GetHeight(); val!=nil { height = uint(val.GetHeight()) }
-//    if val := grid.GetBuffer(); val!=nil { buflen = uint(val.GetBuffer()) }
+    tester.Width  = uint(facade.GridDefaults.Width) 
+    tester.Height = uint(facade.GridDefaults.Height)
+    tester.Buffer = uint(facade.GridDefaults.Buffer)
+    tester.Terminal = facade.GridDefaults.Terminal
 
-    tester.termBuffer = facade.NewTermBuffer(width,height) 
-    tester.lineBuffer = facade.NewLineBuffer(height,buflen,tester.refreshChan) 
+    
+    if grid := config.GetGrid(); grid!=nil {
+        if grid.GetCheckWidth() { tester.Width = uint(grid.GetWidth()) }
+        if grid.GetCheckHeight() { tester.Height = uint(grid.GetHeight()) }
+        if grid.GetCheckBuffer() { tester.Buffer = uint(grid.GetBuffer()) }
+        if grid.GetCheckTerminal() { tester.Terminal = grid.GetTerminal() }
+    }
+
+    tester.termBuffer = facade.NewTermBuffer(tester.Width,tester.Height) 
+    tester.lineBuffer = facade.NewLineBuffer(tester.Height,tester.Buffer,tester.refreshChan) 
     
     
-//    tester.test = facade.NewTest( gridConfig, tester.termBuffer, tester.lineBuffer )
-//    tester.test.Init(tester.font)
-//    tester.test.Configure(gridConfig,tester.font)
 
     
     gfx.ClockReset()
@@ -97,41 +111,39 @@ func (tester *Tester) Init(config *facade.Config) error {
 
 
 
+func (tester *Tester) Desc() string {
+
+    tmp := facade.GridConfig{
+        CheckWidth: true,  Width: uint64(tester.Width),
+        CheckHeight: true, Height: uint64(tester.Height),
+        CheckBuffer: true, Buffer: uint64(tester.Buffer),
+        CheckTerminal: true, Terminal: tester.Terminal,
+    }
+    
+    return "tester[" + tmp.Desc() + "]"
+}
+
 func (tester *Tester) Configure(config *facade.Config) error {
     
-    if config == nil { log.Error("tester config nil") ;return nil }
-//    if len(*config) <= 0 { return nil }
-    
-    log.Debug("tester config %s",config.Desc())
-
-//    if tmp,ok := config.Font(); ok {
-//		newFont, err := gfx.GetFont(&tmp)
-//		if err != nil {
-//			log.Error("fail to get font %s",tmp.Desc())
-//		} else {
-//			newFont.Init()
-//			tester.font = newFont
-//		}
-//	}
+    if config == nil { return nil }
+    log.Debug("%s configure %s",tester.Desc(),config.Desc())
 
 
-//    if grid := config.GetGrid(); grid != nil {
-//		tester.test.Configure(&tmp,tester.font)    
-//
-//        
-//        var width,height,buflen uint  = 64, 8, 4
-//        
-//        if val := grid.GetWidth(); val!=nil {  width = uint(val.GetWidth()) }
-//        if val := grid.GetHeight(); val!=nil { height = uint(val.GetHeight()) }
-//        if val := grid.GetBuffer(); val!=nil { buflen = uint(val.GetBuffer()) }
-//    
-//
-//        tester.termBuffer.Resize(width,height) 
-//        tester.lineBuffer.Resize(height,buflen) 
-//
-//
-//	}
-	
+    if grid := config.GetGrid(); grid != nil {
+        
+        resize := false
+
+        if grid.GetCheckWidth() { resize = true;  tester.Width = uint(grid.GetWidth()) } 
+        if grid.GetCheckHeight() { resize = true; tester.Height = uint(grid.GetHeight()) } 
+        if grid.GetCheckBuffer() { resize = true; tester.Buffer = uint(grid.GetBuffer()) } 
+        if grid.GetCheckTerminal() { tester.Terminal = grid.GetTerminal() } 
+
+        if resize {
+            tester.termBuffer.Resize(tester.Width,tester.Height) 
+            tester.lineBuffer.Resize(tester.Height,tester.Buffer) 
+        }
+
+	}
     
     return nil
 
@@ -215,21 +227,27 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         tester.ProcessConf(confChan)
 
-        if DEBUG_BUFFER && gfx.ClockVerboseFrame(){
-//            if tester.test.Term() {
-                os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
-//            } else {
-//                os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
-//            }
-            os.Stdout.Write( []byte( "\n" ) )
-            os.Stdout.Sync()
-        }
-        
-        if gfx.ClockVerboseFrame() { 
-            if DEBUG_CLOCK  { 
-                log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
+        if gfx.ClockVerboseFrame() {
+
+            if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
+                if tester.Terminal {
+                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
+                } else {
+                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.Width ) ) ) 
+                }
+                os.Stdout.Write( []byte( "\n" ) )
+                os.Stdout.Sync()
             }
-            prev = *gfx.NewClock() 
+            
+
+            if DEBUG_CLOCK { 
+                log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
+                prev = *gfx.NewClock() 
+            }
+            
+            if DEBUG_MODE && tester.Mode == facade.Mode_GRID {
+                log.Debug("mode[grid] %s",tester.Desc() )
+            }
         }
 
         tester.mutex.Unlock()
