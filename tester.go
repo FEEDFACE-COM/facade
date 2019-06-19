@@ -221,7 +221,6 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
     gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
 
-//    log.Debug("test %s",tester.state.Desc())
     for {
         tester.mutex.Lock()
 
@@ -246,7 +245,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
             }
             
             if DEBUG_MODE && tester.Mode == facade.Mode_GRID {
-                log.Debug("mode[grid] %s",tester.Desc() )
+                log.Debug("%s",tester.Desc() )
             }
         }
 

@@ -3,23 +3,13 @@ package facade
 
 import(
 	"strings"
-//    proto "./proto" 
 )
 
-//
-//import (
-////    "fmt"
-//    "flag"
-//    gfx "../gfx"
-////    log "../log"
-//)
-//
+
 var DEFAULT_DIRECTORY = "~/src/gfx/facade"
 
 var DEFAULT_MODE Mode = Mode_GRID
 
-//type Config proto.Config
-//type GridConfig struct { Config proto.GridConfig }
 
 func (config *Config) Desc() string {
     ret := "config["
@@ -39,16 +29,11 @@ func (config *Config) Desc() string {
 
 
 var Defaults = Config{
-    CheckMode: true,   Mode: DEFAULT_MODE,
-    CheckDebug: true, Debug: false,
+    Mode: DEFAULT_MODE,
+    Debug: false,
 }
 
 
-//func (config *Config) Mode() (proto.ModeName,bool) { if config.GetHasMode() { return config.GetMode(),true }; return proto.ModeName_GRID,false }
-//func (config *Config) SetMode(mode proto.ModeName) { config.Mode = mode; config.HasMode = true }
-
-//func (config *Config) Mode()  (proto.ModeName,bool) { if chk := config.GetMode();  chk != nil { return chk.GetValue(),true }; return proto.ModeName_GRID,false }
-//func (config *Config) Debug() (bool,bool)           { if chk := config.GetDebug(); chk != nil { return chk.GetValue(),true }; return false,false }
 
 
 //

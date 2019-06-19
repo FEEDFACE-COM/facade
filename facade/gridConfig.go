@@ -9,7 +9,6 @@ package facade
 import (
     "flag"    
     "fmt"
-//    gfx "../gfx"
     "strings"
 )
 
@@ -96,7 +95,7 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet)  {
             case "down":     { config.CheckDownward = true; }
             case "speed":    { config.CheckSpeed = true;    }
             case "buffer":   { config.CheckBuffer = true;   }
-            case "term": { config.CheckTerminal = true; }
+            case "term":     { config.CheckTerminal = true; }
             case "vert":     { config.CheckVert = true;     }
             case "frag":     { config.CheckFrag = true;     }
             case "fill":     { config.CheckFill = true;     }
