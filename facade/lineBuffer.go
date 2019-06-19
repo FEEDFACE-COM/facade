@@ -227,6 +227,11 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
 //                if DEBUG_LINEBUFFER { log.Debug("BEL") }
             
             case '\b':
+                l := len(tmp)
+                if l >= 1 {
+                    tmp = tmp[0:l-1];
+                }
+                
 //                if DEBUG_LINEBUFFER { log.Debug("BS") }
             
             default:
