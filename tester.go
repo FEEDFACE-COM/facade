@@ -183,6 +183,8 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 
 
+
+
 func (tester *Tester) Test(confChan chan facade.Config) error {
     const FRAME_RATE = 60.
     gfx.ClockTick()
@@ -194,7 +196,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         tester.ProcessConf(confChan)
 
-        if DEBUG_BUFFER {
+        if DEBUG_BUFFER && gfx.ClockVerboseFrame(){
             if tester.test.Term() {
                 os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
             } else {

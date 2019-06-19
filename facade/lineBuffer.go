@@ -10,6 +10,7 @@ import(
 )
 
 const DEBUG_LINEBUFFER = false
+const DEBUG_LINEBUFFER_DUMP = false
 
 
 type LineBuffer struct {
@@ -38,6 +39,7 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     ret.buf = make( []*Line, total )
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
+    if DEBUG_LINEBUFFER { log.Debug("%s created",ret.Desc()) }
     return ret
 }
 
@@ -73,7 +75,7 @@ func (buffer *LineBuffer) dequeueLine() {
     if buffer.buf[0] != nil {
         head = string( *buffer.buf[0] )
     }
-    if DEBUG_LINEBUFFER { log.Debug("dequeue %s %s",buffer.Desc(),head) }
+    if DEBUG_LINEBUFFER { log.Debug("%s dequeue %s",buffer.Desc(),head) }
     total := buffer.rows + buffer.off
     idx := uint(0)
     for ; idx<total-1; idx++ {
@@ -93,7 +95,7 @@ func (buffer *LineBuffer) dequeueLine() {
 
 func (buffer *LineBuffer) scrollOnce() {
     if buffer.timer != nil {
-        log.Error("refuse scroll with existing timer")
+        log.Error("%s refuse scroll with existing timer",buffer.Desc())
         return    
     }
     buffer.timer = gfx.NewTimer( float32(buffer.Speed), false )
@@ -123,7 +125,7 @@ func (buffer *LineBuffer) pushLine(row Line) {
         buffer.buf[r] = buffer.buf[r+1]
     }
     buffer.buf[r] = &   row
-    if DEBUG_LINEBUFFER { log.Debug("push #%d %s %s",r,buffer.Desc(),string(row)) }
+    if DEBUG_LINEBUFFER { log.Debug("%s push #%d %s",buffer.Desc(),r,string(row)) }
 
     select { case buffer.refreshChan <- true: ; default: ; }
 
@@ -146,7 +148,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
-        if DEBUG_LINEBUFFER { log.Debug("next #%d %s %s",idx,buffer.Desc(),string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("%s next #%d %s",buffer.Desc(),idx,string(row)) }
         buffer.buf[idx] = &row
         buffer.scrollOnce() 
         
@@ -160,11 +162,11 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
         
         if idx >= total {
-            if DEBUG_LINEBUFFER { log.Warning("overflow %s",buffer.Desc()) }
+            if DEBUG_LINEBUFFER { log.Warning("%s overflow!!",buffer.Desc()) }
             return
         }
 
-        if DEBUG_LINEBUFFER { log.Debug("queue #%d %s %s",idx,buffer.Desc(),string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("%s queue #%d %s",buffer.Desc(),idx,string(row)) }
         buffer.buf[idx] = &row
         
     }
@@ -177,7 +179,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
 func (buffer *LineBuffer) Clear() {
     // probably should lock mutex?
-    if DEBUG_LINEBUFFER { log.Debug("clear %s",buffer.Desc()) }
+    if DEBUG_LINEBUFFER { log.Debug("%s clear",buffer.Desc()) }
     buffer.buf = make( []*Line, buffer.rows + buffer.off)    
 }
 
@@ -257,7 +259,7 @@ func (buffer *LineBuffer) Fill(fill []string) {
 
     
     rows := uint( len(fill) )
-    if DEBUG_LINEBUFFER { log.Debug("fill %d lines %s",rows,buffer.Desc()) }
+    if DEBUG_LINEBUFFER { log.Debug("%s fill %d lines",buffer.Desc(),rows) }
     
     for r := uint(0); r<rows && r < buffer.rows; r++ {
         
@@ -272,7 +274,7 @@ func (buffer *LineBuffer) Fill(fill []string) {
 
 func (buffer *LineBuffer) Resize(newRows,newOff uint) {
     //lock lock lock
-    if DEBUG_LINEBUFFER { log.Debug("resize %d+%d %s",newRows,newOff,buffer.Desc()) }
+    if DEBUG_LINEBUFFER { log.Debug("%s resize %d+%d",buffer.Desc(),newRows,newOff) }
 
     if newRows == 0 { newRows = 1 }
 

@@ -67,7 +67,7 @@ func NewTermBuffer(cols, rows uint) *TermBuffer {
     ret.buffer = makeBuffer(cols,rows)
     ret.cursor = pos{1,1}
     ret.scroll = region{1,rows}
-
+    if DEBUG_TERMBUFFER { log.Debug("%s created",ret.Desc()) }
     return ret
 }
 
@@ -92,6 +92,10 @@ func (buffer *TermBuffer) Fill(fill []string) {
 
 func (buffer *TermBuffer) Resize(cols, rows uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s resize %dx%d",buffer.Desc(),cols,rows) }
+    
+    if rows == 0 { rows = 1 }
+    if cols == 0 { cols = 1 }
+    
     max := pos{cols,rows}
     buf := makeBuffer(cols,rows)
     for r:=uint(1); r<max.y && r<buffer.max.y; r++ {
