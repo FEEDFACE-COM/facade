@@ -16,8 +16,8 @@ float MAX(float a, float b) {
 float mask(vec2 p) { 
     float x = p.x; float y = p.y;
     float ff = 1.;
-    float A = 3. * ff;
-    float B = 4. * ff; 
+    float A = 7. * ff;
+    float B = 8. * ff; 
     if (abs(x) >= A/B && abs(y) >= A/B)
         return 1.0 - ( B * MAX(abs(x),abs(y)) - A );
     else if (abs(x) >= A/B) 
@@ -31,7 +31,7 @@ float mask(vec2 p) {
 
 void main() {
     vec3 col = vec3(0.0,0.0,0.0);
-    float a = 1.0;
+    float a = 1.;
 
 
     vec2 pos = vTexCoord;
@@ -39,7 +39,7 @@ void main() {
     a = mask(vec2(pos.x/ratio,pos.y));
 
     if (DEBUG) {
-        col.b =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
+        col.rgb =  vec3(  1. - mask(vec2(pos.x/ratio,pos.y)) );
     }
     
     
