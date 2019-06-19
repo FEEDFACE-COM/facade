@@ -148,7 +148,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             case '\n':
 //                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
-//                buffer.cursor.x = 1
+                buffer.cursor.x = 1
                 buffer.cursor.y += 1
                 if buffer.shouldScroll() {
                     buffer.scrollLine()
