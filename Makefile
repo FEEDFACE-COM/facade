@@ -17,7 +17,7 @@ SOURCES=$(wildcard *.go */*.go)
 
 ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
-
+PROTOS=facade/facade.pb.go
 
 
 ASSET_FONT=font/RobotoMono.ttf font/VT323.ttf
@@ -32,7 +32,7 @@ endif
 LDFLAGS = -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
 
 
-default: build
+default: build 
 
 help:
 	@echo "#Usage"
@@ -61,6 +61,8 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
+proto: ${PROTOS}
+
 demo:
 	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid; done; done
 # for f in gfx/*.go; do cat $f | while read l; do sleep 1; echo $l | fcd; done; done
@@ -75,8 +77,15 @@ clean:
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
-${BUILD_PRODUCT}: ${SOURCES} ${ASSETS}
+${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
 	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
+
+
+facade/facade.pb.go: proto/facade.proto
+	protoc -I proto $^ --go_out=plugins=grpc:proto
+
+
+
 
 assets: ${ASSETS}
 
