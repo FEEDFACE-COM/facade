@@ -292,10 +292,14 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         // FIXME, maybe dont wait as long??
 
 
-        e := gl.GetError()
-//        e := uint32(gl.NO_ERROR)
-        if e != gl.NO_ERROR && verboseFrame { 
-            log.Error("post render gl error: %s",gl.ErrorString(e)) 
+//        if e != gl.NO_ERROR && verboseFrame { 
+
+        e := uint32(gl.NO_ERROR)
+        if verboseFrame { 
+            e = gl.GetError()
+            if e != gl.NO_ERROR {
+                log.Error("post render gl error: %s",gl.ErrorString(e)) 
+            }
         }
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
         gfx.ClockTick()
