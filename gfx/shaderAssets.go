@@ -79,21 +79,23 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
 
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
+
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
@@ -258,71 +260,6 @@ void main() {
 
 
 
-"grid/zstep":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y -= scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-    
-    float F = 0.5;
-    float y  =  vTileCoord.y       / (tileCount.y/2.);
-    float yy = (vTileCoord.y - 1.0 ) / (tileCount.y/2.);
-
-    float freq = 2.;
-    float f0 = cos( freq * y  * PI + now + PI/2. );
-    float f1 = cos( freq * yy * PI + now + PI/2. );
-    float d =  f0 + abs(scroller) * (f1 - f0);
-    pos.z += F * d;
-
-
-    
-    gl_Position = projection * view * model * pos;
-}
-`,
-
-
-
-
 "grid/def":`
 uniform mat4 projection;
 uniform mat4 view;
@@ -372,6 +309,72 @@ void main() {
 
 
 
+"grid/adhoc":`
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+
+uniform vec2 tileSize;
+uniform vec2 tileCount;
+uniform vec2 tileOffset;
+
+uniform float now;
+uniform float scroller;
+uniform float debugFlag;
+
+attribute vec3 vertex;
+
+attribute vec2 texCoord;
+attribute vec2 tileCoord;
+attribute vec2 gridCoord;
+
+
+varying vec2 vTexCoord;
+varying vec2 vTileCoord;
+varying vec2 vGridCoord;
+varying float vScroller;
+
+bool DEBUG = debugFlag > 0.0;
+
+float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
+float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
+
+void main() {
+    vTexCoord = texCoord;
+    vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
+    vScroller = abs(scroller);
+    
+    vec4 pos = vec4(vertex,1);
+
+    pos.y -= scroller;
+    pos.x += (tileCoord.x * tileSize.x);
+    pos.y += (tileCoord.y * tileSize.y);
+
+    pos.x += ( tileOffset.x * tileSize.x);
+    pos.y += ( tileOffset.y * tileSize.y);
+
+
+    float x = float( tileCoord.x );
+    float y = float( tileCoord.y );
+    bool a = mod(x,2.0) == 1.0 ;
+    bool b = mod(y,2.0) == 1.0 ;
+    
+    float A = 0.5;
+    if ( a == b) {
+        pos.z +=  A * sin(now);
+    } else {
+//        pos.z -=  1. * sin(now + PI / 2. );
+        pos.z -=  A * sin(now * 2. );
+    }
+
+    gl_Position = projection * view * model * pos;
+}
+`,
+
+
+
+
 "grid/disk":`
 uniform mat4 projection;
 uniform mat4 view;
@@ -379,21 +382,22 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
 
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
@@ -463,6 +467,73 @@ void main() {
     gl_Position = projection * view * model * pos;
 }
 
+`,
+
+
+
+
+"grid/zstep":`
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+
+uniform vec2 tileSize;
+uniform vec2 tileCount;
+uniform vec2 tileOffset;
+
+uniform float now;
+uniform float scroller;
+uniform float debugFlag;
+
+attribute vec3 vertex;
+
+attribute vec2 texCoord;
+attribute vec2 tileCoord;
+attribute vec2 gridCoord;
+
+
+varying vec2 vTexCoord;
+varying vec2 vTileCoord;
+varying vec2 vGridCoord;
+varying float vScroller;
+
+bool DEBUG = debugFlag > 0.0;
+
+
+float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
+
+
+void main() {
+    vTexCoord = texCoord;
+    vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
+    vScroller = abs(scroller);
+    
+    vec4 pos = vec4(vertex,1);
+
+    pos.y -= scroller;
+    pos.x += (tileCoord.x * tileSize.x);
+    pos.y += (tileCoord.y * tileSize.y);
+
+    pos.x += ( tileOffset.x * tileSize.x);
+    pos.y += ( tileOffset.y * tileSize.y);
+
+    float F = 0.5;
+
+    float y  =  vTileCoord.y       / (tileCount.y/2.);
+    float yy = (vTileCoord.y + (abs(scroller)) ) / (tileCount.y/2.);
+
+
+    float freq = 2.;
+    float f0 = cos( freq * y  * PI + now + PI/2. );
+    float f1 = cos( freq * yy * PI + now + PI/2. );
+    float d =  f0 + abs(scroller) * (f1 - f0);
+    pos.z += F * d;
+
+
+    
+    gl_Position = projection * view * model * pos;
+}
 `,
 
 
@@ -700,22 +771,23 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
+
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
-
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -742,6 +814,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
     vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
@@ -757,7 +830,7 @@ void main() {
 
     vec2 coord = vec2( 
         tileCoord.x + (tileCount.x/2.  - 1.),
-        tileCoord.y + (tileCount.y/1.  - 1.)
+        tileCoord.y + (tileCount.y/2.  - 1.)
     );
     
     vec2 grad = vec2(coord.x / tileCount.x, coord.y / tileCount.y);
@@ -772,20 +845,17 @@ void main() {
     b = zoom * radius/2.;
 
     
-
-    float phase = -1. * PI/8.; 
-    
     
 //    phase += PI/2. * (ease1( now/8. ) );
+
+    float phase = +PI/4.;
     
-    float alpha = grad.x * TAU + phase;
- 
-//    alpha += now/10.;
+    
+    float alpha = - grad.x * TAU + phase;
  
     
-    alpha = alpha * -1. + PI/4.;
         
-    pos = rotationMatrix(vec3(0., 0., 1.), alpha) * pos;
+    pos = rotationMatrix(vec3(0., 0., 1.), +  PI - alpha + PI/2.  ) * pos;
 
 
     
@@ -799,7 +869,7 @@ void main() {
     pos.y -= sin(alpha) * b;
 
     pos.z += (tileCoord.y*tileSize.y);
-    pos.z += scroller;
+    pos.z -= scroller;
 
 //    pos = rotationMatrix(vec3(-1.,1.,0.), PI/4.) * pos;
 //    pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
@@ -869,8 +939,8 @@ float MAX(float a, float b) {
 float mask(vec2 p) { 
     float x = p.x; float y = p.y;
     float ff = 1.;
-    float A = 3. * ff;
-    float B = 4. * ff; 
+    float A = 7. * ff;
+    float B = 8. * ff; 
     if (abs(x) >= A/B && abs(y) >= A/B)
         return 1.0 - ( B * MAX(abs(x),abs(y)) - A );
     else if (abs(x) >= A/B) 
@@ -884,7 +954,7 @@ float mask(vec2 p) {
 
 void main() {
     vec3 col = vec3(0.0,0.0,0.0);
-    float a = 1.0;
+    float a = 1.;
 
 
     vec2 pos = vTexCoord;
@@ -892,7 +962,7 @@ void main() {
     a = mask(vec2(pos.x/ratio,pos.y));
 
     if (DEBUG) {
-        col.b =    1. - mask(vec2(pos.x/ratio,pos.y)) ;
+        col.rgb =  vec3(  1. - mask(vec2(pos.x/ratio,pos.y)) );
     }
     
     
@@ -1008,7 +1078,62 @@ void main() {
 
 
 
-"grid/fader":`
+"grid/debug":`
+
+uniform float debugFlag;
+uniform float downward;
+uniform vec2 tileCount;
+uniform sampler2D texture;
+uniform float scroller;
+uniform vec2 cursorPos;
+
+varying vec2 vTexCoord;
+varying vec2 vTileCoord;
+varying vec2 vGridCoord;
+varying float vScroller;
+
+bool DEBUG    = debugFlag > 0.0;
+
+
+
+void main() {
+    vec4 col;
+    col = texture2D(texture, vTexCoord); 
+
+    if (DEBUG) { 
+        col.rgb = vec3(1.,1.,1.);
+        col.a = 1.0;
+    } 
+
+    float F = 1.;
+
+    float x = vGridCoord.x / tileCount.x;
+    float y = vGridCoord.y / tileCount.y;
+    
+    col.r *= F * (1. - x);
+    col.g *= F * (1. - y);
+
+    
+    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
+        col.rgba = 1. - col.rgba;
+    }
+
+    if (gl_FrontFacing) { 
+        vec3 tmp = vec3(col.rgb);
+        col.r = tmp.g;
+        col.g = tmp.b;
+        col.b = tmp.r;
+    }
+
+    gl_FragColor = col;
+    
+}
+`,
+
+
+
+
+"grid/def":`
 
 uniform float debugFlag;
 uniform float downward;
@@ -1057,58 +1182,7 @@ void main() {
 
 
 
-"grid/debug":`
-
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
-
-
-
-void main() {
-    vec4 col;
-    col = texture2D(texture, vTexCoord); 
-
-    if (DEBUG) { 
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-    } 
-
-    if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.r *= 0.0;
-        if ( ! DEBUG ) { col.a *= (1.- abs(vScroller)); }
-    }
-    
-    if ( vGridCoord.y == tileCount.y ) { // newest line
-        col.g *= 0.0;
-        if ( ! DEBUG ) { col.a *= abs(vScroller); }
-    }
-    
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
-        col.rgba = 1. - col.rgba;
-    }
-
-    if (!gl_FrontFacing) { col.a /= 4.; }
-
-    gl_FragColor = col;
-    
-}
-`,
-
-
-
-
-"grid/def":`
+"grid/fader":`
 
 uniform float debugFlag;
 uniform float downward;
