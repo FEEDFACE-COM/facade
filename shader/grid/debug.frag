@@ -24,21 +24,25 @@ void main() {
         col.a = 1.0;
     } 
 
-    if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.r *= 0.0;
-        if ( ! DEBUG ) { col.a *= (1.- abs(vScroller)); }
-    }
+    float F = 1.;
+
+    float x = vGridCoord.x / tileCount.x;
+    float y = vGridCoord.y / tileCount.y;
     
-    if ( vGridCoord.y == tileCount.y ) { // newest line
-        col.g *= 0.0;
-        if ( ! DEBUG ) { col.a *= abs(vScroller); }
-    }
+    col.r *= F * (1. - x);
+    col.g *= F * (1. - y);
+
     
     if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
         col.rgba = 1. - col.rgba;
     }
 
-    if (!gl_FrontFacing) { col.a /= 4.; }
+    if (gl_FrontFacing) { 
+        vec3 tmp = vec3(col.rgb);
+        col.r = tmp.g;
+        col.g = tmp.b;
+        col.b = tmp.r;
+    }
 
     gl_FragColor = col;
     
