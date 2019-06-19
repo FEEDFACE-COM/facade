@@ -1,16 +1,56 @@
 //
 package facade
+
+import(
+	"strings"
+//    proto "./proto" 
+)
+
 //
 //import (
 ////    "fmt"
-//	"strings"
 //    "flag"
 //    gfx "../gfx"
 ////    log "../log"
 //)
 //
-//var DEFAULT_MODE Mode = GRID
 var DEFAULT_DIRECTORY = "~/src/gfx/facade"
+
+var DEFAULT_MODE Mode = Mode_GRID
+
+//type Config proto.Config
+//type GridConfig struct { Config proto.GridConfig }
+
+func (config *Config) Desc() string {
+    ret := "config["
+    if config.GetCheckMode() { ret += strings.ToLower( config.GetMode().String()) + " " }
+
+//    if font,ok := config.Font(); ok { ret += font.Desc() + " "  }
+//    if camera,ok := config.Camera(); ok  { ret += camera.Desc() + " " }
+//    if mask,ok := config.Mask(); ok  { ret += mask.Desc() + " " }
+
+    if grid := config.GetGrid(); grid!=nil { ret += grid.Desc() + " " }
+    if config.GetCheckDebug() { if config.GetDebug() { ret += "DEBUG " } else { ret += "nobug " } }
+
+    ret = strings.TrimRight(ret, " ")
+    ret += "]"
+    return ret
+}
+
+
+var Defaults = Config{
+    CheckMode: true,   Mode: DEFAULT_MODE,
+    CheckDebug: true, Debug: false,
+}
+
+
+//func (config *Config) Mode() (proto.ModeName,bool) { if config.GetHasMode() { return config.GetMode(),true }; return proto.ModeName_GRID,false }
+//func (config *Config) SetMode(mode proto.ModeName) { config.Mode = mode; config.HasMode = true }
+
+//func (config *Config) Mode()  (proto.ModeName,bool) { if chk := config.GetMode();  chk != nil { return chk.GetValue(),true }; return proto.ModeName_GRID,false }
+//func (config *Config) Debug() (bool,bool)           { if chk := config.GetDebug(); chk != nil { return chk.GetValue(),true }; return false,false }
+
+
 //
 //
 //
@@ -188,19 +228,19 @@ var DEFAULT_DIRECTORY = "~/src/gfx/facade"
 //
 
 
-func (config *Config) Desc() string {
-    ret := "facade["
-//    if mode,ok := config.Mode(); ok { ret += string(mode) + " " }
+//func (config *proto.Config) Desc() string {
+//    ret := "facade["
+//    if mode := config.Mode(); mode != nil { ret += string(mode) + " " }
 //    if grid,ok := config.Grid(); ok { ret += grid.Desc() + " " }
 //    if test,ok := config.Test(); ok { ret += test.Desc() + " " }
 //    if font,ok := config.Font(); ok { ret += font.Desc() + " "  }
 //    if camera,ok := config.Camera(); ok  { ret += camera.Desc() + " " }
 //    if mask,ok := config.Mask(); ok  { ret += mask.Desc() + " " }
 //    if debug,ok := config.Debug(); ok {
-//	    if debug { ret += "DEBUG " } else { ret += "nobug" }
+//    if debug := config.Debug(); debug != nil { ret += "DEBUG " } else { ret += "nobug" }
 //	}
 //    ret = strings.TrimRight(ret, " ")
-    ret += "]"
-    return ret
-}
+//    ret += "]"
+//    return ret
+//}
 

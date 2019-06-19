@@ -26,39 +26,39 @@ message Text {
 
 }
 
+
 message Config {
     
-    bool  Debug      =  1;
-    Mode  Mode       =  2;
-                   
-    GridConfig Grid  =  3;
+    bool checkDebug = 1;  bool Debug   = 2;
+    bool checkMode  = 3;  Mode Mode    = 4;
+    
+    GridConfig Grid  =  5;
     
 //    gfx.FontConfig font      = 11;
 //    gfx.CameraConfig camera  = 12;
 //    gfx.MaskConfig mask      = 13;
                    
-
 }
+
+
+
 
 
 message GridConfig {
 
-    int32  Width     =  1;
-    int32  Height    =  2;
-    
-    bool   Downward  =  3;
-    float  Speed     =  4;
-    
-    int32  Buffer    =  5;
-    bool   Terminal  =  6;
-    
-    string Vert      =  7;
-    string Frag      =  8;
-    
-    string Fill      = 16;
+    bool checkWidth    = 1;  uint32 Width  = 2;
+    bool checkHeight   = 3;  uint32 Height = 4;
 
+    bool checkDownward = 5;  bool Downward = 6;
+    bool checkSpeed    = 7;    float Speed = 8;
+
+    bool checkBuffer   = 9; uint32 Buffer  = 10;
+    bool checkTerminal = 11; bool Terminal = 12;
+    
+    bool checkVert     = 13; string Vert   = 14;
+    bool checkFrag     = 15; string Frag   = 16;
+    bool checkFill     = 17; string Fill   = 18;
 }
-
 
 
 

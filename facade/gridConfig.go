@@ -1,15 +1,126 @@
 //
 //
 package facade
+
+
+
+
 //
-//import (
-//    "flag"    
-//    "fmt"
+import (
+    "flag"    
+    "fmt"
 //    gfx "../gfx"
-//    "strings"
-//)
-//
-//
+    "strings"
+)
+
+
+type GridState struct{
+        Width uint 
+        Height uint
+        Downward bool
+        Speed float64 
+        Buffer uint
+        Terminal bool
+        Vert string
+        Frag string
+        Fill string
+}
+
+
+var GridDefaults GridState = GridState{
+    Width:        0,
+    Height:       8,
+    Downward: false,
+    Speed:      0.4,
+    Buffer:       2,
+    Terminal: false,
+    Vert:     "def",
+    Frag:     "def",
+    Fill:        "",
+}
+
+
+
+
+func (config *GridConfig) Desc() string { 
+    ret := "grid["
+    {
+    	wok := config.GetCheckWidth(); 
+	    hok := config.GetCheckHeight();
+	    if wok { ret += fmt.Sprintf("%d",config.GetWidth()) }
+    	if wok || hok { ret += "x" }
+	    if hok { ret += fmt.Sprintf("%d",config.GetHeight()) }
+	    if wok || hok { ret += " " }
+	}
+    
+    {
+        tok := config.GetCheckTerminal(); 
+        bok := config.GetCheckBuffer();
+        if bok { ret += fmt.Sprintf("+%d ",config.GetBuffer()) }
+        if tok && config.GetTerminal() { ret += "TT " }
+    }
+    
+    {
+        tmp := "↑"
+        dok := config.GetCheckDownward(); 
+		pok := config.GetCheckSpeed();
+        if dok && config.GetDownward() { tmp = "↓" } 
+		if pok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
+        if dok { ret += tmp }
+		if dok || pok { ret += " " }
+	}
+	{
+		vok := config.GetCheckVert()
+		fok := config.GetCheckFrag()
+		if vok { ret += config.GetVert() }
+		if vok || fok { ret += "," }
+		if fok { ret += config.GetFrag() }
+		if vok || fok { ret += " " }	
+	}
+    if config.GetCheckFill() { ret += config.GetFill() + " " } 
+    ret = strings.TrimRight(ret, " ")
+    ret += "]"
+    return ret
+}
+
+
+
+func (config *GridConfig) AddFlags(flagset *flag.FlagSet, vars *GridState) {
+    
+    
+    flagset.UintVar(&vars.Width,"w",uint(GridDefaults.Width),"grid width")
+    flagset.UintVar(&vars.Height,"h",uint(GridDefaults.Height),"grid height")
+    flagset.BoolVar(&vars.Downward,"down",GridDefaults.Downward,"downward")
+    flagset.Float64Var(&vars.Speed,"speed",float64(GridDefaults.Speed),"scroll speed")
+    flagset.UintVar( &vars.Buffer,"buffer",uint(GridDefaults.Buffer),"buffer lines")
+    flagset.BoolVar(&vars.Terminal,"term",GridDefaults.Terminal,"ansi terminal")
+    flagset.StringVar(&vars.Vert,"vert",GridDefaults.Vert,"vertex shader")
+    flagset.StringVar(&vars.Frag,"frag",GridDefaults.Frag,"fragment shader")
+    flagset.StringVar(&vars.Fill,"fill",GridDefaults.Fill,"fill pattern")
+    
+}
+
+
+func (config *GridConfig) VisitFlags(flagset *flag.FlagSet, vars *GridState)  {
+	flagset.Visit( func(flg *flag.Flag) {
+        switch flg.Name {
+            case "w":        { config.CheckWidth = true;    config.Width = uint32( vars.Width )  }
+            case "h":        { config.CheckHeight = true;   config.Height = uint32( vars.Height )  }
+            case "down":     { config.CheckDownward = true; config.Downward = vars.Downward  }
+            case "speed":    { config.CheckSpeed = true;    config.Speed = float32( vars.Speed ) }
+            case "buffer":   { config.CheckBuffer = true;   config.Buffer = uint32( vars.Buffer ) }
+            case "terminal": { config.CheckTerminal = true; config.Terminal = vars.Terminal }
+            case "vert":     { config.CheckVert = true;     config.Vert = vars.Vert }
+            case "frag":     { config.CheckFrag = true;     config.Frag = vars.Frag }
+            case "fill":     { config.CheckFill = true;     config.Fill = vars.Fill }
+	   }
+    })
+}
+
+
+
+
+
 //
 //
 //

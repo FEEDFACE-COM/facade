@@ -14,6 +14,7 @@ import (
     log "./log"
     facade "./facade"
     gfx "./gfx"
+//    proto "./facade/proto"
 )
 
 
@@ -23,7 +24,7 @@ const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
 const DEBUG_MEMORY   = false
 const DEBUG_MESSAGES = true
-const DEBUG_BUFFER   = true
+const DEBUG_BUFFER   = false
 
 
 const FRAME_RATE = 60.0
@@ -215,21 +216,47 @@ func main() {
     }
 
 
-
-
-
-//    var mode facade.Mode
-//    var state *facade.State
-//    args := flags[cmd].Args()
-//    
+    args := flags[cmd].Args()
+    var mode string
+    var modeFlags *flag.FlagSet
+    var config *facade.Config = &facade.Config{}
+    
+    
+    
 //    // parse mode, if given
-//    if len(args) > 0 {
-//        switch facade.Mode( args[0] ) {
-//            case facade.GRID, facade.LINES, facade.TEST:
-//                mode = facade.Mode(args[0])
-//                args = args[1:]
-//        }
-//    }
+    if len(args) > 0 {
+        mode = strings.ToLower( args[0] )
+        
+        switch strings.ToUpper(mode) {
+
+            case facade.Mode_GRID.String():
+                config.CheckMode = true
+                config.Mode = facade.Mode_GRID
+                config.Grid = &facade.GridConfig{}
+                modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
+                modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+        }
+
+        args = args[1:]
+
+    }
+    
+    
+
+    if config.Grid != nil {
+        var gridVars facade.GridState
+        config.Grid.AddFlags( modeFlags, &gridVars )
+        modeFlags.Parse( args )
+        config.Grid.VisitFlags(modeFlags, &gridVars )
+        log.Debug("grid %s parsed",config.Desc())
+    }
+
+        
+        
+    
+//    config = ParseGridFlags(modeFlags, vars)
+    
+
 //    
 //        
 //    state = facade.NewState(mode)
@@ -272,7 +299,7 @@ func main() {
 //    }
     
     
-    var config *facade.Config = &facade.Config{}
+//    var config *facade.Config = &facade.Config{}
     
     var err error
     switch ( cmd ) {
@@ -389,7 +416,7 @@ func main() {
 }
 
 
-func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
+func ShowHelpMode(mode string, cmd Command, flagset *flag.FlagSet) {
     switches := "-"
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 

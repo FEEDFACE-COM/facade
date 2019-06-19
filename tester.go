@@ -14,6 +14,7 @@ import (
     log "./log"
     gfx "./gfx"
     facade "./facade"
+//    proto "./facade/proto"
 )
 
 type Tester struct {
@@ -66,16 +67,21 @@ func (tester *Tester) Init(config *facade.Config) error {
 //	tester.font.Init()
 //	
 //	
-    gridConfig := facade.GridConfig{}
+
+
+//    grid := proto.GridConfig{}
 //	gridConfig := facade.GridDefaults.Config()
 //    if cfg,ok := config.Grid(); ok {
 //        gridConfig.ApplyConfig(&cfg)
 //    }
 //    
-    width := uint( gridConfig.GetWidth() )
-    height := uint( gridConfig.GetHeight() )
-    buflen := uint( gridConfig.GetBuffer() )
-//    
+
+    var width,height,buflen uint  = 64, 8, 4
+    
+//    if val := grid.GetWidth(); val!=nil {  width = uint(val.GetWidth()) }
+//    if val := grid.GetHeight(); val!=nil { height = uint(val.GetHeight()) }
+//    if val := grid.GetBuffer(); val!=nil { buflen = uint(val.GetBuffer()) }
+
     tester.termBuffer = facade.NewTermBuffer(width,height) 
     tester.lineBuffer = facade.NewLineBuffer(height,buflen,tester.refreshChan) 
     
@@ -109,20 +115,22 @@ func (tester *Tester) Configure(config *facade.Config) error {
 //	}
 
 
-    if cfg := config.GetGrid(); cfg != nil {
+//    if grid := config.GetGrid(); grid != nil {
 //		tester.test.Configure(&tmp,tester.font)    
-
-        
-        width := uint( cfg.GetWidth() )
-        height := uint( cfg.GetHeight() )
-        buflen := uint( cfg.GetBuffer() )
-        
-    
-        tester.termBuffer.Resize(width,height) 
-        tester.lineBuffer.Resize(height,buflen) 
-
-
-	}
+//
+//        
+//        var width,height,buflen uint  = 64, 8, 4
+//        
+//        if val := grid.GetWidth(); val!=nil {  width = uint(val.GetWidth()) }
+//        if val := grid.GetHeight(); val!=nil { height = uint(val.GetHeight()) }
+//        if val := grid.GetBuffer(); val!=nil { buflen = uint(val.GetBuffer()) }
+//    
+//
+//        tester.termBuffer.Resize(width,height) 
+//        tester.lineBuffer.Resize(height,buflen) 
+//
+//
+//	}
 	
     
     return nil
