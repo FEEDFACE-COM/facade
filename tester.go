@@ -17,11 +17,10 @@ import (
 )
 
 type Tester struct {
-    state facade.State
+//    state facade.State
 
     font *gfx.Font; 
     
-    test *facade.Test;
     
     lineBuffer *facade.LineBuffer
     termBuffer *facade.TermBuffer
@@ -50,39 +49,40 @@ func (tester *Tester) Init(config *facade.Config) error {
     }
     gfx.SetFontDirectory(tester.directory+"/font")
     
-    var err error
+//    var err error
     
     //setup things 
-	tester.state = facade.Defaults
-    tester.state.ApplyConfig(config)
+//	tester.state = facade.Defaults
+//    tester.state.ApplyConfig(config)
     
-	fontConfig := gfx.FontDefaults.Config()
-	if cfg,ok := config.Font(); ok {
-		fontConfig.ApplyConfig( &cfg )	
-	}
-	tester.font,err = gfx.GetFont( fontConfig )
-    if err != nil {
-        log.PANIC("no default font: %s",err)    
-    }
-	tester.font.Init()
-	
-	
-	gridConfig := facade.GridDefaults.Config()
-    if cfg,ok := config.Grid(); ok {
-        gridConfig.ApplyConfig(&cfg)
-    }
-    
-    width,_ := gridConfig.Width()
-    height,_ := gridConfig.Height()
-    buflen,_ := gridConfig.BufLen()
-    
+//	fontConfig := gfx.FontDefaults.Config()
+//	if cfg,ok := config.Font(); ok {
+//		fontConfig.ApplyConfig( &cfg )	
+//	}
+//	tester.font,err = gfx.GetFont( fontConfig )
+//    if err != nil {
+//        log.PANIC("no default font: %s",err)    
+//    }
+//	tester.font.Init()
+//	
+//	
+    gridConfig := facade.GridConfig{}
+//	gridConfig := facade.GridDefaults.Config()
+//    if cfg,ok := config.Grid(); ok {
+//        gridConfig.ApplyConfig(&cfg)
+//    }
+//    
+    width := uint( gridConfig.GetWidth() )
+    height := uint( gridConfig.GetHeight() )
+    buflen := uint( gridConfig.GetBuffer() )
+//    
     tester.termBuffer = facade.NewTermBuffer(width,height) 
     tester.lineBuffer = facade.NewLineBuffer(height,buflen,tester.refreshChan) 
     
     
-    tester.test = facade.NewTest( gridConfig, tester.termBuffer, tester.lineBuffer )
-    tester.test.Init(tester.font)
-    tester.test.Configure(gridConfig,tester.font)
+//    tester.test = facade.NewTest( gridConfig, tester.termBuffer, tester.lineBuffer )
+//    tester.test.Init(tester.font)
+//    tester.test.Configure(gridConfig,tester.font)
 
     
     gfx.ClockReset()
@@ -94,23 +94,34 @@ func (tester *Tester) Init(config *facade.Config) error {
 func (tester *Tester) Configure(config *facade.Config) error {
     
     if config == nil { log.Error("tester config nil") ;return nil }
-    if len(*config) <= 0 { return nil }
+//    if len(*config) <= 0 { return nil }
     
     log.Debug("tester config %s",config.Desc())
 
-    if tmp,ok := config.Font(); ok {
-		newFont, err := gfx.GetFont(&tmp)
-		if err != nil {
-			log.Error("fail to get font %s",tmp.Desc())
-		} else {
-			newFont.Init()
-			tester.font = newFont
-		}
-	}
+//    if tmp,ok := config.Font(); ok {
+//		newFont, err := gfx.GetFont(&tmp)
+//		if err != nil {
+//			log.Error("fail to get font %s",tmp.Desc())
+//		} else {
+//			newFont.Init()
+//			tester.font = newFont
+//		}
+//	}
 
 
-    if tmp,ok := config.Grid(); ok {
-		tester.test.Configure(&tmp,tester.font)    
+    if cfg := config.GetGrid(); cfg != nil {
+//		tester.test.Configure(&tmp,tester.font)    
+
+        
+        width := uint( cfg.GetWidth() )
+        height := uint( cfg.GetHeight() )
+        buflen := uint( cfg.GetBuffer() )
+        
+    
+        tester.termBuffer.Resize(width,height) 
+        tester.lineBuffer.Resize(height,buflen) 
+
+
 	}
 	
     
@@ -190,18 +201,18 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
     gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
 
-    log.Debug("test %s",tester.state.Desc())
+//    log.Debug("test %s",tester.state.Desc())
     for {
         tester.mutex.Lock()
 
         tester.ProcessConf(confChan)
 
         if DEBUG_BUFFER && gfx.ClockVerboseFrame(){
-            if tester.test.Term() {
+//            if tester.test.Term() {
                 os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
-            } else {
-                os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
-            }
+//            } else {
+//                os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.test.Width() ) ) ) 
+//            }
             os.Stdout.Write( []byte( "\n" ) )
             os.Stdout.Sync()
         }

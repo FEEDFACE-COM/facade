@@ -13,6 +13,7 @@ BUILD_DEBUG    ?= false
 
 
 #SOURCES=$(filter-out tester.go facade/test.go , $(wildcard *.go */*.go) )
+
 SOURCES=$(wildcard *.go */*.go)
 
 ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
@@ -61,7 +62,6 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
-proto: ${PROTOS}
 
 demo:
 	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid; done; done
@@ -72,7 +72,7 @@ get:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} ${ASSETS}
+	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} ${ASSETS} ${PROTOS}
 
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
@@ -81,14 +81,16 @@ ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
 	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
 
+
+proto: ${PROTOS}
+
 facade/facade.pb.go: proto/facade.proto
-	protoc -I proto $^ --go_out=plugins=grpc:proto
+	protoc -I proto $^ --go_out=facade/ --plugin=grpc:proto
 
 
 
 
 assets: ${ASSETS}
-
 
 font/RobotoMono.ttf:
 	mkdir -p font

@@ -86,7 +86,7 @@ func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config
         confConn.Close() 
     }()
     decoder := json.NewDecoder(confConn)
-    config := make(facade.Config)
+    config := facade.Config{}
     err := decoder.Decode(&config)
     if err != nil {
         log.Error("fail to decode %s: %s",confConn.RemoteAddr().String(),err)

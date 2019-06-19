@@ -22,7 +22,7 @@ const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
 const DEBUG_MEMORY   = false
-const DEBUG_MESSAGES = false
+const DEBUG_MESSAGES = true
 const DEBUG_BUFFER   = true
 
 
@@ -218,60 +218,61 @@ func main() {
 
 
 
-    var mode facade.Mode
-    var state *facade.State
-    args := flags[cmd].Args()
-    
-    // parse mode, if given
-    if len(args) > 0 {
-        switch facade.Mode( args[0] ) {
-            case facade.GRID, facade.LINES, facade.TEST:
-                mode = facade.Mode(args[0])
-                args = args[1:]
-        }
-    }
-    
-        
-    state = facade.NewState(mode)
-    var modeFlags = flag.NewFlagSet(string(mode), flag.ExitOnError)    
-    
-    state.AddFlags( modeFlags )
-    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
-    modeFlags.Parse( args[0:] )
+//    var mode facade.Mode
+//    var state *facade.State
+//    args := flags[cmd].Args()
+//    
+//    // parse mode, if given
+//    if len(args) > 0 {
+//        switch facade.Mode( args[0] ) {
+//            case facade.GRID, facade.LINES, facade.TEST:
+//                mode = facade.Mode(args[0])
+//                args = args[1:]
+//        }
+//    }
+//    
+//        
+//    state = facade.NewState(mode)
+//    var modeFlags = flag.NewFlagSet(string(mode), flag.ExitOnError)    
+//    
+//    state.AddFlags( modeFlags )
+//    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+//    modeFlags.Parse( args[0:] )
+//
+//    
+//    
+//    config := state.CheckFlags(modeFlags)
 
-    
-    
-    config := state.CheckFlags(modeFlags)
 
-
-    if cmd == EXEC {
-        var ok bool
-        var grid facade.GridConfig
-        if grid,ok = config.Grid(); !ok {                           //REM, make grid!!
-            grid = facade.GridConfig{}
-            config.SetGrid(grid)
-//            log.PANIC("exec without grid")
-        } 
-        var cols,rows = uint(40), uint(12)
-        
-        if c,ok := grid.Width(); ok  { cols = c }
-        if r,ok := grid.Height(); ok { rows = r }
-        grid.SetWidth(cols)
-        grid.SetHeight(rows)
-        executor.SetSize(cols,rows)
-               
-        args := modeFlags.Args()
-        
-        if len(args) <= 0 {
-            ShowHelpMode(facade.GRID,EXEC,modeFlags)
-            os.Exit(-2)             
-        }
-        executor.SetPath(args[0])
-        executor.SetArgs(args[1:])
-        
-    }
+//    if cmd == EXEC {
+//        var ok bool
+//        var grid facade.GridConfig
+//        if grid,ok = config.Grid(); !ok {                           //REM, make grid!!
+//            grid = facade.GridConfig{}
+//            config.SetGrid(grid)
+////            log.PANIC("exec without grid")
+//        } 
+//        var cols,rows = uint(40), uint(12)
+//        
+//        if c,ok := grid.Width(); ok  { cols = c }
+//        if r,ok := grid.Height(); ok { rows = r }
+//        grid.SetWidth(cols)
+//        grid.SetHeight(rows)
+//        executor.SetSize(cols,rows)
+//               
+//        args := modeFlags.Args()
+//        
+//        if len(args) <= 0 {
+//            ShowHelpMode(facade.GRID,EXEC,modeFlags)
+//            os.Exit(-2)             
+//        }
+//        executor.SetPath(args[0])
+//        executor.SetArgs(args[1:])
+//        
+//    }
     
     
+    var config *facade.Config = &facade.Config{}
     
     var err error
     switch ( cmd ) {
@@ -416,7 +417,7 @@ func ShowHelpMode(mode facade.Mode, cmd Command, flagset *flag.FlagSet) {
 
 func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
     modes := []string{}
-    for _,m := range( []facade.Mode{ facade.GRID } ) { 
+    for _,m := range( []facade.Mode{ facade.Mode_GRID } ) { 
         modes = append(modes, string(m) )
     }
     switches := "-"
@@ -453,7 +454,7 @@ func ShowCommands() {
 
 func ShowModes() {
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",facade.GRID,"character grid")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",facade.Mode_GRID,"character grid")
 }
 
 func ShowHelp() {

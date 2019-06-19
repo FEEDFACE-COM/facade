@@ -13,7 +13,7 @@ import(
 
 )
 
-const DEBUG_TERMBUFFER = false
+const DEBUG_TERMBUFFER = true
 const DEBUG_TERMBUFFER_DUMP = false
 
 
@@ -62,6 +62,8 @@ func makeRow(cols uint) []rune {
 
 
 func NewTermBuffer(cols, rows uint) *TermBuffer {
+    if rows == 0 { rows = 1 }
+    if cols == 0 { cols = 1 }
     ret := &TermBuffer{cols:cols, rows:rows}
     ret.max = pos{cols,rows}
     ret.buffer = makeBuffer(cols,rows)

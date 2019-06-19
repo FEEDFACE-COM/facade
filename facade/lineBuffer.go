@@ -9,7 +9,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = false
+const DEBUG_LINEBUFFER = true
 const DEBUG_LINEBUFFER_DUMP = false
 
 
