@@ -42,10 +42,12 @@ void main() {
 
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
-    
+
     float F = 0.5;
+
     float y  =  vTileCoord.y       / (tileCount.y/2.);
-    float yy = (vTileCoord.y - 1.0 ) / (tileCount.y/2.);
+    float yy = (vTileCoord.y + (abs(scroller)) ) / (tileCount.y/2.);
+
 
     float freq = 2.;
     float f0 = cos( freq * y  * PI + now + PI/2. );
