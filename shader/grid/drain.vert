@@ -4,21 +4,23 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
 uniform float debugFlag;
-uniform float downward;
 
 attribute vec3 vertex;
 
 attribute vec2 texCoord;
 attribute vec2 tileCoord;
+attribute vec2 gridCoord;
+
 
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
-
+varying vec2 vGridCoord;
 varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
