@@ -26,7 +26,8 @@ const RENDERER_AVAILABLE = true
 type Renderer struct {
     screen gfx.Size
 
-    state facade.State
+    mode facade.Mode
+    debug bool
 
     grid *facade.Grid
 
@@ -114,8 +115,11 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
 
     //setup things 
-	renderer.state = facade.Defaults
-    renderer.state.ApplyConfig(config)
+    renderer.mode = facade.Defaults.Mode
+    renderer.debug = facade.Defaults.Debug
+    if config.GetSetMode()  { renderer.mode = config.GetMode() }
+    if config.GetSetDebug() { renderer.debug = config.GetDebug() }
+    
 
 
 
@@ -123,53 +127,58 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     
     renderer.axis = &gfx.Axis{}
 
-	fontConfig := gfx.FontDefaults.Config()
-	if cfg,ok := config.Font(); ok {
-		fontConfig.ApplyConfig( &cfg )	
-	}
-	renderer.font,err = gfx.GetFont( fontConfig )
-    if err != nil {
-        log.PANIC("no default font: %s",err)    
+
+    {
+    	var name = facade.DEFAULT_FONT
+        if cfg := config.GetFont(); cfg!=nil {
+            if cfg.GetSetName() {
+                name = cfg.GetName()
+            }
+        }
+    	renderer.font,err = gfx.GetFont( name )
+        if err != nil {
+            log.PANIC("no default font %s: %s",name,err)    
+        }
+    	renderer.font.Init()
     }
-	renderer.font.Init()
+    
 
+    {
+        var zoom = facade.CameraDefaults.Zoom
+        var iso = facade.CameraDefaults.Isometric
+        if cfg:=config.GetCamera(); cfg!=nil {
+            if cfg.GetSetZoom() {
+                zoom = cfg.GetZoom()
+            }
+            if cfg.GetSetIsometric() {
+                iso = cfg.GetIsometric()
+            }
+        }
 
-    cameraConfig := gfx.CameraDefaults.Config()
-    if cfg,ok := config.Camera(); ok {
-		cameraConfig.ApplyConfig( &cfg )    
+        renderer.camera = gfx.NewCamera( float32(zoom), iso, renderer.screen)
+        renderer.camera.Init()
 	}
-    renderer.camera = gfx.NewCamera(cameraConfig,renderer.screen)
-    renderer.camera.Init(cameraConfig)
-
-    maskConfig := gfx.MaskDefaults.Config()
-    if cfg,ok := config.Mask(); ok {
-		maskConfig.ApplyConfig(&cfg)    
-	}
-    renderer.mask = gfx.NewMask(maskConfig,renderer.screen)
-    renderer.mask.Init()
 
 
+    {
+        var name = facade.MaskDefaults.Name
+        if cfg:=config.GetMask(); cfg!=nil {
+            if cfg.GetSetName() {
+                name = cfg.GetName()
+            }
+        }
+        renderer.mask = gfx.NewMask(name,renderer.screen)
+        renderer.mask.Init()
+    }
 
-    gridConfig := facade.GridDefaults.Config()
-    if cfg,ok := config.Grid(); ok {
-        gridConfig.ApplyConfig(&cfg)
-    }	
-
-    width,_ := gridConfig.Width()
-    height,_ := gridConfig.Height()
-    buflen,_ := gridConfig.BufLen()
 
 
-    renderer.termBuffer = facade.NewTermBuffer(width,height) 
-    renderer.lineBuffer = facade.NewLineBuffer(height,buflen,renderer.refreshChan) 
+    renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
+    renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),renderer.refreshChan) 
 
-    //initialize mode, REM this should probably init all modes
-	switch renderer.state.Mode {
-		case facade.GRID:
-			renderer.grid = facade.NewGrid( gridConfig, renderer.lineBuffer, renderer.termBuffer )
-			renderer.grid.Init(renderer.camera,renderer.font)
-			renderer.grid.Configure(gridConfig,renderer.camera,renderer.font)
-	}
+    renderer.grid = facade.NewGrid( renderer.lineBuffer, renderer.termBuffer )
+    renderer.grid.Init(renderer.camera,renderer.font)
+    renderer.grid.Configure(config.GetGrid(),renderer.camera,renderer.font)
 
     renderer.axis.Init()
 
@@ -182,42 +191,87 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 func (renderer *Renderer) Configure(config *facade.Config) error {
     
     if config == nil { log.Error("renderer config nil") ;return nil }
-    if len(*config) <= 0 { return nil }
     
     log.Debug("renderer config %s",config.Desc())
     
-    if tmp,ok := config.Font(); ok {
-		newFont, err := gfx.GetFont(&tmp)
-		if err != nil {
-			log.Error("fail to get font %s",tmp.Desc())
-		} else {
-			newFont.Init()
-			renderer.font = newFont
-			if renderer.grid != nil { 
-				cfg := make(facade.GridConfig)
-				cfg.SetHeight( renderer.grid.Height() )
-				renderer.grid.Configure(&cfg,renderer.camera,renderer.font)
-			}
-		}
-	}
+    {
+            
+    }
     
-    if tmp,ok := config.Camera(); ok {
-		renderer.camera.Configure(&tmp)    
-	}
     
-    if tmp,ok := config.Mask(); ok {
-		renderer.mask.Configure(&tmp)    
-	}
+    
+//    if tmp,ok := config.Font(); ok {
+//		newFont, err := gfx.GetFont(&tmp)
+//		if err != nil {
+//			log.Error("fail to get font %s",tmp.Desc())
+//		} else {
+//			newFont.Init()
+//			renderer.font = newFont
+//			if renderer.grid != nil { 
+//				cfg := make(facade.GridConfig)
+//				cfg.SetHeight( renderer.grid.Height() )
+//				renderer.grid.Configure(&cfg,renderer.camera,renderer.font)
+//			}
+//		}
+//	}
+//    
+//    if tmp,ok := config.Camera(); ok {
+//		renderer.camera.Configure(&tmp)    
+//	}
+//    
 
-    if tmp,ok := config.Grid(); ok {
-		renderer.grid.Configure(&tmp,renderer.camera,renderer.font)    
-	}
+    if cfg := config.GetFont(); cfg!=nil {
+        if cfg.GetSetName() {
+            name := cfg.GetName()
+            newFont, err := gfx.GetFont(name)
+    		if err != nil {
+    	   		log.Error("fail to switch font %s",name)
+    	    } else {
+        	   newFont.Init()
+        	   renderer.font = newFont
+        	   log.Debug("switch font %s",renderer.font.Desc())
+            }
+        }    
+    }
+
+    if cfg := config.GetCamera(); cfg!=nil {
+        if cfg.GetSetZoom() {
+            renderer.camera.ConfigureZoom( float32(cfg.GetZoom()) )
+        }
+        if cfg.GetSetIsometric() {
+            renderer.camera.ConfigureIsometric( cfg.GetIsometric() )
+        }
+    }
+
+    if cfg := config.GetMask(); cfg!=nil {
+        if cfg.GetSetName() { 
+            renderer.mask.ConfigureName( cfg.GetName() )
+        }
+    }
+
+
+    if cfg := config.GetGrid(); cfg!=nil {
+        renderer.grid.Configure(cfg,renderer.camera,renderer.font)
+    }
 	
-	if debug,ok := config.Debug(); ok {
-		renderer.state.Debug = debug	
+	if config.GetSetDebug() {
+		renderer.debug = config.GetDebug()
 	} else {
-		renderer.state.Debug = false	
+		renderer.debug = false	
 	}
+    
+    
+    if config.GetSetMode() {
+        mode := config.GetMode()
+        if renderer.mode != mode {
+        
+            log.Debug("switch mode[] to mode[%s]",renderer.mode.String(),mode.String())
+            renderer.mode = mode
+        
+        }
+        
+    }
+    
     
     return nil
 }
@@ -237,7 +291,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
     gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
-    log.Debug("render %s",renderer.state.Desc())
+    log.Debug("render %s",renderer.Desc())
     for {
         
         verboseFrame := gfx.ClockVerboseFrame()
@@ -247,8 +301,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         
         renderer.ProcessConf(confChan)
         if renderer.checkRefresh() {
-            switch renderer.state.Mode {
-                case facade.GRID:
+            switch renderer.mode {
+                case facade.Mode_GRID:
                     renderer.grid.GenerateData(renderer.font)
             }
         }
@@ -261,25 +315,21 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
         gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
         gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,gl.ZERO,gl.ONE)
-        switch renderer.state.Mode {
-            case facade.GRID:
-                renderer.grid.Render(renderer.camera, renderer.font, renderer.state.Debug, verboseFrame )
+        switch renderer.mode {
+            case facade.Mode_GRID:
+                renderer.grid.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame )
         }
       
-        if renderer.state.Debug {renderer.axis.Render(renderer.camera, renderer.state.Debug) }
+        if renderer.debug {renderer.axis.Render(renderer.camera, renderer.debug) }
 
 
         gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
         gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA,gl.ZERO,gl.ONE)
-        renderer.mask.Render(renderer.state.Debug)
+        renderer.mask.Render(renderer.debug)
         
         
         
         if verboseFrame { 
-
-            if DEBUG_BUFFER {
-                renderer.dumpBuffers()    
-            }
 
             renderer.printDebug(prev); 
             prev = *gfx.NewClock() 
@@ -384,28 +434,33 @@ func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan c
 
 func (renderer *Renderer) printDebug(prev gfx.Clock) {
 
+
     if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
     if DEBUG_DIAG { log.Debug( MemUsage() ) }
         
     if DEBUG_MODE {
         tmp := ""
-        switch renderer.state.Mode { 
-            case facade.GRID:
+        switch renderer.mode { 
+            case facade.Mode_GRID:
                 tmp = renderer.grid.Desc()
         }
 		tmp2 := ""
-		if renderer.state.Debug {
+		if renderer.debug {
 			tmp2 = " DEBUG"	
 		}
         log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+    }
+
+    if DEBUG_BUFFER {
+        renderer.dumpBuffers()    
     }
     
 }
 
 func (renderer *Renderer) dumpBuffers() {
-    if renderer.state.Mode  == facade.GRID {
-        os.Stdout.Write( []byte( renderer.grid.Dump() ) )        
+    if renderer.mode  == facade.Mode_GRID {
+        os.Stdout.Write( []byte( renderer.grid.DumpBuffer() ) )        
     }
     os.Stdout.Write( []byte( "\n" ) )
     os.Stdout.Sync()

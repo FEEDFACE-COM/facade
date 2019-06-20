@@ -4,6 +4,7 @@
 package gfx
 
 import(
+    "fmt"
     log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
@@ -19,32 +20,38 @@ type Mask struct {
     width float32
     height float32
     
-    state MaskState
+    name string
 }
 
-func NewMask(config *MaskConfig, screen Size) *Mask {
+func NewMask(name string, screen Size) *Mask {
     ret := &Mask{width: screen.W, height: screen.H}
-    ret.state.ApplyConfig(config)
+    ret.name = name
     return ret
 }
 
 
-func (mask *Mask) Configure(config *MaskConfig) {
-    if config == nil { return }
 
-	if mask.state.ApplyConfig(config) {
-        log.Debug("mask config %s",mask.Desc())
-        mask.LoadShaders()	
-    }
-	
+func (mask *Mask) ConfigureName(name string) {
+    if mask.name != name {
+        oldName := mask.name
+        mask.name = name    
+        err := mask.LoadShaders()
+        if err != nil {
+            log.Error("fail to load mask shader %s: %s",name,err)     
+            mask.name = oldName
+            mask.LoadShaders()            
+        }
+    }    
 }
 
 
-func (mask *Mask) Desc() string { return mask.state.Desc() }
+func (mask *Mask) Desc() string { 
+    return fmt.Sprintf("mask[%s]",mask.name)
+}
 
 func (mask *Mask) Render(debug bool) {
 
-    if mask.state.Mask == "def" {
+    if mask.name == "def" {
         return
     }
 
@@ -62,10 +69,14 @@ func (mask *Mask) Render(debug bool) {
 
 func (mask *Mask) LoadShaders() error {
     var err error
-    err = mask.program.GetCompileShaders("mask/","def",mask.state.Mask)
-    if err != nil { log.Error("fail load mask shaders: %s",err) }
+    err = mask.program.GetCompileShaders("mask/","def",mask.name)
+    if err != nil { 
+        return log.NewError("fail load mask shaders: %s",err) 
+    }
     err = mask.program.LinkProgram(); 
-    if err != nil { log.Error("fail to link mask program: %s",err) }
+    if err != nil { 
+        return log.NewError("fail to link mask program: %s",err) 
+    }
     return nil
 }
 

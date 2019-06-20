@@ -43,7 +43,7 @@ type Font struct {
     max struct {w, h int}
     Size [GlyphCols][GlyphRows]Size
     
-    state FontState
+    name string
 }
 
 
@@ -52,20 +52,19 @@ func SetFontDirectory(directory string) { fontDirectory = path.Clean(directory) 
 
 
 
-func GetFont(config *FontConfig) (*Font,error) {
+func GetFont(name string) (*Font,error) {
     var err error
     var data []byte
     
-    var name string
-    name, ok := (*config).Name()
-    if ! ok { return nil, log.NewError("no font name given"); }
+
+    if name == "" { return nil, log.NewError("no font name given"); }
         
     
     if fonts[name] != nil {
         return fonts[name],nil
     }
     
-    fnt := NewFont(config)
+    fnt := NewFont(name)
     
     if VectorFont[name] != "" {
         
@@ -131,10 +130,8 @@ func (font *Font) MaxSize() Size {
 }
 
 
-func NewFont(config *FontConfig) *Font {
-    ret := &Font{}
-    ret.state.ApplyConfig(config)
-    return ret
+func NewFont(name string) *Font {
+    return &Font{name: name}
 }
 
 
@@ -146,13 +143,11 @@ func (font *Font) Desc() string {
 //    gw, gh := GlyphCols, GlyphRows
 //    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
 
-//    ret := "font["
-//    ret += font.name
-//    ret += fmt.Sprintf(" %.2f",font.Ratio() )
-//    ret += "]"
-//    return ret
-
-	return font.state.Desc()
+    ret := "font["
+    ret += font.name
+    ret += fmt.Sprintf(" %.2f",font.Ratio() )
+    ret += "]"
+    return ret
 }
 
 
@@ -293,7 +288,7 @@ func (font *Font) stringForByte(b byte) string {
         if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
             return " "
         }
-        if strings.ToUpper(font.state.Name) == "OCRAEXT" && b == 0xB7 {
+        if strings.ToUpper(font.name) == "OCRAEXT" && b == 0xB7 {
             log.Debug("special-case ocraext '%c'",b)
             return " "
         }

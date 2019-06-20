@@ -93,10 +93,10 @@ func (tester *Tester) Init(config *facade.Config) error {
 
     
     if grid := config.GetGrid(); grid!=nil {
-        if grid.GetCheckWidth() { tester.Width = uint(grid.GetWidth()) }
-        if grid.GetCheckHeight() { tester.Height = uint(grid.GetHeight()) }
-        if grid.GetCheckBuffer() { tester.Buffer = uint(grid.GetBuffer()) }
-        if grid.GetCheckTerminal() { tester.Terminal = grid.GetTerminal() }
+        if grid.GetSetWidth() { tester.Width = uint(grid.GetWidth()) }
+        if grid.GetSetHeight() { tester.Height = uint(grid.GetHeight()) }
+        if grid.GetSetBuffer() { tester.Buffer = uint(grid.GetBuffer()) }
+        if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() }
     }
 
     tester.termBuffer = facade.NewTermBuffer(tester.Width,tester.Height) 
@@ -114,10 +114,10 @@ func (tester *Tester) Init(config *facade.Config) error {
 func (tester *Tester) Desc() string {
 
     tmp := facade.GridConfig{
-        CheckWidth: true,  Width: uint64(tester.Width),
-        CheckHeight: true, Height: uint64(tester.Height),
-        CheckBuffer: true, Buffer: uint64(tester.Buffer),
-        CheckTerminal: true, Terminal: tester.Terminal,
+        SetWidth: true,  Width: uint64(tester.Width),
+        SetHeight: true, Height: uint64(tester.Height),
+        SetBuffer: true, Buffer: uint64(tester.Buffer),
+        SetTerminal: true, Terminal: tester.Terminal,
     }
     
     return "tester[" + tmp.Desc() + "]"
@@ -133,10 +133,10 @@ func (tester *Tester) Configure(config *facade.Config) error {
         
         resize := false
 
-        if grid.GetCheckWidth() { resize = true;  tester.Width = uint(grid.GetWidth()) } 
-        if grid.GetCheckHeight() { resize = true; tester.Height = uint(grid.GetHeight()) } 
-        if grid.GetCheckBuffer() { resize = true; tester.Buffer = uint(grid.GetBuffer()) } 
-        if grid.GetCheckTerminal() { tester.Terminal = grid.GetTerminal() } 
+        if grid.GetSetWidth() { resize = true;  tester.Width = uint(grid.GetWidth()) } 
+        if grid.GetSetHeight() { resize = true; tester.Height = uint(grid.GetHeight()) } 
+        if grid.GetSetBuffer() { resize = true; tester.Buffer = uint(grid.GetBuffer()) } 
+        if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() } 
 
         if resize {
             tester.termBuffer.Resize(tester.Width,tester.Height) 

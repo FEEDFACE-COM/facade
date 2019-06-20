@@ -16,6 +16,8 @@ import (
     
 )
 
+const DEBUG_SHADER = false
+
 type Shader struct {
     Name string
     Source string
@@ -102,13 +104,13 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
         }
 
 
-        if src == "" {
-            switch (shaderType) {
-                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"def"]
-                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"def"]
-            }    
-            log.Debug("fallback to %s%s.%s",shaderPrefix,"def",shaderType)
-        }
+//        if src == "" {
+//            switch (shaderType) {
+//                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"def"]
+//                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"def"]
+//            }    
+//            log.Debug("fallback to %s%s.%s",shaderPrefix,"def",shaderType)
+//        }
 
         
         if src == "" {
@@ -124,7 +126,7 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
 
 func WatchShaderFile(filePath string, program *Program, shader *Shader) {
         // REM, should verify that we're not alreay watching this file..
-        log.Debug("watch %s",filePath)
+        if DEBUG_SHADER { log.Debug("watch %s",filePath) }
         
 
         info,err := os.Stat(filePath)
@@ -149,7 +151,7 @@ func WatchShaderFile(filePath string, program *Program, shader *Shader) {
             }
             
         }
-    log.Debug("unwatch %s",filePath)
+    if DEBUG_SHADER { log.Debug("unwatch %s",filePath) }
 }
 
 

@@ -18,6 +18,17 @@ import(
 
 type Grid struct {
 
+    width, height uint
+
+    downward bool
+    speed float32
+    
+    buffer uint
+    terminal bool
+
+
+    vert,frag string
+
     lineBuffer   *LineBuffer
     termBuffer   *TermBuffer
     
@@ -27,7 +38,6 @@ type Grid struct {
     data []float32
     
     
-    state GridState
         
     refreshChan chan bool
 }
@@ -82,27 +92,27 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     
     
-    tileCount := mgl32.Vec2{ float32(grid.state.Width), float32(grid.state.Height) }
+    tileCount := mgl32.Vec2{ float32(grid.width), float32(grid.height) }
     grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0] );
     
     tileSize := mgl32.Vec2{ font.MaxSize().W/font.MaxSize().H, font.MaxSize().H/font.MaxSize().H }
     grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0] );
     
     tileOffset := mgl32.Vec2{-1., 0.0}
-    if grid.state.Width % 2 == 0 { //even columns
+    if grid.width % 2 == 0 { //even columns
         tileOffset[0] = 0.5
     }
-    if grid.state.Height % 2 == 0 { //even rows
+    if grid.height % 2 == 0 { //even rows
         tileOffset[1] = -0.5
     }
-    if grid.state.Downward && ! grid.state.Term {
+    if grid.downward && ! grid.terminal {
         tileOffset[1] += 1.    
     }
     grid.program.Uniform2fv(gfx.TILEOFFSET, 1, &tileOffset[0] );
 
 
     cursorPos := mgl32.Vec2{-1., -1.}
-    if grid.state.Term {
+    if grid.terminal {
         x,y := grid.termBuffer.GetCursor()
         cursorPos[0] = float32(x)
         cursorPos[1] = float32(y)
@@ -113,9 +123,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
 
     scroller := float32(0.0)
-    if ! grid.state.Term {
+    if ! grid.terminal {
         scroller = -1. * float32( grid.lineBuffer.GetScroller() )
-        if grid.state.Downward {
+        if grid.downward {
             scroller *= -1.
         }
     }
@@ -127,7 +137,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 //    { 
 //        dw := float32(0.0); 
-//        if grid.state.Downward { dw = 1.0 }
+//        if grid.Downward { dw = 1.0 }
 //        grid.program.Uniform1f(gfx.DOWNWARD, dw)
 //    }
     
@@ -136,7 +146,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     scale = grid.autoScale(camera,font)
 
 //    var trans = float32(-0.5)
-//    if ( grid.state.Downward ) {
+//    if ( grid.Downward ) {
 //        trans *= -1.
 //    } 
 
@@ -151,12 +161,12 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     grid.program.VertexAttribPointer(gfx.GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4 )
     
     
-    count := int32(grid.state.Width*(grid.state.Height+1))
+    count := int32(grid.width*(grid.height+1))
 	offset := int32(0)
 
-//    if grid.state.Downward { // need to skip first row
+//    if grid.Downward { // need to skip first row
 //        if grid.ringBuffer.Tail(0) != nil {
-//            offset = int32(grid.state.Width)
+//            offset = int32(grid.Width)
 //        }
 //    }
 
@@ -172,20 +182,20 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 		gl.BindTexture(gl.TEXTURE_2D, 0)
         off := offset
         // REM, use single gl.DrawElements call instead (create indice array before)
-        for r:=0; r<int(grid.state.Height+1); r++ {
-            for c:=0; c<int(grid.state.Width); c++ {
+        for r:=0; r<int(grid.height+1); r++ {
+            for c:=0; c<int(grid.width); c++ {
                 gl.DrawArrays(gl.LINE_STRIP,int32(off*2*3), int32(1*2*3))
                 off += int32(1)          
             }
-//    	   gl.DrawArrays(gl.LINE_STRIP,int32(off*2*3), int32(grid.state.Width*2*3) )    
-//    	   off += int32(grid.state.Width)
+//    	   gl.DrawArrays(gl.LINE_STRIP,int32(off*2*3), int32(grid.Width*2*3) )    
+//    	   off += int32(grid.Width)
         }	  
         
     }
 }
 
 
-func (grid *Grid) Height() uint { return grid.state.Height }
+//func (grid *Grid) Height() uint { return grid.Height }
 
 
 
@@ -244,7 +254,7 @@ F A C A D E
         
         case "grid":
             ret := []string{}
-            w,h := int(grid.state.Width), int(grid.state.Height)
+            w,h := int(grid.width), int(grid.height)
             for r:=0; r<h; r++ {
                 tmp := ""
                 for c:=0; c<w; c++ {
@@ -261,7 +271,7 @@ F A C A D E
             
         case "alpha":
             ret := []string{}
-            w,h := int(grid.state.Width), int(grid.state.Height)
+            w,h := int(grid.width), int(grid.height)
             alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
             s := 0
             for r:=0; r<h; r++ {
@@ -274,7 +284,7 @@ F A C A D E
             
         case "clear":
             ret := []string{}
-        	h := int(grid.state.Height)
+        	h := int(grid.height)
         	for r:=0; r<h; r++ {
 	        	ret = append(ret, "" )
 	        }
@@ -328,18 +338,18 @@ func (grid *Grid) GenerateData(font *gfx.Font) {
     grid.data = []float32{}
     if DEBUG_GRID { log.Debug("generate %s %s",grid.Desc(),font.Desc()) }
     
-    width, height := int(grid.state.Width), int(grid.state.Height)
+    width, height := int(grid.width), int(grid.height)
     
     for r:=0; r<=height; r++ {
         y := -1 * (r - height/2)
         
         row := r
-        if grid.state.Downward && ! grid.state.Term {
+        if grid.downward && ! grid.terminal {
             row = height - r    
         }
         
         line := Line("")
-        if grid.state.Term {
+        if grid.terminal {
             line = grid.termBuffer.GetLine( uint(row) )    
         } else {
             line = grid.lineBuffer.GetLine( uint(row) )
@@ -399,11 +409,8 @@ func getGlyphCoord(run rune) gfx.Coord {
 
 
 func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
-
-//    grid.autoWidth(grid.state,camera,font)
-    
-
     log.Debug("init %s",grid.Desc())
+
     grid.texture.Init()
     grid.RenderMap(font)
 //    grid.texture.TexImage()
@@ -419,7 +426,7 @@ func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
 
 func (grid *Grid) LoadShaders() error {
 	var err error
-    err = grid.program.GetCompileShaders("grid/",grid.state.Vert,grid.state.Frag)
+    err = grid.program.GetCompileShaders("grid/",grid.vert,grid.frag)
     if err != nil { return log.NewError("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
     if err != nil { return log.NewError("fail link grid program: %v",err) }
@@ -456,8 +463,8 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 	
 	ratio := screenRatio / fontRatio
 	
-	scaleWidth  :=  ratio * 2. / float32(grid.state.Width) 
-	scaleHeight :=          2. / float32(grid.state.Height ) 
+	scaleWidth  :=  ratio * 2. / float32(grid.width) 
+	scaleHeight :=          2. / float32(grid.height ) 
 	
 	if scaleWidth < scaleHeight { 
 		return scaleWidth
@@ -469,26 +476,33 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 }
 
 
-func (grid *Grid) autoWidth(camera *gfx.Camera, font *gfx.Font) {
-	h := grid.state.Height
-	var cfg = make(GridConfig)
-	cfg.SetHeight(h)
-	cfg.autoWidth(camera, font)
-	
-}
+//func (grid *Grid) autoWidth(camera *gfx.Camera, font *gfx.Font) {
+//	h := grid.Height
+//	var cfg = make(GridConfig)
+//	cfg.SetHeight(h)
+//	cfg.autoWidth(camera, font)
+//	
+//}
 
 func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) {
-    if width,ok := config.Width(); !ok || width == 0 { // no width given
-        height,ok := config.Height()
-        if !ok { 
-	        log.Debug("autowidth fail: %s",config.Desc())
-	        return
-	    }
+    
+    if ! config.GetSetWidth() {
+    
+        if ! config.GetSetHeight() {
+            log.Debug("autowidth fail: %s",config.Desc())
+            return
+        }
+        
+        height := config.GetHeight()
         w := camera.Ratio() / font.Ratio() * float32(height)
         if height == 1 { w = 5. }
-        config.SetWidth( uint(w) )
+
+        config.SetWidth = true
+        config.Width = uint64(w)
         log.Debug("autowidth %s",config.Desc())
-    } 
+        
+        
+    }
 }
 
 
@@ -505,24 +519,31 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 
 	config.autoWidth(camera,font)
 
-    if width,ok := config.Width(); ok && width != 0 { 
-	    grid.state.Width = width 
-        grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
-	} 
-
-    if height,ok := config.Height(); ok && height != 0 && height != grid.state.Height { 
-	    grid.state.Height = height 
-        grid.lineBuffer.Resize(grid.state.Height,grid.state.BufLen)
-        grid.termBuffer.Resize(grid.state.Width,grid.state.Height)   
-    }
-
-    if buflen,ok := config.BufLen(); ok && buflen != 0 && buflen != grid.state.BufLen {
-        grid.state.BufLen = buflen
-        grid.lineBuffer.Resize(grid.state.Height,grid.state.BufLen)
-    }
+    {
+        changed := false
+        if config.GetSetWidth() && config.GetWidth() != 0 && uint(config.GetWidth()) != grid.width {
+            grid.width = uint( config.GetWidth() )
+            changed = true
+        } 
     
-    if term,ok := config.Term(); ok && term != grid.state.Term {
-        grid.state.Term = term
+        if config.GetSetHeight() && config.GetHeight() != 0 && uint(config.GetHeight()) != grid.height { 
+            grid.height = uint( config.GetHeight() )
+            changed = true
+        }
+    
+        if config.GetSetBuffer() && config.GetBuffer() != 0 && uint(config.GetBuffer()) != grid.buffer {
+            grid.buffer = uint( config.GetBuffer() )
+            changed = true
+        }
+        
+        if changed {
+            grid.lineBuffer.Resize(grid.height,grid.buffer)
+            grid.termBuffer.Resize(grid.width,grid.height)   
+        }
+    }
+        
+    if config.GetSetTerminal() {
+        grid.terminal = config.GetTerminal()
     }
 
     if true {  //optimize!!
@@ -533,9 +554,15 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 //		grid.empty.RenderTexture(font)
     }
 
-	{
-		if tmp,ok := config.Downward(); ok { grid.state.Downward = tmp }	
-	}
+    {
+        if config.GetSetDownward() { 
+            grid.downward = config.GetDownward() 
+        }	
+	    if config.GetSetSpeed() { 
+    	   grid.speed = float32(config.GetSpeed())
+           grid.lineBuffer.Speed = grid.speed
+    	}
+    }
 
 //	{
 //		changed := false
@@ -547,33 +574,24 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 //    	}
 //    }
 
-	{
-		changed := false
-	    if tmp,ok := config.Speed(); ok { changed = true; grid.state.Speed = tmp }    
-    	if changed {
-	        grid.lineBuffer.Speed = float32(grid.state.Speed)
-    	}
-    }
     
     {
 	    changed := false
-		vert,frag := grid.state.Vert, grid.state.Frag
-		if tmp,ok := config.Vert(); ok { changed = true; grid.state.Vert = tmp }
-		if tmp,ok := config.Frag(); ok { changed = true; grid.state.Frag = tmp }
+		vert,frag := grid.vert, grid.frag
+		if config.GetSetVert() { changed = true; grid.vert = config.GetVert() }
+		if config.GetSetFrag() { changed = true; grid.frag = config.GetFrag() }
 		if changed {
 			err := grid.LoadShaders()    
-			if false && err != nil {
-				grid.state.Vert = vert
-				grid.state.Frag = frag
+			if err != nil {
+				grid.vert = vert
+				grid.frag = frag
 			}
 		}
     }
     
 
-    if fillName,ok := config.Fill(); ok {
-        
-        fillStr := grid.fill( fillName )
-
+    if config.GetSetFill() {
+        fillStr := grid.fill( config.GetFill() )
         grid.lineBuffer.Fill( fillStr )
         grid.termBuffer.Fill( fillStr )
 
@@ -584,13 +602,29 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 }
 
 
+func (grid *Grid) DumpBuffer() string {
+    if grid.terminal {
+        return grid.termBuffer.Dump()    
+    } else {
+        return grid.lineBuffer.Dump(grid.width)
+    }    
+}
 
 
+func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
+    ret:= &Grid{}    
+    ret.width =  uint(GridDefaults.GetWidth())
+    ret.height = uint(GridDefaults.GetHeight())
 
-func NewGrid(config *GridConfig, lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
-    ret := &Grid{}
-    ret.state = GridDefaults
-    ret.state.ApplyConfig(config)
+    ret.speed = float32(GridDefaults.GetSpeed())
+    ret.downward = GridDefaults.GetDownward()
+
+    ret.terminal = GridDefaults.GetTerminal()
+    ret.buffer = uint(GridDefaults.GetBuffer())
+
+    ret.vert  = GridDefaults.GetVert()
+    ret.frag  = GridDefaults.GetFrag()
+    
     ret.refreshChan = make( chan bool, 1 )
     ret.lineBuffer = lineBuffer
     ret.termBuffer = termBuffer
@@ -600,14 +634,23 @@ func NewGrid(config *GridConfig, lineBuffer *LineBuffer, termBuffer *TermBuffer)
     return ret
 }
 
-func (grid *Grid) Desc() string { return grid.state.Desc()  }
-
-func (grid *Grid) Dump() string { 
-    if grid.state.Term {
-        return grid.termBuffer.Dump() 
-    } else { 
-        return grid.lineBuffer.Dump(grid.state.Width)
+func (grid *Grid) Desc() string { 
+    cfg := GridConfig{
+        SetWidth: true,   Width: uint64(grid.width),
+        SetHeight: true, Height: uint64(grid.height),
+        
+        SetSpeed: true, Speed: float64(grid.speed),
+        SetDownward: true, Downward: grid.downward,
+        
+        SetTerminal: true, Terminal: grid.terminal,
+        SetBuffer: true, Buffer: uint64(grid.buffer),
+        
+        SetVert: true, Vert: grid.vert,
+        SetFrag: true, Frag: grid.frag,
+        
     }
+    return cfg.Desc()
 }
+
 
 

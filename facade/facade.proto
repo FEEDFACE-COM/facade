@@ -1,0 +1,88 @@
+
+syntax = "proto3";
+
+package facade;
+
+enum Mode {
+    GRID  = 0;
+    DRAFT = 16;
+}
+
+
+service Facade {
+    rpc Configure(Config) returns (Empty);
+    rpc Pipe(stream Text) returns (Empty);
+}
+
+
+message Empty {} 
+
+
+message Text {
+
+    bytes Text       =  1;
+
+}
+
+
+message Config {
+    
+    bool SetDebug = 1;  bool Debug   = 2;
+    bool SetMode  = 3;  Mode Mode    = 4;
+    
+    
+
+      FontConfig Font   = 5;
+    CameraConfig Camera = 6;
+      MaskConfig Mask   = 7;
+    
+      GridConfig Grid   = 8;
+                   
+}
+
+
+message FontConfig {
+
+    bool SetName = 1;  string Name = 2;
+
+}
+
+
+message CameraConfig {
+
+    bool SetZoom       = 1; double Zoom      = 2;
+    bool SetIsometric  = 3;   bool Isometric = 4;
+
+}
+
+
+message MaskConfig {
+
+    bool SetName = 1;  string Name = 2;
+
+}
+
+
+message GridConfig {
+
+    bool SetWidth    = 1;   uint64 Width    = 2;
+    bool SetHeight   = 3;   uint64 Height   = 4;
+
+    bool SetDownward = 5;     bool Downward = 6;
+    bool SetSpeed    = 7;   double Speed    = 8;
+
+    bool SetBuffer   = 9;   uint64 Buffer   = 10;
+    bool SetTerminal = 11;    bool Terminal = 12;
+    
+    bool SetVert     = 13;  string Vert     = 14;
+    bool SetFrag     = 15;  string Frag     = 16;
+    bool SetFill     = 17;  string Fill     = 18;
+}
+
+
+
+
+
+
+
+

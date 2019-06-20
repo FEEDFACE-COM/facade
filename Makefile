@@ -84,8 +84,8 @@ ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
 
 proto: ${PROTOS}
 
-facade/facade.pb.go: proto/facade.proto
-	protoc -I proto $^ --go_out=facade/ --plugin=grpc:proto
+facade/facade.pb.go: facade/facade.proto
+	protoc -I facade -I gfx $^ --go_out=facade/ --plugin=grpc:proto
 
 
 

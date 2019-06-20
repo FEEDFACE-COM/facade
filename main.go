@@ -19,6 +19,7 @@ import (
 
 
 const DEBUG_CLOCK    = false
+const DEBUG_CONFIG   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
@@ -230,25 +231,38 @@ func main() {
         switch strings.ToUpper(mode) {
 
             case facade.Mode_GRID.String():
-                config.CheckMode = true
+                config.SetMode = true
                 config.Mode = facade.Mode_GRID
                 config.Grid = &facade.GridConfig{}
-                modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
-                modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+                
+                
+            case facade.Mode_DRAFT.String():
+                config.SetMode = true
         }
 
         args = args[1:]
 
     }
-    
+
     
 
-    if config.Grid != nil {
-        config.Grid.AddFlags( modeFlags )
-        modeFlags.Parse( args )
-        config.Grid.VisitFlags( modeFlags )
-        log.Debug("grid %s parsed",config.Desc())
-    }
+    modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
+    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+    
+    config.Font = &facade.FontConfig{}
+    config.Camera = &facade.CameraConfig{}
+    config.Mask = &facade.MaskConfig{}
+    
+    
+    config.AddFlags( modeFlags )
+    modeFlags.Parse( args )
+    config.VisitFlags( modeFlags )
+
+//    if config.Grid != nil {
+//        config.Grid.AddFlags( modeFlags )
+//        modeFlags.Parse( args )
+//        config.Grid.VisitFlags( modeFlags )
+//    }
 
         
         
