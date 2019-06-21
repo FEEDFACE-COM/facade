@@ -263,11 +263,11 @@ func main() {
             log.Info(AUTHOR)
             scanner = NewScanner()
             renderer = NewRenderer(directory)
-            texts := make(chan facade.BufferItem)
+            texts := make(chan facade.TextSeq)
             go scanner.ScanText(texts)
             runtime.LockOSThread()
             renderer.Init(config)  
-            go renderer.ProcessBufferItems(texts)
+            go renderer.ProcessTextSeqs(texts)
             err = renderer.Render(nil)
             
 
@@ -276,12 +276,12 @@ func main() {
             server = NewServer(host,port,textPort,readTimeout)
             renderer = NewRenderer(directory)
             confs := make(chan facade.Config)
-            texts := make(chan facade.BufferItem)
+            texts := make(chan facade.TextSeq)
             go server.Listen(confs,texts)
             go server.ListenText(texts)
             runtime.LockOSThread()
             renderer.Init(config) 
-            go renderer.ProcessBufferItems(texts)
+            go renderer.ProcessTextSeqs(texts)
             err = renderer.Render(confs)
 
 
@@ -351,7 +351,7 @@ func main() {
             server = NewServer(host,port,textPort,readTimeout)
             tester = NewTester(directory)
             confs := make(chan facade.Config)
-            texts := make(chan facade.BufferItem)
+            texts := make(chan facade.TextSeq)
 
             
 
@@ -364,8 +364,7 @@ func main() {
             tester.Configure(config)
             
             //start processing only after init!
-//            go tester.ProcessRawConfs(rawConfs,confs)
-            go tester.ProcessBufferItems(texts)
+            go tester.ProcessTextSeqs(texts)
             err = tester.Test(confs)
             
 

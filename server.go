@@ -15,7 +15,7 @@ import (
 )
 
 
-const DEBUG_SERVER = true
+const DEBUG_SERVER = false
 const DEBUG_SERVER_DUMP = true
 
 
@@ -28,7 +28,7 @@ type Server   struct {
     connStr string
     connection *grpc.ClientConn
     
-    bufferChan chan facade.BufferItem
+    bufferChan chan facade.TextSeq
     confChan chan facade.Config
 }
 
@@ -39,7 +39,7 @@ func NewServer(host string, confPort uint, textPort uint, timeout float64) (*Ser
     return &Server{host:host, confPort: confPort, textPort: textPort, timeout: timeout} 
 }
 
-func (server *Server) ListenText(bufChan chan facade.BufferItem) { 
+func (server *Server) ListenText(bufChan chan facade.TextSeq) { 
     textListenStr := fmt.Sprintf("%s:%d",server.host,server.textPort)
     log.Debug("listen for text on %s",textListenStr) 
     textListener, err := net.Listen("tcp",textListenStr)
@@ -98,7 +98,7 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
 }
 
 
-func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferItem) {
+func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq) {
     defer func() { 
         if DEBUG_SERVER { log.Debug("close text %s",textConn.RemoteAddr().String()); }
         textConn.Close() 
@@ -129,7 +129,7 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferI
 }
 
 
-func (server *Server) Listen(confChan chan facade.Config, bufferChan chan facade.BufferItem) {
+func (server *Server) Listen(confChan chan facade.Config, bufferChan chan facade.TextSeq) {
     var err error
     
     server.confChan = confChan

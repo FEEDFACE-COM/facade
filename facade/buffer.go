@@ -3,6 +3,7 @@
 package facade
 
 import(
+    "fmt"
     "strings"
     log "../log"
     "github.com/pborman/ansi"
@@ -13,35 +14,35 @@ const DEBUG_ANSI_DUMP = false
 
 type Line []rune
 
-type BufferItem struct {
+type TextSeq struct {
     Text []rune
     Seq  *ansi.S
 }
 
 
-func (item *BufferItem) Desc() string {
+func (item *TextSeq) Desc() string {
     ret := ""
-    if item.Text != nil && len(item.Text) > 0 {
-        ret += "text " + string(item.Text)
-    } else if item.Seq != nil {
-        ret += "ansi " + string(item.Seq.Code)
+    if item.Seq != nil {
+        ret += fmt.Sprintf("ansi 0x%x",item.Seq.Code)
+    } else if len(item.Text) > 0 {
+        ret += fmt.Sprintf("text %d byte",len(item.Text))
     } else {
-        ret += "nil"
+        ret += "empty"
     }
     return ret
 }
 
 
 
-func sendBytes(raw []byte, bufChan chan BufferItem) {
-    var item = BufferItem{}
+func sendBytes(raw []byte, bufChan chan TextSeq) {
+    var item = TextSeq{}
     str := string(raw)
     item.Text = []rune(str)
     bufChan <- item
 }
 
-func sendSequence(seq *ansi.S, bufChan chan BufferItem) {
-    var item = BufferItem{}
+func sendSequence(seq *ansi.S, bufChan chan TextSeq) {
+    var item = TextSeq{}
     item.Seq = seq
     bufChan <- item    
 }
@@ -52,7 +53,7 @@ func sendSequence(seq *ansi.S, bufChan chan BufferItem) {
 // send to channel, 
 // return leftover bytes
 
-func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
+func ProcessRaw(raw []byte, bufChan chan TextSeq) ([]byte, error) {
     var decodeErr error
     var seq *ansi.S
 
@@ -117,7 +118,7 @@ func ProcessRaw(raw []byte, bufChan chan BufferItem) ([]byte, error) {
             default:
                 log.Error("ansi fail decode: %s\n%s",decodeErr,log.Dump(ptr,0,0)) 
                 sendBytes(txt, bufChan)
-                return rem, log.NewError("ansi fail decode")    
+                return ptr, log.NewError("ansi fail decode")     //TWEAK? fix 'man man' escape sequence split error
             
         }
             

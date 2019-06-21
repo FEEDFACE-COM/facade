@@ -9,7 +9,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = true
+const DEBUG_LINEBUFFER = false
 const DEBUG_LINEBUFFER_DUMP = false
 
 
@@ -233,7 +233,6 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
                 if l >= 1 {
                     tmp = tmp[0:l-1];
                 }
-                
 //                if DEBUG_LINEBUFFER { log.Debug("BS") }
             
             default:

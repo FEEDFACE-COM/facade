@@ -358,7 +358,6 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
     
     select {
         case conf := <-confChan:
-            if DEBUG_MESSAGES { log.Debug("conf chan %s",conf.Desc()) }
             renderer.Configure(&conf)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
@@ -376,27 +375,22 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 
 
-func (renderer *Renderer) ProcessBufferItems(textChan chan facade.BufferItem) error {
+func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
     for {
         item := <- textChan    
-        if DEBUG_MESSAGES { log.Debug("buffer %s",item.Desc()) }
         text, seq := item.Text, item.Seq
         if text != nil && len(text) > 0 {
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER {
-                renderer.dumpBuffers()    
-            }
+            if DEBUG_BUFFER { renderer.dumpBuffer() }
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER {
-                renderer.dumpBuffers()    
-            }
+            if DEBUG_BUFFER { renderer.dumpBuffer() }
         }
     }
     return nil
@@ -413,7 +407,6 @@ func (renderer *Renderer) ProcessBufferItems(textChan chan facade.BufferItem) er
 //func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
 //    for {
 //        rawConf := <-rawChan
-//        if DEBUG_MESSAGES { log.Debug("process %s",rawConf.Desc()) }
 //
 //
 //        renderer.mutex.Lock()
@@ -449,13 +442,11 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
         log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
     }
 
-    if DEBUG_BUFFER {
-        renderer.dumpBuffers()    
-    }
+//    if DEBUG_BUFFER { renderer.dumpBuffer() }
     
 }
 
-func (renderer *Renderer) dumpBuffers() {
+func (renderer *Renderer) dumpBuffer() {
     if renderer.mode  == facade.Mode_GRID {
         os.Stdout.Write( []byte( renderer.grid.DumpBuffer() ) )        
     }

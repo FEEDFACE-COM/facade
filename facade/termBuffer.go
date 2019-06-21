@@ -14,7 +14,7 @@ import(
 )
 
 const DEBUG_TERMBUFFER = true
-const DEBUG_TERMBUFFER_DUMP = false
+const DEBUG_TERMBUFFER_DUMP = true
 
 
 /* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */ 
@@ -210,10 +210,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             
             default:
 //                if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
-                buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = run
-                buffer.cursor.x += 1
 
-
+                // ?TWEAK - checking and updating before writing fixes 'man foo' at width 64
                 if buffer.cursor.x > buffer.max.x {
                     buffer.cursor.x = 1
                     buffer.cursor.y += 1
@@ -224,6 +222,11 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.cursor.x = 1
                     buffer.cursor.y = buffer.max.y
                 }
+
+                buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = run
+                buffer.cursor.x += 1
+
+
             
                 
 
@@ -434,7 +437,7 @@ func (buffer *TermBuffer) insertLine(cnt uint) {
 
 func (buffer *TermBuffer) linePositionAbsolute(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s line position absolute %d",buffer.Desc(),val) }
-    buffer.cursor.x = 1
+//    buffer.cursor.x = 1  // TWEAK? setting x breaks top(1)
     buffer.cursor.y = val
 }
 
@@ -462,7 +465,7 @@ func (buffer *TermBuffer) resetMode(val string) {
                     buffer.restoreBuffer()
                     buffer.restoreCursor()
                 default:
-                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),val,lookupMode(val)) }
+                    if DEBUG_TERMBUFFER { log.Debug("%s ignore reset mode '%s'",buffer.Desc(),lookupMode(val)) }
 
             }
 }

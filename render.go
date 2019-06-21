@@ -17,5 +17,5 @@ func (renderer *Renderer) Init(config *facade.Config) error { return log.NewErro
 func (renderer *Renderer) Configure(config *facade.Config) error { return log.NewError("RENDERER NOT AVAILABLE") }
 func (renderer *Renderer) Render(confChan chan facade.Config) error { return log.NewError("RENDERER NOT AVAILABLE") } 
 func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error { return log.NewError("RENDERER NOT AVAILABLE") }
-func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) error { return log.NewError("RENDERER NOT AVAILABLE") }
+func (renderer *Renderer) ProcessTextSeqs(bufChan chan facade.TextSeq) error { return log.NewError("RENDERER NOT AVAILABLE") }
 

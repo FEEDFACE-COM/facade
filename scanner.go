@@ -25,7 +25,7 @@ func NewScanner() *Scanner {
 }
 
 
-func (scanner *Scanner) ScanText(bufChan chan facade.BufferItem) {
+func (scanner *Scanner) ScanText(bufChan chan facade.TextSeq) {
 	var rem []byte = []byte{}
 	var tmp []byte
 
