@@ -16,7 +16,7 @@ import (
 
 
 const DEBUG_SERVER = false
-const DEBUG_SERVER_DUMP = true
+const DEBUG_SERVER_DUMP = false
 
 
 type Server   struct {

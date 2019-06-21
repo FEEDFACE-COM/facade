@@ -384,13 +384,13 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER { renderer.dumpBuffer() }
+//            if DEBUG_BUFFER { renderer.dumpBuffer() }
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER { renderer.dumpBuffer() }
+//            if DEBUG_BUFFER { renderer.dumpBuffer() }
         }
     }
     return nil
@@ -442,7 +442,7 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
         log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
     }
 
-//    if DEBUG_BUFFER { renderer.dumpBuffer() }
+    if DEBUG_BUFFER { renderer.dumpBuffer() }
     
 }
 
