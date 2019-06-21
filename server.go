@@ -8,15 +8,15 @@ import (
     "io"
 //    "os"
     "bufio"
-    "encoding/json"
-//    "encoding/gob"
+    "golang.org/x/net/context"
+    "google.golang.org/grpc"
     log "./log"
     facade "./facade"
 )
 
 
-const DEBUG_ACCEPT = true
-const DEBUG_RECV =   true
+const DEBUG_SERVER = true
+const DEBUG_SERVER_DUMP = true
 
 
 type Server   struct {
@@ -24,32 +24,19 @@ type Server   struct {
     confPort uint
     textPort uint
     timeout float64
+
+    connStr string
+    connection *grpc.ClientConn
+    
+    bufferChan chan facade.BufferItem
+    confChan chan facade.Config
 }
+
+
 
 
 func NewServer(host string, confPort uint, textPort uint, timeout float64) (*Server) { 
     return &Server{host:host, confPort: confPort, textPort: textPort, timeout: timeout} 
-}
-
-func (server *Server) ListenConf(confChan chan facade.Config) {
-    confListenStr := fmt.Sprintf("%s:%d",server.host,server.confPort)
-    log.Debug("listen for config on %s",confListenStr) 
-    confListener, err := net.Listen("tcp",confListenStr)
-    if err != nil {
-        log.PANIC("fail listen on %s: %s",confListenStr,err)
-    }
-    defer func() { log.Debug("stop listen conf on %s",confListener.Addr().String()); confListener.Close() }()
-    log.Info("listening for conf on %s",confListener.Addr().String()) 
-    for {
-        confConn, err := confListener.Accept()
-        if err != nil {
-            log.Error("fail accept on %s: %s",confListenStr,err)    
-            continue
-        }
-        if DEBUG_ACCEPT {log.Debug("accept conf from %s",confConn.RemoteAddr().String()) }
-        go server.ReceiveConf(confConn, confChan)
-
-    }
 }
 
 func (server *Server) ListenText(bufChan chan facade.BufferItem) { 
@@ -68,7 +55,7 @@ func (server *Server) ListenText(bufChan chan facade.BufferItem) {
             log.Error("fail accept on %s: %s",textListenStr,err)    
             continue
         }
-        if DEBUG_ACCEPT { log.Debug("accept text from %s",textConn.RemoteAddr().String()) }
+        if DEBUG_SERVER { log.Debug("accept text from %s",textConn.RemoteAddr().String()) }
         if server.timeout == 0.0 {
             textConn.SetReadDeadline( time.Time{} )
         } else {
@@ -79,26 +66,41 @@ func (server *Server) ListenText(bufChan chan facade.BufferItem) {
     }
 }
 
+func (server *Server) Configure(ctx context.Context, config *facade.Config) (*facade.Status,error) {
+    if DEBUG_SERVER { log.Debug("receive conf %s",config.Desc()) }
 
-func (server *Server) ReceiveConf(confConn net.Conn, confChan chan facade.Config) {
-    defer func() { 
-        if DEBUG_ACCEPT { log.Debug("close conf %s",confConn.RemoteAddr().String()) }
-        confConn.Close() 
-    }()
-    decoder := json.NewDecoder(confConn)
-    config := facade.Config{}
-    err := decoder.Decode(&config)
-    if err != nil {
-        log.Error("fail to decode %s: %s",confConn.RemoteAddr().String(),err)
-        return
-    }
-    if DEBUG_RECV { log.Debug("receive conf %s",config.Desc()) }
-    confChan <- config
+    server.confChan <- *config
+    return &facade.Status{Success:true},nil
 }
+
+
+func (server *Server) Display(stream facade.Facade_DisplayServer) error {
+    if DEBUG_SERVER { log.Debug("receive text stream") }
+	var rem []byte = []byte{}
+	var tmp []byte
+    for {
+        msg, err := stream.Recv()
+        if err == io.EOF {
+            return stream.SendAndClose( &facade.Status{Success: true} )
+        } else if err != nil {
+            return log.NewError("fail to recv: %s",err)
+        } 
+        raw := msg.GetRaw()
+        if DEBUG_SERVER_DUMP { log.Debug("recv %d byte raw:\n%s",len(raw),log.Dump(raw,len(raw),0)) 
+        } else if DEBUG_SERVER { log.Debug("recv %d byte raw",len(raw)) }
+        tmp = append(rem, raw ... )
+        rem, err = facade.ProcessRaw(tmp,server.bufferChan)
+        if err != nil {
+            log.Error("text process error: %s",err)    
+        }
+    }
+    return nil
+}
+
 
 func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferItem) {
     defer func() { 
-        if DEBUG_ACCEPT { log.Debug("close text %s",textConn.RemoteAddr().String()); }
+        if DEBUG_SERVER { log.Debug("close text %s",textConn.RemoteAddr().String()); }
         textConn.Close() 
     }()
     const BUFFER_SIZE = 1024
@@ -113,7 +115,9 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferI
 			log.Error("text read %s error: %s",textConn.RemoteAddr().String(),err)
 			break
 		}
-        if DEBUG_RECV { log.Debug("text recv %d byte:\n%s",n,log.Dump(buf,n,0)) }
+        if DEBUG_SERVER_DUMP { log.Debug("recv %d byte:\n%s",n,log.Dump(buf,n,0)) 
+        } else if DEBUG_SERVER { log.Debug("recv %d byte",n) }
+
 		tmp = append(rem, buf[:n] ... )
 //		log.Debug("PROCESS %d byte:\n%s",len(tmp),log.Dump(tmp,len(tmp),0))
 		rem, err = facade.ProcessRaw(tmp, bufChan)
@@ -122,25 +126,30 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.BufferI
 //            log.Debug("RETURN %d byte:\n%s",len(rem),log.Dump(rem,len(rem),0))
         }
     }
-    
-//    scanner := bufio.NewScanner(textConn)
-//    for scanner.Scan() {
-//        if server.timeout == 0.0 {
-//            textConn.SetReadDeadline( time.Time{} )
-//        } else {
-//            textConn.SetReadDeadline(time.Now().Add( 1 * time.Second ) )
-//        }
-//        
-////        textConn.SetReadDeadline(time.Now().Add( 5 * time.Second ) )
-//        text := scanner.Text()
-//        if DEBUG_RECV {
-//            log.Debug("receive text %s",text)
-//        }
-//        textChan <- facade.RawText(text)
-//    }
-//    err := scanner.Err()
-//    if err != nil {
-//        log.Error("fail to scan %s: %s",textConn.RemoteAddr().String(),err)
-//    }
 }
+
+
+func (server *Server) Listen(confChan chan facade.Config, bufferChan chan facade.BufferItem) {
+    var err error
+    
+    server.confChan = confChan
+    server.bufferChan = bufferChan
+    server.connStr = fmt.Sprintf("%s:%d",server.host,server.confPort)
+
+    if DEBUG_SERVER { log.Debug("listen %s",server.connStr) }
+    listener, err := net.Listen("tcp",server.connStr)
+    if err != nil {
+        log.Error("fail to listen %s: %s",server.connStr,err)
+    }
+    
+    serv := grpc.NewServer()
+    facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan} )
+    if DEBUG_SERVER { log.Debug("serve %s",server.connStr) }
+    err = serv.Serve(listener)
+    if err != nil {
+        log.Error("fail to serve: %s",err)
+    }
+    if DEBUG_SERVER { log.Debug("listen done.") }
+}
+
 

@@ -63,8 +63,8 @@ const (
 
 var (
     textPort       uint     = 0xfcd
-    confPort       uint     = 0xfcc
-    connectHost    string   = "fcd.hq.feedface.com"
+    port           uint     = 0xfcc
+    connectHost    string   = "localhost"
     connectTimeout float64  = 5.0
     readTimeout    float64  = 0.0
     listenHost     string   = "0.0.0.0"
@@ -109,13 +109,13 @@ func main() {
     }
     
     for _,cmd := range []Command{PIPE,CONF,EXEC} {
-        flags[cmd].UintVar(&confPort, "cp", confPort, "connect to `port` for config" )
+        flags[cmd].UintVar(&port, "cp", port, "connect to `port` for config" )
         flags[cmd].StringVar(&connectHost, "h", connectHost, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout connect after `seconds`") 
     }
 
     if flags[RECV] != nil {
-        flags[RECV].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
+        flags[RECV].UintVar(&port, "cp", port, "listen on `port` for config" )
         flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
         flags[RECV].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
 //        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
@@ -123,7 +123,7 @@ func main() {
     }
 
     if flags[TEST] != nil {
-        flags[TEST].UintVar(&confPort, "cp", confPort, "listen on `port` for config" )
+        flags[TEST].UintVar(&port, "cp", port, "listen on `port` for config" )
         flags[TEST].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
         flags[TEST].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
         flags[TEST].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`") 
@@ -183,22 +183,22 @@ func main() {
             scanner = NewScanner()
             
         case RECV:
-            server = NewServer(listenHost,confPort,textPort,readTimeout)
+            server = NewServer(listenHost,port,textPort,readTimeout)
             renderer = NewRenderer(directory)
 
         case PIPE:
-            client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            client = NewClient(connectHost,port,connectTimeout)
 
         case CONF:
-            client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            client = NewClient(connectHost,port,connectTimeout)
 
         case EXEC:
-            client = NewClient(connectHost,confPort,textPort,connectTimeout)
+            client = NewClient(connectHost,port,connectTimeout)
             executor = NewExecutor(client)
 
         case TEST:
             scanner = NewScanner()
-            server = NewServer(listenHost,confPort,textPort,readTimeout)
+            server = NewServer(listenHost,port,textPort,readTimeout)
             tester = NewTester(directory)
 
         case INFO:
@@ -321,13 +321,12 @@ func main() {
             log.Info(AUTHOR)
             if renderer == nil { log.PANIC("renderer not available") }
             if scanner == nil { log.PANIC("scanner not available") }
-            bufChan := make(chan facade.BufferItem)
-            go scanner.ScanText(bufChan)
+            texts := make(chan facade.BufferItem)
+            go scanner.ScanText(texts)
+           
             runtime.LockOSThread()
-            renderer.Init(config) 
-            
-            //start processing only after init!
-            go renderer.ProcessBufferItems(bufChan)
+            renderer.Init(config)  
+            go renderer.ProcessBufferItems(texts)
             
             err = renderer.Render(nil)
             
@@ -336,57 +335,64 @@ func main() {
             log.Info(AUTHOR)
             if server == nil { log.PANIC("server not available") }
             if renderer == nil { log.PANIC("renderer not available") }
-            rawConfs := make(chan facade.Config)
             confs := make(chan facade.Config)
-            bufChan := make(chan facade.BufferItem)
+            texts := make(chan facade.BufferItem)
 
-            go server.ListenConf(rawConfs)
-            go server.ListenText(bufChan)
+            go server.Listen(confs,texts)
+            go server.ListenText(texts)
 
 
             runtime.LockOSThread()
             renderer.Init(config) 
 
-            //start processing only after init!
-            go renderer.ProcessRawConfs(rawConfs,confs)
-            go renderer.ProcessBufferItems(bufChan)
+            go renderer.ProcessBufferItems(texts)
             
             err = renderer.Render(confs)
                     
         case PIPE:
             if client == nil { log.PANIC("client not available") }
+            err = client.Dial() ; if err!=nil { log.Error("fail to dial: %s",err) }
+            defer client.Close()
             if config != nil {
-                client.SendConf(config)
+                client.SendConf(config) ; if err!=nil { log.Error("fail to send conf: %s",err) }
             }
-            err = client.OpenText()
-            client.ScanAndSendText()
-            client.CloseText()
+            err = client.OpenTextStream()  ;  if err!=nil { log.Error("fail to open stream: %s",err) }
+            defer client.CloseTextStream()
+            err = client.ScanAndSendText() ; if err!=nil { log.Error("fail to scan and send: %s",err) }
             
         case CONF:
             if client == nil { log.PANIC("client not available") }
             if config == nil { log.PANIC("config not available") }
+            client.Dial()
+            defer client.Close()
             err = client.SendConf(config)
 
         case EXEC:
             if client == nil { log.PANIC("client not available") }
             if executor == nil { log.PANIC("executor not available") }
-            for config != nil { 
+            client.Dial()
+            defer client.Close()
+            if config != nil {
                 err = client.SendConf(config)
-                if err == nil {
-                    log.Debug("sent config %s",config.Desc())
-                    break
-                }
-                time.Sleep( time.Duration( 200 * time.Millisecond ) )
             }
+//            for config != nil { 
+//                err = client.SendConf(config)
+//                if err == nil {
+//                    log.Debug("sent config %s",config.Desc())
+//                    break
+//                }
+//                time.Sleep( time.Duration( 200 * time.Millisecond ) )
+//            }
+
             for {
-                err = client.OpenText()
-                if err == nil {
-                    log.Debug("connected text.")
-                    break
-                }
+//                err = client.OpenText()
+//                if err == nil {
+//                    log.Debug("connected text.")
+//                    break
+//                }
                 time.Sleep( time.Duration( 200 * time.Millisecond ) )
             }
-            err = executor.Execute()
+//            err = executor.Execute()
             
 
         case TEST:
@@ -394,23 +400,22 @@ func main() {
             if scanner == nil { log.PANIC("scanner not available") }
             if server == nil { log.PANIC("server not available") }
             if tester == nil { log.PANIC("tester not available") }
-            rawConfs := make(chan facade.Config)
             confs := make(chan facade.Config)
-            bufChan := make(chan facade.BufferItem)
+            texts := make(chan facade.BufferItem)
 
             
 
-            go server.ListenConf(rawConfs)
-            go server.ListenText(bufChan)
-            go scanner.ScanText(bufChan)
+            go server.Listen(confs,texts)
+            go server.ListenText(texts)
+            go scanner.ScanText(texts)
 
             runtime.LockOSThread()
             tester.Init(config) 
             tester.Configure(config)
             
             //start processing only after init!
-            go tester.ProcessRawConfs(rawConfs,confs)
-            go tester.ProcessBufferItems(bufChan)
+//            go tester.ProcessRawConfs(rawConfs,confs)
+            go tester.ProcessBufferItems(texts)
 
             
             err = tester.Test(confs)

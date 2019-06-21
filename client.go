@@ -3,12 +3,16 @@ package main
 
 import (
     "fmt"
-    "net"
+//    "net"
     "bufio"
     "os"
+    "time"
+    
 //    "bytes"
-    "encoding/json"
-//    "time"
+//    "encoding/json"
+    "golang.org/x/net/context"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/status"
     log "./log"
     facade "./facade"
 )
@@ -18,38 +22,37 @@ const DEBUG_CLIENT_DUMP = true
 
 type Client   struct {
     host string
-    confPort uint
-    textPort uint
-    textConn net.Conn
-    textConnStr string
-    timeout float64
+    port uint
+    connStr string
+    timeout time.Duration
+    
+    connection *grpc.ClientConn
+    client facade.FacadeClient
+    stream facade.Facade_DisplayClient
+    cancel context.CancelFunc
     
 }
-func NewClient(host string, confPort uint, textPort uint, timeout float64) (*Client) { 
-    return &Client{host:host, confPort:confPort, textPort: textPort, timeout:timeout}
+
+func NewClient(host string, port uint, timeout float64) (*Client) { 
+    ret := &Client{host:host, port:port}
+    ret.connStr = fmt.Sprintf("%s:%d",ret.host,ret.port)
+    ret.timeout = time.Duration( 1000. * timeout ) * time.Millisecond
+    return ret
 }
 
-func (client *Client) OpenText() error {
-    var err error
-    client.textConnStr = fmt.Sprintf("%s:%d",client.host,client.textPort)
-    if DEBUG_CLIENT {
-        log.Debug("dial %s",client.textConnStr) 
+
+
+func (client *Client) Close() {
+    if client.cancel != nil {
+        client.cancel()
+        client.cancel = nil
+        client.stream = nil
     }
-    client.textConn, err = net.Dial("tcp", client.textConnStr)
-    if err != nil {
-        if DEBUG_CLIENT {
-            log.Error("fail to dial %s: %s",client.textConnStr,err)
-        }
-        return log.NewError("fail to dial %s",client.textConnStr) 
+    if client.connection != nil {
+        client.connection.Close()
+        client.connection = nil
     }
-    return nil
 }
-
-func (client *Client) CloseText() {
-    log.Debug("close %s",client.textConn.RemoteAddr().String());
-    client.textConn.Close()    
-}
-
 
 func (client *Client) ScanAndSendText() error {
     var err error
@@ -59,48 +62,102 @@ func (client *Client) ScanAndSendText() error {
         text := scanner.Text()
         err = client.SendText( []byte(text+"\n") )
         if err != nil {
-            return err
+            return log.NewError("fail to send: %s",err)
         }
     }
     err = scanner.Err()
     if err != nil {
         log.Error("fail to scan: %s",err)
     }
+    
     return nil
 }
 
-func (client *Client) SendText(text []byte) error {
+
+func (client *Client) OpenTextStream() error {
     var err error
-    _, err = client.textConn.Write(text) 
-    if err != nil {
-        if DEBUG_CLIENT { log.Error("fail to write to %s: %s",client.textConnStr,err) }
-        return log.NewError("fail to write to %s",client.textConnStr)
+    var ctx context.Context
+    
+    if client.stream != nil || client.cancel != nil {
+        return log.NewError("fail to open stream: existing stream/cancel")
     }
-    if DEBUG_CLIENT_DUMP { log.Debug("sent %d byte text:\n%s",len(text),log.Dump(text,0,0)) 
-    } else if DEBUG_CLIENT { log.Debug("sent %d byte text",len(text)) }
+    
+    ctx, client.cancel = context.WithCancel(context.Background())
+    client.stream, err =  client.client.Display(ctx)
+    if err != nil {
+        return log.NewError("fail to get display stream: %s",err)
+    }    
     return nil
 }
 
-func (client *Client) SendConf(config *facade.Config) error { 
-    confConnStr := fmt.Sprintf("%s:%d",client.host,client.confPort)
-    if DEBUG_CLIENT { log.Debug("dial %s",confConnStr) }
-    conn, err := net.Dial("tcp", confConnStr)
-    if err != nil {
-        if DEBUG_CLIENT { log.Error("fail to dial %s: %s",confConnStr,err) }
-        return log.NewError("fail to dial %s",confConnStr)
+func (client *Client) CloseTextStream() error {
+    
+    if client.stream == nil {
+        return log.NewError("fail to close stream: no stream")
     }
-    defer func() { 
-        if DEBUG_CLIENT { log.Debug("close %s",conn.RemoteAddr().String()); }
-        conn.Close()
-    }()
-    encoder := json.NewEncoder(conn)
-    err = encoder.Encode( *config )
+
+    response,err := client.stream.CloseAndRecv()
+    client.stream = nil
+    client.cancel = nil
+
     if err != nil {
-        if DEBUG_CLIENT { log.Error("fail to encode %s: %s",config.Desc(),err) }
-        return log.NewError("fail to encode %s",config.Desc())
+        status,_ := status.FromError(err)
+        return log.NewError("fail to close: %s",status.Message())
+    } else if ! response.GetSuccess() {
+        return log.NewError("reply fail: %s",response.GetError())   
     }
-    if DEBUG_CLIENT { log.Debug("sent conf %s",config.Desc()) }
+    
+    return nil    
+}
+
+
+func (client *Client) SendText(raw []byte) error {
+    
+    if client.stream == nil {
+        return log.NewError("fail to send stream: no stream")
+    }
+    
+    rawText := facade.RawText{ Raw: raw }
+    ret := client.stream.Send( &rawText )
+    if DEBUG_CLIENT_DUMP { log.Debug("sent %d byte text:\n%s",len(raw),log.Dump(raw,0,0)) 
+    } else if DEBUG_CLIENT { log.Debug("sent %d byte text",len(raw)) }
+    return ret
+}
+
+
+
+func (client *Client) SendConf(config *facade.Config) error {
+    
+    if client.connection == nil {
+        return log.NewError("fail to send: no connection")
+    } 
+    ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
+    defer cancel()
+    
+    response,err := client.client.Configure(ctx, config )
+    if err != nil {
+        status,_ := status.FromError(err)
+        return log.NewError("fail to send: %s",status.Message())
+    } else if ! response.GetSuccess() {
+        return log.NewError("reply fail: %s",response.GetError())   
+    }
+    if DEBUG_CLIENT { log.Debug("sent to %s %s",client.connStr,config.Desc()) }
     return nil
+}
+     
+
+func (client *Client) Dial() error {
+    var err error
+    
+    opts := grpc.WithInsecure()
+    
+    if DEBUG_CLIENT { log.Debug("dial %s timeout %.1fs",client.connStr,client.timeout.Seconds()) }
+    client.connection, err = grpc.Dial( client.connStr, opts )
+    if err != nil {
+        return log.NewError("fail to dial %s: %s",client.connStr,err)
+    }
+    client.client = facade.NewFacadeClient(client.connection)
+    return nil  
 }
 
     

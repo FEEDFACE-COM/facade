@@ -10,17 +10,19 @@ enum Mode {
 
 
 service Facade {
-    rpc Configure(Config) returns (Empty);
-    rpc Pipe(stream Text) returns (Empty);
+    rpc Configure(Config) returns (Status) {}
+    rpc Display(stream RawText) returns (Status) {}
 }
 
+message Status {
+    bool Success = 1;
+    string Error = 2;
+} 
 
-message Empty {} 
 
+message RawText {
 
-message Text {
-
-    bytes Text       =  1;
+    bytes Raw       =  1;
 
 }
 

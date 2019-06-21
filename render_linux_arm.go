@@ -194,9 +194,6 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     
     log.Debug("renderer config %s",config.Desc())
     
-    {
-            
-    }
     
     
     
@@ -361,7 +358,7 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
     
     select {
         case conf := <-confChan:
-        
+            if DEBUG_MESSAGES { log.Debug("conf chan %s",conf.Desc()) }
             renderer.Configure(&conf)
             if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
         
@@ -379,10 +376,10 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 
 
-func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) error {
+func (renderer *Renderer) ProcessBufferItems(textChan chan facade.BufferItem) error {
 
     for {
-        item := <- bufChan    
+        item := <- textChan    
         if DEBUG_MESSAGES { log.Debug("buffer %s",item.Desc()) }
         text, seq := item.Text, item.Seq
         if text != nil && len(text) > 0 {
@@ -413,21 +410,21 @@ func (renderer *Renderer) ProcessBufferItems(bufChan chan facade.BufferItem) err
 
 
 
-func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
-    for {
-        rawConf := <-rawChan
-        if DEBUG_MESSAGES { log.Debug("process %s",rawConf.Desc()) }
-
-
+//func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
+//    for {
+//        rawConf := <-rawChan
+//        if DEBUG_MESSAGES { log.Debug("process %s",rawConf.Desc()) }
+//
+//
 //        renderer.mutex.Lock()
 //        // prep some stuff i guess?
 //        renderer.mutex.Unlock()
-        
-        confChan <- rawConf
-
-    }
-    return nil
-}
+//        
+//        confChan <- rawConf
+//
+//    }
+//    return nil
+//}
 
 
 

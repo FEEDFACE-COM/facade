@@ -118,7 +118,7 @@ func (executor *Executor) ReadTTY() {
 		if DEBUG_EXEC_DUMP { log.Debug("read %d byte tty:\n%s",n,log.Dump(buf,n,0)) 
         } else if DEBUG_EXEC { log.Debug("read %d byte tty",n) }
 		os.Stdout.Write(buf[0:n])
-		executor.client.SendText(buf[0:n])
+//		executor.client.SendText(buf[0:n])
 
 //        term.Write(buf[0:n])
 //        os.Stdout.Write( []byte(term.Dump()+"\n") )
