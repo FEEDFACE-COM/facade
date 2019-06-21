@@ -27,17 +27,9 @@ type Executor struct{
 const DEBUG_EXEC = true
 const DEBUG_EXEC_DUMP = false
 
-func NewExecutor(client *Client) *Executor { 
-	return &Executor{path:"", args:[]string{}, client:client} 
+func NewExecutor(client *Client, cols,rows uint, path string, args []string) *Executor { 
+	return &Executor{path:path, args:args, client:client, rows: rows, cols: cols} 
 }
-
-//func NewExecutor(path string, args []string) *Executor { 
-//	return &Executor{path:path, args:args} 
-//}
-
-func (executor *Executor) SetPath(path string)    { executor.path = path }
-func (executor *Executor) SetArgs(args []string)  { executor.args = args }
-func (executor *Executor) SetSize(cols,rows uint) { executor.cols,executor.rows = cols,rows }
 
 
 
@@ -104,7 +96,6 @@ func (executor *Executor) Execute() error {
 }    
 
 func (executor *Executor) ReadTTY() {
-//    term := gfx.NewTermBuffer(executor.cols,executor.rows)
 
 	reader := bufio.NewReader( executor.tty )
 	var buf []byte = make([]byte, 1024)
@@ -118,11 +109,8 @@ func (executor *Executor) ReadTTY() {
 		if DEBUG_EXEC_DUMP { log.Debug("read %d byte tty:\n%s",n,log.Dump(buf,n,0)) 
         } else if DEBUG_EXEC { log.Debug("read %d byte tty",n) }
 		os.Stdout.Write(buf[0:n])
-//		executor.client.SendText(buf[0:n])
+        executor.client.SendText( buf[0:n]  )
 
-//        term.Write(buf[0:n])
-//        os.Stdout.Write( []byte(term.Dump()+"\n") )
-//        log.Debug(term.Dump())
     }
 }
 

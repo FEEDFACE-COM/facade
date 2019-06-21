@@ -54,6 +54,43 @@ func (client *Client) Close() {
     }
 }
 
+//
+// reading bytes not scanning lines:
+//
+//func (client *Client) ScanAndSendText() error {
+//    var ret error = nil
+//
+//
+//    const BUFFER_SIZE = 4096
+//	var buf []byte = make([]byte, BUFFER_SIZE)
+//	
+//    reader := bufio.NewReader(os.Stdin)
+//	
+//	
+//	for {
+//        n,err := reader.Read(buf)
+//		if err == io.EOF { 
+//    		if DEBUG_CLIENT { log.Debug("read stdin eof") }
+//    		break 
+//        }
+//		if err != nil {
+//			return log.NewError("fail read stdin: %s",err)
+//		}
+//        if DEBUG_CLIENT_DUMP { log.Debug("read %d byte:\n%s",n,log.Dump(buf,n,0)) 
+//        } else if DEBUG_CLIENT { log.Debug("read %d byte",n) }
+//
+//        err = client.SendText( buf[:n] )
+//        if err != nil {
+//            log.Error("fail to send: %s",err)
+//            ret = log.NewError("fail to send: %s",err)
+//        }
+//    }    
+//    
+//    return ret
+//    
+//}
+
+
 func (client *Client) ScanAndSendText() error {
     var err error
 

@@ -10,7 +10,6 @@ import (
     "os"    
     "os/signal"
     "runtime"
-    "time"
     log "./log"
     facade "./facade"
     gfx "./gfx"
@@ -64,13 +63,14 @@ const (
 var (
     textPort       uint     = 0xfcd
     port           uint     = 0xfcc
-    connectHost    string   = "localhost"
+    host         string     = ""
     connectTimeout float64  = 5.0
     readTimeout    float64  = 0.0
-    listenHost     string   = "0.0.0.0"
-//    daemonize      bool     = false
 )
 
+
+const DEFAULT_LISTEN_HOST = "0.0.0.0"
+const DEFAULT_CONNECT_HOST = "localhost"
 
 
 
@@ -109,23 +109,22 @@ func main() {
     }
     
     for _,cmd := range []Command{PIPE,CONF,EXEC} {
-        flags[cmd].UintVar(&port, "cp", port, "connect to `port` for config" )
-        flags[cmd].StringVar(&connectHost, "h", connectHost, "connect to `host`" )
+        flags[cmd].UintVar(&port, "p", port, "connect to `port` for config" )
+        flags[cmd].StringVar(&host, "h", DEFAULT_CONNECT_HOST, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout connect after `seconds`") 
     }
 
     if flags[RECV] != nil {
         flags[RECV].UintVar(&port, "cp", port, "listen on `port` for config" )
         flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
-        flags[RECV].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
-//        flags[RECV].BoolVar(&daemonize, "D",         daemonize, "daemonize" )
+        flags[RECV].StringVar(&host, "h", DEFAULT_LISTEN_HOST, "listen on `host`" )
         flags[RECV].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`") 
     }
 
     if flags[TEST] != nil {
         flags[TEST].UintVar(&port, "cp", port, "listen on `port` for config" )
         flags[TEST].UintVar(&textPort, "tp", textPort, "listen on `port` for text" )
-        flags[TEST].StringVar(&listenHost, "h", listenHost, "listen on `host`" )
+        flags[TEST].StringVar(&host, "h", DEFAULT_LISTEN_HOST, "listen on `host`" )
         flags[TEST].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`") 
     }
     
@@ -160,6 +159,8 @@ func main() {
     var renderer *Renderer
     var tester *Tester
     var executor *Executor
+    var path string
+    
     
     
     cmd := Command(flag.Args()[0])
@@ -178,29 +179,10 @@ func main() {
     
 
     switch (cmd) {
-        case READ:
-            renderer = NewRenderer(directory)
-            scanner = NewScanner()
+
+        case READ,RECV,PIPE,CONF,EXEC,TEST:
+            break
             
-        case RECV:
-            server = NewServer(listenHost,port,textPort,readTimeout)
-            renderer = NewRenderer(directory)
-
-        case PIPE:
-            client = NewClient(connectHost,port,connectTimeout)
-
-        case CONF:
-            client = NewClient(connectHost,port,connectTimeout)
-
-        case EXEC:
-            client = NewClient(connectHost,port,connectTimeout)
-            executor = NewExecutor(client)
-
-        case TEST:
-            scanner = NewScanner()
-            server = NewServer(listenHost,port,textPort,readTimeout)
-            tester = NewTester(directory)
-
         case INFO:
             ShowVersion()
             ShowAssets()
@@ -216,15 +198,18 @@ func main() {
         
     }
 
-
-    args := flags[cmd].Args()
+    var args []string
     var mode string
     var modeFlags *flag.FlagSet
+
     var config *facade.Config = &facade.Config{}
+    config.Font = &facade.FontConfig{}
+    config.Camera = &facade.CameraConfig{}
+    config.Mask = &facade.MaskConfig{}
     
-    
-    
-//    // parse mode, if given
+
+    // parse mode, if given
+    args = flags[cmd].Args()
     if len(args) > 0 {
         mode = strings.ToLower( args[0] )
         
@@ -239,167 +224,132 @@ func main() {
             case facade.Mode_DRAFT.String():
                 config.SetMode = true
         }
-
         args = args[1:]
-
     }
 
-    
 
     modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
     modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
-    
-    config.Font = &facade.FontConfig{}
-    config.Camera = &facade.CameraConfig{}
-    config.Mask = &facade.MaskConfig{}
     
     
     config.AddFlags( modeFlags )
     modeFlags.Parse( args )
     config.VisitFlags( modeFlags )
 
-//    if config.Grid != nil {
-//        config.Grid.AddFlags( modeFlags )
-//        modeFlags.Parse( args )
-//        config.Grid.VisitFlags( modeFlags )
-//    }
 
+    if cmd == EXEC {
+        
+        args = modeFlags.Args()
+        
+        if len(args) <= 0 { // no command given
+            ShowHelpMode(facade.Mode_GRID.String(),EXEC,modeFlags)
+            os.Exit(-2)             
+        }
+        
+        path = args[0]
+        args = args[1:]
+        
+
+    }        
         
         
     
-//    config = ParseGridFlags(modeFlags, vars)
     
-
-//    
-//        
-//    state = facade.NewState(mode)
-//    var modeFlags = flag.NewFlagSet(string(mode), flag.ExitOnError)    
-//    
-//    state.AddFlags( modeFlags )
-//    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
-//    modeFlags.Parse( args[0:] )
-//
-//    
-//    
-//    config := state.CheckFlags(modeFlags)
-
-
-//    if cmd == EXEC {
-//        var ok bool
-//        var grid facade.GridConfig
-//        if grid,ok = config.Grid(); !ok {                           //REM, make grid!!
-//            grid = facade.GridConfig{}
-//            config.SetGrid(grid)
-////            log.PANIC("exec without grid")
-//        } 
-//        var cols,rows = uint(40), uint(12)
-//        
-//        if c,ok := grid.Width(); ok  { cols = c }
-//        if r,ok := grid.Height(); ok { rows = r }
-//        grid.SetWidth(cols)
-//        grid.SetHeight(rows)
-//        executor.SetSize(cols,rows)
-//               
-//        args := modeFlags.Args()
-//        
-//        if len(args) <= 0 {
-//            ShowHelpMode(facade.GRID,EXEC,modeFlags)
-//            os.Exit(-2)             
-//        }
-//        executor.SetPath(args[0])
-//        executor.SetArgs(args[1:])
-//        
-//    }
-    
-    
-//    var config *facade.Config = &facade.Config{}
     
     var err error
     switch ( cmd ) {
 
         case READ:
             log.Info(AUTHOR)
-            if renderer == nil { log.PANIC("renderer not available") }
-            if scanner == nil { log.PANIC("scanner not available") }
+            scanner = NewScanner()
+            renderer = NewRenderer(directory)
             texts := make(chan facade.BufferItem)
             go scanner.ScanText(texts)
-           
             runtime.LockOSThread()
             renderer.Init(config)  
             go renderer.ProcessBufferItems(texts)
-            
             err = renderer.Render(nil)
             
 
         case RECV:
             log.Info(AUTHOR)
-            if server == nil { log.PANIC("server not available") }
-            if renderer == nil { log.PANIC("renderer not available") }
+            server = NewServer(host,port,textPort,readTimeout)
+            renderer = NewRenderer(directory)
             confs := make(chan facade.Config)
             texts := make(chan facade.BufferItem)
-
             go server.Listen(confs,texts)
             go server.ListenText(texts)
-
-
             runtime.LockOSThread()
             renderer.Init(config) 
-
             go renderer.ProcessBufferItems(texts)
-            
             err = renderer.Render(confs)
+
+
                     
         case PIPE:
-            if client == nil { log.PANIC("client not available") }
-            err = client.Dial() ; if err!=nil { log.Error("fail to dial: %s",err) }
+            client = NewClient(host,port,connectTimeout)
+            if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
             if config != nil {
-                client.SendConf(config) ; if err!=nil { log.Error("fail to send conf: %s",err) }
+                if client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
             }
-            err = client.OpenTextStream()  ;  if err!=nil { log.Error("fail to open stream: %s",err) }
+            if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
             defer client.CloseTextStream()
-            err = client.ScanAndSendText() ; if err!=nil { log.Error("fail to scan and send: %s",err) }
+            if err=client.ScanAndSendText(); err!=nil { log.Error("fail to scan and send: %s",err) }
             
         case CONF:
-            if client == nil { log.PANIC("client not available") }
-            if config == nil { log.PANIC("config not available") }
-            client.Dial()
+            client = NewClient(host,port,connectTimeout)
+            if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
-            err = client.SendConf(config)
+            if err=client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
 
         case EXEC:
-            if client == nil { log.PANIC("client not available") }
-            if executor == nil { log.PANIC("executor not available") }
-            client.Dial()
+
+            var cols,rows = uint64(40), uint64(12)
+            if config.GetGrid() == nil {
+                config.Grid = &facade.GridConfig{}
+            }
+            
+            if config.GetGrid().GetSetWidth() {
+                cols = config.GetGrid().GetWidth()
+            }
+            if config.GetGrid().GetSetWidth() {
+                rows = config.GetGrid().GetHeight()
+            }
+            
+            config.Grid.Width = cols
+            config.Grid.SetWidth = true
+
+            config.Grid.Height = rows
+            config.Grid.SetHeight = true
+
+            config.Grid.Terminal = true
+            config.Grid.SetTerminal = true
+            
+            client = NewClient(host,port,connectTimeout)
+            executor = NewExecutor( client, uint(cols), uint(rows), path, args )
+
+
+
+            if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
             if config != nil {
-                err = client.SendConf(config)
+                if client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
             }
-//            for config != nil { 
-//                err = client.SendConf(config)
-//                if err == nil {
-//                    log.Debug("sent config %s",config.Desc())
-//                    break
-//                }
-//                time.Sleep( time.Duration( 200 * time.Millisecond ) )
-//            }
+            if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
+            defer client.CloseTextStream()
 
-            for {
-//                err = client.OpenText()
-//                if err == nil {
-//                    log.Debug("connected text.")
-//                    break
-//                }
-                time.Sleep( time.Duration( 200 * time.Millisecond ) )
-            }
-//            err = executor.Execute()
+
+
+
+            err = executor.Execute()
             
 
         case TEST:
             log.Info(AUTHOR)
-            if scanner == nil { log.PANIC("scanner not available") }
-            if server == nil { log.PANIC("server not available") }
-            if tester == nil { log.PANIC("tester not available") }
+            scanner = NewScanner()
+            server = NewServer(host,port,textPort,readTimeout)
+            tester = NewTester(directory)
             confs := make(chan facade.Config)
             texts := make(chan facade.BufferItem)
 
@@ -416,13 +366,11 @@ func main() {
             //start processing only after init!
 //            go tester.ProcessRawConfs(rawConfs,confs)
             go tester.ProcessBufferItems(texts)
-
-            
             err = tester.Test(confs)
             
 
         default:
-            log.PANIC("inconsistent command")
+            log.PANIC("unexpected command %s",cmd)
     }
         
 
@@ -431,6 +379,8 @@ func main() {
         os.Exit(-1)
     }
     
+    
+    os.Exit(0)
 }
 
 
