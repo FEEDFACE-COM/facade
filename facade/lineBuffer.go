@@ -62,9 +62,7 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
 func (buffer *LineBuffer) GetScroller() float32 {
     
     if buffer.timer != nil {
-        return buffer.timer.Fader()
-//        return buffer.timer.Fader()
-//        return math.EaseInEaseOut( buffer.timer.Fader() )
+        return buffer.timer.Custom()
     }
     
     return float32(0.0)  
@@ -85,8 +83,12 @@ func (buffer *LineBuffer) dequeueLine() {
     }
     buffer.buf[idx] = nil
     
-    if buffer.buf[buffer.rows] != nil {
-        buffer.scrollOnce(true)
+    if off > 0 && buffer.buf[buffer.rows] != nil {
+        more := false
+        if off > 1 && buffer.buf[buffer.rows+1] != nil {
+            more = true
+        }
+        buffer.scrollOnce(true, more)
     }
     
         
@@ -95,15 +97,36 @@ func (buffer *LineBuffer) dequeueLine() {
 }
 
 
-func (buffer *LineBuffer) scrollOnce(fromDequeue bool) {
+func (buffer *LineBuffer) scrollOnce(fromDequeue, moreToCome bool) {
     if buffer.timer != nil {
         log.Error("%s refuse scroll with existing timer",buffer.Desc())
         return    
     }
-    custom := math.EaseInEaseOut
-    if fromDequeue {
+    
+    //most lines are scrolled ease in / ease out
+    custom := math.Identity
+    
+    
+    
+    if fromDequeue && moreToCome{  
+    
+        if DEBUG_LINEBUFFER { log.Debug("%s start timer with Identity",buffer.Desc()) }
         custom = math.Identity
+    
+    
+    } else if fromDequeue { 
+
+        if DEBUG_LINEBUFFER { log.Debug("%s start timer with Identity",buffer.Desc()) }
+        custom = math.Identity
+        
+    } else  { 
+
+        if DEBUG_LINEBUFFER { log.Debug("%s start timer with EaseInEaseOut",buffer.Desc()) }
+        custom = math.EaseInEaseOut
+        
     }
+
+        
     buffer.timer = gfx.NewTimer( float32(buffer.Speed), false, custom )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)

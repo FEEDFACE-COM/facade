@@ -32,7 +32,7 @@ void main() {
         col.a *= vScroller;    
     }
     
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
+    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) { // invert cursor
         col.rgba = 1. - col.rgba;
     }
 

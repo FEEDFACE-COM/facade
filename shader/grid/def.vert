@@ -24,6 +24,15 @@ varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
+float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
+float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
+
+float Identity(float x) { return x; }
+float EaseInEaseOut(float x) { return -0.5 * cos( x * PI ) + 0.5; }
+
+float EaseOut(float x) { return cos(x*PI/2. + 3.*PI/2. ); }
+float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
+
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
@@ -32,7 +41,9 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y -= scroller;
+    float foo = Identity( scroller );
+
+    pos.y += foo;
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
 
@@ -41,3 +52,4 @@ void main() {
 
     gl_Position = projection * view * model * pos;
 }
+

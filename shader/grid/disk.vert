@@ -68,8 +68,8 @@ void main() {
     float r0 = R0 + (rad * row ) ;
     float r1 = r0 + rad;
 
-    r0 += (scroller*rad);
-    r1 += (scroller*rad);
+    r0 -= (scroller*rad);
+    r1 -= (scroller*rad);
 
     
     vec2 A = vec2( cos(gamma+alpha)*r0, sin(gamma+alpha)*r0);
