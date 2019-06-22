@@ -531,7 +531,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
             changed = true
         }
     
-        if config.GetSetBuffer() && config.GetBuffer() != 0 && uint(config.GetBuffer()) != grid.buffer {
+        if config.GetSetBuffer() && uint(config.GetBuffer()) != grid.buffer {
             grid.buffer = uint( config.GetBuffer() )
             changed = true
         }
