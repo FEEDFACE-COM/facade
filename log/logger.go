@@ -22,6 +22,9 @@ var logger Logger = Logger{verbosity: NOTICE}
 func SetVerbosity(verbosity Verbosity) { logger.verbosity = verbosity }
 
 
+func InfoLogging()  bool { return logger.verbosity >= INFO }
+func DebugLogging() bool { return logger.verbosity >= DEBUG }
+
 
 func   Debug(format string, args ...interface{})  { if logger.verbosity >= DEBUG   { fmt.Fprintf(os.Stderr,format+"\n", args...) } }
 func    Info(format string, args ...interface{})  { if logger.verbosity >= INFO    { fmt.Fprintf(os.Stderr,format+"\n", args...) } }

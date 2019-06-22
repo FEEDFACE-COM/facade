@@ -287,6 +287,15 @@ varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
+float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
+float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
+
+float Identity(float x) { return x; }
+float EaseInEaseOut(float x) { return -0.5 * cos( x * PI ) + 0.5; }
+
+float EaseOut(float x) { return cos(x*PI/2. + 3.*PI/2. ); }
+float EaseIn(float x) { return  cos(x*PI/2. ) -1. ; }
+
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
@@ -295,7 +304,9 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y -= scroller;
+    float foo = Identity( scroller );
+
+    pos.y += foo;
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
 
@@ -304,6 +315,7 @@ void main() {
 
     gl_Position = projection * view * model * pos;
 }
+
 `,
 
 
@@ -407,63 +419,66 @@ float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
 float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 
-bool oddColCount() { return mod(tileCount.x, 2.0) == 1.0 ; }
-bool oddRowCount() { return mod(tileCount.y, 2.0) == 1.0 ; }
-
-
-bool upperVertex(vec2 vec) {
-    return vec.y >= 0.; 
-}
-
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
 
 
 
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
+    vGridCoord = gridCoord;
     vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
 
 
-    float rx = tileCoord.x / tileCount.x;
+    float RADIUS = 10.;
+    float R0 = 4.0;
+    float rad = RADIUS / (tileCount.y + R0); 
 
-    float r0 = 4.;
-    float r1 = 1.;
+
+    float delta = 0.0;
+//    delta += now/10.;
+    delta += ease1(now/2.) - 0.5;
     
-    float phi = (tileCoord.x / tileCount.x) * TAU;
+
+    float ARC = TAU;
+    float A0 = 2.0;
+  
+    float alpha,gamma;
     
-    if ( upperVertex(pos.xy) ) {
-        pos.x += cos(phi) * r0;
-    } else {
-        pos.x += cos(phi) * r1;
+    float row = (-tileCoord.y+tileCount.y/2.);
+
+
+    alpha = ARC / (A0 + tileCount.x);
+    gamma += delta;
+    gamma += ( ARC / (tileCount.x+A0)) * tileCoord.x;
+
+
+    
+    float r0 = R0 + (rad * row ) ;
+    float r1 = r0 + rad;
+
+    r0 += (scroller*rad);
+    r1 += (scroller*rad);
+
+    
+    vec2 A = vec2( cos(gamma+alpha)*r0, sin(gamma+alpha)*r0);
+    vec2 B = vec2( cos(gamma+alpha)*r1, sin(gamma+alpha)*r1);
+    vec2 C = vec2( cos(gamma      )*r1, sin(gamma      )*r1);
+    vec2 D = vec2( cos(gamma      )*r0, sin(gamma      )*r0);
+    
+   
+   
+    if        ( pos.x > 0. && pos.y > 0. ) {
+        pos.xy = A;
+    } else if ( pos.x > 0. && pos.y < 0. ) {
+        pos.xy = B;
+    } else if ( pos.x < 0. && pos.y > 0. ) {
+        pos.xy = D;
+    } else if ( pos.x < 0. && pos.y < 0. ) {
+        pos.xy = C;
     }
-//    if (pos.y > 0.) {
-//        pos.x = cos(phi) * r0;
-//    } else {
-//        pos.y = cos(phi) * r1;
-//    }
 
-
-    vec3 axis = vec3(-1.,-1.,0.);
-    mat4 rot = rotationMatrix(axis, PI/4.);
-//    pos = rot * pos;
-    
     gl_Position = projection * view * model * pos;
 }
 

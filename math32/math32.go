@@ -19,12 +19,15 @@ func Max(a,b float32) float32 { if a>=b { return a }; return b }
 func Min(a,b float32) float32 { if a<=b { return a }; return b }
 func Abs(a float32) float32 { if a < 0 { return -a }; return a }
 
+func Sin(x float32) float32 { return float32( math.Sin( float64(x) ) ) }
 func Cos(x float32) float32 { return float32( math.Cos( float64(x) ) ) }
 func Floor(x float32) float32 { return float32( math.Floor( float64(x) ) ) }
 
 func Clamp(x float32) float32 { if x < 0.0 { return 0.0 } else if x > 1.0 { return 1.0 } else { return x }   }
 
 
-func EaseInEaseOut(x float32) float32 {
-    return  -0.5 * Cos( x * PI  ) + 0.5
-}
+func Identity(x float32) float32 { return x }
+func EaseInEaseOut(x float32) float32 { return  0.5 * Cos( x * PI ) - 0.5 }    // 0, ease to 0.5, ease to 1
+func EaseOut(x float32) float32 { return  Cos( x * PI/2. + 3.*PI/2. )  }    // 0, ease to 1
+func EaseIn(x float32) float32 { return  Cos( x * PI/2. ) -1.0  }    // 1, ease to 0
+

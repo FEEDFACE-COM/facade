@@ -17,6 +17,7 @@ type Timer struct {
 
     count uint
     fader float32
+    custom func(float32) float32
     Fun func()
     
     start float32
@@ -24,15 +25,19 @@ type Timer struct {
     repeat bool
 }
 
-func (timer *Timer) Count() uint    { return timer.count }
-func (timer *Timer) Fader() float32 { return timer.fader }
+func (timer *Timer) Count() uint     { return timer.count }
+func (timer *Timer) Fader() float32  { return timer.fader }
+func (timer *Timer) Custom() float32 { return timer.custom( timer.fader ) }
 
 
 
 
-
-func NewTimer(duration float32, repeat bool) *Timer {
+func NewTimer(duration float32, repeat bool, custom func(float32) float32 ) *Timer {
     ret := &Timer{start: NOW(), duration: duration, repeat: repeat}
+    ret.custom = func(x float32) float32 { return x }
+    if custom != nil {
+        ret.custom = custom
+    } 
     RegisterTimer(ret)
     return ret
 }
@@ -54,7 +59,7 @@ func (timer *Timer) Start() {
     timer.start = NOW()
     timer.fader = 0.0
     timer.count = 0    
-    if DEBUG_TIMER { log.Debug("start %s",timer.Desc()) }
+    if DEBUG_TIMER { log.Debug("%s start",timer.Desc()) }
 }
 
 
@@ -71,7 +76,7 @@ func (timer *Timer) Update() bool {
 
         timer.count += 1
 
-        if DEBUG_TIMER { log.Debug("trigger %s",timer.Desc()) }
+        if DEBUG_TIMER { log.Debug("%s trigger",timer.Desc()) }
 
 
         if timer.Fun != nil {

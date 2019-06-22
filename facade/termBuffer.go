@@ -169,10 +169,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                 TABWIDTH := 8
                 for c:=0; c<TABWIDTH ; c++ {
 
-
-                    buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = rune(' ')
-                    buffer.cursor.x += 1
-
+                    // ?TWEAK - checking and updating before writing fixes 'man foo' at width 64
                     if buffer.cursor.x > buffer.max.x {
                         buffer.cursor.x = 1
                         buffer.cursor.y += 1
@@ -183,6 +180,10 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                         buffer.cursor.x = 1
                         buffer.cursor.y = buffer.max.y
                     }
+    
+
+                    buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = rune(' ')
+                    buffer.cursor.x += 1
 
                     if int(buffer.cursor.x) % TABWIDTH == 1 { //hit tab stop
                         break
@@ -412,7 +413,7 @@ func (buffer *TermBuffer) eraseLine(val uint) {
                 buffer.buffer[buffer.cursor.y][c] = rune(' ')    
             }
         case 1:
-            for c:=uint(1); c<=buffer.cursor.x; c++ {
+            for c:=uint(1); c<=buffer.cursor.x && c<=buffer.max.x; c++ {
                 buffer.buffer[buffer.cursor.y][c] = rune(' ')    
             }
         case 2:

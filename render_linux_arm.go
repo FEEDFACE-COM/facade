@@ -84,7 +84,7 @@ func (renderer *Renderer) checkRefresh() bool {
 
 func (renderer *Renderer) Init(config *facade.Config) error {
     var err error
-    log.Debug("init renderer[%s] %s",renderer.directory,config.Desc())
+    log.Info("init renderer[%s] %s",renderer.directory,config.Desc())
     if strings.HasPrefix(renderer.directory, "~/") {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
@@ -110,8 +110,8 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     }
     
 
-    log.Debug("got renderer %s %s", gl.GoStr(gl.GetString((gl.VENDOR))),gl.GoStr(gl.GetString((gl.RENDERER))));
-    log.Debug("got version %s %s", gl.GoStr(gl.GetString((gl.VERSION))),gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))));
+    log.Info("got renderer %s %s", gl.GoStr(gl.GetString((gl.VENDOR))),gl.GoStr(gl.GetString((gl.RENDERER))));
+    log.Info("got version %s %s", gl.GoStr(gl.GetString((gl.VERSION))),gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))));
 
 
     //setup things 
@@ -192,7 +192,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     
     if config == nil { log.Error("renderer config nil") ;return nil }
     
-    log.Debug("renderer config %s",config.Desc())
+    log.Info("renderer config %s",config.Desc())
     
     
     
@@ -226,7 +226,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
     	    } else {
         	   newFont.Init()
         	   renderer.font = newFont
-        	   log.Debug("switch font %s",renderer.font.Desc())
+        	   log.Info("switch font %s",renderer.font.Desc())
             }
         }    
     }
@@ -262,7 +262,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
         mode := config.GetMode()
         if renderer.mode != mode {
         
-            log.Debug("switch mode[] to mode[%s]",renderer.mode.String(),mode.String())
+            log.Info("switch mode[] to mode[%s]",renderer.mode.String(),mode.String())
             renderer.mode = mode
         
         }
@@ -288,7 +288,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
     gfx.ClockTick()
     var prev gfx.Clock = *gfx.NewClock()
-    log.Debug("render %s",renderer.Desc())
+    log.Info("render %s",renderer.Desc())
     for {
         
         verboseFrame := gfx.ClockVerboseFrame()
@@ -359,7 +359,7 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
     select {
         case conf := <-confChan:
             renderer.Configure(&conf)
-            if DEBUG_MEMORY { log.Debug("mem now %s",MemUsage())}
+            if DEBUG_MEMORY { log.Info("mem now %s",MemUsage())}
         
         
         default:
@@ -384,13 +384,17 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
-//            if DEBUG_BUFFER { renderer.dumpBuffer() }
+            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
+                log.Debug( renderer.grid.DumpBuffer() )
+            }
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
-//            if DEBUG_BUFFER { renderer.dumpBuffer() }
+            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
+                log.Debug( renderer.grid.DumpBuffer() )
+            }
         }
     }
     return nil
@@ -424,10 +428,14 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 func (renderer *Renderer) printDebug(prev gfx.Clock) {
 
+    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
+        log.Debug("")
+    }
 
-    if DEBUG_CLOCK { log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
+
+    if DEBUG_CLOCK { log.Info("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
-    if DEBUG_DIAG { log.Debug( MemUsage() ) }
+    if DEBUG_DIAG { log.Info( MemUsage() ) }
         
     if DEBUG_MODE {
         tmp := ""
@@ -439,10 +447,10 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
 		if renderer.debug {
 			tmp2 = " DEBUG"	
 		}
-        log.Debug("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+        log.Info("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
     }
 
-    if DEBUG_BUFFER { renderer.dumpBuffer() }
+    if DEBUG_BUFFER && log.DebugLogging() { renderer.dumpBuffer() }
     
 }
 

@@ -124,7 +124,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     scroller := float32(0.0)
     if ! grid.terminal {
-        scroller = -1. * float32( grid.lineBuffer.GetScroller() )
+        scroller = float32( grid.lineBuffer.GetScroller() )
         if grid.downward {
             scroller *= -1.
         }

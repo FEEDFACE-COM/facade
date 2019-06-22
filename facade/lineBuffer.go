@@ -9,7 +9,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = false
+const DEBUG_LINEBUFFER = true
 const DEBUG_LINEBUFFER_DUMP = false
 
 
@@ -62,7 +62,9 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
 func (buffer *LineBuffer) GetScroller() float32 {
     
     if buffer.timer != nil {
-        return math.EaseInEaseOut( buffer.timer.Fader() )
+        return buffer.timer.Fader()
+//        return buffer.timer.Fader()
+//        return math.EaseInEaseOut( buffer.timer.Fader() )
     }
     
     return float32(0.0)  
@@ -84,7 +86,7 @@ func (buffer *LineBuffer) dequeueLine() {
     buffer.buf[idx] = nil
     
     if buffer.buf[buffer.rows] != nil {
-        buffer.scrollOnce()
+        buffer.scrollOnce(true)
     }
     
         
@@ -93,12 +95,16 @@ func (buffer *LineBuffer) dequeueLine() {
 }
 
 
-func (buffer *LineBuffer) scrollOnce() {
+func (buffer *LineBuffer) scrollOnce(fromDequeue bool) {
     if buffer.timer != nil {
         log.Error("%s refuse scroll with existing timer",buffer.Desc())
         return    
     }
-    buffer.timer = gfx.NewTimer( float32(buffer.Speed), false )
+    custom := math.EaseInEaseOut
+    if fromDequeue {
+        custom = math.Identity
+    }
+    buffer.timer = gfx.NewTimer( float32(buffer.Speed), false, custom )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
@@ -150,7 +156,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
         
         if DEBUG_LINEBUFFER { log.Debug("%s next #%d %s",buffer.Desc(),idx,string(row)) }
         buffer.buf[idx] = &row
-        buffer.scrollOnce() 
+        buffer.scrollOnce(false) 
         
         
     } else { // first offscreen slot full, find next available
@@ -162,7 +168,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
         
         if idx >= total {
-            if DEBUG_LINEBUFFER { log.Warning("%s overflow!!",buffer.Desc()) }
+            log.Debug("%s overflow!!",buffer.Desc())
             return
         }
 
@@ -260,11 +266,17 @@ func (buffer *LineBuffer) Fill(fill []string) {
     rows := uint( len(fill) )
     if DEBUG_LINEBUFFER { log.Debug("%s fill %d lines",buffer.Desc(),rows) }
     
-    for r := uint(0); r<rows && r < buffer.rows; r++ {
-        
+    r := uint(0)
+    for  ; r<rows && r < buffer.rows; r++ {
+
         line := Line( fill[r] )
         buffer.buf[r] = &line
-
+        
+    }
+    for ; r < buffer.rows+buffer.off; r++ {
+        
+//        line := Line( []rune{} )
+        buffer.buf[r] = nil//&line
         
     }
     
@@ -323,7 +335,11 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
 
 
 func (buffer *LineBuffer) Desc() string { 
-    return fmt.Sprintf("linebuffer[%d+%d]",buffer.rows,buffer.off )
+    tmp := ""
+    if buffer.timer != nil {
+        tmp = fmt.Sprintf(" %.1f",buffer.timer.Fader())
+    }
+    return fmt.Sprintf("linebuffer[%d+%d%s]",buffer.rows,buffer.off,tmp )
 }
 
 

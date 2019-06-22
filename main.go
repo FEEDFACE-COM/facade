@@ -17,7 +17,7 @@ import (
 )
 
 
-const DEBUG_CLOCK    = false
+const DEBUG_CLOCK    = true
 const DEBUG_CONFIG   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
@@ -184,7 +184,9 @@ func main() {
             
         case INFO:
             ShowVersion()
-            ShowAssets()
+            if log.InfoLogging() {
+                ShowAssets()
+            }
             os.Exit(-2)
 
         case HELP:
