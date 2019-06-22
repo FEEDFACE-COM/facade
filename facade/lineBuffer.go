@@ -46,6 +46,11 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
 
 func (buffer *LineBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?
+    
+    if buffer.off == 0 && idx >= buffer.rows {
+        return Line{}
+    }
+    
     if idx == buffer.rows && buffer.buf[idx] == nil {
         return Line{}    
     } else if idx > buffer.rows {
@@ -83,9 +88,9 @@ func (buffer *LineBuffer) dequeueLine() {
     }
     buffer.buf[idx] = nil
     
-    if off > 0 && buffer.buf[buffer.rows] != nil {
+    if buffer.off > 0 && buffer.buf[buffer.rows] != nil {
         more := false
-        if off > 1 && buffer.buf[buffer.rows+1] != nil {
+        if buffer.off > 1 && buffer.buf[buffer.rows+1] != nil {
             more = true
         }
         buffer.scrollOnce(true, more)
@@ -179,7 +184,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
         
         if DEBUG_LINEBUFFER { log.Debug("%s next #%d %s",buffer.Desc(),idx,string(row)) }
         buffer.buf[idx] = &row
-        buffer.scrollOnce(false) 
+        buffer.scrollOnce(false,false) 
         
         
     } else { // first offscreen slot full, find next available
