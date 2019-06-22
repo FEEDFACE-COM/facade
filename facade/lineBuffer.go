@@ -370,7 +370,13 @@ func (buffer *LineBuffer) Dump(width uint) string {
     ret := ""
     for i := uint(0); i<buffer.rows+buffer.off;i++ {
         
-        ret += fmt.Sprintf("%2d |",i)
+        
+        if i > buffer.rows + 2 && i < buffer.rows+buffer.off - 2 {
+            continue
+        }
+        
+        
+        ret += fmt.Sprintf("%3d |",i)
         
         line := buffer.buf[ i ]
         if line != nil {
