@@ -70,15 +70,16 @@ message GridConfig {
     bool SetWidth    = 1;   uint64 Width    = 2;
     bool SetHeight   = 3;   uint64 Height   = 4;
 
-    bool SetDownward = 5;     bool Downward = 6;
-    bool SetSpeed    = 7;   double Speed    = 8;
+    bool SetDownward = 5;     bool Downward =  6;
+    bool SetSpeed    = 7;   double Speed    =  8;
+    bool SetAdaptive = 9;     bool Adaptive = 10;
 
-    bool SetBuffer   = 9;   uint64 Buffer   = 10;
-    bool SetTerminal = 11;    bool Terminal = 12;
+    bool SetBuffer   = 11;   uint64 Buffer  = 12;
+    bool SetTerminal = 13;    bool Terminal = 14;
     
-    bool SetVert     = 13;  string Vert     = 14;
-    bool SetFrag     = 15;  string Frag     = 16;
-    bool SetFill     = 17;  string Fill     = 18;
+    bool SetVert     = 15;  string Vert     = 16;
+    bool SetFrag     = 17;  string Frag     = 18;
+    bool SetFill     = 19;  string Fill     = 20;
 }
 
 

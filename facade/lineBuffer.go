@@ -21,7 +21,7 @@ type LineBuffer struct {
     
     timer *gfx.Timer
     Speed float32
-
+    Adaptive bool 
 
     refreshChan chan bool
     
@@ -33,7 +33,7 @@ type LineBuffer struct {
 func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     if rows == 0 { rows = 1 }
     total := rows + off
-    ret := &LineBuffer{}
+    ret := &LineBuffer{Speed: float32(GridDefaults.Speed), Adaptive: GridDefaults.Adaptive}
     ret.rows = rows
     ret.off = off
     ret.buf = make( []*Line, total )
@@ -90,7 +90,7 @@ func (buffer *LineBuffer) dequeueLine() {
     
     if buffer.off > 0 && buffer.buf[buffer.rows] != nil {
         more := false
-        if buffer.off > 1 && buffer.buf[buffer.rows+1] != nil {
+        if buffer.off > 1 && buffer.buf[buffer.rows+1] != nil { ///fillage>0?
             more = true
         }
         buffer.scrollOnce(true, more)
@@ -112,27 +112,34 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue, moreToCome bool) {
     custom := math.Identity
     
     
-    
-    if fromDequeue && moreToCome{  
-    
-        if DEBUG_LINEBUFFER { log.Debug("%s start timer with Identity",buffer.Desc()) }
-        custom = math.Identity
-    
-    
-    } else if fromDequeue { 
+    tmp:=""
+    if fromDequeue { 
 
-        if DEBUG_LINEBUFFER { log.Debug("%s start timer with Identity",buffer.Desc()) }
+        tmp = "identity"
         custom = math.Identity
         
     } else  { 
-
-        if DEBUG_LINEBUFFER { log.Debug("%s start timer with EaseInEaseOut",buffer.Desc()) }
+        tmp = "easeineaseout"
         custom = math.EaseInEaseOut
         
     }
-
-        
-    buffer.timer = gfx.NewTimer( float32(buffer.Speed), false, custom )
+    speed := float32(buffer.Speed)
+    fillage,buffered := buffer.fillage()
+    
+    if buffer.Adaptive {
+        if fillage > .25 { speed /= 2. }
+        if fillage > .50 { speed /= 2. }
+        if fillage > .75 { speed /= 2. }
+        if buffered > 8 { speed /= 2. }
+        if buffered > 16 { speed /= 2. }
+        if buffered > 32 { speed /= 2. }
+        if DEBUG_LINEBUFFER { log.Debug("%s adaptive start %s timer with %.1f speed",buffer.Desc(),tmp,speed) }
+    }  else {
+        if DEBUG_LINEBUFFER { log.Debug("%s fixed start %s timer with %.1f speed",buffer.Desc(),tmp,speed) }
+    }
+    
+    
+    buffer.timer = gfx.NewTimer( speed, false, custom )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
@@ -140,6 +147,18 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue, moreToCome bool) {
 
     }
     buffer.timer.Start()
+}
+
+
+func (buffer *LineBuffer) fillage() (float32,uint) {
+    cnt := 0
+    for i:=buffer.rows; i < buffer.rows+buffer.off; i++ {
+        if  buffer.buf[i] == nil {
+            break    
+        }
+        cnt += 1
+    }    
+    return (float32(cnt) / float32(buffer.off)), uint(cnt)
 }
 
 
@@ -363,11 +382,25 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
 
 
 func (buffer *LineBuffer) Desc() string { 
-    tmp := ""
-    if buffer.timer != nil {
-        tmp = fmt.Sprintf(" %.1f",buffer.timer.Fader())
+
+    _,buffered := buffer.fillage()
+    
+    buf := "0"
+    if buffer.off > 0 {
+        buf = fmt.Sprintf("%d/%d",buffered,buffer.off)
     }
-    return fmt.Sprintf("linebuffer[%d+%d%s]",buffer.rows,buffer.off,tmp )
+
+    spd := fmt.Sprintf("%.1f",buffer.Speed)
+    if buffer.Adaptive {
+        spd = fmt.Sprintf("a%.1f",buffer.Speed)
+    }
+
+    tmr := ""
+    if buffer.timer != nil {
+        tmr = fmt.Sprintf(" %.1f",buffer.timer.Fader())
+    }
+    
+    return fmt.Sprintf("linebuffer[%d+%s %s%s]",buffer.rows,buf,spd,tmr )
 }
 
 

@@ -18,7 +18,8 @@ var GridDefaults GridConfig = GridConfig{
     Width:       32,
     Height:       8,
     Downward: false,
-    Speed:      0.4,
+    Speed:      1.0,
+    Adaptive:  true,
     Buffer:       2,
     Terminal: false,
     Vert:     "def",
@@ -48,13 +49,23 @@ func (config *GridConfig) Desc() string {
     }
     
     {
-        tmp := "↑"
+        down,adapt := "",""
         dok := config.GetSetDownward(); 
 		pok := config.GetSetSpeed();
-        if dok && config.GetDownward() { tmp = "↓" } 
+		aok := config.GetSetAdaptive();
+		
+        if aok { 
+            if  config.GetAdaptive() {adapt = "a" }
+            if ! config.GetAdaptive() { adapt = "ā" }
+        }
+        if dok {
+            if config.GetDownward() { down = "↓" } 
+            if ! config.GetDownward() { down = "↑" }
+        }
+        if aok { ret += adapt }
 		if pok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
-        if dok { ret += tmp }
-		if dok || pok { ret += " " }
+        if dok { ret += down }
+		if dok || pok || aok { ret += " " }
 	}
 	{
 		vok := config.GetSetVert()
@@ -76,8 +87,9 @@ func (config *GridConfig) AddFlags(flagset *flag.FlagSet) {
     
     flagset.Uint64Var( &config.Width, "w", GridDefaults.Width, "grid width" ) 
     flagset.Uint64Var( &config.Height,"h",GridDefaults.Height,"grid height")
-    flagset.BoolVar(&config.Downward,"down",GridDefaults.Downward,"downward?")
+    flagset.BoolVar(&config.Downward,"down",GridDefaults.Downward,"scroll downward?")
     flagset.Float64Var(&config.Speed,"speed",GridDefaults.Speed,"scroll speed")
+    flagset.BoolVar(&config.Adaptive,"adapt",GridDefaults.Adaptive,"adapt speed?")
     flagset.Uint64Var( &config.Buffer,"buffer",GridDefaults.Buffer,"buffer lines")
     flagset.BoolVar(&config.Terminal,"term",GridDefaults.Terminal,"ansi terminal?")
     flagset.StringVar(&config.Vert,"vert",GridDefaults.Vert,"vertex shader")
@@ -94,6 +106,7 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
             case "h":        { config.SetHeight = true;   }
             case "down":     { config.SetDownward = true; }
             case "speed":    { config.SetSpeed = true;    }
+            case "adapt":    { config.SetAdaptive = true; }
             case "buffer":   { config.SetBuffer = true;   }
             case "term":     { config.SetTerminal = true; }
             case "vert":     { config.SetVert = true;     }
@@ -105,6 +118,7 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
            config.SetHeight   ||
            config.SetDownward ||
            config.SetSpeed    ||
+           config.SetAdaptive ||
            config.SetBuffer   ||
            config.SetTerminal ||
            config.SetVert     ||

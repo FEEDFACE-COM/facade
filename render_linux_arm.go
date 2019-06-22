@@ -384,17 +384,17 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
             renderer.lineBuffer.ProcessRunes( text )
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-                log.Debug( renderer.grid.DumpBuffer() )
-            }
+//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
+//                log.Debug( renderer.grid.DumpBuffer() )
+//            }
         }
         if seq != nil {
             renderer.lineBuffer.ProcessSequence( seq )
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
-            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-                log.Debug( renderer.grid.DumpBuffer() )
-            }
+//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
+//                log.Debug( renderer.grid.DumpBuffer() )
+//            }
         }
     }
     return nil
@@ -435,7 +435,7 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
 
     if DEBUG_CLOCK { log.Info("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
     
-    if DEBUG_DIAG { log.Info( MemUsage() ) }
+    if DEBUG_DIAG { log.Info("%s", MemUsage() ) }
         
     if DEBUG_MODE {
         tmp := ""
@@ -450,7 +450,8 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
         log.Info("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
     }
 
-    if DEBUG_BUFFER && log.DebugLogging() { renderer.dumpBuffer() }
+    if DEBUG_BUFFER && !log.DebugLogging() { log.Info( "%s", renderer.grid.DescBuffer() ) }
+    if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
     
 }
 
