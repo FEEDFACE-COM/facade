@@ -455,11 +455,14 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
 }
 
 func (renderer *Renderer) dumpBuffer() {
-    if renderer.mode  == facade.Mode_GRID {
-        os.Stdout.Write( []byte( renderer.grid.DumpBuffer() ) )        
-    }
-    os.Stdout.Write( []byte( "\n" ) )
-    os.Stdout.Sync()
+//    if ! DEBUG_BUFFER {
+//        return
+//    }
+//    if renderer.mode  == facade.Mode_GRID {
+//        os.Stdout.Write( []byte( renderer.grid.DumpBuffer() ) )        
+//    }
+//    os.Stdout.Write( []byte( "\n" ) )
+//    os.Stdout.Sync()
 }
 
 
