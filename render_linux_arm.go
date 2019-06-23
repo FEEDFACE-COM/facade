@@ -408,22 +408,6 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 
 
-//func (renderer *Renderer) ProcessRawConfs(rawChan chan facade.Config, confChan chan facade.Config) error {
-//    for {
-//        rawConf := <-rawChan
-//
-//
-//        renderer.mutex.Lock()
-//        // prep some stuff i guess?
-//        renderer.mutex.Unlock()
-//        
-//        confChan <- rawConf
-//
-//    }
-//    return nil
-//}
-
-
 
 
 func (renderer *Renderer) printDebug(prev gfx.Clock) {

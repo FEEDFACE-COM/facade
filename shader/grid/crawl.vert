@@ -50,8 +50,6 @@ mat4 rotationMatrix(vec3 axis, float angle)
     );
 }
 
-
-
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
@@ -60,27 +58,41 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y = vertex.z;
-    pos.z = -vertex.y;
- 
-    pos.z -= scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.z -= (tileCoord.y * tileSize.y);
+    
+    pos.y += scroller;
+    pos.x += tileCoord.x * tileSize.x;
+    pos.y += tileCoord.y * tileSize.y;
 
     pos.x += ( tileOffset.x * tileSize.x);
-    pos.z += ( tileOffset.y * tileSize.y);
-
-//    pos.z -= (tileCount.y/2.) * tileSize.y;
+    pos.y += ( tileOffset.y * tileSize.y);
 
 
-
-
-    vec3 axis = vec3(1.,0.,0.);
+    float ALPHA = PI/4.;
     mat4 rot;
-    rot = rotationMatrix(axis, PI/-8.);
+    
+    pos.y += tileCount.y / 2.;
+    
+    rot = rotationMatrix(vec3(1.,0.,0.), ALPHA);
     pos = rot * pos;
 
-    pos.z -= (tileCount.y/4.) * tileSize.y;
+
+    pos.y -= tileCount.y/2.;
+//    pos.z += tileCount.y/2.;
+
+    mat4 zoom;
+    float z = 1.;
+    zoom = mat4(
+          z, 0.0, 0.0, 0.0,
+        0.0,   z, 0.0, 0.0,
+        0.0, 0.0,   z, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+    
+    
+//    pos = zoom * pos;
+    
+
+    
 
     gl_Position = projection * view * model * pos;
 }

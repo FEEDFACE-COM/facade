@@ -136,20 +136,11 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     
     grid.texture.Uniform(grid.program)
 
-//    { 
-//        dw := float32(0.0); 
-//        if grid.Downward { dw = 1.0 }
-//        grid.program.Uniform1f(gfx.DOWNWARD, dw)
-//    }
     
     
     scale := float32( 1.0 )
     scale = grid.autoScale(camera,font)
 
-//    var trans = float32(-0.5)
-//    if ( grid.Downward ) {
-//        trans *= -1.
-//    } 
 
     model := mgl32.Ident4()
     model = model.Mul4( mgl32.Scale3D(scale,scale,scale) )
@@ -165,11 +156,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     count := int32(grid.width*(grid.height+1))
 	offset := int32(0)
 
-//    if grid.Downward { // need to skip first row
-//        if grid.ringBuffer.Tail(0) != nil {
-//            offset = int32(grid.Width)
-//        }
-//    }
 
     if !debug || debug {    
 	    grid.program.SetDebug(false)
@@ -490,7 +476,7 @@ func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) {
     if ! config.GetSetWidth() {
     
         if ! config.GetSetHeight() {
-            log.Debug("autowidth fail: %s",config.Desc())
+//            log.Debug("autowidth fail: %s",config.Desc())
             return
         }
         
@@ -638,7 +624,11 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 }
 
 func (grid *Grid) Desc() string { 
-    cfg := GridConfig{
+    return grid.Config().Desc()
+}
+
+func (grid *Grid) Config() *GridConfig {
+    return &GridConfig{
         SetWidth: true,   Width: uint64(grid.width),
         SetHeight: true, Height: uint64(grid.height),
         
@@ -653,8 +643,6 @@ func (grid *Grid) Desc() string {
         SetFrag: true, Frag: grid.frag,
         
     }
-    return cfg.Desc()
 }
-
 
 
