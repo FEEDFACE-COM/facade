@@ -24,8 +24,6 @@ varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
-
-
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
 
@@ -50,6 +48,7 @@ mat4 rotationMatrix(vec3 axis, float angle)
     );
 }
 
+
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
@@ -58,43 +57,81 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    
     pos.y += scroller;
-    pos.x += tileCoord.x * tileSize.x;
-    pos.y += tileCoord.y * tileSize.y;
+    pos.x += (tileCoord.x * tileSize.x);
+    pos.y += (tileCoord.y * tileSize.y);
 
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
 
 
-    float ALPHA = PI/4.;
+
+
+
+    
+//
+    float ALPHA;
+    ALPHA = PI * 3./8.;
+    ALPHA = tileCount.y/64. * PI/8. + PI/4.;
+//    ALPHA = now;
     mat4 rot;
-    
-    pos.y += tileCount.y / 2.;
-    
+//    
+//    pos.y += 1.;
+//    pos.y +=  tileCount.y / 2.;
+//    
     rot = rotationMatrix(vec3(1.,0.,0.), ALPHA);
     pos = rot * pos;
-
-
-    pos.y -= tileCount.y/2.;
-//    pos.z += tileCount.y/2.;
-
-    mat4 zoom;
-    float z = 1.;
-    zoom = mat4(
-          z, 0.0, 0.0, 0.0,
-        0.0,   z, 0.0, 0.0,
-        0.0, 0.0,   z, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    );
     
+    float height = tileCount.y * tileSize.y;
+    float a = cos( ALPHA ) * (height/2.);
     
-//    pos = zoom * pos;
+    pos.y -= a;
+
+    pos.y += height/2.;    
+//    pos.z += height/2.;    
+    
+//    pos.y -=  tileCount.y / 2.;
+//
+//    pos.z += tileCount.y;
+//    pos.y -= tileCount.y/2.;
+//    
+//    pos.y += tileCount.y/2.;
+//
+//
+    float zoom = 1.;
+//
+//
+    float fontRatio = tileSize.x/tileSize.y;
+    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
+    float ratio = screenRatio / fontRatio;
+
+    float scaleWidth = ratio * 2. / tileCount.x;
+    float scaleHeight =        2. / tileCount.y;
     
 
-    
 
-    gl_Position = projection * view * model * pos;
+    if ( scaleWidth < scaleHeight/2. ) {
+        zoom = scaleWidth;
+    } else {            
+        zoom = scaleHeight;
+    }
+
+//    float height = tileSize.y * tileCount.y;
+//
+//    float a = 2. * sin(ALPHA) * height/2.;
+//    
+//    pos.xyz += vec3(0.,0.,0.);
+//
+//    zoom = 1./10.;
+//
+//    pos.xyz *= zoom;
+  //  pos.xyz *= model[0][0];  
+//
+
+
+///    zoom = 2.;  
+    pos.xyz *= zoom;
+//    pos.xyz *= model[0][0];
+    gl_Position = projection * view * pos;
 }
-
 
