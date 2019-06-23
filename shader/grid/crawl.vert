@@ -87,7 +87,7 @@ void main() {
     
     pos.y -= a;
 
-    pos.y += height/2.;    
+    pos.y += height/4.;    
 //    pos.z += height/2.;    
     
 //    pos.y -=  tileCount.y / 2.;
