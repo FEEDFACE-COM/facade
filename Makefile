@@ -38,6 +38,7 @@ default: build
 help:
 	@echo "#Usage"
 	@echo " make build    # build static executable"
+	@echo " make run      # build and run"
 	@echo " make info     # show build info"
 	@echo " make assets   # build fonts and shaders"
 	@echo " make clean    # clean up"
@@ -62,6 +63,9 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
+
+run: ${BUILD_PRODUCT}
+	./${BUILD_PRODUCT} -d -D $$(pwd) recv
 
 demo:
 	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid; done; done

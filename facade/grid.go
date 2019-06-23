@@ -551,8 +551,6 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         log.Debug("rendermap %s",font.Desc())
         grid.RenderMap(font)
 //        grid.texture.TexImage()
-		
-//		grid.empty.RenderTexture(font)
     }
 
     {
@@ -569,16 +567,6 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
             grid.lineBuffer.Adaptive = grid.adaptive
         }
     }
-
-//	{
-//		changed := false
-//	    scroll,speed := grid.state.Scroll, grid.state.Speed
-//    	if tmp,ok := config.Scroll(); ok { changed = true; grid.state.Scroll = tmp }
-//	    if tmp,ok := config.Speed(); ok { changed = true; grid.state.Speed = tmp }    
-//    	if changed {
-//	        grid.scroller.SetScrollSpeed(grid.state.Scroll, float32(grid.state.Speed))
-//    	}
-//    }
 
     
     {

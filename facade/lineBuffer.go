@@ -76,11 +76,11 @@ func (buffer *LineBuffer) GetScroller() float32 {
 func (buffer *LineBuffer) dequeueLine() {
     // probably should lock mutex?
     
-    head := ""
-    if buffer.buf[0] != nil {
-        head = string( *buffer.buf[0] )
-    }
-    if DEBUG_LINEBUFFER { log.Debug("%s dequeue %s",buffer.Desc(),head) }
+//    head := ""
+//    if buffer.buf[0] != nil {
+//        head = string( *buffer.buf[0] )
+//    }
+//    if DEBUG_LINEBUFFER { log.Debug("%s dequeue",buffer.Desc()) }
     total := buffer.rows + buffer.off
     idx := uint(0)
     for ; idx<total-1; idx++ {
@@ -110,33 +110,28 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue, moreToCome bool) {
     
     //most lines are scrolled ease in / ease out
     custom := math.Identity
-    
+    speed := float32(buffer.Speed)    
     
     tmp:=""
+
     if fromDequeue { 
 
-        tmp = "identity"
+        tmp = "fixed"
         custom = math.Identity
-        
-    } else  { 
-        tmp = "easeineaseout"
-        custom = math.EaseInEaseOut
-        
+        if buffer.Adaptive {
+            speed = buffer.adaptedSpeed()
+        }
     }
-    speed := float32(buffer.Speed)
-    fillage,buffered := buffer.fillage()
     
-    if buffer.Adaptive {
-        if fillage > .25 { speed /= 2. }
-        if fillage > .50 { speed /= 2. }
-        if fillage > .75 { speed /= 2. }
-        if buffered > 8 { speed /= 2. }
-        if buffered > 16 { speed /= 2. }
-        if buffered > 32 { speed /= 2. }
-        if DEBUG_LINEBUFFER { log.Debug("%s adaptive start %s timer with %.1f speed",buffer.Desc(),tmp,speed) }
-    }  else {
-        if DEBUG_LINEBUFFER { log.Debug("%s fixed start %s timer with %.1f speed",buffer.Desc(),tmp,speed) }
+    if ! fromDequeue {
+
+        tmp = "ease"
+        custom = math.EaseInEaseOut
+        speed = float32(buffer.Speed)
+        
     }
+
+    if DEBUG_LINEBUFFER { log.Debug("%s start timer %s %.3f",buffer.Desc(),tmp,speed) }
     
     
     buffer.timer = gfx.NewTimer( speed, false, custom )
@@ -201,7 +196,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
     if buffer.buf[idx] == nil { //first offscreen slot available
         
-        if DEBUG_LINEBUFFER { log.Debug("%s next #%d %s",buffer.Desc(),idx,string(row)) }
+        if DEBUG_LINEBUFFER { log.Debug("%s next #%d",buffer.Desc(),idx) }
         buffer.buf[idx] = &row
         buffer.scrollOnce(false,false) 
         
@@ -215,11 +210,11 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
         
         if idx >= total {
-            log.Debug("%s overflow!!",buffer.Desc())
+            log.Debug("%s !! buffer overflow !! line dropped !!",buffer.Desc())
             return
         }
 
-        if DEBUG_LINEBUFFER { log.Debug("%s queue #%d %s",buffer.Desc(),idx,string(row)) }
+//        if DEBUG_LINEBUFFER { log.Debug("%s queue #%d",buffer.Desc(),idx) }
         buffer.buf[idx] = &row
         
     }
@@ -381,6 +376,31 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
 }
 
 
+func (buffer *LineBuffer) adaptedSpeed() float32 {
+
+    _,buffered := buffer.fillage()
+    
+//    pageDuration := float32(buffer.rows) * float32(buffer.Speed)
+//    bufferDuration := float32(buffered) * float32(buffer.Speed)
+    
+    //ratio := pageDuration / bufferDuration
+    if buffered == 0 {
+        return buffer.Speed
+    }
+    
+    return buffer.Speed * float32( 1. - float32(buffered)/float32(buffer.off) )
+
+
+//    if fillage > .25 { speed /= 2. }
+//    if fillage > .50 { speed /= 2. }
+//    if fillage > .75 { speed /= 2. }
+//    if buffered > 8 { speed /= 2. }
+//    if buffered > 16 { speed /= 2. }
+//    if buffered > 32 { speed /= 2. }
+    
+
+}
+
 func (buffer *LineBuffer) Desc() string { 
 
     _,buffered := buffer.fillage()
@@ -392,7 +412,7 @@ func (buffer *LineBuffer) Desc() string {
 
     spd := fmt.Sprintf("%.1f",buffer.Speed)
     if buffer.Adaptive {
-        spd = fmt.Sprintf("a%.1f",buffer.Speed)
+        spd = fmt.Sprintf("a%.1f",buffer.adaptedSpeed())
     }
 
     tmr := ""
