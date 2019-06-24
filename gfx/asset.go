@@ -7,16 +7,10 @@ import "sort"
 func ListShaderNames() []string {
     var ret []string
     for n, _ := range VertexShader {
-        if FragmentShader[n] == "" {
-            ret = append(ret,fmt.Sprintf("%s.vert",n)) 
-        } else {
-            ret = append(ret,fmt.Sprintf("%s.vert %s.frag",n,n)) 
-        }        
+        ret = append(ret,fmt.Sprintf("%s.vert",n)) 
     }
     for n, _ := range FragmentShader {
-        if VertexShader[n] == "" {
-            ret = append(ret,fmt.Sprintf("%s.frag",n)) 
-        }        
+        ret = append(ret,fmt.Sprintf("%s.frag",n)) 
     }
     sort.Strings(ret)
     return ret

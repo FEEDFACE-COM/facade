@@ -190,6 +190,7 @@ func main() {
                 if log.InfoLogging() {
                     ShowAssets()
                 }
+                fmt.Fprintf(os.Stderr,"\n\n")
                 os.Exit(0)
             } else { 
                 
@@ -522,13 +523,37 @@ func InfoAssets() string {
     ret := ""
     shaders := gfx.ListShaderNames()
     fonts := gfx.ListFontNames()
-    ret += "\nShaders:\n"
-    for _,s := range shaders {
-        ret += fmt.Sprintf("  %s\n",s)
+//    ret += "\nShaders:\n"
+//    for _,s := range shaders {
+//        ret += fmt.Sprintf("  %s\n",s)
+//    }
+
+    for _,prefix := range []string{"grid/",} {
+    ret += "\n" + strings.TrimSuffix(prefix,"/") + ":  " 
+        for _,suffix := range []string{".vert",".frag"} {
+            for _,shader := range shaders {
+                    if strings.HasPrefix(shader,prefix) && strings.HasSuffix(shader,suffix) {
+                        ret += strings.TrimSuffix(strings.TrimPrefix(shader,prefix),suffix) 
+                        ret += " "
+                    }
+            }
+        }
     }
-    ret += "\nFonts:\n"
-    for _,f := range fonts {
-        ret += fmt.Sprintf("  %s\n",f)
+    
+
+    ret += "\nmask:  "
+    for _,shader := range shaders {
+        if strings.HasPrefix(shader,"mask/") && strings.HasSuffix(shader,"frag") {
+            ret += strings.TrimSuffix(strings.TrimPrefix(shader,"mask/"),".frag")
+            ret += " "
+        }
+    }
+
+
+    ret += "\nfont:  "
+    for _,font := range fonts {
+        ret += font
+        ret += " "
     }
     ret += "\n"
     return ret

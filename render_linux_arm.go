@@ -45,6 +45,8 @@ type Renderer struct {
     
     refreshChan chan bool
     
+    prevClock gfx.Clock
+    
 }
 
 
@@ -263,7 +265,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 
     gfx.ClockTick()
-    var prev gfx.Clock = *gfx.NewClock()
+    renderer.prev = *gfx.NewClock()
     log.Info("render %s",renderer.Desc())
     for {
         
@@ -304,8 +306,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         
         if verboseFrame { 
 
-            renderer.printDebug(prev); 
-            prev = *gfx.NewClock() 
+            renderer.printDebug(); 
+            renderer.prevClock = *gfx.NewClock()
         }
 
         piglet.SwapBuffers()
@@ -404,22 +406,7 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 
 
-
-
-
-
-func (renderer *Renderer) printDebug(prev gfx.Clock) {
-
-    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
-        log.Debug("")
-    }
-
-
-    if DEBUG_CLOCK { log.Info("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) }
-    
-    if DEBUG_DIAG { log.Info("%s", MemUsage() ) }
-        
-    if DEBUG_MODE {
+func (renderer *Renderer) InfoMode() string {
         tmp := ""
         switch renderer.mode { 
             case facade.Mode_GRID:
@@ -429,8 +416,28 @@ func (renderer *Renderer) printDebug(prev gfx.Clock) {
 		if renderer.debug {
 			tmp2 = " DEBUG"	
 		}
-        log.Info("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+        return fmt.Sprintf("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+    
+}
+
+
+func (renderer *Renderer) InfoClock() string {
+    return "%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(renderer.prevClock)) }
+}
+
+
+func (renderer *Renderer) printDebug() {
+
+    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
+        log.Debug("")
     }
+
+
+    if DEBUG_CLOCK { log.Info( renderer.InfoClock() ) }
+    
+    if DEBUG_DIAG { log.Info("%s", MemUsage() ) }
+        
+    if DEBUG_MODE { log.Info( renderer.InfoMode() ) }
 
     if DEBUG_BUFFER && !log.DebugLogging() { log.Info( "%s", renderer.grid.DescBuffer() ) }
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
@@ -453,9 +460,13 @@ func (renderer *Renderer) Info() string {
     
     ret += InfoVersion()
     ret += InfoAssets()
-    
-    ret += renderer.Desc()
-    
+    ret += "\n\n"
+
+
+    ret += renderer.InfoClock()
+    ret += renderer.InfoMode()
+    ret += "\n\n"
+        
 
     
     return ret
