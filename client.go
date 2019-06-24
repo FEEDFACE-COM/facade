@@ -12,7 +12,7 @@ import (
 //    "encoding/json"
     "golang.org/x/net/context"
     "google.golang.org/grpc"
-    "google.golang.org/grpc/status"
+    grpcstatus "google.golang.org/grpc/status"
     log "./log"
     facade "./facade"
 )
@@ -133,15 +133,15 @@ func (client *Client) CloseTextStream() error {
         return log.NewError("fail to close stream: no stream")
     }
 
-    response,err := client.stream.CloseAndRecv()
+    status,err := client.stream.CloseAndRecv()
     client.stream = nil
     client.cancel = nil
 
     if err != nil {
-        status,_ := status.FromError(err)
-        return log.NewError("fail to close: %s",status.Message())
-    } else if ! response.GetSuccess() {
-        return log.NewError("reply fail: %s",response.GetError())   
+        stat,_ := grpcstatus.FromError(err)
+        return log.NewError("fail to close: %s",stat.Message())
+    } else if ! status.GetSuccess() {
+        return log.NewError("display error: %s",status.GetError())   
     }
     
     return nil    
@@ -151,7 +151,7 @@ func (client *Client) CloseTextStream() error {
 func (client *Client) SendText(raw []byte) error {
     
     if client.stream == nil {
-        return log.NewError("fail to send stream: no stream")
+        return log.NewError("no stream")
     }
     
     rawText := facade.RawText{ Raw: raw }
@@ -166,20 +166,46 @@ func (client *Client) SendText(raw []byte) error {
 func (client *Client) SendConf(config *facade.Config) error {
     
     if client.connection == nil {
-        return log.NewError("fail to send: no connection")
+        return log.NewError("no connection")
     } 
     ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
     defer cancel()
     
-    response,err := client.client.Configure(ctx, config )
+    status,err := client.client.Configure(ctx, config )
     if err != nil {
-        status,_ := status.FromError(err)
-        return log.NewError("fail to send: %s",status.Message())
-    } else if ! response.GetSuccess() {
-        return log.NewError("reply fail: %s",response.GetError())   
+        stat,_ := grpcstatus.FromError(err)
+        return log.NewError("fail to send: %s",stat.Message())
+    } else if ! status.GetSuccess() {
+        return log.NewError("conf error: %s",status.GetError())   
     }
     if DEBUG_CLIENT { log.Debug("sent to %s %s",client.connStr,config.Desc()) }
     return nil
+}
+
+func (client *Client) QueryInfo() (string,error) {
+    if client.connection == nil {
+        return "",log.NewError("no connection")
+    } 
+    ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
+    defer cancel()
+    
+    status,err := client.client.Query(ctx, &facade.Empty{} )
+    if err != nil {
+        stat,_ := grpcstatus.FromError(err)
+        return "",log.NewError("fail to send: %s",stat.Message())
+    } else 
+    
+    if ! status.GetSuccess() {
+        return "",log.NewError("query error: %s",status.GetError())   
+    } 
+    
+    info := status.GetInfo()
+    if info == "" {
+        return "", log.NewError("empty info")
+    }
+    
+    return info, nil
+    
 }
      
 

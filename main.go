@@ -51,7 +51,7 @@ const (
     RECV    Command = "recv"
     PIPE    Command = "pipe"
     EXEC    Command = "exec"
-    CONF    Command = "conf"    
+    CONF    Command = "conf"
     INFO    Command = "info"
     HELP    Command = "help"
     TEST    Command = "test"
@@ -107,8 +107,8 @@ func main() {
         flags[cmd].UintVar(&textPort, "tp", textPort, "connect to `port` for text" )
     }
     
-    for _,cmd := range []Command{PIPE,CONF,EXEC} {
-        flags[cmd].UintVar(&port, "p", port, "connect to `port` for config" )
+    for _,cmd := range []Command{PIPE,CONF,EXEC,INFO} {
+        flags[cmd].UintVar(&port, "p", port, "connect to `port`" )
         flags[cmd].StringVar(&host, "h", DEFAULT_CONNECT_HOST, "connect to `host`" )
         flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout connect after `seconds`") 
     }
@@ -181,13 +181,26 @@ func main() {
 
         case READ,RECV,PIPE,CONF,EXEC,TEST:
             break
+
             
         case INFO:
-            ShowVersion()
-            if log.InfoLogging() {
-                ShowAssets()
+            // no args, print local info
+            if len(flag.Args()) <= 1 { 
+                ShowVersion()
+                if log.InfoLogging() {
+                    ShowAssets()
+                }
+                os.Exit(0)
+            } else { 
+                
+                // query remote host
+                flags[INFO].Usage = func() { ShowHelpCommand(INFO,flags) }
+                flags[INFO].Parse( flag.Args()[1:] )
+
             }
-            os.Exit(-2)
+            
+        
+        
 
         case HELP:
             ShowHelp()
@@ -211,7 +224,8 @@ func main() {
 
     // parse mode, if given
     args = flags[cmd].Args()
-    if len(args) > 0 {
+
+    if cmd != INFO && len(args) > 0 {
         mode = strings.ToLower( args[0] )
         
         switch strings.ToUpper(mode) {
@@ -224,19 +238,24 @@ func main() {
                 
             case facade.Mode_DRAFT.String():
                 config.SetMode = true
+                config.Mode = facade.Mode_GRID
         }
         args = args[1:]
+        
+        
+        
+        modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
+        modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+        
+    
+        config.AddFlags( modeFlags )
+        modeFlags.Parse( args )
+        config.VisitFlags( modeFlags )
+        
+        
     }
 
-
-    modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
-    modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
     
-    
-    config.AddFlags( modeFlags )
-    modeFlags.Parse( args )
-    config.VisitFlags( modeFlags )
-
 
     if cmd == EXEC {
         
@@ -249,7 +268,6 @@ func main() {
         
         path = args[0]
         args = args[1:]
-        
 
     }        
         
@@ -258,13 +276,16 @@ func main() {
     
     
     var err error
+    confs := make(chan facade.Config)
+    texts := make(chan facade.TextSeq)
+    quers := make(chan (chan string))
     switch ( cmd ) {
+        
 
         case READ:
             log.Info(AUTHOR)
             scanner = NewScanner()
             renderer = NewRenderer(directory)
-            texts := make(chan facade.TextSeq)
             go scanner.ScanText(texts)
             runtime.LockOSThread()
             renderer.Init(config)  
@@ -276,13 +297,12 @@ func main() {
             log.Info(AUTHOR)
             server = NewServer(host,port,textPort,readTimeout)
             renderer = NewRenderer(directory)
-            confs := make(chan facade.Config)
-            texts := make(chan facade.TextSeq)
-            go server.Listen(confs,texts)
+            go server.Listen(confs,texts,quers)
             go server.ListenText(texts)
             runtime.LockOSThread()
             renderer.Init(config) 
             go renderer.ProcessTextSeqs(texts)
+            go renderer.ProcessQueries(quers)
             err = renderer.Render(confs)
 
 
@@ -298,11 +318,27 @@ func main() {
             defer client.CloseTextStream()
             if err=client.ScanAndSendText(); err!=nil { log.Error("fail to scan and send: %s",err) }
             
+
         case CONF:
             client = NewClient(host,port,connectTimeout)
             if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
-            if err=client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
+            if err=client.SendConf(config); err!=nil { log.Error("fail to conf: %s",err) }
+
+
+        case INFO:
+            client = NewClient(host,port,connectTimeout)
+            if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
+            defer client.Close()
+            info, err := client.QueryInfo()
+            if err != nil {
+                log.Error("fail to query: %s",err)
+            } else {
+                log.Notice("%s",info)
+            }
+
+
+
 
         case EXEC:
 
@@ -351,12 +387,8 @@ func main() {
             scanner = NewScanner()
             server = NewServer(host,port,textPort,readTimeout)
             tester = NewTester(directory)
-            confs := make(chan facade.Config)
-            texts := make(chan facade.TextSeq)
 
-            
-
-            go server.Listen(confs,texts)
+            go server.Listen(confs,texts,quers)
             go server.ListenText(texts)
             go scanner.ScanText(texts)
 
@@ -385,6 +417,7 @@ func main() {
 
 
 func ShowHelpMode(mode string, cmd Command, flagset *flag.FlagSet) {
+    mode = strings.ToLower(mode)
     switches := "-"
     flags := ""
     flagset.VisitAll( func(f *flag.Flag) { 
@@ -426,8 +459,12 @@ func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
 
     ShowVersion()
     fmt.Fprintf(os.Stderr,"\nUsage:\n")
-    fmt.Fprintf(os.Stderr,"  %s %s [%s] %s    %s\n",BUILD_NAME,cmd,switches,flags,strings.Join(modes," | "))
-    ShowModes()
+    if cmd == INFO {
+        fmt.Fprintf(os.Stderr,"  %s %s [%s] %s\n",BUILD_NAME,cmd,switches,flags)
+    } else {
+        fmt.Fprintf(os.Stderr,"  %s %s [%s] %s\n",BUILD_NAME,cmd,switches,flags)
+        ShowModes()
+    }
 
     fmt.Fprintf(os.Stderr,"\nFlags:\n")
     flagSetMap[cmd].PrintDefaults()
@@ -449,7 +486,7 @@ func ShowCommands() {
 
 func ShowModes() {
     fmt.Fprintf(os.Stderr,"\nModes:\n")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",facade.Mode_GRID,"character grid")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",strings.ToLower(facade.Mode_GRID.String()),"character grid")
 }
 
 func ShowHelp() {
@@ -480,24 +517,29 @@ func ShowHelp() {
     
 }
 
-func ShowAssets() {
+func ShowAssets() { fmt.Fprintf(os.Stderr,InfoAssets()) }
+func InfoAssets() string {
+    ret := ""
     shaders := gfx.ListShaderNames()
     fonts := gfx.ListFontNames()
-    fmt.Fprintf(os.Stderr,"\nShaders:\n")
+    ret += "\nShaders:\n"
     for _,s := range shaders {
-        fmt.Fprintf(os.Stderr,"  %s\n",s)
+        ret += fmt.Sprintf("  %s\n",s)
     }
-    fmt.Fprintf(os.Stderr,"\nFonts:\n")
+    ret += "\nFonts:\n"
     for _,f := range fonts {
-        fmt.Fprintf(os.Stderr,"  %s\n",f)
+        ret += fmt.Sprintf("  %s\n",f)
     }
-    fmt.Fprintf(os.Stderr,"\n")
+    ret += "\n"
+    return ret
 }
 
-
-func ShowVersion() {
-    fmt.Printf(AUTHOR)
-    fmt.Fprintf(os.Stderr,"\n%s version %s for %s, built %s\n",BUILD_NAME,BUILD_VERSION,BUILD_PLATFORM,BUILD_DATE)
+func ShowVersion() { fmt.Fprintf(os.Stderr,InfoVersion()) }
+func InfoVersion() string {
+    ret := ""
+    ret += AUTHOR
+    ret += fmt.Sprintf("\n%s version %s for %s, built %s\n",BUILD_NAME,BUILD_VERSION,BUILD_PLATFORM,BUILD_DATE)
+    return ret
 }    
     
 

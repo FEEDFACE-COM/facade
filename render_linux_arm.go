@@ -17,11 +17,10 @@ import (
 )
 
 
-
+const DEBUG_RENDER = true
 
 
 const RENDERER_AVAILABLE = true
-
 
 type Renderer struct {
     screen gfx.Size
@@ -190,32 +189,9 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
 func (renderer *Renderer) Configure(config *facade.Config) error {
     
-    if config == nil { log.Error("renderer config nil") ;return nil }
+    if config == nil { return log.NewError("renderer config nil") }
     
     log.Info("renderer config %s",config.Desc())
-    
-    
-    
-    
-//    if tmp,ok := config.Font(); ok {
-//		newFont, err := gfx.GetFont(&tmp)
-//		if err != nil {
-//			log.Error("fail to get font %s",tmp.Desc())
-//		} else {
-//			newFont.Init()
-//			renderer.font = newFont
-//			if renderer.grid != nil { 
-//				cfg := make(facade.GridConfig)
-//				cfg.SetHeight( renderer.grid.Height() )
-//				renderer.grid.Configure(&cfg,renderer.camera,renderer.font)
-//			}
-//		}
-//	}
-//    
-//    if tmp,ok := config.Camera(); ok {
-//		renderer.camera.Configure(&tmp)    
-//	}
-//    
 
     if cfg := config.GetFont(); cfg!=nil {
         if cfg.GetSetName() {
@@ -372,10 +348,32 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 
 
+func (renderer *Renderer) ProcessQueries(queryChan chan (chan string) ) error {
 
+    if DEBUG_RENDER { log.Debug("start process info queries") }
+
+    for {
+    
+        chn := <- queryChan
+        info := renderer.Info()
+        
+        select {
+            case chn <- info:
+                continue
+            
+            case <-time.After(1000. * time.Millisecond):
+                continue
+        }
+        
+        
+    }
+    
+}
 
 
 func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
+
+    if DEBUG_RENDER { log.Debug("start process text sequences") }
 
     for {
         item := <- textChan    
@@ -450,6 +448,18 @@ func (renderer *Renderer) dumpBuffer() {
 //    os.Stdout.Sync()
 }
 
+func (renderer *Renderer) Info() string { 
+    ret := ""
+    
+    ret += InfoVersion()
+    ret += InfoAssets()
+    
+    ret += renderer.Desc()
+    
+
+    
+    return ret
+}
 
 
 

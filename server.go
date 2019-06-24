@@ -15,7 +15,7 @@ import (
 )
 
 
-const DEBUG_SERVER = false
+const DEBUG_SERVER = true
 const DEBUG_SERVER_DUMP = false
 
 
@@ -30,6 +30,7 @@ type Server   struct {
     
     bufferChan chan facade.TextSeq
     confChan chan facade.Config
+    queryChan chan (chan string)
 }
 
 
@@ -66,6 +67,31 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
     }
 }
 
+func (server *Server) Query(ctx context.Context, empty *facade.Empty) (*facade.Status,error) {
+    if DEBUG_SERVER { log.Debug("received info request") }
+    ret := &facade.Status{}
+    
+    chn := make(chan string)
+    server.queryChan <- chn
+
+    info := ""
+    select {
+        case info = <- chn:
+            ret.Info = info
+            
+        case <-time.After(5. * time.Second):
+            if DEBUG_SERVER { log.Debug("query channel time out") }
+            return &facade.Status{Success: false, Error: "timeout"} , log.NewError("timeout")
+            
+    }
+    
+    if DEBUG_SERVER { log.Debug("respond query info: %s",ret.Info) }
+
+    ret.Success = true
+    return ret,nil
+
+}
+
 func (server *Server) Configure(ctx context.Context, config *facade.Config) (*facade.Status,error) {
     if DEBUG_SERVER { log.Debug("receive conf %s",config.Desc()) }
 
@@ -83,7 +109,7 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
         if err == io.EOF {
             return stream.SendAndClose( &facade.Status{Success: true} )
         } else if err != nil {
-            return log.NewError("fail to recv: %s",err)
+            return log.NewError("fail to receive: %s",err)
         } 
         raw := msg.GetRaw()
         if DEBUG_SERVER_DUMP { log.Debug("recv %d byte raw:\n%s",len(raw),log.Dump(raw,len(raw),0)) 
@@ -129,11 +155,17 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 }
 
 
-func (server *Server) Listen(confChan chan facade.Config, bufferChan chan facade.TextSeq) {
+func (server *Server) Listen(
+        confChan chan facade.Config, 
+        bufferChan chan facade.TextSeq, 
+        queryChan chan (chan string),
+    ) {
     var err error
     
     server.confChan = confChan
     server.bufferChan = bufferChan
+    server.queryChan = queryChan
+        
     server.connStr = fmt.Sprintf("%s:%d",server.host,server.confPort)
 
     if DEBUG_SERVER { log.Debug("listen %s",server.connStr) }
@@ -143,7 +175,7 @@ func (server *Server) Listen(confChan chan facade.Config, bufferChan chan facade
     }
     
     serv := grpc.NewServer()
-    facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan} )
+    facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan, queryChan: queryChan} )
     if DEBUG_SERVER { log.Debug("serve %s",server.connStr) }
     err = serv.Serve(listener)
     if err != nil {

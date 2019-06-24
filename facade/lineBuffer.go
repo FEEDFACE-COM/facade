@@ -9,7 +9,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = true
+const DEBUG_LINEBUFFER = false
 const DEBUG_LINEBUFFER_DUMP = false
 
 
@@ -53,7 +53,7 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     ret.checker.Fun = func() {
         if ret.packetCount > 0 {
             ret.average = CHECKFREQ / float32(ret.packetCount) 
-            log.Debug("%s check, adapt to %5.1f",ret.Desc(),ret.average)
+            log.Debug("%s check, adapt to %.2f",ret.Desc(),ret.average)
         }
         ret.packetCount = 0
     }

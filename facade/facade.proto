@@ -12,11 +12,16 @@ enum Mode {
 service Facade {
     rpc Configure(Config) returns (Status) {}
     rpc Display(stream RawText) returns (Status) {}
+    rpc Query(Empty) returns (Status) {}
 }
+
+message Empty {}
 
 message Status {
     bool Success = 1;
     string Error = 2;
+    
+    string Info = 3;
 } 
 
 

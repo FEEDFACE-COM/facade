@@ -65,5 +65,7 @@ func (axis *Axis) Init() {
     err = axis.program.LinkProgram(); 
     if err != nil { log.Error("fail to link axis program: %s",err) }
 
-    log.Debug("init axis")
+    log.Debug("%s init",axis.Desc())
 }
+
+func (axis *Axis) Desc() string { return "axis[]" }
