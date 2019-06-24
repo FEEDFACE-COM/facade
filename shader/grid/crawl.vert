@@ -72,7 +72,7 @@ void main() {
 //
     float ALPHA;
     ALPHA = PI * 3./8.;
-    ALPHA = tileCount.y/64. * PI/8. + PI/4.;
+    ALPHA = tileCount.y/64. * PI/4. + PI/4.;
 //    ALPHA = now;
     mat4 rot;
 //    

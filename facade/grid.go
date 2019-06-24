@@ -21,8 +21,6 @@ type Grid struct {
     width, height uint
 
     downward bool
-    speed float32
-    adaptive bool
     
     buffer uint
     terminal bool
@@ -544,13 +542,14 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
             grid.downward = config.GetDownward() 
         }	
 	    if config.GetSetSpeed() { 
-    	   grid.speed = float32(config.GetSpeed())
-           grid.lineBuffer.Speed = grid.speed
+            grid.lineBuffer.SetSpeed( float32(config.GetSpeed() ) )
     	}
     	
     	if config.GetSetAdaptive() {
-        	grid.adaptive = config.GetAdaptive()
-            grid.lineBuffer.Adaptive = grid.adaptive
+            grid.lineBuffer.Adaptive = config.GetAdaptive()
+        }
+        if config.GetSetJump() {
+            grid.lineBuffer.Jump = config.GetJump()
         }
     }
 
@@ -604,9 +603,7 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
     ret.width =  uint(GridDefaults.GetWidth())
     ret.height = uint(GridDefaults.GetHeight())
 
-    ret.speed = float32(GridDefaults.GetSpeed())
     ret.downward = GridDefaults.GetDownward()
-    ret.adaptive = GridDefaults.GetAdaptive()
 
     ret.terminal = GridDefaults.GetTerminal()
     ret.buffer = uint(GridDefaults.GetBuffer())
@@ -632,9 +629,9 @@ func (grid *Grid) Config() *GridConfig {
         SetWidth: true,   Width: uint64(grid.width),
         SetHeight: true, Height: uint64(grid.height),
         
-        SetSpeed: true, Speed: float64(grid.speed),
+        SetSpeed: true, Speed: float64(grid.lineBuffer.Speed()),
         SetDownward: true, Downward: grid.downward,
-        SetAdaptive: true, Adaptive: grid.adaptive,
+        SetAdaptive: true, Adaptive: grid.lineBuffer.Adaptive,
         
         SetTerminal: true, Terminal: grid.terminal,
         SetBuffer: true, Buffer: uint64(grid.buffer),

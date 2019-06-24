@@ -73,13 +73,14 @@ message GridConfig {
     bool SetDownward = 5;     bool Downward =  6;
     bool SetSpeed    = 7;   double Speed    =  8;
     bool SetAdaptive = 9;     bool Adaptive = 10;
+    bool SetJump     =11;     bool Jump     = 12;
 
-    bool SetBuffer   = 11;   uint64 Buffer  = 12;
-    bool SetTerminal = 13;    bool Terminal = 14;
+    bool SetBuffer   = 13;   uint64 Buffer  = 14;
+    bool SetTerminal = 15;    bool Terminal = 16;
     
-    bool SetVert     = 15;  string Vert     = 16;
-    bool SetFrag     = 17;  string Frag     = 18;
-    bool SetFill     = 19;  string Fill     = 20;
+    bool SetVert     = 17;  string Vert     = 18;
+    bool SetFrag     = 19;  string Frag     = 20;
+    bool SetFill     = 21;  string Fill     = 22;
 }
 
 

@@ -53,6 +53,7 @@ func (config *GridConfig) Desc() string {
         dok := config.GetSetDownward(); 
 		pok := config.GetSetSpeed();
 		aok := config.GetSetAdaptive();
+		jok := config.GetSetJump()
 		
         if aok { 
             if  config.GetAdaptive() {adapt = "a" }
@@ -65,7 +66,8 @@ func (config *GridConfig) Desc() string {
         if aok { ret += adapt }
 		if pok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
         if dok { ret += down }
-		if dok || pok || aok { ret += " " }
+        if jok && config.GetJump() { ret += "j" }
+		if dok || pok || aok || jok { ret += " " }
 	}
 	{
 		vok := config.GetSetVert()
