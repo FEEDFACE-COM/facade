@@ -19,6 +19,8 @@ func Max(a,b float32) float32 { if a>=b { return a }; return b }
 func Min(a,b float32) float32 { if a<=b { return a }; return b }
 func Abs(a float32) float32 { if a < 0 { return -a }; return a }
 
+func Log(x float32) float32 { return float32( math.Log( float64(x) ) ) }
+
 func Sin(x float32) float32 { return float32( math.Sin( float64(x) ) ) }
 func Cos(x float32) float32 { return float32( math.Cos( float64(x) ) ) }
 func Floor(x float32) float32 { return float32( math.Floor( float64(x) ) ) }
