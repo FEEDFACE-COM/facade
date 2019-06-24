@@ -265,7 +265,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 
     gfx.ClockTick()
-    renderer.prev = *gfx.NewClock()
+    renderer.prevClock = *gfx.NewClock()
     log.Info("render %s",renderer.Desc())
     for {
         
@@ -422,7 +422,7 @@ func (renderer *Renderer) InfoMode() string {
 
 
 func (renderer *Renderer) InfoClock() string {
-    return "%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(renderer.prevClock)) }
+    return fmt.Sprintf("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(renderer.prevClock)  )
 }
 
 
@@ -464,9 +464,14 @@ func (renderer *Renderer) Info() string {
 
 
     ret += renderer.InfoClock()
+    ret += "\n"
     ret += renderer.InfoMode()
+    ret += "\n"
+    ret += renderer.lineBuffer.Desc()
+    ret += "\n"
+    ret += renderer.termBuffer.Desc()
     ret += "\n\n"
-        
+            
 
     
     return ret
