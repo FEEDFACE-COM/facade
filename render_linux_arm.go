@@ -385,7 +385,7 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
             renderer.termBuffer.ProcessRunes( text )    
             renderer.ScheduleRefresh()
 //            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-//                log.Debug( renderer.grid.DumpBuffer() )
+//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 //            }
         }
         if seq != nil {
@@ -393,7 +393,7 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
             renderer.termBuffer.ProcessSequence( seq )
             renderer.ScheduleRefresh()
 //            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-//                log.Debug( renderer.grid.DumpBuffer() )
+//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 //            }
         }
     }
