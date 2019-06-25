@@ -10,7 +10,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = true
+const DEBUG_LINEBUFFER = false
 const DEBUG_LINEBUFFER_DUMP = false
 
 
@@ -452,6 +452,7 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
     average := buffer.meterBuffer.Average()
 
 
+    const FinalBound = 0.88
     const UpperBound = 0.75
     const CenterMark = 0.50
     const LowerBound = 0.25
@@ -483,10 +484,12 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
     if average <= buffer.speed /*|| buffer.speed == 0.0*/ {
 
 
+        if fillage >= FinalBound {
 
-        if fillage > UpperBound || ( fillage > CenterMark && buffer.mark == UPPER ) {
+            speed = average * SpeedDouble
+            
+        } else if fillage > UpperBound || ( fillage > CenterMark && buffer.mark == UPPER ) {
     
-//            speed = average * SpeedDouble
             speed = average * (1. - SpeedDelta)
     
         } else if fillage < LowerBound || ( fillage < CenterMark && buffer.mark == LOWER ) {
