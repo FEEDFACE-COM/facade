@@ -37,9 +37,8 @@ type LineBuffer struct {
 
     refreshChan chan bool
 
-    mark Mark
-
     //metering
+    mark Mark
     meterBuffer *gfx.RB
     meterTimer *gfx.Timer
     meterTimestamp float32
@@ -113,7 +112,7 @@ func (buffer *LineBuffer) GetScroller() float32 {
     return float32(0.0)  
 }
 
-func (buffer *LineBuffer) dequeueLine() {
+func (buffer *LineBuffer) dequeueLine(scrollNext bool) {
     // probably should lock mutex?
     
     total := buffer.rows + buffer.offs
@@ -123,17 +122,18 @@ func (buffer *LineBuffer) dequeueLine() {
     }
     buffer.buf[idx] = nil
     
-    if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
-        buffer.scrollOnce(true, nil)
-    }
-    
+    if scrollNext {
+        if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
+            buffer.scrollOnce(false)
+        }
+    }    
         
     select { case buffer.refreshChan <- true: ; default: ; }
     
 }
 
 
-func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
+func (buffer *LineBuffer) scrollOnce(freshLine bool) {
     if buffer.timer != nil {
         log.Error("%s refuse scroll with existing timer",buffer.Desc())
         return    
@@ -143,42 +143,38 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
     custom := math.EaseInEaseOut
     speed := float32(buffer.speed)    
     
-    tmp := "speed"
+    tmp := ""
 
-    if fromDequeue && buffer.Smooth  { 
 
-        custom = math.Identity
-        tmp = "smooth"
+    if freshLine  {
+        custom = math.EaseInEaseOut
+        tmp += " ease"
+    }
+
+    if !freshLine  { 
+
+        if buffer.Smooth {
+            custom = math.Identity
+            tmp += " smooth"
+        }
         if buffer.Adaptive {
             speed = buffer.adaptedSpeed()
             tmp += " adapted"
         }
     }
     
-    if ! fromDequeue  {
-
-        custom = math.EaseInEaseOut
-        tmp = "ease"
-
-//        if buffer.Adaptive {
-//            speed = buffer.adaptedSpeed()
-//            tmp = " adapted"
-//        }
-//        if withSpeed != nil && *withSpeed < speed {
-//            speed = *withSpeed
-//            tmp = "given"
-//        }
-
-        
-    }
     
-    if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f %s",buffer.Desc(),speed,tmp) }
+    if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f%s",buffer.Desc(),speed,tmp) }
+
+
+
+
 
     buffer.timer = gfx.NewTimer( speed, false, custom )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
-        buffer.dequeueLine()
+        buffer.dequeueLine(true)
 
     }
     buffer.timer.Start()
@@ -189,11 +185,6 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
 func (buffer *LineBuffer) pushLine(row Line) {
     // lock lock lock
     
-//    //dont want timer to mess with new buffer
-//    if buffer.timer != nil {
-//        gfx.UnRegisterTimer(buffer.timer)
-//        buffer.timer = nil
-//    }
 
     total := buffer.rows + buffer.offs // buffer.offs should be zero
     
@@ -213,10 +204,11 @@ func (buffer *LineBuffer) pushLine(row Line) {
 
 func (buffer *LineBuffer) queueLine(row Line) {
 
-    buffer.meterBuffer.Add( gfx.NOW()-buffer.meterTimestamp )
-
-    
+    // measure speed
+    metered := gfx.NOW()-buffer.meterTimestamp
+    buffer.meterBuffer.Add( metered )
     buffer.meterTimestamp = gfx.NOW()
+    
     
     // no buffering, just push line    
     if buffer.offs == 0 {
@@ -233,7 +225,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
     if buffer.buf[buffer.rows] == nil { //first offscreen slot available
 
         buffer.buf[idx] = &row
-        buffer.scrollOnce(false,nil) 
+        buffer.scrollOnce(true) 
         
         
     } else { // first offscreen slot full, find next available
@@ -345,11 +337,13 @@ func (buffer *LineBuffer) Fill(fill []string) {
     
     // lock lock lock
 
-    //dont want timer to mess with new buffer
+    // kill timer
     if buffer.timer != nil {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
+        buffer.dequeueLine(false)
     }
+
 
     
     rows := uint( len(fill) )
@@ -385,10 +379,11 @@ func (buffer *LineBuffer) Resize(newRows,newOffs uint) {
     newBuf := make( []*Line, newTotal )
 
 
-    //dont want timer to mess with new buffer
+    // kill timer
     if buffer.timer != nil {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
+        buffer.dequeueLine(false)
     }
 
 
@@ -427,9 +422,13 @@ func (buffer *LineBuffer) Speed() float32 { return buffer.speed }
 func (buffer *LineBuffer) SetSpeed(speed float32) {
     buffer.speed = speed
     
+    // kill timer
     if buffer.timer != nil {
-        buffer.timer.Fun() //execute timer, will unregister itself
-    }    
+        gfx.UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+        buffer.dequeueLine(false)
+    }
+
 }
 
 func (buffer *LineBuffer) fillage() float32 { return float32(buffer.buffered()) / float32(buffer.offs) }
@@ -481,7 +480,7 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
 
     }
 
-    if average <= buffer.speed || buffer.speed == 0.0 {
+    if average <= buffer.speed /*|| buffer.speed == 0.0*/ {
 
 
 
@@ -589,3 +588,5 @@ func (buffer *LineBuffer) Dump(width uint) string {
 
 func (buffer *LineBuffer) GetBuffer() uint64 { return uint64(buffer.offs) }
 func (buffer *LineBuffer) GetHeight() uint64 { return uint64(buffer.rows) }
+
+
