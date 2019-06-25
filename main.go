@@ -175,12 +175,59 @@ func main() {
             flags[cmd].Usage = func() { ShowHelpCommand(cmd,flags) }
             flags[cmd].Parse( flag.Args()[1:] )
     }
+
+
+
+
+    var config *facade.Config = &facade.Config{}
+    config.Font = &facade.FontConfig{}
+    config.Camera = &facade.CameraConfig{}
+    config.Mask = &facade.MaskConfig{}
+
+    var args []string
+    var mode string
+    var modeFlags *flag.FlagSet
+    
+
     
 
     switch (cmd) {
 
         case READ,RECV,PIPE,CONF,EXEC,TEST:
-            break
+            // parse mode, if given
+            args = flags[cmd].Args()
+        
+            if cmd != INFO && len(args) > 0 {
+                mode = strings.ToLower( args[0] )
+                
+                switch strings.ToUpper(mode) {
+        
+                    case facade.Mode_GRID.String():
+                        config.SetMode = true
+                        config.Mode = facade.Mode_GRID
+                        config.Grid = &facade.GridConfig{}
+                        
+                        
+                    case facade.Mode_DRAFT.String():
+                        config.SetMode = true
+                        config.Mode = facade.Mode_GRID
+                }
+                args = args[1:]
+                
+                
+                
+                modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
+                modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
+                
+            
+                config.AddFlags( modeFlags )
+                modeFlags.Parse( args )
+                config.VisitFlags( modeFlags )
+                
+            }
+
+
+
 
             
         case INFO:
@@ -213,48 +260,7 @@ func main() {
         
     }
 
-    var args []string
-    var mode string
-    var modeFlags *flag.FlagSet
 
-    var config *facade.Config = &facade.Config{}
-    config.Font = &facade.FontConfig{}
-    config.Camera = &facade.CameraConfig{}
-    config.Mask = &facade.MaskConfig{}
-    
-
-    // parse mode, if given
-    args = flags[cmd].Args()
-
-    if cmd != INFO && len(args) > 0 {
-        mode = strings.ToLower( args[0] )
-        
-        switch strings.ToUpper(mode) {
-
-            case facade.Mode_GRID.String():
-                config.SetMode = true
-                config.Mode = facade.Mode_GRID
-                config.Grid = &facade.GridConfig{}
-                
-                
-            case facade.Mode_DRAFT.String():
-                config.SetMode = true
-                config.Mode = facade.Mode_GRID
-        }
-        args = args[1:]
-        
-        
-        
-        modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
-        modeFlags.Usage = func() { ShowHelpMode(mode,cmd,modeFlags) }
-        
-    
-        config.AddFlags( modeFlags )
-        modeFlags.Parse( args )
-        config.VisitFlags( modeFlags )
-        
-        
-    }
 
     
 
@@ -313,14 +319,20 @@ func main() {
             if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
             if config != nil {
+                log.Debug("configure %s",config.Desc())
                 if client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
             }
             if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
-            defer client.CloseTextStream()
+//            defer client.CloseTextStream()
             if err=client.ScanAndSendText(); err!=nil { log.Error("fail to scan and send: %s",err) }
             
 
         case CONF:
+            if config == nil {
+                ShowHelpMode(mode,cmd,modeFlags)
+                os.Exit(-1)
+            }
+            log.Debug("configure %s",config.Desc())
             client = NewClient(host,port,connectTimeout)
             if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
@@ -372,6 +384,7 @@ func main() {
             if err=client.Dial(); err!=nil { log.Error("fail to dial: %s",err) }
             defer client.Close()
             if config != nil {
+                log.Debug("configure %s",config.Desc())
                 if client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
             }
             if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
@@ -476,12 +489,12 @@ func ShowCommands() {
     fmt.Fprintf(os.Stderr,"\nCommands:\n")
     if RENDERER_AVAILABLE {
         fmt.Fprintf(os.Stderr,"%6s     %s\n",READ,"read text from stdin and render")
-        fmt.Fprintf(os.Stderr,"%6s     %s\n",RECV,"receive text from network and render ")
+        fmt.Fprintf(os.Stderr,"%6s     %s\n",RECV,"receive text from remote and render ")
     }
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"read text from stdin and send to server")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"change configuration of server")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",PIPE,"read text from stdin and send to remote server")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",CONF,"change configuration of remote server")
     fmt.Fprintf(os.Stderr,"%6s     %s\n",EXEC,"execute command and send stdout,stderr to server")
-    fmt.Fprintf(os.Stderr,"%6s     %s\n",INFO,"show available shaders and fonts ")
+    fmt.Fprintf(os.Stderr,"%6s     %s\n",INFO,"show available shaders and fonts of remote server ")
 }
 
 
@@ -529,31 +542,33 @@ func InfoAssets() string {
 //    }
 
     for _,prefix := range []string{"grid/",} {
-    ret += "\n" + strings.TrimSuffix(prefix,"/") + ":  " 
         for _,suffix := range []string{".vert",".frag"} {
+            ret += "\n" + strings.TrimSuffix(prefix,"/") + " "
+            ret += "-" + strings.TrimPrefix(suffix,".") + "=  "
             for _,shader := range shaders {
-                    if strings.HasPrefix(shader,prefix) && strings.HasSuffix(shader,suffix) {
-                        ret += strings.TrimSuffix(strings.TrimPrefix(shader,prefix),suffix) 
-                        ret += " "
-                    }
+                if strings.HasPrefix(shader,prefix) && strings.HasSuffix(shader,suffix) {
+                    ret += strings.TrimSuffix(strings.TrimPrefix(shader,prefix),suffix)
+                    ret += "  "
+                }
+                    
             }
         }
     }
     
-
-    ret += "\nmask:  "
+    
+    ret += "\n-mask=  "
     for _,shader := range shaders {
         if strings.HasPrefix(shader,"mask/") && strings.HasSuffix(shader,"frag") {
             ret += strings.TrimSuffix(strings.TrimPrefix(shader,"mask/"),".frag")
-            ret += " "
+            ret += "  "
         }
     }
 
 
-    ret += "\nfont:  "
+    ret += "\n-font=  "
     for _,font := range fonts {
         ret += font
-        ret += " "
+        ret += "  "
     }
     ret += "\n"
     return ret

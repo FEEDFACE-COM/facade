@@ -548,9 +548,15 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     	if config.GetSetAdaptive() {
             grid.lineBuffer.Adaptive = config.GetAdaptive()
         }
-        if config.GetSetJump() {
-            grid.lineBuffer.Jump = config.GetJump()
+        if config.GetSetDrop() {
+            grid.lineBuffer.Drop = config.GetDrop()
         }
+
+        if config.GetSetSmooth() {
+            grid.lineBuffer.Smooth = config.GetSmooth()
+        }
+
+
     }
 
     

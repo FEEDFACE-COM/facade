@@ -18,7 +18,7 @@ import (
 )
 
 const DEBUG_CLIENT = true
-const DEBUG_CLIENT_DUMP = true
+const DEBUG_CLIENT_DUMP = false
 
 type Client   struct {
     host string

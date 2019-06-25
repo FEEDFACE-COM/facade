@@ -20,7 +20,9 @@ var GridDefaults GridConfig = GridConfig{
     Downward: false,
     Speed:      1.0,
     Adaptive:  true,
-    Buffer:       2,
+    Drop:     false,
+    Smooth:    true,
+    Buffer:       8,
     Terminal: false,
     Vert:     "def",
     Frag:     "def",
@@ -49,26 +51,39 @@ func (config *GridConfig) Desc() string {
     }
     
     {
-        down,adapt := "",""
+        down,adapt,drop,smooth := "","","",""
         dok := config.GetSetDownward(); 
-		pok := config.GetSetSpeed();
+		sok := config.GetSetSpeed();
 		aok := config.GetSetAdaptive();
-		jok := config.GetSetJump()
+		pok := config.GetSetDrop()
+		mok := config.GetSetSmooth()
 		
-        if aok { 
-            if  config.GetAdaptive() {adapt = "a" }
-            if ! config.GetAdaptive() { adapt = "ā" }
-        }
         if dok {
             if config.GetDownward() { down = "↓" } 
             if ! config.GetDownward() { down = "↑" }
         }
-        if aok { ret += adapt }
-		if pok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
-        if dok { ret += down }
-        if jok && config.GetJump() { ret += "j" }
-		if dok || pok || aok || jok { ret += " " }
+        if aok { 
+            if  config.GetAdaptive() {adapt = "a" }
+            if ! config.GetAdaptive() { adapt = "á" }
+        }
+        if pok {
+            if config.GetDrop() { drop = "p" }
+            if ! config.GetDrop() { drop = "ṕ" }
+        }
+
+        if mok { 
+            if config.GetSmooth() { smooth = "s" }
+            if ! config.GetSmooth() { smooth = "ś" }
+        }
+        
+        ret += down
+		if sok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
+        ret += adapt
+        ret += drop
+        ret += smooth
+		if dok || sok || aok || pok || mok { ret += " " }
 	}
+
 	{
 		vok := config.GetSetVert()
 		fok := config.GetSetFrag()
@@ -77,6 +92,7 @@ func (config *GridConfig) Desc() string {
 		if fok { ret += config.GetFrag() }
 		if vok || fok { ret += " " }	
 	}
+
     if config.GetSetFill() { ret += config.GetFill() + " " } 
     ret = strings.TrimRight(ret, " ")
     ret += "]"
@@ -90,6 +106,8 @@ func (config *GridConfig) AddFlags(flagset *flag.FlagSet) {
     flagset.Uint64Var( &config.Width, "w", GridDefaults.Width, "grid width" ) 
     flagset.Uint64Var( &config.Height,"h",GridDefaults.Height,"grid height")
     flagset.BoolVar(&config.Downward,"down",GridDefaults.Downward,"scroll downward?")
+    flagset.BoolVar(&config.Drop,"drop",GridDefaults.Drop,"drop lines?")
+    flagset.BoolVar(&config.Smooth,"smooth",GridDefaults.Smooth,"smooth speed?")
     flagset.Float64Var(&config.Speed,"speed",GridDefaults.Speed,"scroll speed")
     flagset.BoolVar(&config.Adaptive,"adapt",GridDefaults.Adaptive,"adapt speed?")
     flagset.Uint64Var( &config.Buffer,"buffer",GridDefaults.Buffer,"buffer lines")
@@ -107,6 +125,8 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
             case "w":        { config.SetWidth = true;    }
             case "h":        { config.SetHeight = true;   }
             case "down":     { config.SetDownward = true; }
+            case "drop":     { config.SetDrop = true;    }
+            case "smooth":   { config.SetSmooth = true;   }
             case "speed":    { config.SetSpeed = true;    }
             case "adapt":    { config.SetAdaptive = true; }
             case "buffer":   { config.SetBuffer = true;   }

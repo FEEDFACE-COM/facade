@@ -15,7 +15,7 @@ import (
 )
 
 
-const DEBUG_SERVER = true
+const DEBUG_SERVER = false
 const DEBUG_SERVER_DUMP = false
 
 
@@ -106,9 +106,8 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
 	var tmp []byte
     for {
         msg, err := stream.Recv()
-        if err == io.EOF {
-            return stream.SendAndClose( &facade.Status{Success: true} )
-        } else if err != nil {
+        if err != nil && err != io.EOF {
+            if DEBUG_SERVER { log.Debug("fail to receive: %s",err) }
             return log.NewError("fail to receive: %s",err)
         } 
         raw := msg.GetRaw()
@@ -117,10 +116,15 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
         tmp = append(rem, raw ... )
         rem, err = facade.ProcessRaw(tmp,server.bufferChan)
         if err != nil {
-            log.Error("text process error: %s",err)    
+            log.Error("error processing raw text: %s",err)    
         }
+        if err == io.EOF {
+            if DEBUG_SERVER { log.Debug("recv end of file") }
+            break
+        } 
+        
     }
-    return nil
+    return stream.SendAndClose( &facade.Status{Success: true} )
 }
 
 

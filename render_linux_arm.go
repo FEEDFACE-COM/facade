@@ -407,16 +407,16 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 
 func (renderer *Renderer) InfoMode() string {
-        tmp := ""
+        mode := ""
         switch renderer.mode { 
             case facade.Mode_GRID:
-                tmp = renderer.grid.Desc()
+                mode = renderer.grid.Desc()
         }
-		tmp2 := ""
+		dbg := ""
 		if renderer.debug {
-			tmp2 = " DEBUG"	
+			dbg = " DEBUG"	
 		}
-        return fmt.Sprintf("%s %s %s %s%s",tmp,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),tmp2)
+        return fmt.Sprintf("%s\n%s %s %s%s",mode,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),dbg)
     
 }
 
@@ -433,14 +433,23 @@ func (renderer *Renderer) printDebug() {
     }
 
 
-    if DEBUG_CLOCK { log.Info( renderer.InfoClock() ) }
+    if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
     
     if DEBUG_DIAG { log.Info("%s", MemUsage() ) }
         
-    if DEBUG_MODE { log.Info( renderer.InfoMode() ) }
+    if DEBUG_MODE { 
+            log.Info("%s", renderer.InfoMode() ) 
+            log.Info("%s", renderer.lineBuffer.Desc() )
+            log.Info("%s", renderer.termBuffer.Desc() )
+    }
 
     if DEBUG_BUFFER && !log.DebugLogging() { log.Info( "%s", renderer.grid.DescBuffer() ) }
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
+ 
+    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
+        log.Debug("")
+    }
+
     
 }
 
