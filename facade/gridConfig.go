@@ -76,11 +76,11 @@ func (config *GridConfig) Desc() string {
             if ! config.GetSmooth() { smooth = "ś" }
         }
         
-        ret += down
+        if dok { ret += down }
 		if sok { ret += fmt.Sprintf("%.1f",config.GetSpeed()) }
-        ret += adapt
-        ret += drop
-        ret += smooth
+        if aok { ret += adapt }
+        if pok { ret += drop }
+        if mok { ret += smooth }
 		if dok || sok || aok || pok || mok { ret += " " }
 	}
 
@@ -141,6 +141,8 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
            config.SetDownward ||
            config.SetSpeed    ||
            config.SetAdaptive ||
+           config.SetDrop     ||
+           config.SetSmooth   ||
            config.SetBuffer   ||
            config.SetTerminal ||
            config.SetVert     ||
