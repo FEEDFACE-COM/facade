@@ -42,7 +42,12 @@ const CHECK_INTERVAL = 1.
 func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     if rows == 0 { rows = 1 }
     total := rows + off
-    ret := &LineBuffer{speed: float32(GridDefaults.Speed), Adaptive: GridDefaults.Adaptive}
+    ret := &LineBuffer{
+            speed: float32(GridDefaults.Speed), 
+            Adaptive: GridDefaults.Adaptive, 
+            Drop: GridDefaults.Drop, 
+            Smooth: GridDefaults.Smooth,
+    }
     ret.rows = rows
     ret.off = off
     ret.buf = make( []*Line, total )

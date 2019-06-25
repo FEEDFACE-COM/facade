@@ -20,7 +20,7 @@ var GridDefaults GridConfig = GridConfig{
     Downward: false,
     Speed:      1.0,
     Adaptive:  true,
-    Drop:     false,
+    Drop:      true,
     Smooth:    true,
     Buffer:       8,
     Terminal: false,

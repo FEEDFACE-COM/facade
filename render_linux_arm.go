@@ -416,7 +416,7 @@ func (renderer *Renderer) InfoMode() string {
 		if renderer.debug {
 			dbg = " DEBUG"	
 		}
-        return fmt.Sprintf("%s\n%s %s %s%s",mode,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),dbg)
+        return fmt.Sprintf("%s\n  %s %s %s%s",mode,renderer.camera.Desc(),renderer.font.Desc(),renderer.mask.Desc(),dbg)
     
 }
 
@@ -435,15 +435,14 @@ func (renderer *Renderer) printDebug() {
 
     if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
     
-    if DEBUG_DIAG { log.Info("%s", MemUsage() ) }
+    if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
         
     if DEBUG_MODE { 
-            log.Info("%s", renderer.InfoMode() ) 
-            log.Info("%s", renderer.lineBuffer.Desc() )
-            log.Info("%s", renderer.termBuffer.Desc() )
+            log.Info("  %s", renderer.InfoMode() ) 
+            log.Info("  %s", renderer.lineBuffer.Desc() )
+            log.Info("  %s", renderer.termBuffer.Desc() )
     }
 
-    if DEBUG_BUFFER && !log.DebugLogging() { log.Info( "%s", renderer.grid.DescBuffer() ) }
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
  
     if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
@@ -474,11 +473,11 @@ func (renderer *Renderer) Info() string {
 
     ret += renderer.InfoClock()
     ret += "\n"
-    ret += renderer.InfoMode()
+    ret += "  " + renderer.InfoMode()
     ret += "\n"
-    ret += renderer.lineBuffer.Desc()
+    ret += "  " + renderer.lineBuffer.Desc()
     ret += "\n"
-    ret += renderer.termBuffer.Desc()
+    ret += "  " + renderer.termBuffer.Desc()
     ret += "\n\n"
             
 

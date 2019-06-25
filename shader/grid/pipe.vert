@@ -4,6 +4,7 @@ uniform mat4 model;
 
 uniform vec2 tileSize;
 uniform vec2 tileCount;
+uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
@@ -21,28 +22,14 @@ varying vec2 vTileCoord;
 varying vec2 vGridCoord;
 varying float vScroller;
 
-
 bool DEBUG = debugFlag > 0.0;
+
 
 float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
 float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 
 
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
 
 
 void main() {
@@ -53,43 +40,63 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
+    float offset = PI/8.;
 
-    float c = tileCount.x * tileSize.x;
-
-    // c = 2π * r <=> c/2π = r //
-    float r = c / TAU;
-    
-    float a;
-    a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
-
-    a += now/10.;
-    
-    
-    a += ease1(now/2.);
-
-    pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
-    pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
-    
-
-    pos.x +=  cos(a) * r;
-    pos.y +=  sin(a) * r;
-
-
-    pos.z -= tileCoord.y;
-    pos.z -= scroller;
+    float ARC = PI - offset;
+    float RADIUS = tileCount.y/2. * tileSize.y /2.;
 
 
     
-    vec3 axis = vec3(-1.,-1.,0.);
-    mat4 rot = rotationMatrix(axis, PI/2.);
-    pos = rot * pos;
 
-//    pos.x += (tileCoord.x * tileSize.x);
-//    pos.y += (tileCoord.y * tileSize.y);
-    
-        
+    float delta = 0.0;
+    float alpha,beta;
     
 
+    alpha = -1. * ARC / (tileCount.y);
+    delta = PI/2. - offset + alpha;
+    beta = delta + ( alpha * (scroller+tileCoord.y) ) ;
+
+
+    float r = RADIUS * 2.;
     
-    gl_Position = projection * view * model * pos;
+    vec3 A = vec3( (tileCoord.x+1.)*tileSize.x, cos(alpha+beta)*r, sin(alpha+beta)*r);
+    vec3 B = vec3( (tileCoord.x+1.)*tileSize.x, cos(beta)*r,       sin(beta)*r);
+    vec3 C = vec3( tileCoord.x*tileSize.x,      cos(alpha+beta)*r, sin(alpha+beta)*r);
+    vec3 D = vec3( tileCoord.x*tileSize.x,      cos(beta)*r,       sin(beta)*r);
+    
+   
+    if ( pos.x > 0. && pos.y > 0. ) {
+        pos.xyz = A;
+    } else if ( pos.x > 0. && pos.y < 0. ) {
+        pos.xyz = B;
+    } else if ( pos.x < 0. && pos.y > 0. ) {
+        pos.xyz = C;
+    } else if ( pos.x < 0. && pos.y < 0. ) {
+        pos.xyz = D;
+    }
+
+    float zoom = 0.8;
+//
+//
+    float fontRatio = tileSize.x/tileSize.y;
+    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
+    float ratio = screenRatio / fontRatio;
+
+    float scaleWidth = ratio * 2. / tileCount.x;
+    float scaleHeight =        2. / tileCount.y;
+    
+
+
+//    if ( scaleWidth < scaleHeight/2. ) {
+//        zoom = scaleWidth;
+//    } else {            
+//        zoom = scaleHeight;
+//    }
+    zoom = scaleWidth ;
+
+    pos.xyz *= zoom;
+//    pos.xyz *= model[0][0]  * 0.8;
+
+    gl_Position = projection * view * pos;
 }
+
