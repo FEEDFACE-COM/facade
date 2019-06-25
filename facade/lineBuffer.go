@@ -17,7 +17,7 @@ const DEBUG_LINEBUFFER_DUMP = false
 
 type LineBuffer struct {
     rows uint // lines on screen, min 1
-    off  uint // lines off screen, min 0
+    offs  uint // lines off screen, min 0
     buf []*Line
     rem []rune
     
@@ -28,22 +28,22 @@ type LineBuffer struct {
     Smooth bool
 
     refreshChan chan bool
+
+    rb *gfx.RB
     
     checker *gfx.Timer
-
     lastTimestamp float32
     average float32
-    
     packetCount uint
 }
 
-
+const SAMPLE_COUNT = 8
 const CHECK_INTERVAL = 1.
 
 
-func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
+func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     if rows == 0 { rows = 1 }
-    total := rows + off
+    total := rows + offs
     ret := &LineBuffer{
             speed: float32(GridDefaults.Speed), 
             Adaptive: GridDefaults.Adaptive, 
@@ -51,10 +51,13 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
             Smooth: GridDefaults.Smooth,
     }
     ret.rows = rows
-    ret.off = off
+    ret.offs = offs
     ret.buf = make( []*Line, total )
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
+
+
+    ret.rb = gfx.NewRB( SAMPLE_COUNT )
 
 
     ret.average = float32(GridDefaults.Speed);
@@ -67,10 +70,10 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
         }
         ret.packetCount = 0
     }
-    
-    
-    
     ret.packetCount = 0
+
+
+
     if DEBUG_LINEBUFFER { log.Debug("%s created",ret.Desc()) }
     return ret
 }
@@ -79,7 +82,7 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
 func (buffer *LineBuffer) GetLine(idx uint) Line {
     // REM probably should lock mutex?
     
-    if buffer.off == 0 && idx >= buffer.rows {
+    if buffer.offs == 0 && idx >= buffer.rows {
         return Line{}
     }
     
@@ -113,16 +116,16 @@ func (buffer *LineBuffer) dequeueLine() {
 //        head = string( *buffer.buf[0] )
 //    }
 //    if DEBUG_LINEBUFFER { log.Debug("%s dequeue",buffer.Desc()) }
-    total := buffer.rows + buffer.off
+    total := buffer.rows + buffer.offs
     idx := uint(0)
     for ; idx<total-1; idx++ {
         buffer.buf[idx] = buffer.buf[idx+1]
     }
     buffer.buf[idx] = nil
     
-    if buffer.off > 0 && buffer.buf[buffer.rows] != nil {
+    if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
 //        more := false
-//        if buffer.off > 1 && buffer.buf[buffer.rows+1] != nil { ///fillage>0?
+//        if buffer.offs > 1 && buffer.buf[buffer.rows+1] != nil { ///fillage>0?
 //            more = true
 //        }
         buffer.scrollOnce(true, nil)
@@ -196,7 +199,7 @@ func (buffer *LineBuffer) pushLine(row Line) {
 //        buffer.timer = nil
 //    }
 
-    total := buffer.rows + buffer.off // buffer.off should be zero
+    total := buffer.rows + buffer.offs // buffer.offs should be zero
     
     r := uint(0)
     for ; r < total-1; r++ {
@@ -210,16 +213,20 @@ func (buffer *LineBuffer) pushLine(row Line) {
 }
 
 
+
+
 func (buffer *LineBuffer) queueLine(row Line) {
+
+    buffer.rb.Add( gfx.NOW() - buffer.lastTimestamp )
     
-    now := gfx.NOW()
-//    buffer.average = now - buffer.lastTimestamp 
-//    buffer.lastTimestamp = now
+
+    buffer.lastTimestamp = gfx.NOW()
     buffer.packetCount += 1
+
 
     
     
-    if buffer.off == 0 {
+    if buffer.offs == 0 {
         buffer.pushLine(row)
         return
     }
@@ -228,28 +235,18 @@ func (buffer *LineBuffer) queueLine(row Line) {
     
     
     // REM probably should lock mutex?
-    total := buffer.rows + buffer.off
+    total := buffer.rows + buffer.offs
 
     idx := buffer.rows
 
     if buffer.buf[buffer.rows] == nil { //first offscreen slot available
 
-        //change speed preemptively
-        buffer.lastTimestamp = now
-        
-//        if DEBUG_LINEBUFFER { log.Debug("%s first #%d",buffer.Desc(),idx) }
-
         buffer.buf[idx] = &row
-    
-//        speed := now - buffer.lastTimestamp
-//        buffer.scrollOnce(false,&speed) 
-
         buffer.scrollOnce(false,nil) 
         
         
     } else { // first offscreen slot full, find next available
 
-        buffer.lastTimestamp = now
      
         for ;idx<total;idx++ {
             if buffer.buf[idx] == nil {
@@ -274,7 +271,6 @@ func (buffer *LineBuffer) queueLine(row Line) {
             }
         }
 
-//        if DEBUG_LINEBUFFER { log.Debug("%s queue #%d",buffer.Desc(),idx) }
         buffer.buf[idx] = &row
         
     }
@@ -288,7 +284,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 func (buffer *LineBuffer) Clear() {
     // probably should lock mutex?
     if DEBUG_LINEBUFFER { log.Debug("%s clear",buffer.Desc()) }
-    buffer.buf = make( []*Line, buffer.rows + buffer.off)    
+    buffer.buf = make( []*Line, buffer.rows + buffer.offs)    
 }
 
 
@@ -375,7 +371,7 @@ func (buffer *LineBuffer) Fill(fill []string) {
         buffer.buf[r] = &line
         
     }
-    for ; r < buffer.rows+buffer.off; r++ {
+    for ; r < buffer.rows+buffer.offs; r++ {
         
 //        line := Line( []rune{} )
         buffer.buf[r] = nil//&line
@@ -385,14 +381,14 @@ func (buffer *LineBuffer) Fill(fill []string) {
 }
 
 
-func (buffer *LineBuffer) Resize(newRows,newOff uint) {
+func (buffer *LineBuffer) Resize(newRows,newOffs uint) {
     //lock lock lock
-    if DEBUG_LINEBUFFER { log.Debug("%s resize %d+%d",buffer.Desc(),newRows,newOff) }
+    if DEBUG_LINEBUFFER { log.Debug("%s resize %d+%d",buffer.Desc(),newRows,newOffs) }
 
     if newRows == 0 { newRows = 1 }
 
-    oldTotal := buffer.rows + buffer.off
-    newTotal := newRows + newOff
+    oldTotal := buffer.rows + buffer.offs
+    newTotal := newRows + newOffs
     
     oldBuf := buffer.buf
     newBuf := make( []*Line, newTotal )
@@ -429,7 +425,7 @@ func (buffer *LineBuffer) Resize(newRows,newOff uint) {
     
     //adjust buffer info
     buffer.rows = newRows
-    buffer.off  = newOff
+    buffer.offs  = newOffs
     buffer.buf = newBuf
     
     
@@ -445,10 +441,10 @@ func (buffer *LineBuffer) SetSpeed(speed float32) {
     }    
 }
 
-func (buffer *LineBuffer) fillage() float32 { return float32(buffer.buffered()) / float32(buffer.off) }
+func (buffer *LineBuffer) fillage() float32 { return float32(buffer.buffered()) / float32(buffer.offs) }
 func (buffer *LineBuffer) buffered() uint { 
     cnt := uint(0)
-    for i:=buffer.rows; i<buffer.rows+buffer.off; i++ {
+    for i:=buffer.rows; i<buffer.rows+buffer.offs; i++ {
         if buffer.buf[i] == nil {
             break
         }
@@ -467,7 +463,7 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
     if buffer.average <= buffer.speed {
         ret = buffer.average
         
-//        if buffer.buf[buffer.rows+buffer.off-1.] != nil {
+//        if buffer.buf[buffer.rows+buffer.offs-1.] != nil {
 //            ret /= 2.;
 //        }
         
@@ -518,7 +514,7 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
 //        return buffer.speed
 //    }
 //    
-//    return buffer.speed * float32( 1. - float32(buffered)/float32(buffer.off) )
+//    return buffer.speed * float32( 1. - float32(buffered)/float32(buffer.offs) )
 //
 //
 ////    if fillage > .25 { speed /= 2. }
@@ -536,13 +532,13 @@ func (buffer *LineBuffer) Desc() string {
     ret := "linebuffer["
     
     
-    if buffer.off == 0 {
+    if buffer.offs == 0 {
         ret += fmt.Sprintf("%d ",buffer.rows)
     } else {
         buffered := buffer.buffered()
         fillage := buffer.fillage()
-        ret += fmt.Sprintf("%d+%d ",buffer.rows,buffer.off)
-        ret += fmt.Sprintf("%3.0f%%=%d/%d ",100.*fillage,buffered,buffer.off)
+        ret += fmt.Sprintf("%d+%d ",buffer.rows,buffer.offs)
+        ret += fmt.Sprintf("%3.0f%%=%d/%d ",100.*fillage,buffered,buffer.offs)
     }
 
     {
@@ -552,7 +548,7 @@ func (buffer *LineBuffer) Desc() string {
         }
         
         
-        ret += fmt.Sprintf("avg%.2f ",buffer.average)
+        ret += fmt.Sprintf("avg%.2f ",buffer.rb.Average())
         
     }    
     
@@ -567,10 +563,10 @@ func (buffer *LineBuffer) Desc() string {
 
 func (buffer *LineBuffer) Dump(width uint) string {
     ret := ""
-    for i := uint(0); i<buffer.rows+buffer.off;i++ {
+    for i := uint(0); i<buffer.rows+buffer.offs;i++ {
         
         
-        if i > buffer.rows + 2 && i < buffer.rows+buffer.off - 2 {
+        if i > buffer.rows + 2 && i < buffer.rows+buffer.offs - 2 {
             continue
         }
         
@@ -597,3 +593,7 @@ func (buffer *LineBuffer) Dump(width uint) string {
 }
 
 
+
+
+func (buffer *LineBuffer) GetBuffer() uint64 { return uint64(buffer.offs) }
+func (buffer *LineBuffer) GetHeight() uint64 { return uint64(buffer.rows) }

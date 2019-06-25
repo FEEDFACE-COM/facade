@@ -19,10 +19,7 @@ import (
 
 type Tester struct {
 
-    Width, Height uint
-    Speed float32
     Terminal bool
-    Buffer uint
     
     Mode facade.Mode
 
@@ -101,24 +98,31 @@ func (tester *Tester) Init(config *facade.Config) error {
 //    }
 //    
 
-    tester.Width  = uint(facade.GridDefaults.Width) 
-    tester.Height = uint(facade.GridDefaults.Height)
-    tester.Buffer = uint(facade.GridDefaults.Buffer)
-    tester.Terminal = facade.GridDefaults.Terminal
 
     
     if grid := config.GetGrid(); grid!=nil {
-        if grid.GetSetWidth() { tester.Width = uint(grid.GetWidth()) }
-        if grid.GetSetHeight() { tester.Height = uint(grid.GetHeight()) }
-        if grid.GetSetBuffer() { tester.Buffer = uint(grid.GetBuffer()) }
         if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() }
     }
 
-    tester.termBuffer = facade.NewTermBuffer(tester.Width,tester.Height) 
-    tester.lineBuffer = facade.NewLineBuffer(tester.Height,tester.Buffer,tester.refreshChan) 
+    tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
+    tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),tester.refreshChan) 
     
-    
+    if grid := config.GetGrid(); grid!=nil {
+	    if grid.GetSetSpeed() { 
+            tester.lineBuffer.SetSpeed( float32(grid.GetSpeed() ) )
+    	}
+    	
+    	if grid.GetSetAdaptive() {
+            tester.lineBuffer.Adaptive = grid.GetAdaptive()
+        }
+        if grid.GetSetDrop() {
+            tester.lineBuffer.Drop = grid.GetDrop()
+        }
 
+        if grid.GetSetSmooth() {
+            tester.lineBuffer.Smooth = grid.GetSmooth()
+        }
+    }
     
     gfx.ClockReset()
     return nil   
@@ -129,9 +133,9 @@ func (tester *Tester) Init(config *facade.Config) error {
 func (tester *Tester) Desc() string {
 
     tmp := facade.GridConfig{
-        SetWidth: true,  Width: uint64(tester.Width),
-        SetHeight: true, Height: uint64(tester.Height),
-        SetBuffer: true, Buffer: uint64(tester.Buffer),
+        SetWidth: true,  Width: uint64(tester.termBuffer.GetWidth()),
+        SetHeight: true, Height: uint64(tester.termBuffer.GetHeight()),
+        SetBuffer: true, Buffer: uint64(tester.lineBuffer.GetBuffer()),
         SetTerminal: true, Terminal: tester.Terminal,
     }
     
@@ -146,19 +150,42 @@ func (tester *Tester) Configure(config *facade.Config) error {
 
     if grid := config.GetGrid(); grid != nil {
         
-        resize := false
 
-        if grid.GetSetWidth() { resize = true;  tester.Width = uint(grid.GetWidth()) } 
-        if grid.GetSetHeight() { resize = true; tester.Height = uint(grid.GetHeight()) } 
-        if grid.GetSetBuffer() { resize = true; tester.Buffer = uint(grid.GetBuffer()) } 
         if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() } 
 
-        if resize {
-            tester.termBuffer.Resize(tester.Width,tester.Height) 
-            tester.lineBuffer.Resize(tester.Height,tester.Buffer) 
+        if ( grid.GetSetWidth() && grid.GetWidth() != tester.termBuffer.GetWidth())    ||
+           ( grid.GetSetHeight() && grid.GetHeight() != tester.termBuffer.GetHeight() ) {
+        
+            tester.termBuffer.Resize(uint(grid.GetWidth()),uint(grid.GetHeight()))
         }
 
+        if ( grid.GetSetBuffer() && grid.GetBuffer() != tester.lineBuffer.GetBuffer() )   ||
+           ( grid.GetSetHeight() && grid.GetHeight() != tester.lineBuffer.GetHeight() ) { 
+
+            tester.lineBuffer.Resize(uint(grid.GetHeight()),uint(grid.GetBuffer()))
+        }
+        
+	    if grid.GetSetSpeed() { 
+            tester.lineBuffer.SetSpeed( float32(grid.GetSpeed() ) )
+    	}
+    	
+    	if grid.GetSetAdaptive() {
+            tester.lineBuffer.Adaptive = grid.GetAdaptive()
+        }
+        if grid.GetSetDrop() {
+            tester.lineBuffer.Drop = grid.GetDrop()
+        }
+
+        if grid.GetSetSmooth() {
+            tester.lineBuffer.Smooth = grid.GetSmooth()
+        }
+        
+        
+
 	}
+
+
+
     
     return nil
 
@@ -269,7 +296,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
                 if tester.Terminal { 
                     log.Info(tester.termBuffer.Dump() )
                 } else {
-                    log.Info(tester.lineBuffer.Dump( tester.termBuffer.Columns()) )    
+                    log.Info(tester.lineBuffer.Dump( uint(tester.termBuffer.GetWidth())) )    
                 }
                 
             }
@@ -284,7 +311,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 //                if tester.Terminal {
 //                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
 //                } else {
-//                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.Width ) ) ) 
+//                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.GetWidth ) ) ) 
 //                }
 //                os.Stdout.Write( []byte( "\n" ) )
 //                os.Stdout.Sync()
