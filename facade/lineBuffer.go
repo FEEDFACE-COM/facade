@@ -46,7 +46,7 @@ type LineBuffer struct {
     
 }
 
-const METER_SAMPLES  = 5
+const METER_SAMPLES  = 10   
 const METER_INTERVAL = 1.
 
 
@@ -65,7 +65,7 @@ func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
 
-    ret.mark = LEVEL
+    ret.mark = LOWER
     ret.meterBuffer = gfx.NewRB( METER_SAMPLES )
     for i:=0;i<METER_SAMPLES;i++ { ret.meterBuffer.Add(1.0) }
     ret.meterTimestamp = gfx.NOW()
@@ -449,21 +449,63 @@ func (buffer *LineBuffer) buffered() uint {
 func (buffer *LineBuffer) adaptedSpeed() float32 {
 
     fillage := buffer.fillage()
-
-    average := buffer.meterBuffer.Average()
     speed := buffer.speed
-    if average <= speed {
-        speed = average
+    average := buffer.meterBuffer.Average()
+
+
+    const UpperBound = 0.75
+    const CenterMark = 0.50
+    const LowerBound = 0.25
+
+    
+    const SpeedDelta = 0.2
+    const SpeedDouble = 0.5            
+
+
+    //adjust mark
+    if buffer.mark == UPPER && fillage <= CenterMark { 
+
+        buffer.mark = LEVEL 
+
+    } else if buffer.mark == LOWER && fillage >= CenterMark { 
+    
+        buffer.mark = LEVEL 
+
+    } else if buffer.mark == LEVEL && fillage > UpperBound {
         
-        if fillage >= 0.8 { //fast now!!
-            speed *= 0.5
-        } else if fillage > 0.7 {
-            speed *= 0.8
-        } else if fillage <= 0.25 { //slow down
-            speed *= 1.2
-        }
+        buffer.mark = UPPER
         
+    } else if buffer.mark == LEVEL && fillage < LowerBound {
+    
+        buffer.mark = LOWER
+
     }
+
+    if average <= buffer.speed || buffer.speed == 0.0 {
+
+
+
+        if fillage > UpperBound || ( fillage > CenterMark && buffer.mark == UPPER ) {
+    
+//            speed = average * SpeedDouble
+            speed = average * (1. - SpeedDelta)
+    
+        } else if fillage < LowerBound || ( fillage < CenterMark && buffer.mark == LOWER ) {
+    
+            speed = average * (1. + SpeedDelta)
+    
+        } else {
+            
+            speed = average
+                
+        }
+
+    }    
+    
+
+    
+    
+
     
     return speed
 
@@ -495,6 +537,15 @@ func (buffer *LineBuffer) Desc() string {
     
     if ! buffer.Drop { ret += "!drop " }
     if ! buffer.Smooth { ret += "!smooth " }
+
+    {
+        mp := map[int] string{
+                -1 : "lower",
+                 0 : "level",
+                +1 : "upper",
+        }
+        ret += " " + mp[int(buffer.mark)]
+    }
 
     ret = strings.TrimSuffix(ret," ")
     ret += "]"
