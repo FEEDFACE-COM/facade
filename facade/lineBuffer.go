@@ -538,7 +538,7 @@ func (buffer *LineBuffer) Desc() string {
     if ! buffer.Drop { ret += "!drop " }
     if ! buffer.Smooth { ret += "!smooth " }
 
-    {
+    if DEBUG_LINEBUFFER {
         mp := map[int] string{
                 -1 : "lower",
                  0 : "level",
