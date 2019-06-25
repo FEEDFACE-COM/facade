@@ -14,6 +14,14 @@ const DEBUG_LINEBUFFER = true
 const DEBUG_LINEBUFFER_DUMP = false
 
 
+type Mark int
+const (
+    LOWER Mark = -1.0
+    LEVEL Mark =  0.0
+    UPPER Mark = +1.0
+)
+    
+
 
 type LineBuffer struct {
     rows uint // lines on screen, min 1
@@ -29,16 +37,17 @@ type LineBuffer struct {
 
     refreshChan chan bool
 
-    rb *gfx.RB
+    mark Mark
+
+    //metering
+    meterBuffer *gfx.RB
+    meterTimer *gfx.Timer
+    meterTimestamp float32
     
-    checker *gfx.Timer
-    lastTimestamp float32
-    average float32
-    packetCount uint
 }
 
-const SAMPLE_COUNT = 8
-const CHECK_INTERVAL = 1.
+const METER_SAMPLES  = 5
+const METER_INTERVAL = 1.
 
 
 func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
@@ -56,21 +65,17 @@ func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
 
-
-    ret.rb = gfx.NewRB( SAMPLE_COUNT )
-
-
-    ret.average = float32(GridDefaults.Speed);
-    ret.lastTimestamp = gfx.NOW()
-    ret.checker = gfx.NewTimer(CHECK_INTERVAL, true, nil)
-    ret.checker.Fun = func() {
-        if ret.packetCount > 0 {
-            ret.average = CHECK_INTERVAL  / float32(ret.packetCount)
-//            if DEBUG_LINEBUFFER { log.Debug("%s checkd %.2f average %d/%.1fs ",ret.Desc(),ret.average,ret.packetCount,CHECK_INTERVAL) }
-        }
-        ret.packetCount = 0
+    ret.mark = LEVEL
+    ret.meterBuffer = gfx.NewRB( METER_SAMPLES )
+    for i:=0;i<METER_SAMPLES;i++ { ret.meterBuffer.Add(1.0) }
+    ret.meterTimestamp = gfx.NOW()
+    ret.meterTimer = gfx.NewTimer(METER_INTERVAL, true, nil)
+    ret.meterTimer.Fun = func() {
+        if ret.meterTimestamp + METER_INTERVAL < gfx.NOW() { // no new lines since last check
+//            log.Debug("%s no line since one sec",ret.Desc())
+            ret.meterBuffer.Add( 1.0 )
+        }        
     }
-    ret.packetCount = 0
 
 
 
@@ -111,11 +116,6 @@ func (buffer *LineBuffer) GetScroller() float32 {
 func (buffer *LineBuffer) dequeueLine() {
     // probably should lock mutex?
     
-//    head := ""
-//    if buffer.buf[0] != nil {
-//        head = string( *buffer.buf[0] )
-//    }
-//    if DEBUG_LINEBUFFER { log.Debug("%s dequeue",buffer.Desc()) }
     total := buffer.rows + buffer.offs
     idx := uint(0)
     for ; idx<total-1; idx++ {
@@ -124,10 +124,6 @@ func (buffer *LineBuffer) dequeueLine() {
     buffer.buf[idx] = nil
     
     if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
-//        more := false
-//        if buffer.offs > 1 && buffer.buf[buffer.rows+1] != nil { ///fillage>0?
-//            more = true
-//        }
         buffer.scrollOnce(true, nil)
     }
     
@@ -144,7 +140,7 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
     }
     
     //most lines are scrolled ease in / ease out
-    custom := math.Identity
+    custom := math.EaseInEaseOut
     speed := float32(buffer.speed)    
     
     tmp := "speed"
@@ -217,22 +213,17 @@ func (buffer *LineBuffer) pushLine(row Line) {
 
 func (buffer *LineBuffer) queueLine(row Line) {
 
-    buffer.rb.Add( gfx.NOW() - buffer.lastTimestamp )
-    
-
-    buffer.lastTimestamp = gfx.NOW()
-    buffer.packetCount += 1
-
+    buffer.meterBuffer.Add( gfx.NOW()-buffer.meterTimestamp )
 
     
+    buffer.meterTimestamp = gfx.NOW()
     
+    // no buffering, just push line    
     if buffer.offs == 0 {
         buffer.pushLine(row)
         return
     }
 
-    
-    
     
     // REM probably should lock mutex?
     total := buffer.rows + buffer.offs
@@ -459,71 +450,23 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
 
     fillage := buffer.fillage()
 
-    ret := buffer.speed
-    if buffer.average <= buffer.speed {
-        ret = buffer.average
+    average := buffer.meterBuffer.Average()
+    speed := buffer.speed
+    if average <= speed {
+        speed = average
         
-//        if buffer.buf[buffer.rows+buffer.offs-1.] != nil {
-//            ret /= 2.;
-//        }
-        
-//        log.Debug("fillage %f",fillage)
-        if fillage >= 0.75 { //speed up
-            ret *= 0.5
+        if fillage >= 0.8 { //fast now!!
+            speed *= 0.5
+        } else if fillage > 0.7 {
+            speed *= 0.8
         } else if fillage <= 0.25 { //slow down
-            ret *= 1.2
-        } else {
-            ret *= 0.9    
+            speed *= 1.2
         }
         
-//        if fillage > 0.8 {
-//            ret *= 1. - fillage
-//        }
-
-//        if fillage > 0.125 { ret /= 2.  } 
-//        if fillage > 0.25 { ret /= 2.  }
-        
-        
-         
-//        if fillage > 0.5 { ret /= 2.  } 
-//        if fillage > 0.75 { ret /= 2.  } 
-//        if fillage > 0.95 { ret /= 2.  } 
-
-//            log.Debug("using last delta + fillage %f!",ret);
-
-//        ret *= 1. - math.Log(1. - fillage)
-
-        
-//        if fillage > .5  {
-//            ret /= 2.    
-//            log.Debug("using last delta %f HALVED!",ret);
-//        } else {
-//                    log.Debug("using last delta %f",ret);
-//        }
     }
     
-    return ret
+    return speed
 
-
-    
-////    pageDuration := float32(buffer.rows) * float32(buffer.speed)
-////    bufferDuration := float32(buffered) * float32(buffer.speed)
-//    
-//    //ratio := pageDuration / bufferDuration
-//    if buffered == 0 {
-//        return buffer.speed
-//    }
-//    
-//    return buffer.speed * float32( 1. - float32(buffered)/float32(buffer.offs) )
-//
-//
-////    if fillage > .25 { speed /= 2. }
-////    if fillage > .50 { speed /= 2. }
-////    if fillage > .75 { speed /= 2. }
-////    if buffered > 8 { speed /= 2. }
-////    if buffered > 16 { speed /= 2. }
-////    if buffered > 32 { speed /= 2. }
-    
 
 }
 
@@ -547,9 +490,7 @@ func (buffer *LineBuffer) Desc() string {
             ret += fmt.Sprintf("adp%.2f ",buffer.adaptedSpeed())
         }
         
-        
-        ret += fmt.Sprintf("avg%.2f ",buffer.rb.Average())
-        
+        ret += fmt.Sprintf("avg%.2f ",buffer.meterBuffer.Average())
     }    
     
     if ! buffer.Drop { ret += "!drop " }
