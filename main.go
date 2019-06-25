@@ -23,7 +23,7 @@ const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
 const DEBUG_MEMORY   = false
-const DEBUG_BUFFER   = true
+const DEBUG_BUFFER   = false
 
 
 const FRAME_RATE = 60.0

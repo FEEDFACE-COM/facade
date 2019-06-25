@@ -3,6 +3,7 @@ package facade
 
 import(
     "fmt"
+    "strings"
     gfx "../gfx"
     math "../math32"
     log "../log"
@@ -11,6 +12,7 @@ import(
 
 const DEBUG_LINEBUFFER = true
 const DEBUG_LINEBUFFER_DUMP = false
+
 
 
 type LineBuffer struct {
@@ -53,16 +55,21 @@ func NewLineBuffer(rows,off uint, refreshChan chan bool) *LineBuffer {
     ret.buf = make( []*Line, total )
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
+
+
     ret.average = float32(GridDefaults.Speed);
     ret.lastTimestamp = gfx.NOW()
     ret.checker = gfx.NewTimer(CHECK_INTERVAL, true, nil)
     ret.checker.Fun = func() {
         if ret.packetCount > 0 {
             ret.average = CHECK_INTERVAL  / float32(ret.packetCount)
-            if DEBUG_LINEBUFFER { log.Debug("%s checked %dp/%.1fs avg %.2f",ret.Desc(),ret.packetCount,CHECK_INTERVAL,ret.average) }
+//            if DEBUG_LINEBUFFER { log.Debug("%s checkd %.2f average %d/%.1fs ",ret.Desc(),ret.average,ret.packetCount,CHECK_INTERVAL) }
         }
         ret.packetCount = 0
     }
+    
+    
+    
     ret.packetCount = 0
     if DEBUG_LINEBUFFER { log.Debug("%s created",ret.Desc()) }
     return ret
@@ -145,11 +152,14 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
         tmp = "smooth"
         if buffer.Adaptive {
             speed = buffer.adaptedSpeed()
-            tmp += "adapted"
+            tmp += " adapted"
         }
     }
     
     if ! fromDequeue  {
+
+        custom = math.EaseInEaseOut
+        tmp = "ease"
 
 //        if buffer.Adaptive {
 //            speed = buffer.adaptedSpeed()
@@ -160,12 +170,10 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
 //            tmp = "given"
 //        }
 
-        custom = math.EaseInEaseOut
-        tmp = "ease"
         
     }
     
-    if DEBUG_LINEBUFFER { log.Debug("%s scroll %s %.2f",buffer.Desc(),tmp,speed) }
+    if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f %s",buffer.Desc(),speed,tmp) }
 
     buffer.timer = gfx.NewTimer( speed, false, custom )
     buffer.timer.Fun = func() {
@@ -525,31 +533,35 @@ func (buffer *LineBuffer) adaptedSpeed() float32 {
 
 func (buffer *LineBuffer) Desc() string { 
 
+    ret := "linebuffer["
     
-    buf := "0"
-    if buffer.off > 0 {
+    
+    if buffer.off == 0 {
+        ret += fmt.Sprintf("%d ",buffer.rows)
+    } else {
         buffered := buffer.buffered()
         fillage := buffer.fillage()
-        buf = fmt.Sprintf("%d/%d %.0f%% ",buffered,buffer.off,100.*fillage)
+        ret += fmt.Sprintf("%d+%d ",buffer.rows,buffer.off)
+        ret += fmt.Sprintf("%3.0f%%=%d/%d ",100.*fillage,buffered,buffer.off)
     }
 
-    spd := fmt.Sprintf("%.1f",buffer.speed)
-    if buffer.Adaptive {
-        spd = fmt.Sprintf("%.1fa",buffer.adaptedSpeed())
-    }
-    if buffer.Drop {
-        spd += "p"
-    }
-    if buffer.Smooth {
-        spd += "s"
-    }
-
-    tmr := ""
-    if buffer.timer != nil {
-        tmr = fmt.Sprintf(" %.1f",buffer.timer.Fader())
-    }
+    {
+        ret += fmt.Sprintf("spd%.2f ",buffer.speed)
+        if buffer.Adaptive { 
+            ret += fmt.Sprintf("adp%.2f ",buffer.adaptedSpeed())
+        }
+        
+        
+        ret += fmt.Sprintf("avg%.2f ",buffer.average)
+        
+    }    
     
-    return fmt.Sprintf("linebuffer[%d+%s %s%s]",buffer.rows,buf,spd,tmr )
+    if ! buffer.Drop { ret += "!drop " }
+    if ! buffer.Smooth { ret += "!smooth " }
+
+    ret = strings.TrimSuffix(ret," ")
+    ret += "]"
+    return ret
 }
 
 

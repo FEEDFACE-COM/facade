@@ -122,9 +122,6 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     if config.GetSetDebug() { renderer.debug = config.GetDebug() }
     
 
-
-
-//    renderer.config.Clean()
     
     renderer.axis = &gfx.Axis{}
 

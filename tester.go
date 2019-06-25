@@ -3,7 +3,7 @@
 package main
 
 import (
-//    "fmt"
+    "fmt"
     "strings"
     "os"
     "sync"
@@ -35,6 +35,8 @@ type Tester struct {
     mutex *sync.Mutex
     directory string
     
+    prevClock gfx.Clock
+    
     refreshChan chan bool
         
     
@@ -58,9 +60,22 @@ func (tester *Tester) Init(config *facade.Config) error {
     gfx.SetFontDirectory(tester.directory+"/font")
     
     
+    var err error    
+    {
+    	var name = facade.DEFAULT_FONT
+        if cfg := config.GetFont(); cfg!=nil {
+            if cfg.GetSetName() {
+                name = cfg.GetName()
+            }
+        }
+    	tester.font,err = gfx.GetFont( name )
+        if err != nil {
+            log.PANIC("no default font %s: %s",name,err)    
+        }
+    	tester.font.Init()
+    }
+
     
-    
-//    var err error
     
     //setup things 
 //	tester.state = facade.Defaults
@@ -208,7 +223,14 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 
 
+func (tester *Tester) InfoMode() string {
+        return fmt.Sprintf("%s %s",strings.ToLower(tester.Mode.String()),tester.font.Desc())
+    
+}
 
+func (tester *Tester) InfoClock() string {
+    return fmt.Sprintf("%s    %4.1f",gfx.ClockDesc(),gfx.ClockDelta(tester.prevClock)  )
+}
 
 
 
@@ -217,7 +239,7 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 func (tester *Tester) Test(confChan chan facade.Config) error {
     const FRAME_RATE = 60.
     gfx.ClockTick()
-    var prev gfx.Clock = *gfx.NewClock()
+    tester.prevClock = *gfx.NewClock()
 
     for {
         tester.mutex.Lock()
@@ -226,27 +248,54 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         if gfx.ClockVerboseFrame() {
 
+
+            if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
+                log.Debug("")
+            }
+        
+        
+            if DEBUG_CLOCK { log.Info( "%s", tester.InfoClock() ) }
+            
+            if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
+                
+            if DEBUG_MODE { 
+                    log.Info("  %s", tester.InfoMode() ) 
+                    log.Info("  %s", tester.lineBuffer.Desc() )
+                    log.Info("  %s", tester.termBuffer.Desc() )
+            }
+        
             if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
-                if tester.Terminal {
-                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
+                log.Info("")
+                if tester.Terminal { 
+                    log.Info(tester.termBuffer.Dump() )
                 } else {
-                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.Width ) ) ) 
+                    log.Info(tester.lineBuffer.Dump( tester.termBuffer.Columns()) )    
                 }
-                os.Stdout.Write( []byte( "\n" ) )
-                os.Stdout.Sync()
+                
             }
-            
+        
+//            if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
+         
+            if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
+                log.Debug("")
+            }
 
-            if DEBUG_CLOCK { 
-                log.Debug("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(prev)) 
-                prev = *gfx.NewClock() 
-            }
-            
-            if DEBUG_MODE && tester.Mode == facade.Mode_GRID {
-                log.Debug("%s",tester.Desc() )
-            }
+//            if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
+//                if tester.Terminal {
+//                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
+//                } else {
+//                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.Width ) ) ) 
+//                }
+//                os.Stdout.Write( []byte( "\n" ) )
+//                os.Stdout.Sync()
+//            }
+//            
+//
+//
+//
+//        }
+
         }
-
         tester.mutex.Unlock()
         
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )

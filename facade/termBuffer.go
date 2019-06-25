@@ -58,7 +58,8 @@ func makeRow(cols uint) []rune {
     return ret
 }
 
-
+func (buffer *TermBuffer) Columns() uint { return buffer.cols }
+func (buffer *TermBuffer) Rows() uint { return buffer.rows }
 
 
 func NewTermBuffer(cols, rows uint) *TermBuffer {
