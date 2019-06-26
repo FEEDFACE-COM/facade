@@ -4,9 +4,6 @@ package gfx
 import (
     "fmt"
     "strings"
-    "path"
-    "encoding/base64"
-    "io/ioutil"
     "image"
     "image/color"
     "image/draw"
@@ -23,16 +20,13 @@ var fonts = map[string]*Font {}
 var foreground = image.White
 var background = image.Transparent
 
-const GlyphCols  = 0x20
-const GlyphRows  = 0x08
-const GlyphCount = GlyphCols * GlyphRows
+const GlyphMapCols  = 0x20
+const GlyphMapRows  = 0x08
+const GlyphMapCount = GlyphMapCols * GlyphMapRows
 
 
 const scratchSize = 8192
 var fontScratch *image.RGBA = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
-
-const DEBUG_FONT = false
-
 
 
 type Font struct {
@@ -41,85 +35,15 @@ type Font struct {
     context *freetype.Context
 
     max struct {w, h int}
-    Size [GlyphCols][GlyphRows]Size
+    Size [GlyphMapCols][GlyphMapRows]Size
     
     name string
 }
 
 
-var fontDirectory string
-func SetFontDirectory(directory string) { fontDirectory = path.Clean(directory) }
 
 
 
-func GetFont(name string) (*Font,error) {
-    var err error
-    var data []byte
-    
-
-    if name == "" { return nil, log.NewError("no font name given"); }
-        
-    
-    if fonts[name] != nil {
-        return fonts[name],nil
-    }
-    
-    fnt := NewFont(name)
-    
-    if VectorFont[name] != "" {
-        
-        data,err = base64.StdEncoding.DecodeString( VectorFont[name] )
-        if err != nil {
-            return nil, log.NewError("fail to decode font %s: %s",name,err)    
-        }
-
-
-    } else {
-
-        path,err := getFilePathForFont(fontDirectory, name)
-        if err != nil {
-            return nil, log.NewError("fail to find font file %s in %s",name,fontDirectory)    
-        }
-
-        data, err = ioutil.ReadFile(path)
-        if err != nil {
-            return nil,log.NewError("fail to read font file %s: %s",path,err)
-        }
-   
-    }
-    
-    
-    err = fnt.loadFont(data)
-    if err != nil {
-        log.Error("fail to load font %s: %s",name,err)
-        return nil, log.NewError("fail to load font %s: %s",name,err)
-    } 
-    
-    
-    fonts[name] = fnt
-    return fonts[name],nil
-    //note, its' still leaking tho!
-    
-}
-
-
-func getFilePathForFont(fontDirectory string, fontName string) (string,error) {
-    var extensions =[]string{ ".ttf", ".ttc" }
-    var err error
-    files, err := ioutil.ReadDir(fontDirectory)
-    if err != nil {
-        return "", log.NewError("fail list fonts in %s: %s",fontDirectory,err)
-    }
-    for _, f := range files {
-        for _, ext := range extensions {
-            if strings.ToLower(f.Name()) == strings.ToLower(fontName+ext) {
-                log.Debug("found %s matching %s",f.Name(),ext)
-                return fontDirectory + "/" + f.Name(), nil
-            }
-        }
-    }
-    return "",log.NewError("fail finding file for font %s in %s",fontName,fontDirectory)
-}
 
 
 
@@ -135,17 +59,22 @@ func NewFont(name string) *Font {
 }
 
 
-
+func (font *Font) GetName() string { 
+    if font == nil { return "" }
+    return font.name 
+}
 
 func (font *Font) Desc() string { 
 //    tw,th := font.MaxSize().W, font.MaxSize().H
-//    mw, mh := font.MaxSize().W * GlyphCols, font.MaxSize().H * GlyphRows
-//    gw, gh := GlyphCols, GlyphRows
+//    mw, mh := font.MaxSize().W * GlyphMapCols, font.MaxSize().H * GlyphMapRows
+//    gw, gh := GlyphMapCols, GlyphMapRows
 //    return fmt.Sprintf("font[ %dx%d %s %.0fx%.0f %.0fx%.0f]",gw,gh,font.config.Name,tw,th,mw,mh)
 
     ret := "font["
     ret += font.name
-    ret += fmt.Sprintf(" %.2f",font.Ratio() )
+    if font.max.w > 0 && font.max.h > 0 {
+        ret += fmt.Sprintf(" %.2f",font.Ratio() )
+    }
     ret += "]"
     return ret
 }
@@ -153,7 +82,7 @@ func (font *Font) Desc() string {
 
 
 
-func (font *Font) loadFont(data []byte) error {
+func (font *Font) loadData(data []byte) error {
     var err error
 
     
@@ -161,21 +90,21 @@ func (font *Font) loadFont(data []byte) error {
     if err != nil {
         return log.NewError("fail to parse: %s",err)
     }
-    log.Debug("load %s",font.Desc())
+    if DEBUG_FONTSERVICE { log.Debug("%s data loaded",font.Desc()) }
     return nil
 }
 
 func (font *Font) Init() {
     
     if font.context != nil { 
-        log.Debug("skip init %s",font.Desc())
+        log.Error("skip init %s",font.Desc())
         return 
     }
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
 
     font.Size, font.max = font.findSizes()
-    log.Debug("init %s",font.Desc())
+    if DEBUG_FONTSERVICE { log.Debug("init %s",font.Desc()) }
 }
 
 func (font *Font) Close() { // do me do me 
@@ -193,11 +122,11 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     height := font.max.h
 
 
-    imageWidth := GlyphCols*width 
-    imageHeight := GlyphRows*height
+    imageWidth := GlyphMapCols*width 
+    imageHeight := GlyphMapRows*height
 
     back := background
-    if DEBUG_FONT {
+    if DEBUG_FONTSERVICE {
         back = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
     }
         
@@ -216,9 +145,9 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 
 
     var c byte = 0x00
-    for y:=0; DEBUG_FONT && y<GlyphRows; y++ {
+    for y:=0; DEBUG_FONTSERVICE && y<GlyphMapRows; y++ {
         
-        for x:=0; x<GlyphCols; x++ {
+        for x:=0; x<GlyphMapCols; x++ {
             
             
             pos := freetype.Pt( x*width, y*height+height)
@@ -251,9 +180,9 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     
     
     c = 0x00
-    for y:=0; y<GlyphRows; y++ {
+    for y:=0; y<GlyphMapRows; y++ {
         
-        for x:=0; x<GlyphCols; x++ {
+        for x:=0; x<GlyphMapCols; x++ {
             
             str := font.stringForByte(c)
             
@@ -261,7 +190,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
             pos := freetype.Pt( x*width, y*height + height - magic_offset)
             
             ctx.SetSrc( foreground )
-            if DEBUG_FONT && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
+            if DEBUG_FONTSERVICE && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
                 r,g,b,_ := foreground.RGBA()
                 back := color.RGBA{255 - uint8(r), 255-uint8(g), 255 - uint8(b), 255}
                 ctx.SetSrc( image.NewUniform( back ) )
@@ -277,8 +206,8 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
 
-    if DEBUG_FONT {
-        log.Debug("rendered map %s   %dx%d glyphs in %dx%d img",font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
+    if DEBUG_FONTSERVICE {
+        log.Debug("rendered map %s   %dx%d glyphs in %dx%d img",font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
     }
     return ret,nil
     
@@ -337,8 +266,8 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
     
-    if DEBUG_FONT {
-        log.Debug("rendered '%s' %s   %dx%d glyphs in %dx%d img",text[0:min(len(text),8)],font.Desc(),GlyphCols,GlyphRows,imageWidth,imageHeight)
+    if DEBUG_FONTSERVICE {
+        log.Debug("rendered '%s' %s   %dx%d glyphs in %dx%d img",text[0:min(len(text),8)],font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
     }
     
     return ret,nil
@@ -356,8 +285,8 @@ const (
 
 
 
-func (font *Font) findSizes() ([GlyphCols][GlyphRows]Size, struct{w,h int}) {
-    var size [GlyphCols][GlyphRows]Size
+func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{w,h int}) {
+    var size [GlyphMapCols][GlyphMapRows]Size
     var max struct{w,h int} 
 
     ctx := font.context
@@ -371,10 +300,10 @@ func (font *Font) findSizes() ([GlyphCols][GlyphRows]Size, struct{w,h int}) {
     max.h = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()
     
     var c byte = 0x00
-    for y:=0; y<GlyphRows; y++ {
+    for y:=0; y<GlyphMapRows; y++ {
         
 
-        for x:=0; x<GlyphCols; x++ {
+        for x:=0; x<GlyphMapCols; x++ {
             
             str := font.stringForByte(c)
             dim,err := ctx.DrawString(str, freetype.Pt(0,0))

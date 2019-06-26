@@ -28,6 +28,8 @@ type Tester struct {
     
     lineBuffer *facade.LineBuffer
     termBuffer *facade.TermBuffer
+    
+    fontService *gfx.FontService
 
     mutex *sync.Mutex
     directory string
@@ -51,57 +53,45 @@ func NewTester(directory string) *Tester {
 
 func (tester *Tester) Init(config *facade.Config) error {
     log.Debug("init tester[%s] %s",tester.directory,config.Desc())
+
     if strings.HasPrefix(tester.directory, "~/") {
         tester.directory = os.Getenv("HOME") + tester.directory[1:]
     }
-    gfx.SetFontDirectory(tester.directory+"/font")
-    
+
+    tester.fontService = gfx.NewFontService(tester.directory+"/font")
+
     
     var err error    
     {
     	var name = facade.DEFAULT_FONT
+
         if cfg := config.GetFont(); cfg!=nil {
             if cfg.GetSetName() {
                 name = cfg.GetName()
             }
         }
-    	tester.font,err = gfx.GetFont( name )
+        
+        log.Debug("load font %s",name)
+        err = tester.fontService.LoadFont(name)
         if err != nil {
-            log.PANIC("no default font %s: %s",name,err)    
+            log.PANIC("fail load font %s: %s",name,err)    
         }
-    	tester.font.Init()
+
+        tester.font,err = tester.fontService.GetFont( name )
+        if err != nil {
+            log.Debug("tester fail get font %s: %s",name,err)
+        }
+
+
     }
 
     
     
-    //setup things 
-//	tester.state = facade.Defaults
-//    tester.state.ApplyConfig(config)
-    
-//	fontConfig := gfx.FontDefaults.Config()
-//	if cfg,ok := config.Font(); ok {
-//		fontConfig.ApplyConfig( &cfg )	
-//	}
-//	tester.font,err = gfx.GetFont( fontConfig )
-//    if err != nil {
-//        log.PANIC("no default font: %s",err)    
-//    }
-//	tester.font.Init()
-//	
-//	
-
-
-//    grid := proto.GridConfig{}
-//	gridConfig := facade.GridDefaults.Config()
-//    if cfg,ok := config.Grid(); ok {
-//        gridConfig.ApplyConfig(&cfg)
-//    }
-//    
-
-
     
     if grid := config.GetGrid(); grid!=nil {
+        
         if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() }
+        
     }
 
     tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
@@ -130,22 +120,46 @@ func (tester *Tester) Init(config *facade.Config) error {
 
 
 
-func (tester *Tester) Desc() string {
+func (tester *Tester) GridConfig() *facade.GridConfig {
 
-    tmp := facade.GridConfig{
+    return &facade.GridConfig{
         SetWidth: true,  Width: uint64(tester.termBuffer.GetWidth()),
         SetHeight: true, Height: uint64(tester.termBuffer.GetHeight()),
         SetBuffer: true, Buffer: uint64(tester.lineBuffer.GetBuffer()),
         SetTerminal: true, Terminal: tester.Terminal,
     }
-    
-    return "tester[" + tmp.Desc() + "]"
 }
 
 func (tester *Tester) Configure(config *facade.Config) error {
+    var err error
     
     if config == nil { return nil }
-    log.Debug("%s configure %s",tester.Desc(),config.Desc())
+    log.Debug("tester config %s",config.Desc())
+
+
+    if cfg := config.GetFont(); cfg!=nil {
+    
+        if cfg.GetSetName() {
+            name := cfg.GetName()
+            if name != tester.font.GetName() {
+        
+                log.Debug("tester add font %s",name )
+                err = tester.fontService.LoadFont( name )
+                if err != nil {
+                    log.Debug("tester fail add font %s: %s",name,err)
+                }
+                
+                tester.font,err = tester.fontService.GetFont( name )
+                if err != nil {
+                    log.Debug("tester fail get font %s: %s",name,err)
+                }
+                
+            }        
+        
+            
+        }
+        
+    }
 
 
     if grid := config.GetGrid(); grid != nil {
@@ -180,6 +194,10 @@ func (tester *Tester) Configure(config *facade.Config) error {
             tester.lineBuffer.Smooth = grid.GetSmooth()
         }
         
+        if grid.GetSetFill() {
+            tester.render( grid.GetFill() )
+        }
+        
         
 
 	}
@@ -192,7 +210,11 @@ func (tester *Tester) Configure(config *facade.Config) error {
 }
 
 
-
+func (tester *Tester) render(fill string) {
+    if tester.font != nil {
+        log.Debug("tester render %s with %s",fill,tester.font.Desc())
+    }
+}
 
 
 //rem, should not need this, can do directly?
@@ -251,7 +273,11 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 
 func (tester *Tester) InfoMode() string {
-        return fmt.Sprintf("%s %s",strings.ToLower(tester.Mode.String()),tester.font.Desc())
+    ret := strings.ToLower(tester.Mode.String())    
+//    if tester.font != nil {
+//        ret += " " + tester.font.Desc()
+//    }
+    return ret
     
 }
 
@@ -290,7 +316,14 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
                     log.Info("  %s", tester.lineBuffer.Desc() )
                     log.Info("  %s", tester.termBuffer.Desc() )
             }
-        
+            
+            if DEBUG_FONT {
+                log.Info("  %s",tester.fontService.Desc())
+                if tester.font != nil {
+                    log.Info("  %s",tester.font.Desc())
+                }
+            }    
+                        
             if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
                 log.Info("")
                 if tester.Terminal { 

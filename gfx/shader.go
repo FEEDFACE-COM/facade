@@ -99,8 +99,8 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
     } else {
         src := ""
         switch (shaderType) {
-            case VERTEX_SHADER:   src = VertexShader[shaderPrefix+shaderName]
-            case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+shaderName]
+            case VERTEX_SHADER:   src = VertexShaderAsset[shaderPrefix+shaderName]
+            case FRAGMENT_SHADER: src = FragmentShaderAsset[shaderPrefix+shaderName]
         }
 
 

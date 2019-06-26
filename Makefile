@@ -106,32 +106,32 @@ font/VT323.ttf:
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
 
 gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
-	echo ""                                         >|$@
-#	echo "// +build linux,arm"                      >>$@
-	echo "package gfx"                              >>$@
-	echo "var VertexShader = map[string]string{"    >>$@
+	echo ""                                             >|$@
+#	echo "// +build linux,arm"                          >>$@
+	echo "package gfx"                                  >>$@
+	echo "var VertexShaderAsset = map[string]string{"   >>$@
 	for src in ${ASSET_VERT}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
       echo "\`,\n\n"; \
-    done                                            >>$@
-	echo "}\n\n"                                    >>$@
-	echo "var FragmentShader = map[string]string{"  >>$@
+    done                                                >>$@
+	echo "}\n\n"                                        >>$@
+	echo "var FragmentShaderAsset = map[string]string{" >>$@
 	for src in ${ASSET_FRAG}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src; \
       echo "\`,\n\n"; \
-    done                                            >>$@
-	echo "}"                                        >>$@
+    done                                                >>$@
+	echo "}"                                            >>$@
 
 
 gfx/fontAssets.go: ${ASSET_FONT}
 	echo ""                                         >|$@
 #	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var VectorFont = map[string]string{"      >>$@
+	echo "var FontAsset = map[string]string{"      >>$@
 	for src in ${ASSET_FONT}; do \
       name=$$( echo $$src | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
