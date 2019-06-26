@@ -74,12 +74,12 @@ func (tester *Tester) Init(config *facade.Config) error {
         log.Debug("load font %s",name)
         err = tester.fontService.LoadFont(name)
         if err != nil {
-            log.PANIC("fail load font %s: %s",name,err)    
+            log.PANIC("tester fail load default font %s: %s",name,err)
         }
 
         tester.font,err = tester.fontService.GetFont( name )
         if err != nil {
-            log.Debug("tester fail get font %s: %s",name,err)
+            log.PANIC("tester fail get default font %s: %s",name,err)
         }
 
 
@@ -149,10 +149,15 @@ func (tester *Tester) Configure(config *facade.Config) error {
                     log.Debug("tester fail add font %s: %s",name,err)
                 }
                 
-                tester.font,err = tester.fontService.GetFont( name )
-                if err != nil {
+                var font *gfx.Font
+                font,err = tester.fontService.GetFont( name )
+                if err == nil {
+                    log.Debug("tester switch to font %s",name)
+                    tester.font = font
+                } else {
                     log.Debug("tester fail get font %s: %s",name,err)
                 }
+                
                 
             }        
         
