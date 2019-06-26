@@ -250,8 +250,15 @@ func (buffer *LineBuffer) queueLine(row Line) {
                 if DEBUG_LINEBUFFER { log.Debug("%s overflow, line jumped",buffer.Desc()) }
                 buffer.pushLine(row)
                 return
-            
+
             }
+            
+            // in case timer is gone somehow
+            if buffer.timer == nil {
+                buffer.scrollOnce(false)    
+            }            
+            
+            
         }
 
         buffer.buf[idx] = &row
