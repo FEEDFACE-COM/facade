@@ -355,7 +355,7 @@ func main() {
 
         case EXEC:
 
-            var cols,rows = uint64(40), uint64(12)
+            var cols,rows = facade.GridDefaults.Width,facade.GridDefaults.Height
             if config.GetGrid() == nil {
                 config.Grid = &facade.GridConfig{}
             }
