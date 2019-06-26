@@ -10,9 +10,17 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_LINEBUFFER = true
+const DEBUG_LINEBUFFER = false
 const DEBUG_LINEBUFFER_DUMP = false
 
+
+type Mark int
+const (
+    LOWER Mark = -1.0
+    LEVEL Mark =  0.0
+    UPPER Mark = +1.0
+)
+    
 
 
 type LineBuffer struct {
@@ -29,16 +37,16 @@ type LineBuffer struct {
 
     refreshChan chan bool
 
-    rb *gfx.RB
+    //metering
+    mark Mark
+    meterBuffer *gfx.RB
+    meterTimer *gfx.Timer
+    meterTimestamp float32
     
-    checker *gfx.Timer
-    lastTimestamp float32
-    average float32
-    packetCount uint
 }
 
-const SAMPLE_COUNT = 8
-const CHECK_INTERVAL = 1.
+const METER_SAMPLES  = 10   
+const METER_INTERVAL = 1.
 
 
 func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
@@ -56,21 +64,17 @@ func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     ret.rem = []rune{}
     ret.refreshChan = refreshChan
 
-
-    ret.rb = gfx.NewRB( SAMPLE_COUNT )
-
-
-    ret.average = float32(GridDefaults.Speed);
-    ret.lastTimestamp = gfx.NOW()
-    ret.checker = gfx.NewTimer(CHECK_INTERVAL, true, nil)
-    ret.checker.Fun = func() {
-        if ret.packetCount > 0 {
-            ret.average = CHECK_INTERVAL  / float32(ret.packetCount)
-//            if DEBUG_LINEBUFFER { log.Debug("%s checkd %.2f average %d/%.1fs ",ret.Desc(),ret.average,ret.packetCount,CHECK_INTERVAL) }
-        }
-        ret.packetCount = 0
+    ret.mark = LOWER
+    ret.meterBuffer = gfx.NewRB( METER_SAMPLES )
+    for i:=0;i<METER_SAMPLES;i++ { ret.meterBuffer.Add(1.0) }
+    ret.meterTimestamp = gfx.NOW()
+    ret.meterTimer = gfx.NewTimer(METER_INTERVAL, true, nil)
+    ret.meterTimer.Fun = func() {
+        if ret.meterTimestamp + METER_INTERVAL < gfx.NOW() { // no new lines since last check
+//            log.Debug("%s no line since one sec",ret.Desc())
+            ret.meterBuffer.Add( 1.0 )
+        }        
     }
-    ret.packetCount = 0
 
 
 
@@ -108,14 +112,9 @@ func (buffer *LineBuffer) GetScroller() float32 {
     return float32(0.0)  
 }
 
-func (buffer *LineBuffer) dequeueLine() {
+func (buffer *LineBuffer) dequeueLine(scrollNext bool) {
     // probably should lock mutex?
     
-//    head := ""
-//    if buffer.buf[0] != nil {
-//        head = string( *buffer.buf[0] )
-//    }
-//    if DEBUG_LINEBUFFER { log.Debug("%s dequeue",buffer.Desc()) }
     total := buffer.rows + buffer.offs
     idx := uint(0)
     for ; idx<total-1; idx++ {
@@ -123,66 +122,59 @@ func (buffer *LineBuffer) dequeueLine() {
     }
     buffer.buf[idx] = nil
     
-    if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
-//        more := false
-//        if buffer.offs > 1 && buffer.buf[buffer.rows+1] != nil { ///fillage>0?
-//            more = true
-//        }
-        buffer.scrollOnce(true, nil)
-    }
-    
+    if scrollNext {
+        if buffer.offs > 0 && buffer.buf[buffer.rows] != nil {
+            buffer.scrollOnce(false)
+        }
+    }    
         
     select { case buffer.refreshChan <- true: ; default: ; }
     
 }
 
 
-func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
+func (buffer *LineBuffer) scrollOnce(freshLine bool) {
     if buffer.timer != nil {
         log.Error("%s refuse scroll with existing timer",buffer.Desc())
         return    
     }
     
     //most lines are scrolled ease in / ease out
-    custom := math.Identity
+    custom := math.EaseInEaseOut
     speed := float32(buffer.speed)    
     
-    tmp := "speed"
+    tmp := ""
 
-    if fromDequeue && buffer.Smooth  { 
 
-        custom = math.Identity
-        tmp = "smooth"
+    if freshLine  {
+        custom = math.EaseInEaseOut
+        tmp += " ease"
+    }
+
+    if !freshLine  { 
+
+        if buffer.Smooth {
+            custom = math.Identity
+            tmp += " smooth"
+        }
         if buffer.Adaptive {
             speed = buffer.adaptedSpeed()
             tmp += " adapted"
         }
     }
     
-    if ! fromDequeue  {
-
-        custom = math.EaseInEaseOut
-        tmp = "ease"
-
-//        if buffer.Adaptive {
-//            speed = buffer.adaptedSpeed()
-//            tmp = " adapted"
-//        }
-//        if withSpeed != nil && *withSpeed < speed {
-//            speed = *withSpeed
-//            tmp = "given"
-//        }
-
-        
-    }
     
-    if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f %s",buffer.Desc(),speed,tmp) }
+    if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f%s",buffer.Desc(),speed,tmp) }
+
+
+
+
 
     buffer.timer = gfx.NewTimer( speed, false, custom )
     buffer.timer.Fun = func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
-        buffer.dequeueLine()
+        buffer.dequeueLine(true)
 
     }
     buffer.timer.Start()
@@ -193,11 +185,6 @@ func (buffer *LineBuffer) scrollOnce(fromDequeue bool, withSpeed *float32) {
 func (buffer *LineBuffer) pushLine(row Line) {
     // lock lock lock
     
-//    //dont want timer to mess with new buffer
-//    if buffer.timer != nil {
-//        gfx.UnRegisterTimer(buffer.timer)
-//        buffer.timer = nil
-//    }
 
     total := buffer.rows + buffer.offs // buffer.offs should be zero
     
@@ -217,22 +204,18 @@ func (buffer *LineBuffer) pushLine(row Line) {
 
 func (buffer *LineBuffer) queueLine(row Line) {
 
-    buffer.rb.Add( gfx.NOW() - buffer.lastTimestamp )
-    
-
-    buffer.lastTimestamp = gfx.NOW()
-    buffer.packetCount += 1
-
-
+    // measure speed
+    metered := gfx.NOW()-buffer.meterTimestamp
+    buffer.meterBuffer.Add( metered )
+    buffer.meterTimestamp = gfx.NOW()
     
     
+    // no buffering, just push line    
     if buffer.offs == 0 {
         buffer.pushLine(row)
         return
     }
 
-    
-    
     
     // REM probably should lock mutex?
     total := buffer.rows + buffer.offs
@@ -242,7 +225,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
     if buffer.buf[buffer.rows] == nil { //first offscreen slot available
 
         buffer.buf[idx] = &row
-        buffer.scrollOnce(false,nil) 
+        buffer.scrollOnce(true) 
         
         
     } else { // first offscreen slot full, find next available
@@ -267,8 +250,15 @@ func (buffer *LineBuffer) queueLine(row Line) {
                 if DEBUG_LINEBUFFER { log.Debug("%s overflow, line jumped",buffer.Desc()) }
                 buffer.pushLine(row)
                 return
-            
+
             }
+            
+            // in case timer is gone somehow
+            if buffer.timer == nil {
+                buffer.scrollOnce(false)    
+            }            
+            
+            
         }
 
         buffer.buf[idx] = &row
@@ -354,11 +344,13 @@ func (buffer *LineBuffer) Fill(fill []string) {
     
     // lock lock lock
 
-    //dont want timer to mess with new buffer
+    // kill timer
     if buffer.timer != nil {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
+        buffer.dequeueLine(false)
     }
+
 
     
     rows := uint( len(fill) )
@@ -394,10 +386,11 @@ func (buffer *LineBuffer) Resize(newRows,newOffs uint) {
     newBuf := make( []*Line, newTotal )
 
 
-    //dont want timer to mess with new buffer
+    // kill timer
     if buffer.timer != nil {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
+        buffer.dequeueLine(false)
     }
 
 
@@ -436,9 +429,13 @@ func (buffer *LineBuffer) Speed() float32 { return buffer.speed }
 func (buffer *LineBuffer) SetSpeed(speed float32) {
     buffer.speed = speed
     
+    // kill timer
     if buffer.timer != nil {
-        buffer.timer.Fun() //execute timer, will unregister itself
-    }    
+        gfx.UnRegisterTimer(buffer.timer)
+        buffer.timer = nil
+        buffer.dequeueLine(false)
+    }
+
 }
 
 func (buffer *LineBuffer) fillage() float32 { return float32(buffer.buffered()) / float32(buffer.offs) }
@@ -458,72 +455,69 @@ func (buffer *LineBuffer) buffered() uint {
 func (buffer *LineBuffer) adaptedSpeed() float32 {
 
     fillage := buffer.fillage()
+    speed := buffer.speed
+    average := buffer.meterBuffer.Average()
 
-    ret := buffer.speed
-    if buffer.average <= buffer.speed {
-        ret = buffer.average
-        
-//        if buffer.buf[buffer.rows+buffer.offs-1.] != nil {
-//            ret /= 2.;
-//        }
-        
-//        log.Debug("fillage %f",fillage)
-        if fillage >= 0.75 { //speed up
-            ret *= 0.5
-        } else if fillage <= 0.25 { //slow down
-            ret *= 1.2
-        } else {
-            ret *= 0.9    
-        }
-        
-//        if fillage > 0.8 {
-//            ret *= 1. - fillage
-//        }
 
-//        if fillage > 0.125 { ret /= 2.  } 
-//        if fillage > 0.25 { ret /= 2.  }
-        
-        
-         
-//        if fillage > 0.5 { ret /= 2.  } 
-//        if fillage > 0.75 { ret /= 2.  } 
-//        if fillage > 0.95 { ret /= 2.  } 
+    const FinalBound = 0.88
+    const UpperBound = 0.75
+    const CenterMark = 0.50
+    const LowerBound = 0.25
 
-//            log.Debug("using last delta + fillage %f!",ret);
+    
+    const SpeedDelta = 0.2
+    const SpeedDouble = 0.5            
 
-//        ret *= 1. - math.Log(1. - fillage)
 
+    //adjust mark
+    if buffer.mark == UPPER && fillage <= CenterMark { 
+
+        buffer.mark = LEVEL 
+
+    } else if buffer.mark == LOWER && fillage >= CenterMark { 
+    
+        buffer.mark = LEVEL 
+
+    } else if buffer.mark == LEVEL && fillage > UpperBound {
         
-//        if fillage > .5  {
-//            ret /= 2.    
-//            log.Debug("using last delta %f HALVED!",ret);
-//        } else {
-//                    log.Debug("using last delta %f",ret);
-//        }
+        buffer.mark = UPPER
+        
+    } else if buffer.mark == LEVEL && fillage < LowerBound {
+    
+        buffer.mark = LOWER
+
     }
-    
-    return ret
+
+    if average <= buffer.speed /*|| buffer.speed == 0.0*/ {
 
 
+        if fillage >= FinalBound {
+
+            speed = average * SpeedDouble
+            
+        } else if fillage > UpperBound || ( fillage > CenterMark && buffer.mark == UPPER ) {
     
-////    pageDuration := float32(buffer.rows) * float32(buffer.speed)
-////    bufferDuration := float32(buffered) * float32(buffer.speed)
-//    
-//    //ratio := pageDuration / bufferDuration
-//    if buffered == 0 {
-//        return buffer.speed
-//    }
-//    
-//    return buffer.speed * float32( 1. - float32(buffered)/float32(buffer.offs) )
-//
-//
-////    if fillage > .25 { speed /= 2. }
-////    if fillage > .50 { speed /= 2. }
-////    if fillage > .75 { speed /= 2. }
-////    if buffered > 8 { speed /= 2. }
-////    if buffered > 16 { speed /= 2. }
-////    if buffered > 32 { speed /= 2. }
+            speed = average * (1. - SpeedDelta)
     
+        } else if fillage < LowerBound || ( fillage < CenterMark && buffer.mark == LOWER ) {
+    
+            speed = average * (1. + SpeedDelta)
+    
+        } else {
+            
+            speed = average
+                
+        }
+
+    }    
+    
+
+    
+    
+
+    
+    return speed
+
 
 }
 
@@ -547,13 +541,20 @@ func (buffer *LineBuffer) Desc() string {
             ret += fmt.Sprintf("adp%.2f ",buffer.adaptedSpeed())
         }
         
-        
-        ret += fmt.Sprintf("avg%.2f ",buffer.rb.Average())
-        
+        ret += fmt.Sprintf("avg%.2f ",buffer.meterBuffer.Average())
     }    
     
     if ! buffer.Drop { ret += "!drop " }
     if ! buffer.Smooth { ret += "!smooth " }
+
+    if DEBUG_LINEBUFFER {
+        mp := map[int] string{
+                -1 : "lower",
+                 0 : "level",
+                +1 : "upper",
+        }
+        ret += " " + mp[int(buffer.mark)]
+    }
 
     ret = strings.TrimSuffix(ret," ")
     ret += "]"
@@ -597,3 +598,5 @@ func (buffer *LineBuffer) Dump(width uint) string {
 
 func (buffer *LineBuffer) GetBuffer() uint64 { return uint64(buffer.offs) }
 func (buffer *LineBuffer) GetHeight() uint64 { return uint64(buffer.rows) }
+
+
