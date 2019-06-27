@@ -57,27 +57,28 @@ func NewTester(directory string) *Tester {
 }
 
 
-func (tester *Tester) switchShader(name string, typ gfx.ShaderType) error {
+func (tester *Tester) switchShader(shaderName string, shaderType gfx.ShaderType) error {
     var err error
+    shaderName = strings.ToLower(tester.Mode.String()) + "/" + strings.ToLower(shaderName)
+    name := shaderName + "." + string(shaderType)
     
-    name = strings.ToLower(tester.Mode.String()) + "/" + name
     
-    log.Debug("tester load shader %s.%s",name,typ)
-    err = tester.shaderService.LoadShader(name,typ)
+    log.Debug("tester load shader %s",name)
+    err = tester.shaderService.LoadShader(shaderName,shaderType)
     if err != nil {
-        log.Error("tester fail load shader %s.%s: %s",name,typ,err)
-        return log.NewError("tester fail load shader %s.%s: %s",name,typ,err)
+        log.Error("tester fail load shader %s: %s",name,err)
+        return log.NewError("tester fail load shader %s: %s",name,err)
     }
 
     var shader *gfx.Shader
-    shader,err = tester.shaderService.GetShader( name, typ )
+    shader,err = tester.shaderService.GetShader( name, shaderType )
     if err != nil {
-        log.PANIC("tester fail get shader %s.%s: %s",name,typ,err)
-        return log.NewError("tester fail get shader %s.%s: %s",name,typ,err)
+        log.PANIC("tester fail get shader %s: %s",name,err)
+        return log.NewError("tester fail get shader %s: %s",name,err)
     }
 
-    log.Debug("tester switch to %s shader %s.%s",typ,name,typ)
-    switch typ {
+    log.Debug("tester switch to shader %s",name)
+    switch shaderType {
         case gfx.VertType: 
             tester.vert = shader
         case gfx.FragType:

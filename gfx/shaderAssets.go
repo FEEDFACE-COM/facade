@@ -1,1417 +1,157 @@
 
 package gfx
-var VertexShaderAsset = map[string]string{
+var ShaderAsset = map[string]string{
 
 
-"color":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform float debugFlag;
-
-attribute vec3 vertex;
-attribute vec4 color;
-
-varying vec4  vFragColor;
-varying float vDebugFlag;
-
-
-void main() {
-    vFragColor = color;
-    vDebugFlag = debugFlag;
-    gl_Position = projection * view * model * vec4(vertex, 1);
-}
+"color.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIGZsb2F0IGRlYnVnRmxhZzsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleDsKYXR0cmlidXRlIHZlYzQgY29sb3I7Cgp2YXJ5aW5nIHZlYzQgIHZGcmFnQ29sb3I7CnZhcnlpbmcgZmxvYXQgdkRlYnVnRmxhZzsKCgp2b2lkIG1haW4oKSB7CiAgICB2RnJhZ0NvbG9yID0gY29sb3I7CiAgICB2RGVidWdGbGFnID0gZGVidWdGbGFnOwogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uICogdmlldyAqIG1vZGVsICogdmVjNCh2ZXJ0ZXgsIDEpOwp9Cg==
 `,
 
 
 
 
-"def":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform float debugFlag;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-
-varying vec2 vFragCoord;
-varying float vDebugFlag;
-
-bool DEBUG = debugFlag > 0.0;
-
-void main() {
-    vFragCoord = texCoord;
-    gl_Position = projection * view * model * vec4(vertex, 1);
-}
+"def.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIGZsb2F0IGRlYnVnRmxhZzsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleDsKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7Cgp2YXJ5aW5nIHZlYzIgdkZyYWdDb29yZDsKdmFyeWluZyBmbG9hdCB2RGVidWdGbGFnOwoKYm9vbCBERUJVRyA9IGRlYnVnRmxhZyA+IDAuMDsKCnZvaWQgbWFpbigpIHsKICAgIHZGcmFnQ29vcmQgPSB0ZXhDb29yZDsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHZlYzQodmVydGV4LCAxKTsKfQo=
 `,
 
 
 
 
-"grid/crawl":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
-
-float Identity(float x) { return x; }
-float EaseInEaseOut(float x) { return -0.5 * cos( x * PI ) + 0.5; }
-
-float EaseOut(float x) { return cos(x*PI/2. + 3.*PI/2. ); }
-float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-
-
-
-
-
-    
-//
-    float ALPHA;
-    ALPHA = PI * 3./8.;
-    ALPHA = tileCount.y/64. * PI/4. + PI/4.;
-//    ALPHA = now;
-    mat4 rot;
-//    
-//    pos.y += 1.;
-//    pos.y +=  tileCount.y / 2.;
-//    
-    rot = rotationMatrix(vec3(1.,0.,0.), ALPHA);
-    pos = rot * pos;
-    
-    float height = tileCount.y * tileSize.y;
-    float a = cos( ALPHA ) * (height/2.);
-    
-    pos.y -= a;
-
-    pos.y += height/4.;    
-//    pos.z += height/2.;    
-    
-//    pos.y -=  tileCount.y / 2.;
-//
-//    pos.z += tileCount.y;
-//    pos.y -= tileCount.y/2.;
-//    
-//    pos.y += tileCount.y/2.;
-//
-//
-    float zoom = 1.;
-//
-//
-    float fontRatio = tileSize.x/tileSize.y;
-    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
-    float ratio = screenRatio / fontRatio;
-
-    float scaleWidth = ratio * 2. / tileCount.x;
-    float scaleHeight =        2. / tileCount.y;
-    
-
-
-    if ( scaleWidth < scaleHeight/2. ) {
-        zoom = scaleWidth;
-    } else {            
-        zoom = scaleHeight;
-    }
-
-//    float height = tileSize.y * tileCount.y;
-//
-//    float a = 2. * sin(ALPHA) * height/2.;
-//    
-//    pos.xyz += vec3(0.,0.,0.);
-//
-//    zoom = 1./10.;
-//
-//    pos.xyz *= zoom;
-  //  pos.xyz *= model[0][0];  
-//
-
-
-///    zoom = 2.;  
-    pos.xyz *= zoom;
-//    pos.xyz *= model[0][0];
-    gl_Position = projection * view * pos;
-}
-
+"grid/crawl.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKZmxvYXQgUEkgID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwpmbG9hdCBUQVUgPSA2LjI4MzE4NTMwNzE3OTU4NjQ3NjkyNTI4Njc2NjU1OTAwNTc2ODM5NDMzODc5ODc1MDIxMTY0MTk0OTg4OTE4NDA7CgpmbG9hdCBJZGVudGl0eShmbG9hdCB4KSB7IHJldHVybiB4OyB9CmZsb2F0IEVhc2VJbkVhc2VPdXQoZmxvYXQgeCkgeyByZXR1cm4gLTAuNSAqIGNvcyggeCAqIFBJICkgKyAwLjU7IH0KCmZsb2F0IEVhc2VPdXQoZmxvYXQgeCkgeyByZXR1cm4gY29zKHgqUEkvMi4gKyAzLipQSS8yLiApOyB9CmZsb2F0IEVhc2VJbihmbG9hdCB4KSB7IHJldHVybiAgLTEuICogY29zKHgqUEkvMi4gKSArIDEuICA7IH0KCm1hdDQgcm90YXRpb25NYXRyaXgodmVjMyBheGlzLCBmbG9hdCBhbmdsZSkKewogICAgdmVjMyBhICA9IG5vcm1hbGl6ZShheGlzKTsKICAgIGZsb2F0IHMgPSBzaW4oYW5nbGUpOwogICAgZmxvYXQgYyA9IGNvcyhhbmdsZSk7CiAgICBmbG9hdCBvYyA9IDEuMCAtIGM7CiAgICAKICAgIHJldHVybiBtYXQ0KAogICAgICAgIG9jKmEueCphLnggKyBjLCAgICAgIG9jKmEueCphLnkgLSBhLnoqcywgIG9jKmEueiphLnggKyBhLnkqcywgIDAuMCwKICAgICAgICBvYyphLngqYS55ICsgYS56KnMsICBvYyphLnkqYS55ICsgYywgICAgICBvYyphLnkqYS56IC0gYS54KnMsICAwLjAsCiAgICAgICAgb2MqYS56KmEueCAtIGEueSpzLCAgb2MqYS55KmEueiArIGEueCpzLCAgb2MqYS56KmEueiArIGMsICAgICAgMC4wLAogICAgICAgICAgICAgICAgICAgICAgIDAuMCwgICAgICAgICAgICAgICAgIDAuMCwgICAgICAgICAgICAgICAgIDAuMCwgIDEuMAogICAgKTsKfQoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgdlRpbGVDb29yZCA9IHRpbGVDb29yZDsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICB2U2Nyb2xsZXIgPSBhYnMoc2Nyb2xsZXIpOwogICAgCiAgICB2ZWM0IHBvcyA9IHZlYzQodmVydGV4LDEpOwoKICAgIHBvcy55ICs9IHNjcm9sbGVyOwogICAgcG9zLnggKz0gKHRpbGVDb29yZC54ICogdGlsZVNpemUueCk7CiAgICBwb3MueSArPSAodGlsZUNvb3JkLnkgKiB0aWxlU2l6ZS55KTsKCiAgICBwb3MueCArPSAoIHRpbGVPZmZzZXQueCAqIHRpbGVTaXplLngpOwogICAgcG9zLnkgKz0gKCB0aWxlT2Zmc2V0LnkgKiB0aWxlU2l6ZS55KTsKCgoKCgogICAgCi8vCiAgICBmbG9hdCBBTFBIQTsKICAgIEFMUEhBID0gUEkgKiAzLi84LjsKICAgIEFMUEhBID0gdGlsZUNvdW50LnkvNjQuICogUEkvNC4gKyBQSS80LjsKLy8gICAgQUxQSEEgPSBub3c7CiAgICBtYXQ0IHJvdDsKLy8gICAgCi8vICAgIHBvcy55ICs9IDEuOwovLyAgICBwb3MueSArPSAgdGlsZUNvdW50LnkgLyAyLjsKLy8gICAgCiAgICByb3QgPSByb3RhdGlvbk1hdHJpeCh2ZWMzKDEuLDAuLDAuKSwgQUxQSEEpOwogICAgcG9zID0gcm90ICogcG9zOwogICAgCiAgICBmbG9hdCBoZWlnaHQgPSB0aWxlQ291bnQueSAqIHRpbGVTaXplLnk7CiAgICBmbG9hdCBhID0gY29zKCBBTFBIQSApICogKGhlaWdodC8yLik7CiAgICAKICAgIHBvcy55IC09IGE7CgogICAgcG9zLnkgKz0gaGVpZ2h0LzQuOyAgICAKLy8gICAgcG9zLnogKz0gaGVpZ2h0LzIuOyAgICAKICAgIAovLyAgICBwb3MueSAtPSAgdGlsZUNvdW50LnkgLyAyLjsKLy8KLy8gICAgcG9zLnogKz0gdGlsZUNvdW50Lnk7Ci8vICAgIHBvcy55IC09IHRpbGVDb3VudC55LzIuOwovLyAgICAKLy8gICAgcG9zLnkgKz0gdGlsZUNvdW50LnkvMi47Ci8vCi8vCiAgICBmbG9hdCB6b29tID0gMS47Ci8vCi8vCiAgICBmbG9hdCBmb250UmF0aW8gPSB0aWxlU2l6ZS54L3RpbGVTaXplLnk7CiAgICBmbG9hdCBzY3JlZW5SYXRpbyA9ICh0aWxlQ291bnQueCp0aWxlU2l6ZS54KS8oKHRpbGVDb3VudC55KSp0aWxlU2l6ZS55KTsKICAgIGZsb2F0IHJhdGlvID0gc2NyZWVuUmF0aW8gLyBmb250UmF0aW87CgogICAgZmxvYXQgc2NhbGVXaWR0aCA9IHJhdGlvICogMi4gLyB0aWxlQ291bnQueDsKICAgIGZsb2F0IHNjYWxlSGVpZ2h0ID0gICAgICAgIDIuIC8gdGlsZUNvdW50Lnk7CiAgICAKCgogICAgaWYgKCBzY2FsZVdpZHRoIDwgc2NhbGVIZWlnaHQvMi4gKSB7CiAgICAgICAgem9vbSA9IHNjYWxlV2lkdGg7CiAgICB9IGVsc2UgeyAgICAgICAgICAgIAogICAgICAgIHpvb20gPSBzY2FsZUhlaWdodDsKICAgIH0KCi8vICAgIGZsb2F0IGhlaWdodCA9IHRpbGVTaXplLnkgKiB0aWxlQ291bnQueTsKLy8KLy8gICAgZmxvYXQgYSA9IDIuICogc2luKEFMUEhBKSAqIGhlaWdodC8yLjsKLy8gICAgCi8vICAgIHBvcy54eXogKz0gdmVjMygwLiwwLiwwLik7Ci8vCi8vICAgIHpvb20gPSAxLi8xMC47Ci8vCi8vICAgIHBvcy54eXogKj0gem9vbTsKICAvLyAgcG9zLnh5eiAqPSBtb2RlbFswXVswXTsgIAovLwoKCi8vLyAgICB6b29tID0gMi47ICAKICAgIHBvcy54eXogKj0gem9vbTsKLy8gICAgcG9zLnh5eiAqPSBtb2RlbFswXVswXTsKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBwb3M7Cn0KCg==
 `,
 
 
 
 
-"grid/cylinder":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-
-bool DEBUG = debugFlag > 0.0;
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
-float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
-
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-
-//    float c = tileCount.x * tileSize.x;
-    float c = tileCount.y * tileSize.y;
-    
-
-    // c = 2π * r <=> c/2π = r //
-    float r = 1. * c / TAU;
-    
-    float a;
-//    a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
-    a = (tileCoord.y / (0.5*tileCount.y + 2.)) * PI - PI/8.;
-
-    a += PI/4.;
-//    a += now/10.;
-//    a += ease1(now/2.);
-    
-
-    pos = rotationMatrix(vec3(1.,0.,0.), a*1.) * pos;
-    
-
-    r *= 1.1;
-    pos.z +=  cos(a) * r;
-    pos.y +=  sin(a) * r;
-    pos.x += (tileCoord.x * tileSize.x);
-
-
-
-
-    
-    vec3 axis = vec3(-1.,0.,0.);
-    mat4 rot = rotationMatrix(axis, -PI/2.);
-    pos = rot * pos;
-
-
-//    pos.xyz *= 2.5;
-    
-    gl_Position = projection * view * model * pos;
-}
+"grid/cylinder.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7Cgp1bmlmb3JtIGZsb2F0IG5vdzsKdW5pZm9ybSBmbG9hdCBzY3JvbGxlcjsKdW5pZm9ybSBmbG9hdCBkZWJ1Z0ZsYWc7CgphdHRyaWJ1dGUgdmVjMyB2ZXJ0ZXg7CmF0dHJpYnV0ZSB2ZWMyIHRleENvb3JkOwphdHRyaWJ1dGUgdmVjMiB0aWxlQ29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIGdyaWRDb29yZDsKCgp2YXJ5aW5nIHZlYzIgdlRleENvb3JkOwp2YXJ5aW5nIHZlYzIgdlRpbGVDb29yZDsKdmFyeWluZyB2ZWMyIHZHcmlkQ29vcmQ7CnZhcnlpbmcgZmxvYXQgdlNjcm9sbGVyOwoKCmJvb2wgREVCVUcgPSBkZWJ1Z0ZsYWcgPiAwLjA7CgpmbG9hdCBQSSA9IDMuMTQxNTkyNjUzNTg5NzkzMjM4NDYyNjQzMzgzMjc5NTAyODg0MTk3MTY5Mzk5Mzc1MTA1ODIwOTc0OTQ0NTkyMDsKZmxvYXQgVEFVPSA2LjI4MzE4NTMwNzE3OTU4NjQ3NjkyNTI4Njc2NjU1OTAwNTc2ODM5NDMzODc5ODc1MDIxMTY0MTk0OTg4OTE4NDA7CmZsb2F0IGVhc2UxKGZsb2F0IHgpICAgICAgICAgIHsgcmV0dXJuIDAuNSAqIGNvcyggICAgIHggKyBQSS8yLjAgKSArIDAuNTsgfQoKCm1hdDQgcm90YXRpb25NYXRyaXgodmVjMyBheGlzLCBmbG9hdCBhbmdsZSkKewogICAgdmVjMyBhICA9IG5vcm1hbGl6ZShheGlzKTsKICAgIGZsb2F0IHMgPSBzaW4oYW5nbGUpOwogICAgZmxvYXQgYyA9IGNvcyhhbmdsZSk7CiAgICBmbG9hdCBvYyA9IDEuMCAtIGM7CiAgICAKICAgIHJldHVybiBtYXQ0KAogICAgICAgIG9jKmEueCphLnggKyBjLCAgICAgIG9jKmEueCphLnkgLSBhLnoqcywgIG9jKmEueiphLnggKyBhLnkqcywgIDAuMCwKICAgICAgICBvYyphLngqYS55ICsgYS56KnMsICBvYyphLnkqYS55ICsgYywgICAgICBvYyphLnkqYS56IC0gYS54KnMsICAwLjAsCiAgICAgICAgb2MqYS56KmEueCAtIGEueSpzLCAgb2MqYS55KmEueiArIGEueCpzLCAgb2MqYS56KmEueiArIGMsICAgICAgMC4wLAogICAgICAgICAgICAgICAgICAgICAgIDAuMCwgICAgICAgICAgICAgICAgIDAuMCwgICAgICAgICAgICAgICAgIDAuMCwgIDEuMAogICAgKTsKfQoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgdlRpbGVDb29yZCA9IHRpbGVDb29yZDsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICB2U2Nyb2xsZXIgPSBhYnMoc2Nyb2xsZXIpOwogICAgCiAgICB2ZWM0IHBvcyA9IHZlYzQodmVydGV4LDEpOwoKCi8vICAgIGZsb2F0IGMgPSB0aWxlQ291bnQueCAqIHRpbGVTaXplLng7CiAgICBmbG9hdCBjID0gdGlsZUNvdW50LnkgKiB0aWxlU2l6ZS55OwogICAgCgogICAgLy8gYyA9IDLPgCAqIHIgPD0+IGMvMs+AID0gciAvLwogICAgZmxvYXQgciA9IDEuICogYyAvIFRBVTsKICAgIAogICAgZmxvYXQgYTsKLy8gICAgYSA9ICh0aWxlQ29vcmQueCAvICgwLjUqdGlsZUNvdW50LnggKyAyLikpICogUEkgLSBQSS84LjsKICAgIGEgPSAodGlsZUNvb3JkLnkgLyAoMC41KnRpbGVDb3VudC55ICsgMi4pKSAqIFBJIC0gUEkvOC47CgogICAgYSArPSBQSS80LjsKLy8gICAgYSArPSBub3cvMTAuOwovLyAgICBhICs9IGVhc2UxKG5vdy8yLik7CiAgICAKCiAgICBwb3MgPSByb3RhdGlvbk1hdHJpeCh2ZWMzKDEuLDAuLDAuKSwgYSoxLikgKiBwb3M7CiAgICAKCiAgICByICo9IDEuMTsKICAgIHBvcy56ICs9ICBjb3MoYSkgKiByOwogICAgcG9zLnkgKz0gIHNpbihhKSAqIHI7CiAgICBwb3MueCArPSAodGlsZUNvb3JkLnggKiB0aWxlU2l6ZS54KTsKCgoKCiAgICAKICAgIHZlYzMgYXhpcyA9IHZlYzMoLTEuLDAuLDAuKTsKICAgIG1hdDQgcm90ID0gcm90YXRpb25NYXRyaXgoYXhpcywgLVBJLzIuKTsKICAgIHBvcyA9IHJvdCAqIHBvczsKCgovLyAgICBwb3MueHl6ICo9IDIuNTsKICAgIAogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uICogdmlldyAqIG1vZGVsICogcG9zOwp9Cg==
 `,
 
 
 
 
-"grid/def":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-
-    gl_Position = projection * view * model * pos;
-}
-
+"grid/def.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgdlRpbGVDb29yZCA9IHRpbGVDb29yZDsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICB2U2Nyb2xsZXIgPSBhYnMoc2Nyb2xsZXIpOwogICAgCiAgICB2ZWM0IHBvcyA9IHZlYzQodmVydGV4LDEpOwoKICAgIHBvcy55ICs9IHNjcm9sbGVyOwogICAgcG9zLnggKz0gKHRpbGVDb29yZC54ICogdGlsZVNpemUueCk7CiAgICBwb3MueSArPSAodGlsZUNvb3JkLnkgKiB0aWxlU2l6ZS55KTsKCiAgICBwb3MueCArPSAoIHRpbGVPZmZzZXQueCAqIHRpbGVTaXplLngpOwogICAgcG9zLnkgKz0gKCB0aWxlT2Zmc2V0LnkgKiB0aWxlU2l6ZS55KTsKCiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiBwb3M7Cn0KCg==
 `,
 
 
 
 
-"grid/disk-bent":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
-float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
-
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-
-    float RADIUS = 10.;
-    float R0 = 5.0;
-    float rad = RADIUS / (tileCount.y + R0); 
-
-
-    float delta = 0.0;
-//    delta += now/10.;
-    delta += ease1(now/4.) - 0.5;
-    
-
-    float ARC = TAU;
-    float A0 = 2.0;
-  
-    float alpha,gamma;
-    
-    float row = (-tileCoord.y+tileCount.y/2.);
-
-
-    alpha = ARC / (A0 + tileCount.x);
-    gamma += delta;
-    gamma += ( ARC / (tileCount.x+A0)) * tileCoord.x;
-
-
-    
-    float r0 = R0 + (rad * row ) ;
-    float r1 = r0 + rad;
-
-    r0 -= (scroller*rad);
-    r1 -= (scroller*rad);
-
-    
-    vec2 A = vec2( cos(gamma+alpha)*r0, sin(gamma+alpha)*r0);
-    vec2 B = vec2( cos(gamma+alpha)*r1, sin(gamma+alpha)*r1);
-    vec2 C = vec2( cos(gamma      )*r1, sin(gamma      )*r1);
-    vec2 D = vec2( cos(gamma      )*r0, sin(gamma      )*r0);
-    
-   
-   
-    if        ( pos.x > 0. && pos.y > 0. ) {
-        pos.xy = A;
-        pos.z +=  tileSize.x*(scroller+tileCoord.y+1.)/tileCount.y * 16.;
-    } else if ( pos.x > 0. && pos.y < 0. ) {
-        pos.xy = B;
-        pos.z +=  tileSize.x*(scroller+tileCoord.y   )/tileCount.y * 16.;
-    } else if ( pos.x < 0. && pos.y > 0. ) {
-        pos.xy = D;
-        pos.z +=  tileSize.x*(scroller+tileCoord.y+1.)/tileCount.y * 16.;
-    } else if ( pos.x < 0. && pos.y < 0. ) {
-        pos.xy = C;
-        pos.z +=  tileSize.x*(scroller+tileCoord.y   )/tileCount.y * 16.;
-    }
-
-    pos.z +=  tileCoord.x/tileCount.x * 8. ;
-
-
-
-    mat4 R = mat4(1.0);
-    R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
-    R *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
-    pos = R * pos;
-
-    gl_Position = projection * view * model * pos;
-}
-
+"grid/disk-bent.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCmZsb2F0IFBJID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwpmbG9hdCBUQVU9IDYuMjgzMTg1MzA3MTc5NTg2NDc2OTI1Mjg2NzY2NTU5MDA1NzY4Mzk0MzM4Nzk4NzUwMjExNjQxOTQ5ODg5MTg0MDsKZmxvYXQgZWFzZTEoZmxvYXQgeCkgICAgICAgICAgeyByZXR1cm4gMC41ICogY29zKCAgICAgeCArIFBJLzIuMCApICsgMC41OyB9CgptYXQ0IHJvdGF0aW9uTWF0cml4KHZlYzMgYXhpcywgZmxvYXQgYW5nbGUpCnsKICAgIHZlYzMgYSAgPSBub3JtYWxpemUoYXhpcyk7CiAgICBmbG9hdCBzID0gc2luKGFuZ2xlKTsKICAgIGZsb2F0IGMgPSBjb3MoYW5nbGUpOwogICAgZmxvYXQgb2MgPSAxLjAgLSBjOwogICAgCiAgICByZXR1cm4gbWF0NCgKICAgICAgICBvYyphLngqYS54ICsgYywgICAgICBvYyphLngqYS55IC0gYS56KnMsICBvYyphLnoqYS54ICsgYS55KnMsICAwLjAsCiAgICAgICAgb2MqYS54KmEueSArIGEueipzLCAgb2MqYS55KmEueSArIGMsICAgICAgb2MqYS55KmEueiAtIGEueCpzLCAgMC4wLAogICAgICAgIG9jKmEueiphLnggLSBhLnkqcywgIG9jKmEueSphLnogKyBhLngqcywgIG9jKmEueiphLnogKyBjLCAgICAgIDAuMCwKICAgICAgICAgICAgICAgICAgICAgICAwLjAsICAgICAgICAgICAgICAgICAwLjAsICAgICAgICAgICAgICAgICAwLjAsICAxLjAKICAgICk7Cn0KCgoKdm9pZCBtYWluKCkgewogICAgdlRleENvb3JkID0gdGV4Q29vcmQ7CiAgICB2VGlsZUNvb3JkID0gdGlsZUNvb3JkOwogICAgdkdyaWRDb29yZCA9IGdyaWRDb29yZDsKICAgIHZTY3JvbGxlciA9IGFicyhzY3JvbGxlcik7CiAgICAKICAgIHZlYzQgcG9zID0gdmVjNCh2ZXJ0ZXgsMSk7CgoKICAgIGZsb2F0IFJBRElVUyA9IDEwLjsKICAgIGZsb2F0IFIwID0gNS4wOwogICAgZmxvYXQgcmFkID0gUkFESVVTIC8gKHRpbGVDb3VudC55ICsgUjApOyAKCgogICAgZmxvYXQgZGVsdGEgPSAwLjA7Ci8vICAgIGRlbHRhICs9IG5vdy8xMC47CiAgICBkZWx0YSArPSBlYXNlMShub3cvNC4pIC0gMC41OwogICAgCgogICAgZmxvYXQgQVJDID0gVEFVOwogICAgZmxvYXQgQTAgPSAyLjA7CiAgCiAgICBmbG9hdCBhbHBoYSxnYW1tYTsKICAgIAogICAgZmxvYXQgcm93ID0gKC10aWxlQ29vcmQueSt0aWxlQ291bnQueS8yLik7CgoKICAgIGFscGhhID0gQVJDIC8gKEEwICsgdGlsZUNvdW50LngpOwogICAgZ2FtbWEgKz0gZGVsdGE7CiAgICBnYW1tYSArPSAoIEFSQyAvICh0aWxlQ291bnQueCtBMCkpICogdGlsZUNvb3JkLng7CgoKICAgIAogICAgZmxvYXQgcjAgPSBSMCArIChyYWQgKiByb3cgKSA7CiAgICBmbG9hdCByMSA9IHIwICsgcmFkOwoKICAgIHIwIC09IChzY3JvbGxlcipyYWQpOwogICAgcjEgLT0gKHNjcm9sbGVyKnJhZCk7CgogICAgCiAgICB2ZWMyIEEgPSB2ZWMyKCBjb3MoZ2FtbWErYWxwaGEpKnIwLCBzaW4oZ2FtbWErYWxwaGEpKnIwKTsKICAgIHZlYzIgQiA9IHZlYzIoIGNvcyhnYW1tYSthbHBoYSkqcjEsIHNpbihnYW1tYSthbHBoYSkqcjEpOwogICAgdmVjMiBDID0gdmVjMiggY29zKGdhbW1hICAgICAgKSpyMSwgc2luKGdhbW1hICAgICAgKSpyMSk7CiAgICB2ZWMyIEQgPSB2ZWMyKCBjb3MoZ2FtbWEgICAgICApKnIwLCBzaW4oZ2FtbWEgICAgICApKnIwKTsKICAgIAogICAKICAgCiAgICBpZiAgICAgICAgKCBwb3MueCA+IDAuICYmIHBvcy55ID4gMC4gKSB7CiAgICAgICAgcG9zLnh5ID0gQTsKICAgICAgICBwb3MueiArPSAgdGlsZVNpemUueCooc2Nyb2xsZXIrdGlsZUNvb3JkLnkrMS4pL3RpbGVDb3VudC55ICogMTYuOwogICAgfSBlbHNlIGlmICggcG9zLnggPiAwLiAmJiBwb3MueSA8IDAuICkgewogICAgICAgIHBvcy54eSA9IEI7CiAgICAgICAgcG9zLnogKz0gIHRpbGVTaXplLngqKHNjcm9sbGVyK3RpbGVDb29yZC55ICAgKS90aWxlQ291bnQueSAqIDE2LjsKICAgIH0gZWxzZSBpZiAoIHBvcy54IDwgMC4gJiYgcG9zLnkgPiAwLiApIHsKICAgICAgICBwb3MueHkgPSBEOwogICAgICAgIHBvcy56ICs9ICB0aWxlU2l6ZS54KihzY3JvbGxlcit0aWxlQ29vcmQueSsxLikvdGlsZUNvdW50LnkgKiAxNi47CiAgICB9IGVsc2UgaWYgKCBwb3MueCA8IDAuICYmIHBvcy55IDwgMC4gKSB7CiAgICAgICAgcG9zLnh5ID0gQzsKICAgICAgICBwb3MueiArPSAgdGlsZVNpemUueCooc2Nyb2xsZXIrdGlsZUNvb3JkLnkgICApL3RpbGVDb3VudC55ICogMTYuOwogICAgfQoKICAgIHBvcy56ICs9ICB0aWxlQ29vcmQueC90aWxlQ291bnQueCAqIDguIDsKCgoKICAgIG1hdDQgUiA9IG1hdDQoMS4wKTsKICAgIFIgPSByb3RhdGlvbk1hdHJpeCh2ZWMzKDEuLDAuLDAuKSwgc2luKG5vdy8yLikgKiBQSS8xNS4pOwogICAgUiAqPSByb3RhdGlvbk1hdHJpeCh2ZWMzKDAuLDEuLDAuKSwgc2luKG5vdy8yLikgKiBQSS8xMy4pOwogICAgcG9zID0gUiAqIHBvczsKCiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiBwb3M7Cn0KCg==
 `,
 
 
 
 
-"grid/disk":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
-float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
-
-
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-
-    float RADIUS = 10.;
-    float R0 = 4.0;
-    float rad = RADIUS / (tileCount.y + R0); 
-
-
-    float delta = 0.0;
-//    delta += now/10.;
-    delta += ease1(now/2.) - 0.5;
-    
-
-    float ARC = TAU;
-    float A0 = 2.0;
-  
-    float alpha,gamma;
-    
-    float row = (-tileCoord.y+tileCount.y/2.);
-
-
-    alpha = ARC / (A0 + tileCount.x);
-    gamma += delta;
-    gamma += ( ARC / (tileCount.x+A0)) * tileCoord.x;
-
-
-    
-    float r0 = R0 + (rad * row ) ;
-    float r1 = r0 + rad;
-
-    r0 -= (scroller*rad);
-    r1 -= (scroller*rad);
-
-    
-    vec2 A = vec2( cos(gamma+alpha)*r0, sin(gamma+alpha)*r0);
-    vec2 B = vec2( cos(gamma+alpha)*r1, sin(gamma+alpha)*r1);
-    vec2 C = vec2( cos(gamma      )*r1, sin(gamma      )*r1);
-    vec2 D = vec2( cos(gamma      )*r0, sin(gamma      )*r0);
-    
-   
-   
-    if        ( pos.x > 0. && pos.y > 0. ) {
-        pos.xy = A;
-    } else if ( pos.x > 0. && pos.y < 0. ) {
-        pos.xy = B;
-    } else if ( pos.x < 0. && pos.y > 0. ) {
-        pos.xy = D;
-    } else if ( pos.x < 0. && pos.y < 0. ) {
-        pos.xy = C;
-    }
-
-    gl_Position = projection * view * model * pos;
-}
-
+"grid/disk.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCmZsb2F0IFBJID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwpmbG9hdCBUQVU9IDYuMjgzMTg1MzA3MTc5NTg2NDc2OTI1Mjg2NzY2NTU5MDA1NzY4Mzk0MzM4Nzk4NzUwMjExNjQxOTQ5ODg5MTg0MDsKZmxvYXQgZWFzZTEoZmxvYXQgeCkgICAgICAgICAgeyByZXR1cm4gMC41ICogY29zKCAgICAgeCArIFBJLzIuMCApICsgMC41OyB9CgoKCgp2b2lkIG1haW4oKSB7CiAgICB2VGV4Q29vcmQgPSB0ZXhDb29yZDsKICAgIHZUaWxlQ29vcmQgPSB0aWxlQ29vcmQ7CiAgICB2R3JpZENvb3JkID0gZ3JpZENvb3JkOwogICAgdlNjcm9sbGVyID0gYWJzKHNjcm9sbGVyKTsKICAgIAogICAgdmVjNCBwb3MgPSB2ZWM0KHZlcnRleCwxKTsKCgogICAgZmxvYXQgUkFESVVTID0gMTAuOwogICAgZmxvYXQgUjAgPSA0LjA7CiAgICBmbG9hdCByYWQgPSBSQURJVVMgLyAodGlsZUNvdW50LnkgKyBSMCk7IAoKCiAgICBmbG9hdCBkZWx0YSA9IDAuMDsKLy8gICAgZGVsdGEgKz0gbm93LzEwLjsKICAgIGRlbHRhICs9IGVhc2UxKG5vdy8yLikgLSAwLjU7CiAgICAKCiAgICBmbG9hdCBBUkMgPSBUQVU7CiAgICBmbG9hdCBBMCA9IDIuMDsKICAKICAgIGZsb2F0IGFscGhhLGdhbW1hOwogICAgCiAgICBmbG9hdCByb3cgPSAoLXRpbGVDb29yZC55K3RpbGVDb3VudC55LzIuKTsKCgogICAgYWxwaGEgPSBBUkMgLyAoQTAgKyB0aWxlQ291bnQueCk7CiAgICBnYW1tYSArPSBkZWx0YTsKICAgIGdhbW1hICs9ICggQVJDIC8gKHRpbGVDb3VudC54K0EwKSkgKiB0aWxlQ29vcmQueDsKCgogICAgCiAgICBmbG9hdCByMCA9IFIwICsgKHJhZCAqIHJvdyApIDsKICAgIGZsb2F0IHIxID0gcjAgKyByYWQ7CgogICAgcjAgLT0gKHNjcm9sbGVyKnJhZCk7CiAgICByMSAtPSAoc2Nyb2xsZXIqcmFkKTsKCiAgICAKICAgIHZlYzIgQSA9IHZlYzIoIGNvcyhnYW1tYSthbHBoYSkqcjAsIHNpbihnYW1tYSthbHBoYSkqcjApOwogICAgdmVjMiBCID0gdmVjMiggY29zKGdhbW1hK2FscGhhKSpyMSwgc2luKGdhbW1hK2FscGhhKSpyMSk7CiAgICB2ZWMyIEMgPSB2ZWMyKCBjb3MoZ2FtbWEgICAgICApKnIxLCBzaW4oZ2FtbWEgICAgICApKnIxKTsKICAgIHZlYzIgRCA9IHZlYzIoIGNvcyhnYW1tYSAgICAgICkqcjAsIHNpbihnYW1tYSAgICAgICkqcjApOwogICAgCiAgIAogICAKICAgIGlmICAgICAgICAoIHBvcy54ID4gMC4gJiYgcG9zLnkgPiAwLiApIHsKICAgICAgICBwb3MueHkgPSBBOwogICAgfSBlbHNlIGlmICggcG9zLnggPiAwLiAmJiBwb3MueSA8IDAuICkgewogICAgICAgIHBvcy54eSA9IEI7CiAgICB9IGVsc2UgaWYgKCBwb3MueCA8IDAuICYmIHBvcy55ID4gMC4gKSB7CiAgICAgICAgcG9zLnh5ID0gRDsKICAgIH0gZWxzZSBpZiAoIHBvcy54IDwgMC4gJiYgcG9zLnkgPCAwLiApIHsKICAgICAgICBwb3MueHkgPSBDOwogICAgfQoKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHBvczsKfQoK
 `,
 
 
 
 
-"grid/flag":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-uniform float downward;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vScroller = abs(scroller);
-    vGridCoord = gridCoord;
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-
-    float F = 0.75;
-    float x = pos.x;
-    float y = pos.y;
-    
-    float freq = -1./24.;
-    pos.y += F * cos( 2. * freq * x * PI + now         );
-    pos.x += F * cos( 3. * freq * y * PI + now + PI/2. );
-	pos.z += F * cos( 1. * freq * (x+y) * PI + now + PI/2. );
-
-    gl_Position = projection * view * model * pos;
-}
-
+"grid/flag.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IGRvd253YXJkOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwphdHRyaWJ1dGUgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGlsZUNvb3JkOwphdHRyaWJ1dGUgdmVjMiBncmlkQ29vcmQ7CgoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKdmFyeWluZyB2ZWMyIHZUaWxlQ29vcmQ7CnZhcnlpbmcgdmVjMiB2R3JpZENvb3JkOwoKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKZmxvYXQgUEkgPSAzLjE0MTU5MjY1MzU4OTc5MzIzODQ2MjY0MzM4MzI3OTUwMjg4NDE5NzE2OTM5OTM3NTEwNTgyMDk3NDk0NDU5MjA7CgoKdm9pZCBtYWluKCkgewogICAgdlRleENvb3JkID0gdGV4Q29vcmQ7CiAgICB2VGlsZUNvb3JkID0gdGlsZUNvb3JkOwogICAgdlNjcm9sbGVyID0gYWJzKHNjcm9sbGVyKTsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICAKICAgIHZlYzQgcG9zID0gdmVjNCh2ZXJ0ZXgsMSk7CgogICAgcG9zLnkgKz0gc2Nyb2xsZXI7CiAgICBwb3MueCArPSAodGlsZUNvb3JkLnggKiB0aWxlU2l6ZS54KTsKICAgIHBvcy55ICs9ICh0aWxlQ29vcmQueSAqIHRpbGVTaXplLnkpOwoKICAgIHBvcy54ICs9ICggdGlsZU9mZnNldC54ICogdGlsZVNpemUueCk7CiAgICBwb3MueSArPSAoIHRpbGVPZmZzZXQueSAqIHRpbGVTaXplLnkpOwoKICAgIGZsb2F0IEYgPSAwLjc1OwogICAgZmxvYXQgeCA9IHBvcy54OwogICAgZmxvYXQgeSA9IHBvcy55OwogICAgCiAgICBmbG9hdCBmcmVxID0gLTEuLzI0LjsKICAgIHBvcy55ICs9IEYgKiBjb3MoIDIuICogZnJlcSAqIHggKiBQSSArIG5vdyAgICAgICAgICk7CiAgICBwb3MueCArPSBGICogY29zKCAzLiAqIGZyZXEgKiB5ICogUEkgKyBub3cgKyBQSS8yLiApOwoJcG9zLnogKz0gRiAqIGNvcyggMS4gKiBmcmVxICogKHgreSkgKiBQSSArIG5vdyArIFBJLzIuICk7CgogICAgZ2xfUG9zaXRpb24gPSBwcm9qZWN0aW9uICogdmlldyAqIG1vZGVsICogcG9zOwp9Cgo=
 `,
 
 
 
 
-"grid/foo":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-
-bool DEBUG = debugFlag > 0.0;
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
-float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
-
-
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    vec3 a  = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(
-        oc*a.x*a.x + c,      oc*a.x*a.y - a.z*s,  oc*a.z*a.x + a.y*s,  0.0,
-        oc*a.x*a.y + a.z*s,  oc*a.y*a.y + c,      oc*a.y*a.z - a.x*s,  0.0,
-        oc*a.z*a.x - a.y*s,  oc*a.y*a.z + a.x*s,  oc*a.z*a.z + c,      0.0,
-                       0.0,                 0.0,                 0.0,  1.0
-    );
-}
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-
-    float c = tileCount.x * tileSize.x;
-
-    // c = 2π * r <=> c/2π = r //
-    float r = c / TAU;
-    
-    float a;
-    a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
-
-    a += now/10.;
-    
-    
-    a += ease1(now/2.);
-
-    pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
-    pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
-    
-
-    pos.x +=  cos(a) * r;
-    pos.y +=  sin(a) * r;
-
-
-    pos.z -= tileCoord.y;
-    pos.z -= scroller;
-
-
-    
-    vec3 axis = vec3(-1.,-1.,0.);
-    mat4 rot = rotationMatrix(axis, PI/2.);
-    pos = rot * pos;
-
-//    pos.x += (tileCoord.x * tileSize.x);
-//    pos.y += (tileCoord.y * tileSize.y);
-    
-        
-    
-
-    
-    gl_Position = projection * view * model * pos;
-}
+"grid/foo.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7Cgp1bmlmb3JtIGZsb2F0IG5vdzsKdW5pZm9ybSBmbG9hdCBzY3JvbGxlcjsKdW5pZm9ybSBmbG9hdCBkZWJ1Z0ZsYWc7CgphdHRyaWJ1dGUgdmVjMyB2ZXJ0ZXg7CgphdHRyaWJ1dGUgdmVjMiB0ZXhDb29yZDsKYXR0cmlidXRlIHZlYzIgdGlsZUNvb3JkOwphdHRyaWJ1dGUgdmVjMiBncmlkQ29vcmQ7CgoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKdmFyeWluZyB2ZWMyIHZUaWxlQ29vcmQ7CnZhcnlpbmcgdmVjMiB2R3JpZENvb3JkOwp2YXJ5aW5nIGZsb2F0IHZTY3JvbGxlcjsKCgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKZmxvYXQgUEkgPSAzLjE0MTU5MjY1MzU4OTc5MzIzODQ2MjY0MzM4MzI3OTUwMjg4NDE5NzE2OTM5OTM3NTEwNTgyMDk3NDk0NDU5MjA7CmZsb2F0IFRBVT0gNi4yODMxODUzMDcxNzk1ODY0NzY5MjUyODY3NjY1NTkwMDU3NjgzOTQzMzg3OTg3NTAyMTE2NDE5NDk4ODkxODQwOwpmbG9hdCBlYXNlMShmbG9hdCB4KSAgICAgICAgICB7IHJldHVybiAwLjUgKiBjb3MoICAgICB4ICsgUEkvMi4wICkgKyAwLjU7IH0KCgptYXQ0IHJvdGF0aW9uTWF0cml4KHZlYzMgYXhpcywgZmxvYXQgYW5nbGUpCnsKICAgIHZlYzMgYSAgPSBub3JtYWxpemUoYXhpcyk7CiAgICBmbG9hdCBzID0gc2luKGFuZ2xlKTsKICAgIGZsb2F0IGMgPSBjb3MoYW5nbGUpOwogICAgZmxvYXQgb2MgPSAxLjAgLSBjOwogICAgCiAgICByZXR1cm4gbWF0NCgKICAgICAgICBvYyphLngqYS54ICsgYywgICAgICBvYyphLngqYS55IC0gYS56KnMsICBvYyphLnoqYS54ICsgYS55KnMsICAwLjAsCiAgICAgICAgb2MqYS54KmEueSArIGEueipzLCAgb2MqYS55KmEueSArIGMsICAgICAgb2MqYS55KmEueiAtIGEueCpzLCAgMC4wLAogICAgICAgIG9jKmEueiphLnggLSBhLnkqcywgIG9jKmEueSphLnogKyBhLngqcywgIG9jKmEueiphLnogKyBjLCAgICAgIDAuMCwKICAgICAgICAgICAgICAgICAgICAgICAwLjAsICAgICAgICAgICAgICAgICAwLjAsICAgICAgICAgICAgICAgICAwLjAsICAxLjAKICAgICk7Cn0KCgp2b2lkIG1haW4oKSB7CiAgICB2VGV4Q29vcmQgPSB0ZXhDb29yZDsKICAgIHZUaWxlQ29vcmQgPSB0aWxlQ29vcmQ7CiAgICB2R3JpZENvb3JkID0gZ3JpZENvb3JkOwogICAgdlNjcm9sbGVyID0gYWJzKHNjcm9sbGVyKTsKICAgIAogICAgdmVjNCBwb3MgPSB2ZWM0KHZlcnRleCwxKTsKCgogICAgZmxvYXQgYyA9IHRpbGVDb3VudC54ICogdGlsZVNpemUueDsKCiAgICAvLyBjID0gMs+AICogciA8PT4gYy8yz4AgPSByIC8vCiAgICBmbG9hdCByID0gYyAvIFRBVTsKICAgIAogICAgZmxvYXQgYTsKICAgIGEgPSAodGlsZUNvb3JkLnggLyAoMC41KnRpbGVDb3VudC54ICsgMi4pKSAqIFBJIC0gUEkvOC47CgogICAgYSArPSBub3cvMTAuOwogICAgCiAgICAKICAgIGEgKz0gZWFzZTEobm93LzIuKTsKCiAgICBwb3MgPSByb3RhdGlvbk1hdHJpeCh2ZWMzKDEuLDAuLDAuKSwgUEkvMi4pICogcG9zOwogICAgcG9zID0gcm90YXRpb25NYXRyaXgodmVjMygwLiwwLiwxLiksIC1hLVBJLzIuKSAqIHBvczsKICAgIAoKICAgIHBvcy54ICs9ICBjb3MoYSkgKiByOwogICAgcG9zLnkgKz0gIHNpbihhKSAqIHI7CgoKICAgIHBvcy56IC09IHRpbGVDb29yZC55OwogICAgcG9zLnogLT0gc2Nyb2xsZXI7CgoKICAgIAogICAgdmVjMyBheGlzID0gdmVjMygtMS4sLTEuLDAuKTsKICAgIG1hdDQgcm90ID0gcm90YXRpb25NYXRyaXgoYXhpcywgUEkvMi4pOwogICAgcG9zID0gcm90ICogcG9zOwoKLy8gICAgcG9zLnggKz0gKHRpbGVDb29yZC54ICogdGlsZVNpemUueCk7Ci8vICAgIHBvcy55ICs9ICh0aWxlQ29vcmQueSAqIHRpbGVTaXplLnkpOwogICAgCiAgICAgICAgCiAgICAKCiAgICAKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHBvczsKfQo=
 `,
 
 
 
 
-"grid/pipe":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
-float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
-
-
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    float offset = PI/8.;
-
-    float ARC = PI - offset;
-    float RADIUS = tileCount.y/2. * tileSize.y /2.;
-
-
-    
-
-    float delta = 0.0;
-    float alpha,beta;
-    
-
-    alpha = -1. * ARC / (tileCount.y);
-    delta = PI/2. - offset + alpha;
-    beta = delta + ( alpha * (scroller+tileCoord.y) ) ;
-
-
-    float r = RADIUS * 2.;
-    
-    vec3 A = vec3( (tileCoord.x+1.)*tileSize.x, cos(alpha+beta)*r, sin(alpha+beta)*r);
-    vec3 B = vec3( (tileCoord.x+1.)*tileSize.x, cos(beta)*r,       sin(beta)*r);
-    vec3 C = vec3( tileCoord.x*tileSize.x,      cos(alpha+beta)*r, sin(alpha+beta)*r);
-    vec3 D = vec3( tileCoord.x*tileSize.x,      cos(beta)*r,       sin(beta)*r);
-    
-   
-    if ( pos.x > 0. && pos.y > 0. ) {
-        pos.xyz = A;
-    } else if ( pos.x > 0. && pos.y < 0. ) {
-        pos.xyz = B;
-    } else if ( pos.x < 0. && pos.y > 0. ) {
-        pos.xyz = C;
-    } else if ( pos.x < 0. && pos.y < 0. ) {
-        pos.xyz = D;
-    }
-
-    float zoom = 0.8;
-//
-//
-    float fontRatio = tileSize.x/tileSize.y;
-    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
-    float ratio = screenRatio / fontRatio;
-
-    float scaleWidth = ratio * 2. / tileCount.x;
-    float scaleHeight =        2. / tileCount.y;
-    
-
-
-//    if ( scaleWidth < scaleHeight/2. ) {
-//        zoom = scaleWidth;
-//    } else {            
-//        zoom = scaleHeight;
-//    }
-    zoom = scaleWidth ;
-
-    pos.xyz *= zoom;
-//    pos.xyz *= model[0][0]  * 0.8;
-
-    gl_Position = projection * view * pos;
-}
-
+"grid/pipe.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCmZsb2F0IFBJID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwpmbG9hdCBUQVU9IDYuMjgzMTg1MzA3MTc5NTg2NDc2OTI1Mjg2NzY2NTU5MDA1NzY4Mzk0MzM4Nzk4NzUwMjExNjQxOTQ5ODg5MTg0MDsKZmxvYXQgZWFzZTEoZmxvYXQgeCkgICAgICAgICAgeyByZXR1cm4gMC41ICogY29zKCAgICAgeCArIFBJLzIuMCApICsgMC41OyB9CgoKCgp2b2lkIG1haW4oKSB7CiAgICB2VGV4Q29vcmQgPSB0ZXhDb29yZDsKICAgIHZUaWxlQ29vcmQgPSB0aWxlQ29vcmQ7CiAgICB2R3JpZENvb3JkID0gZ3JpZENvb3JkOwogICAgdlNjcm9sbGVyID0gYWJzKHNjcm9sbGVyKTsKICAgIAogICAgdmVjNCBwb3MgPSB2ZWM0KHZlcnRleCwxKTsKCiAgICBmbG9hdCBvZmZzZXQgPSBQSS84LjsKCiAgICBmbG9hdCBBUkMgPSBQSSAtIG9mZnNldDsKICAgIGZsb2F0IFJBRElVUyA9IHRpbGVDb3VudC55LzIuICogdGlsZVNpemUueSAvMi47CgoKICAgIAoKICAgIGZsb2F0IGRlbHRhID0gMC4wOwogICAgZmxvYXQgYWxwaGEsYmV0YTsKICAgIAoKICAgIGFscGhhID0gLTEuICogQVJDIC8gKHRpbGVDb3VudC55KTsKICAgIGRlbHRhID0gUEkvMi4gLSBvZmZzZXQgKyBhbHBoYTsKICAgIGJldGEgPSBkZWx0YSArICggYWxwaGEgKiAoc2Nyb2xsZXIrdGlsZUNvb3JkLnkpICkgOwoKCiAgICBmbG9hdCByID0gUkFESVVTICogMi47CiAgICAKICAgIHZlYzMgQSA9IHZlYzMoICh0aWxlQ29vcmQueCsxLikqdGlsZVNpemUueCwgY29zKGFscGhhK2JldGEpKnIsIHNpbihhbHBoYStiZXRhKSpyKTsKICAgIHZlYzMgQiA9IHZlYzMoICh0aWxlQ29vcmQueCsxLikqdGlsZVNpemUueCwgY29zKGJldGEpKnIsICAgICAgIHNpbihiZXRhKSpyKTsKICAgIHZlYzMgQyA9IHZlYzMoIHRpbGVDb29yZC54KnRpbGVTaXplLngsICAgICAgY29zKGFscGhhK2JldGEpKnIsIHNpbihhbHBoYStiZXRhKSpyKTsKICAgIHZlYzMgRCA9IHZlYzMoIHRpbGVDb29yZC54KnRpbGVTaXplLngsICAgICAgY29zKGJldGEpKnIsICAgICAgIHNpbihiZXRhKSpyKTsKICAgIAogICAKICAgIGlmICggcG9zLnggPiAwLiAmJiBwb3MueSA+IDAuICkgewogICAgICAgIHBvcy54eXogPSBBOwogICAgfSBlbHNlIGlmICggcG9zLnggPiAwLiAmJiBwb3MueSA8IDAuICkgewogICAgICAgIHBvcy54eXogPSBCOwogICAgfSBlbHNlIGlmICggcG9zLnggPCAwLiAmJiBwb3MueSA+IDAuICkgewogICAgICAgIHBvcy54eXogPSBDOwogICAgfSBlbHNlIGlmICggcG9zLnggPCAwLiAmJiBwb3MueSA8IDAuICkgewogICAgICAgIHBvcy54eXogPSBEOwogICAgfQoKICAgIGZsb2F0IHpvb20gPSAwLjg7Ci8vCi8vCiAgICBmbG9hdCBmb250UmF0aW8gPSB0aWxlU2l6ZS54L3RpbGVTaXplLnk7CiAgICBmbG9hdCBzY3JlZW5SYXRpbyA9ICh0aWxlQ291bnQueCp0aWxlU2l6ZS54KS8oKHRpbGVDb3VudC55KSp0aWxlU2l6ZS55KTsKICAgIGZsb2F0IHJhdGlvID0gc2NyZWVuUmF0aW8gLyBmb250UmF0aW87CgogICAgZmxvYXQgc2NhbGVXaWR0aCA9IHJhdGlvICogMi4gLyB0aWxlQ291bnQueDsKICAgIGZsb2F0IHNjYWxlSGVpZ2h0ID0gICAgICAgIDIuIC8gdGlsZUNvdW50Lnk7CiAgICAKCgovLyAgICBpZiAoIHNjYWxlV2lkdGggPCBzY2FsZUhlaWdodC8yLiApIHsKLy8gICAgICAgIHpvb20gPSBzY2FsZVdpZHRoOwovLyAgICB9IGVsc2UgeyAgICAgICAgICAgIAovLyAgICAgICAgem9vbSA9IHNjYWxlSGVpZ2h0OwovLyAgICB9CiAgICB6b29tID0gc2NhbGVXaWR0aCA7CgogICAgcG9zLnh5eiAqPSB6b29tOwovLyAgICBwb3MueHl6ICo9IG1vZGVsWzBdWzBdICAqIDAuODsKCiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogcG9zOwp9Cgo=
 `,
 
 
 
 
-"grid/zstep":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-
-    float F = 1.;
-
-    float y  =  vTileCoord.y       / (tileCount.y/2.);
-    float yy = (vTileCoord.y + ((scroller)) ) / (tileCount.y/2.);
-
-
-    float freq = -1.;
-    float f0 = cos( freq * y  * PI + now + PI/2. );
-    float f1 = cos( freq * yy * PI + now + PI/2. );
-    float d =  f0 + /*(scroller) * */(f1 - f0);
-    pos.z += F * d;
-    pos.z -= F;
-
-
-    
-    gl_Position = projection * view * model * pos;
-}
+"grid/zstep.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKdW5pZm9ybSBmbG9hdCBub3c7CnVuaWZvcm0gZmxvYXQgc2Nyb2xsZXI7CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwoKYXR0cmlidXRlIHZlYzIgdGV4Q29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIHRpbGVDb29yZDsKYXR0cmlidXRlIHZlYzIgZ3JpZENvb3JkOwoKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7CnZhcnlpbmcgdmVjMiB2VGlsZUNvb3JkOwp2YXJ5aW5nIHZlYzIgdkdyaWRDb29yZDsKdmFyeWluZyBmbG9hdCB2U2Nyb2xsZXI7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCmZsb2F0IFBJID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgdlRpbGVDb29yZCA9IHRpbGVDb29yZDsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICB2U2Nyb2xsZXIgPSBhYnMoc2Nyb2xsZXIpOwogICAgCiAgICB2ZWM0IHBvcyA9IHZlYzQodmVydGV4LDEpOwoKICAgIHBvcy55ICs9IHNjcm9sbGVyOwogICAgcG9zLnggKz0gKHRpbGVDb29yZC54ICogdGlsZVNpemUueCk7CiAgICBwb3MueSArPSAodGlsZUNvb3JkLnkgKiB0aWxlU2l6ZS55KTsKCiAgICBwb3MueCArPSAoIHRpbGVPZmZzZXQueCAqIHRpbGVTaXplLngpOwogICAgcG9zLnkgKz0gKCB0aWxlT2Zmc2V0LnkgKiB0aWxlU2l6ZS55KTsKCiAgICBmbG9hdCBGID0gMS47CgogICAgZmxvYXQgeSAgPSAgdlRpbGVDb29yZC55ICAgICAgIC8gKHRpbGVDb3VudC55LzIuKTsKICAgIGZsb2F0IHl5ID0gKHZUaWxlQ29vcmQueSArICgoc2Nyb2xsZXIpKSApIC8gKHRpbGVDb3VudC55LzIuKTsKCgogICAgZmxvYXQgZnJlcSA9IC0xLjsKICAgIGZsb2F0IGYwID0gY29zKCBmcmVxICogeSAgKiBQSSArIG5vdyArIFBJLzIuICk7CiAgICBmbG9hdCBmMSA9IGNvcyggZnJlcSAqIHl5ICogUEkgKyBub3cgKyBQSS8yLiApOwogICAgZmxvYXQgZCA9ICBmMCArIC8qKHNjcm9sbGVyKSAqICovKGYxIC0gZjApOwogICAgcG9zLnogKz0gRiAqIGQ7CiAgICBwb3MueiAtPSBGOwoKCiAgICAKICAgIGdsX1Bvc2l0aW9uID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHBvczsKfQo=
 `,
 
 
 
 
-"grid/zwave":`
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-
-uniform vec2 tileSize;
-uniform vec2 tileCount;
-uniform vec2 tileOffset;
-
-
-uniform float now;
-uniform float scroller;
-uniform float debugFlag;
-
-attribute vec3 vertex;
-
-attribute vec2 texCoord;
-attribute vec2 tileCoord;
-attribute vec2 gridCoord;
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG = debugFlag > 0.0;
-
-float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
-
-
-void main() {
-    vTexCoord = texCoord;
-    vTileCoord = tileCoord;
-    vGridCoord = gridCoord;
-    vScroller = abs(scroller);
-    
-    vec4 pos = vec4(vertex,1);
-
-    pos.y += scroller;
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
-
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
-
-    float F = 0.5;
-    
-    pos.z += F * cos( pos.x + 2. * now         );
-    pos.z += F * cos( pos.y + 3. * now + PI/2. );
-    pos.z -= 2. * F;
-    
-    gl_Position = projection * view * model * pos;
-}
-
+"grid/zwave.vert":`
+dW5pZm9ybSBtYXQ0IHByb2plY3Rpb247CnVuaWZvcm0gbWF0NCB2aWV3Owp1bmlmb3JtIG1hdDQgbW9kZWw7Cgp1bmlmb3JtIHZlYzIgdGlsZVNpemU7CnVuaWZvcm0gdmVjMiB0aWxlQ291bnQ7CnVuaWZvcm0gdmVjMiB0aWxlT2Zmc2V0OwoKCnVuaWZvcm0gZmxvYXQgbm93Owp1bmlmb3JtIGZsb2F0IHNjcm9sbGVyOwp1bmlmb3JtIGZsb2F0IGRlYnVnRmxhZzsKCmF0dHJpYnV0ZSB2ZWMzIHZlcnRleDsKCmF0dHJpYnV0ZSB2ZWMyIHRleENvb3JkOwphdHRyaWJ1dGUgdmVjMiB0aWxlQ29vcmQ7CmF0dHJpYnV0ZSB2ZWMyIGdyaWRDb29yZDsKCgp2YXJ5aW5nIHZlYzIgdlRleENvb3JkOwp2YXJ5aW5nIHZlYzIgdlRpbGVDb29yZDsKdmFyeWluZyB2ZWMyIHZHcmlkQ29vcmQ7CnZhcnlpbmcgZmxvYXQgdlNjcm9sbGVyOwoKYm9vbCBERUJVRyA9IGRlYnVnRmxhZyA+IDAuMDsKCmZsb2F0IFBJID0gMy4xNDE1OTI2NTM1ODk3OTMyMzg0NjI2NDMzODMyNzk1MDI4ODQxOTcxNjkzOTkzNzUxMDU4MjA5NzQ5NDQ1OTIwOwoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgdlRpbGVDb29yZCA9IHRpbGVDb29yZDsKICAgIHZHcmlkQ29vcmQgPSBncmlkQ29vcmQ7CiAgICB2U2Nyb2xsZXIgPSBhYnMoc2Nyb2xsZXIpOwogICAgCiAgICB2ZWM0IHBvcyA9IHZlYzQodmVydGV4LDEpOwoKICAgIHBvcy55ICs9IHNjcm9sbGVyOwogICAgcG9zLnggKz0gKHRpbGVDb29yZC54ICogdGlsZVNpemUueCk7CiAgICBwb3MueSArPSAodGlsZUNvb3JkLnkgKiB0aWxlU2l6ZS55KTsKCiAgICBwb3MueCArPSAoIHRpbGVPZmZzZXQueCAqIHRpbGVTaXplLngpOwogICAgcG9zLnkgKz0gKCB0aWxlT2Zmc2V0LnkgKiB0aWxlU2l6ZS55KTsKCiAgICBmbG9hdCBGID0gMC41OwogICAgCiAgICBwb3MueiArPSBGICogY29zKCBwb3MueCArIDIuICogbm93ICAgICAgICAgKTsKICAgIHBvcy56ICs9IEYgKiBjb3MoIHBvcy55ICsgMy4gKiBub3cgKyBQSS8yLiApOwogICAgcG9zLnogLT0gMi4gKiBGOwogICAgCiAgICBnbF9Qb3NpdGlvbiA9IHByb2plY3Rpb24gKiB2aWV3ICogbW9kZWwgKiBwb3M7Cn0KCg==
 `,
 
 
 
 
-"mask/def":`
-
-uniform float debugFlag;
-
-attribute vec3 vertex;
-attribute vec2 texCoord;
-
-varying vec2 vTexCoord;
-
-bool DEBUG = debugFlag > 0.0;
-
-
-void main() {
-    vTexCoord = texCoord;
-    gl_Position = vec4(vertex,1.);
-}
-`,
-
-
-}
-
-
-var FragmentShaderAsset = map[string]string{
-
-
-"color":`
-
-
-varying float vDebugFlag;
-varying vec4 vFragColor;
-
-bool DEBUG = vDebugFlag > 0.0;
-
-void main() {
-    gl_FragColor = vFragColor;
-}
+"mask/def.vert":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwphdHRyaWJ1dGUgdmVjMiB0ZXhDb29yZDsKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7Cgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3JkOwogICAgZ2xfUG9zaXRpb24gPSB2ZWM0KHZlcnRleCwxLik7Cn0K
 `,
 
 
 
 
-"def":`
-uniform sampler2D texture;
-
-varying vec2 vFragCoord;
-varying float vDebugFlag;
-
-bool DEBUG = vDebugFlag > 0.0;
-
-
-void main() {
-    vec4 tex = texture2D(texture,vFragCoord);
-    gl_FragColor = tex;
-}
+"color.frag":`
+Cgp2YXJ5aW5nIGZsb2F0IHZEZWJ1Z0ZsYWc7CnZhcnlpbmcgdmVjNCB2RnJhZ0NvbG9yOwoKYm9vbCBERUJVRyA9IHZEZWJ1Z0ZsYWcgPiAwLjA7Cgp2b2lkIG1haW4oKSB7CiAgICBnbF9GcmFnQ29sb3IgPSB2RnJhZ0NvbG9yOwp9Cg==
 `,
 
 
 
 
-"grid/debug":`
-
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
-
-
-
-void main() {
-    vec4 col;
-    col = texture2D(texture, vTexCoord); 
-
-    if (true) { 
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-    } 
-
-    float F = 1.;
-
-    float x = vGridCoord.x / tileCount.x;
-    float y = vGridCoord.y / tileCount.y;
-    
-    col.r *= F * (1. - x);
-    col.g *= F * (1. - y);
-
-    if ( abs(vGridCoord.y) == tileCount.y  ) {
-        col.r = 1.0;
-        col.g = 1.0;
-        col.b = 0.;
-    }
-    
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
-        col.rgba = 1. - col.rgba;
-    }
-
-    if (gl_FrontFacing) { 
-        vec3 tmp = vec3(col.rgb);
-        col.r = tmp.g;
-        col.g = tmp.b;
-        col.b = tmp.r;
-    }
-
-    gl_FragColor = col;
-    
-}
+"def.frag":`
+dW5pZm9ybSBzYW1wbGVyMkQgdGV4dHVyZTsKCnZhcnlpbmcgdmVjMiB2RnJhZ0Nvb3JkOwp2YXJ5aW5nIGZsb2F0IHZEZWJ1Z0ZsYWc7Cgpib29sIERFQlVHID0gdkRlYnVnRmxhZyA+IDAuMDsKCgp2b2lkIG1haW4oKSB7CiAgICB2ZWM0IHRleCA9IHRleHR1cmUyRCh0ZXh0dXJlLHZGcmFnQ29vcmQpOwogICAgZ2xfRnJhZ0NvbG9yID0gdGV4Owp9Cg==
 `,
 
 
 
 
-"grid/debug2":`
-
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
-
-
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
-
-
-
-void main() {
-    vec4 col;
-    col = texture2D(texture, vTexCoord); 
-
-    if (DEBUG) { 
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-    } 
-
-    
-    
-    if ( 
-        vTileCoord.x == 0.0
-     || vTileCoord.y == 0.0
-     || vTileCoord.x+1. >= (tileCount.x/2.)
-     || vTileCoord.y+1. >= (tileCount.y/2.)
-     || vTileCoord.x <= -(tileCount.x/2.)
-     || vTileCoord.y <= -(tileCount.y/2.)
-    ) {
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-     
-    } else if (
-         mod(-abs(vTileCoord.x) , 2.) == 0.0 
-     ^^ mod(-abs(vTileCoord.y) , 2.) == 0.0
-    
-    ) {
-        col.rgb = 0.75 * vec3(1.,1.,1.);
-        col.a = 0.5;
-    } else {
-        col = vec4(0.);
-    }
-         
-
-
-    
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
-        col.rgba = 1. - col.rgba;
-    }
-
-    if (gl_FrontFacing) { 
-        col.rgb /= 2.;
-    }
-
-    gl_FragColor = col;
-    
-}
+"grid/debug.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IGRvd253YXJkOwp1bmlmb3JtIHZlYzIgdGlsZUNvdW50Owp1bmlmb3JtIHNhbXBsZXIyRCB0ZXh0dXJlOwp1bmlmb3JtIGZsb2F0IHNjcm9sbGVyOwp1bmlmb3JtIHZlYzIgY3Vyc29yUG9zOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKdmFyeWluZyB2ZWMyIHZUaWxlQ29vcmQ7CnZhcnlpbmcgdmVjMiB2R3JpZENvb3JkOwp2YXJ5aW5nIGZsb2F0IHZTY3JvbGxlcjsKCmJvb2wgREVCVUcgICAgPSBkZWJ1Z0ZsYWcgPiAwLjA7CgoKCnZvaWQgbWFpbigpIHsKICAgIHZlYzQgY29sOwogICAgY29sID0gdGV4dHVyZTJEKHRleHR1cmUsIHZUZXhDb29yZCk7IAoKICAgIGlmICh0cnVlKSB7IAogICAgICAgIGNvbC5yZ2IgPSB2ZWMzKDEuLDEuLDEuKTsKICAgICAgICBjb2wuYSA9IDEuMDsKICAgIH0gCgogICAgZmxvYXQgRiA9IDEuOwoKICAgIGZsb2F0IHggPSB2R3JpZENvb3JkLnggLyB0aWxlQ291bnQueDsKICAgIGZsb2F0IHkgPSB2R3JpZENvb3JkLnkgLyB0aWxlQ291bnQueTsKICAgIAogICAgY29sLnIgKj0gRiAqICgxLiAtIHgpOwogICAgY29sLmcgKj0gRiAqICgxLiAtIHkpOwoKICAgIGlmICggYWJzKHZHcmlkQ29vcmQueSkgPT0gdGlsZUNvdW50LnkgICkgewogICAgICAgIGNvbC5yID0gMS4wOwogICAgICAgIGNvbC5nID0gMS4wOwogICAgICAgIGNvbC5iID0gMC47CiAgICB9CiAgICAKICAgIGlmICggY3Vyc29yUG9zLnggPT0gdkdyaWRDb29yZC54ICYmIGN1cnNvclBvcy55ID09IHZHcmlkQ29vcmQueSApIHsKICAgICAgICBjb2wucmdiYSA9IDEuIC0gY29sLnJnYmE7CiAgICB9CgogICAgaWYgKGdsX0Zyb250RmFjaW5nKSB7IAogICAgICAgIHZlYzMgdG1wID0gdmVjMyhjb2wucmdiKTsKICAgICAgICBjb2wuciA9IHRtcC5nOwogICAgICAgIGNvbC5nID0gdG1wLmI7CiAgICAgICAgY29sLmIgPSB0bXAucjsKICAgIH0KCiAgICBnbF9GcmFnQ29sb3IgPSBjb2w7CiAgICAKfQo=
 `,
 
 
 
 
-"grid/def":`
-
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
-
-
-
-void main() {
-    vec4 col;
-    col = texture2D(texture, vTexCoord); 
-
-    if (DEBUG) { 
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-    } 
-
-    if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.a *= (1.-vScroller);
-    }
-    
-    if ( vGridCoord.y == tileCount.y ) { // newest line
-        col.a *= vScroller;    
-    }
-    
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) { // invert cursor
-        col.rgba = 1. - col.rgba;
-    }
-
-    if (!gl_FrontFacing) { col.a /= 4.; }
-
-    gl_FragColor = col;
-    
-}
+"grid/debug2.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IGRvd253YXJkOwp1bmlmb3JtIHZlYzIgdGlsZUNvdW50Owp1bmlmb3JtIHNhbXBsZXIyRCB0ZXh0dXJlOwp1bmlmb3JtIGZsb2F0IHNjcm9sbGVyOwp1bmlmb3JtIHZlYzIgY3Vyc29yUG9zOwoKCgp2YXJ5aW5nIHZlYzIgdlRleENvb3JkOwp2YXJ5aW5nIHZlYzIgdlRpbGVDb29yZDsKdmFyeWluZyB2ZWMyIHZHcmlkQ29vcmQ7CnZhcnlpbmcgZmxvYXQgdlNjcm9sbGVyOwoKYm9vbCBERUJVRyAgICA9IGRlYnVnRmxhZyA+IDAuMDsKCgoKdm9pZCBtYWluKCkgewogICAgdmVjNCBjb2w7CiAgICBjb2wgPSB0ZXh0dXJlMkQodGV4dHVyZSwgdlRleENvb3JkKTsgCgogICAgaWYgKERFQlVHKSB7IAogICAgICAgIGNvbC5yZ2IgPSB2ZWMzKDEuLDEuLDEuKTsKICAgICAgICBjb2wuYSA9IDEuMDsKICAgIH0gCgogICAgCiAgICAKICAgIGlmICggCiAgICAgICAgdlRpbGVDb29yZC54ID09IDAuMAogICAgIHx8IHZUaWxlQ29vcmQueSA9PSAwLjAKICAgICB8fCB2VGlsZUNvb3JkLngrMS4gPj0gKHRpbGVDb3VudC54LzIuKQogICAgIHx8IHZUaWxlQ29vcmQueSsxLiA+PSAodGlsZUNvdW50LnkvMi4pCiAgICAgfHwgdlRpbGVDb29yZC54IDw9IC0odGlsZUNvdW50LngvMi4pCiAgICAgfHwgdlRpbGVDb29yZC55IDw9IC0odGlsZUNvdW50LnkvMi4pCiAgICApIHsKICAgICAgICBjb2wucmdiID0gdmVjMygxLiwxLiwxLik7CiAgICAgICAgY29sLmEgPSAxLjA7CiAgICAgCiAgICB9IGVsc2UgaWYgKAogICAgICAgICBtb2QoLWFicyh2VGlsZUNvb3JkLngpICwgMi4pID09IDAuMCAKICAgICBeXiBtb2QoLWFicyh2VGlsZUNvb3JkLnkpICwgMi4pID09IDAuMAogICAgCiAgICApIHsKICAgICAgICBjb2wucmdiID0gMC43NSAqIHZlYzMoMS4sMS4sMS4pOwogICAgICAgIGNvbC5hID0gMC41OwogICAgfSBlbHNlIHsKICAgICAgICBjb2wgPSB2ZWM0KDAuKTsKICAgIH0KICAgICAgICAgCgoKICAgIAogICAgaWYgKCBjdXJzb3JQb3MueCA9PSB2R3JpZENvb3JkLnggJiYgY3Vyc29yUG9zLnkgPT0gdkdyaWRDb29yZC55ICkgewogICAgICAgIGNvbC5yZ2JhID0gMS4gLSBjb2wucmdiYTsKICAgIH0KCiAgICBpZiAoZ2xfRnJvbnRGYWNpbmcpIHsgCiAgICAgICAgY29sLnJnYiAvPSAyLjsKICAgIH0KCiAgICBnbF9GcmFnQ29sb3IgPSBjb2w7CiAgICAKfQo=
 `,
 
 
 
 
-"grid/fader":`
-
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
-
-varying vec2 vTexCoord;
-varying vec2 vTileCoord;
-varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
-
-
-
-void main() {
-    vec4 col;
-    col = texture2D(texture, vTexCoord); 
-
-    if (DEBUG) { 
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-    } 
-
-    if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.a *= (1.-vScroller);
-    }
-    
-    if ( vGridCoord.y == tileCount.y ) { // newest line
-        col.a *= vScroller;    
-    }
-    
-    if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
-        col.rgba = 1. - col.rgba;
-    }
-
-    if (!gl_FrontFacing) { col.a /= 4.; }
-
-    gl_FragColor = col;
-    
-}
+"grid/def.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IGRvd253YXJkOwp1bmlmb3JtIHZlYzIgdGlsZUNvdW50Owp1bmlmb3JtIHNhbXBsZXIyRCB0ZXh0dXJlOwp1bmlmb3JtIGZsb2F0IHNjcm9sbGVyOwp1bmlmb3JtIHZlYzIgY3Vyc29yUG9zOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKdmFyeWluZyB2ZWMyIHZUaWxlQ29vcmQ7CnZhcnlpbmcgdmVjMiB2R3JpZENvb3JkOwp2YXJ5aW5nIGZsb2F0IHZTY3JvbGxlcjsKCmJvb2wgREVCVUcgICAgPSBkZWJ1Z0ZsYWcgPiAwLjA7CgoKCnZvaWQgbWFpbigpIHsKICAgIHZlYzQgY29sOwogICAgY29sID0gdGV4dHVyZTJEKHRleHR1cmUsIHZUZXhDb29yZCk7IAoKICAgIGlmIChERUJVRykgeyAKICAgICAgICBjb2wucmdiID0gdmVjMygxLiwxLiwxLik7CiAgICAgICAgY29sLmEgPSAxLjA7CiAgICB9IAoKICAgIGlmICggdkdyaWRDb29yZC55ID09IDAuMCApIHsgLy8gb2xkZXN0IGxpbmUKICAgICAgICBjb2wuYSAqPSAoMS4tdlNjcm9sbGVyKTsKICAgIH0KICAgIAogICAgaWYgKCB2R3JpZENvb3JkLnkgPT0gdGlsZUNvdW50LnkgKSB7IC8vIG5ld2VzdCBsaW5lCiAgICAgICAgY29sLmEgKj0gdlNjcm9sbGVyOyAgICAKICAgIH0KICAgIAogICAgaWYgKCBjdXJzb3JQb3MueCA9PSB2R3JpZENvb3JkLnggJiYgY3Vyc29yUG9zLnkgPT0gdkdyaWRDb29yZC55ICkgeyAvLyBpbnZlcnQgY3Vyc29yCiAgICAgICAgY29sLnJnYmEgPSAxLiAtIGNvbC5yZ2JhOwogICAgfQoKICAgIGlmICghZ2xfRnJvbnRGYWNpbmcpIHsgY29sLmEgLz0gNC47IH0KCiAgICBnbF9GcmFnQ29sb3IgPSBjb2w7CiAgICAKfQo=
 `,
 
 
 
 
-"mask/debug":`
-
-uniform float debugFlag;
-uniform float ratio;
-
-varying vec2 vTexCoord;
-
-
-bool DEBUG = debugFlag > 0.0;
-float w = 0.002;
-
-bool major(vec2 pos) {
-
-    for (float d = -2.0; d<=2.0; d+=0.5) {
-        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
-        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
-    }
-    
-    return false;
-}
-
-bool minor(vec2 pos) {
-
-    for (float d = -2.0; d<=2.0; d+=0.25) {
-        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
-        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
-    }
-    
-    return false;
-}
-
-
-
-void main() {
-    vec3 col = vec3(0.0,0.0,0.0);
-    float a = 1.0;
-
-
-    vec2 pos = vTexCoord;
-
-
-    if ( true && major(pos) ) {
-        float gray = 0.9;
-        col = gray * vec3(1.,1.,1.);
-    } else if ( true && minor(pos) ) {
-        float gray = 0.5;
-        col = gray * vec3(1.,1.,1.);
-    }
-
-    gl_FragColor = vec4(col.rgb, a);
-}
-
-
-
+"grid/fader.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IGRvd253YXJkOwp1bmlmb3JtIHZlYzIgdGlsZUNvdW50Owp1bmlmb3JtIHNhbXBsZXIyRCB0ZXh0dXJlOwp1bmlmb3JtIGZsb2F0IHNjcm9sbGVyOwp1bmlmb3JtIHZlYzIgY3Vyc29yUG9zOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKdmFyeWluZyB2ZWMyIHZUaWxlQ29vcmQ7CnZhcnlpbmcgdmVjMiB2R3JpZENvb3JkOwp2YXJ5aW5nIGZsb2F0IHZTY3JvbGxlcjsKCmJvb2wgREVCVUcgICAgPSBkZWJ1Z0ZsYWcgPiAwLjA7CgoKCnZvaWQgbWFpbigpIHsKICAgIHZlYzQgY29sOwogICAgY29sID0gdGV4dHVyZTJEKHRleHR1cmUsIHZUZXhDb29yZCk7IAoKICAgIGlmIChERUJVRykgeyAKICAgICAgICBjb2wucmdiID0gdmVjMygxLiwxLiwxLik7CiAgICAgICAgY29sLmEgPSAxLjA7CiAgICB9IAoKICAgIGlmICggdkdyaWRDb29yZC55ID09IDAuMCApIHsgLy8gb2xkZXN0IGxpbmUKICAgICAgICBjb2wuYSAqPSAoMS4tdlNjcm9sbGVyKTsKICAgIH0KICAgIAogICAgaWYgKCB2R3JpZENvb3JkLnkgPT0gdGlsZUNvdW50LnkgKSB7IC8vIG5ld2VzdCBsaW5lCiAgICAgICAgY29sLmEgKj0gdlNjcm9sbGVyOyAgICAKICAgIH0KICAgIAogICAgaWYgKCBjdXJzb3JQb3MueCA9PSB2R3JpZENvb3JkLnggJiYgY3Vyc29yUG9zLnkgPT0gdkdyaWRDb29yZC55ICkgewogICAgICAgIGNvbC5yZ2JhID0gMS4gLSBjb2wucmdiYTsKICAgIH0KCiAgICBpZiAoIWdsX0Zyb250RmFjaW5nKSB7IGNvbC5hIC89IDQuOyB9CgogICAgZ2xfRnJhZ0NvbG9yID0gY29sOwogICAgCn0K
 `,
 
 
 
 
-"mask/def":`
-
-uniform float debugFlag;
-uniform float ratio;
-
-varying vec2 vTexCoord;
-
-
-bool DEBUG = debugFlag > 0.0;
-float w = 0.005;
-
-bool grid(vec2 pos) {
-
-    for (float d = -2.0; d<=2.0; d+=0.5) {
-        if (abs(pos.y - d) - w <= 0.0 ) { return true; }
-        if (abs(pos.x - d) - w <= 0.0 ) { return true; }
-    }
-    
-    return false;
-}
-
-
-void main() {
-    vec3 col = vec3(0.0,0.0,0.0);
-    float a = 1.0;
-
-
-    vec2 pos = vTexCoord;
-
-
-    if ( true && grid(pos) ) {
-        float gray = 0.5;
-        col = gray * vec3(1.,1.,1.);
-    }
-
-    
-    
-    gl_FragColor = vec4(col.rgb, a);
-}
-
-
+"mask/debug.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IHJhdGlvOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKCgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwpmbG9hdCB3ID0gMC4wMDI7Cgpib29sIG1ham9yKHZlYzIgcG9zKSB7CgogICAgZm9yIChmbG9hdCBkID0gLTIuMDsgZDw9Mi4wOyBkKz0wLjUpIHsKICAgICAgICBpZiAoYWJzKHBvcy55IC0gZCkgLSB3IDw9IDAuMCApIHsgcmV0dXJuIHRydWU7IH0KICAgICAgICBpZiAoYWJzKHBvcy54IC0gZCkgLSB3IDw9IDAuMCApIHsgcmV0dXJuIHRydWU7IH0KICAgIH0KICAgIAogICAgcmV0dXJuIGZhbHNlOwp9Cgpib29sIG1pbm9yKHZlYzIgcG9zKSB7CgogICAgZm9yIChmbG9hdCBkID0gLTIuMDsgZDw9Mi4wOyBkKz0wLjI1KSB7CiAgICAgICAgaWYgKGFicyhwb3MueSAtIGQpIC0gdyA8PSAwLjAgKSB7IHJldHVybiB0cnVlOyB9CiAgICAgICAgaWYgKGFicyhwb3MueCAtIGQpIC0gdyA8PSAwLjAgKSB7IHJldHVybiB0cnVlOyB9CiAgICB9CiAgICAKICAgIHJldHVybiBmYWxzZTsKfQoKCgp2b2lkIG1haW4oKSB7CiAgICB2ZWMzIGNvbCA9IHZlYzMoMC4wLDAuMCwwLjApOwogICAgZmxvYXQgYSA9IDEuMDsKCgogICAgdmVjMiBwb3MgPSB2VGV4Q29vcmQ7CgoKICAgIGlmICggdHJ1ZSAmJiBtYWpvcihwb3MpICkgewogICAgICAgIGZsb2F0IGdyYXkgPSAwLjk7CiAgICAgICAgY29sID0gZ3JheSAqIHZlYzMoMS4sMS4sMS4pOwogICAgfSBlbHNlIGlmICggdHJ1ZSAmJiBtaW5vcihwb3MpICkgewogICAgICAgIGZsb2F0IGdyYXkgPSAwLjU7CiAgICAgICAgY29sID0gZ3JheSAqIHZlYzMoMS4sMS4sMS4pOwogICAgfQoKICAgIGdsX0ZyYWdDb2xvciA9IHZlYzQoY29sLnJnYiwgYSk7Cn0KCgoK
 `,
 
 
 
 
-"mask/mask":`
-
-uniform float debugFlag;
-uniform float ratio;
-
-varying vec2 vTexCoord;
-
-bool DEBUG = debugFlag > 0.0;
-
-float MAX(float a, float b) { 
-    if (a>=b) 
-        return a; 
-    else 
-        return b; 
-}
-
-float mask(vec2 p) { 
-    float x = p.x; float y = p.y;
-    float ff = 1.;
-    float A = 7. * ff;
-    float B = 8. * ff; 
-    if (abs(x) >= A/B && abs(y) >= A/B)
-        return 1.0 - ( B * MAX(abs(x),abs(y)) - A );
-    else if (abs(x) >= A/B) 
-        return 1.0 - ( B * abs(x) - A);
-    else if (abs(y) >= A/B)
-        return 1.0 - ( B * abs(y) - A);
-    return 1.0;
-}
+"mask/def.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IHJhdGlvOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKCgpib29sIERFQlVHID0gZGVidWdGbGFnID4gMC4wOwpmbG9hdCB3ID0gMC4wMDU7Cgpib29sIGdyaWQodmVjMiBwb3MpIHsKCiAgICBmb3IgKGZsb2F0IGQgPSAtMi4wOyBkPD0yLjA7IGQrPTAuNSkgewogICAgICAgIGlmIChhYnMocG9zLnkgLSBkKSAtIHcgPD0gMC4wICkgeyByZXR1cm4gdHJ1ZTsgfQogICAgICAgIGlmIChhYnMocG9zLnggLSBkKSAtIHcgPD0gMC4wICkgeyByZXR1cm4gdHJ1ZTsgfQogICAgfQogICAgCiAgICByZXR1cm4gZmFsc2U7Cn0KCgp2b2lkIG1haW4oKSB7CiAgICB2ZWMzIGNvbCA9IHZlYzMoMC4wLDAuMCwwLjApOwogICAgZmxvYXQgYSA9IDEuMDsKCgogICAgdmVjMiBwb3MgPSB2VGV4Q29vcmQ7CgoKICAgIGlmICggdHJ1ZSAmJiBncmlkKHBvcykgKSB7CiAgICAgICAgZmxvYXQgZ3JheSA9IDAuNTsKICAgICAgICBjb2wgPSBncmF5ICogdmVjMygxLiwxLiwxLik7CiAgICB9CgogICAgCiAgICAKICAgIGdsX0ZyYWdDb2xvciA9IHZlYzQoY29sLnJnYiwgYSk7Cn0KCgo=
+`,
 
 
 
-void main() {
-    vec3 col = vec3(0.0,0.0,0.0);
-    float a = 1.;
 
-
-    vec2 pos = vTexCoord;
-
-    a = mask(vec2(pos.x/ratio,pos.y));
-
-    if (DEBUG) {
-        col.rgb =  vec3(  1. - mask(vec2(pos.x/ratio,pos.y)) );
-    }
-    
-    
-    gl_FragColor = vec4(col.rgb, a);
-}
+"mask/mask.frag":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwp1bmlmb3JtIGZsb2F0IHJhdGlvOwoKdmFyeWluZyB2ZWMyIHZUZXhDb29yZDsKCmJvb2wgREVCVUcgPSBkZWJ1Z0ZsYWcgPiAwLjA7CgpmbG9hdCBNQVgoZmxvYXQgYSwgZmxvYXQgYikgeyAKICAgIGlmIChhPj1iKSAKICAgICAgICByZXR1cm4gYTsgCiAgICBlbHNlIAogICAgICAgIHJldHVybiBiOyAKfQoKZmxvYXQgbWFzayh2ZWMyIHApIHsgCiAgICBmbG9hdCB4ID0gcC54OyBmbG9hdCB5ID0gcC55OwogICAgZmxvYXQgZmYgPSAxLjsKICAgIGZsb2F0IEEgPSA3LiAqIGZmOwogICAgZmxvYXQgQiA9IDguICogZmY7IAogICAgaWYgKGFicyh4KSA+PSBBL0IgJiYgYWJzKHkpID49IEEvQikKICAgICAgICByZXR1cm4gMS4wIC0gKCBCICogTUFYKGFicyh4KSxhYnMoeSkpIC0gQSApOwogICAgZWxzZSBpZiAoYWJzKHgpID49IEEvQikgCiAgICAgICAgcmV0dXJuIDEuMCAtICggQiAqIGFicyh4KSAtIEEpOwogICAgZWxzZSBpZiAoYWJzKHkpID49IEEvQikKICAgICAgICByZXR1cm4gMS4wIC0gKCBCICogYWJzKHkpIC0gQSk7CiAgICByZXR1cm4gMS4wOwp9CgoKCnZvaWQgbWFpbigpIHsKICAgIHZlYzMgY29sID0gdmVjMygwLjAsMC4wLDAuMCk7CiAgICBmbG9hdCBhID0gMS47CgoKICAgIHZlYzIgcG9zID0gdlRleENvb3JkOwoKICAgIGEgPSBtYXNrKHZlYzIocG9zLngvcmF0aW8scG9zLnkpKTsKCiAgICBpZiAoREVCVUcpIHsKICAgICAgICBjb2wucmdiID0gIHZlYzMoICAxLiAtIG1hc2sodmVjMihwb3MueC9yYXRpbyxwb3MueSkpICk7CiAgICB9CiAgICAKICAgIAogICAgZ2xfRnJhZ0NvbG9yID0gdmVjNChjb2wucmdiLCBhKTsKfQo=
 `,
 
 

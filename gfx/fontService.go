@@ -13,7 +13,7 @@ import (
 )
 
 
-const DEBUG_FONTSERVICE = true
+const DEBUG_FONTSERVICE = false
 
 
 
@@ -135,7 +135,7 @@ func (service *FontService) getFilePathForName(fontName string) (string,error) {
             }
         }
     }
-    return "",log.NewError("no files for font %s",fontName)
+    return "",log.NewError("no file for font %s",fontName)
 }
 
 

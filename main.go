@@ -411,7 +411,6 @@ func main() {
 
             runtime.LockOSThread()
             tester.Init(config) 
-            tester.Configure(config)
             
             //start processing only after init!
             go tester.ProcessTextSeqs(texts)

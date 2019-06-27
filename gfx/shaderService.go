@@ -4,6 +4,7 @@ package gfx
 import (
     "fmt"
     "strings"
+    "os"
     "io/ioutil"
     "encoding/base64"
     log "../log"       
@@ -43,69 +44,65 @@ func (service *ShaderService) GetShader(name string, typ ShaderType) (*Shader,er
 
 
 
-func (service *ShaderService) LoadShader(name string, typ ShaderType) error {
-    name = strings.ToLower(name)
-    
+func (service *ShaderService) LoadShader(shaderName string, shaderType ShaderType) error {
+    shaderName = strings.ToLower(shaderName)
+    name := shaderName + "." + string(shaderType)
 
     var err error
     var data []byte = []byte{}
+    
 
     {
         var path = ""
-        path,err = service.getFilePathForName(name,typ)
+        path,err = service.getFilePathForName(shaderName,shaderType)
     
-        if err == nil {
+        if err == nil { // file found, try reading
             
-            if DEBUG_SHADERSERVICE { log.Debug("%s read shader %s.%s from %s",service.Desc(),name,typ,path) }
+            if DEBUG_SHADERSERVICE { log.Debug("%s read shader %s from %s",service.Desc(),name,path) }
             data, err = ioutil.ReadFile(path)
             if err != nil {
-                return log.NewError("fail to read shader %s.%s from %s: %s",name,typ,path,err)
+                return log.NewError("fail to read shader %s from %s: %s",name,path,err)
             }
             
-        } else  { // no file found, try embedded
+        } else  { // no file found, lookup embedded
 
-            if DEBUG_SHADERSERVICE { log.Debug("%s no file for shader %s%s: %s",service.Desc(),name,typ,err ) }
+            if DEBUG_SHADERSERVICE { log.Debug("%s %s",service.Desc(),err ) }
 
-            encoded := ""
-            switch typ {
-                case VertType:
-                    encoded = VertexShaderAsset[name]
-                case FragType: 
-                    encoded = FragmentShaderAsset[name]
-            }
-
+            encoded := ShaderAsset[name]
             if encoded == "" {
-                return log.NewError("no data for embedded shader %s.%s",name,typ)    
+                return log.NewError("no asset data for shader %s",name)    
             }
 
-            if DEBUG_SHADERSERVICE { log.Debug("%s decode embedded shader %s.%s",service.Desc(),name,typ) }
+            if DEBUG_SHADERSERVICE { log.Debug("%s decode embedded shader %s",service.Desc(),name) }
             data,err = base64.StdEncoding.DecodeString( encoded )
             if err != nil {
-                return log.NewError("fail to decode embedded shader %s.%s: %s",name,typ,err)    
+                return log.NewError("fail to decode embedded shader %s: %s",name,err)    
             }
         }    
     }
     
     if len(data) <= 0 {
-        if DEBUG_SHADERSERVICE { log.Debug("%s no data for shader %s.%s",service.Desc(),name,typ) }
-        return log.NewError("no data for shader %s.%s",name,typ)
+        if DEBUG_SHADERSERVICE { log.Debug("%s no data for shader %s",service.Desc(),name) }
+        return log.NewError("no data for shader %s",name)
         
     }
     
-    shader := service.shaders[typ][name]
+    shader := service.shaders[shaderType][name]
     if  shader == nil {
-        shader = NewShader(name,typ)    
+        shader = NewShader(name,shaderType)    
     }
     
     err = shader.loadData( data )
     if err != nil {
-        log.Debug("%s fail load shader %s.%s data: %s",service.Desc(),name,typ,err)
-        return log.NewError("fail to load shader %s.%s data",name,typ)
+        log.Debug("%s fail load shader %s data: %s",service.Desc(),name,err)
+        return log.NewError("fail to load shader %s data",name)
     }
 
 
-    if DEBUG_FONTSERVICE { log.Debug("%s add shader %s.%s",service.Desc(),name,typ) }
-    service.shaders[typ][name] = shader
+    if service.shaders[shaderType][name] != shader {
+        if DEBUG_SHADERSERVICE { log.Debug("%s add shader %s",service.Desc(),name) }
+        service.shaders[shaderType][name] = shader
+    }
     
     
 
@@ -113,8 +110,17 @@ func (service *ShaderService) LoadShader(name string, typ ShaderType) error {
 }
 
 func (service *ShaderService) getFilePathForName(name string, typ ShaderType) (string,error) {
+
+    ret := service.directory + "/" + name + "." + string(typ)
+    _,err := os.Stat(ret)
+    if os.IsNotExist(err) {
+        return "", log.NewError("no file for shader %s",name+"."+string(typ) )    
+    } else if err != nil {
+        return "", log.NewError("fail stat file %s: %s",name+"."+string(typ),err )
+    }
+    return ret, nil
+
     
-    return (service.directory + "/" + name + "." + string(typ)), nil
     
 }
 

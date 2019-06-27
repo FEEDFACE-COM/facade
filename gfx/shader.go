@@ -97,21 +97,8 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
         return ret,nil
         
     } else {
-        src := ""
-        switch (shaderType) {
-            case VERTEX_SHADER:   src = VertexShaderAsset[shaderPrefix+shaderName]
-            case FRAGMENT_SHADER: src = FragmentShaderAsset[shaderPrefix+shaderName]
-        }
 
-
-//        if src == "" {
-//            switch (shaderType) {
-//                case VERTEX_SHADER:   src = VertexShader[shaderPrefix+"def"]
-//                case FRAGMENT_SHADER: src = FragmentShader[shaderPrefix+"def"]
-//            }    
-//            log.Debug("fallback to %s%s.%s",shaderPrefix,"def",shaderType)
-//        }
-
+        src = ShaderAsset[shaderPrefix+shaderName+"."+shaderType]
         
         if src == "" {
             return nil, log.NewError("fail get %s shader %s from file and map",string(shaderType),shaderName)

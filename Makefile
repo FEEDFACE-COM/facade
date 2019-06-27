@@ -22,8 +22,7 @@ PROTOS=facade/facade.pb.go
 
 
 ASSET_FONT=font/RobotoMono.ttf font/VT323.ttf
-ASSET_VERT=$(wildcard shader/*.vert shader/*/*.vert)
-ASSET_FRAG=$(wildcard shader/*.frag shader/*/*.frag)
+ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
 
 GCFLAGS ?= 
 ifeq (${BUILD_DEBUG},true)
@@ -53,13 +52,10 @@ info:
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo ""
-	@echo "#Sources"
-	@echo " source     ${SOURCES}"
-	@echo "  asset     ${ASSETS}"
-	@echo ""
-	@echo "   vert     ${ASSET_VERT}"
-	@echo "   frag     ${ASSET_FRAG}"
-	@echo "   font     ${ASSET_FONT}"   
+	@echo "#Sources ${SOURCES}"
+	@echo "#Assets ${ASSETS}"
+	@echo "#Shaders ${ASSET_SHADER}"
+	@echo "#Fonts ${ASSET_FONT}"   
 	
 build: ${BUILD_PRODUCT}
 
@@ -104,21 +100,15 @@ font/VT323.ttf:
 	mkdir -p font
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
 
-gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
+gfx/shaderAssets.go: ${ASSET_SHADER}
 	echo ""                                             >|$@
 #	echo "// +build linux,arm"                          >>$@
 	echo "package gfx"                                  >>$@
-	echo "var VertexShaderAsset = map[string]string{"   >>$@
-	for src in ${ASSET_VERT}; do \
-      name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
-      echo "\n\n\"$${name}\":\`";\
-      cat $$src | base64; \
-      echo "\`,\n\n"; \
-    done                                                >>$@
-	echo "}\n\n"                                        >>$@
-	echo "var FragmentShaderAsset = map[string]string{" >>$@
-	for src in ${ASSET_FRAG}; do \
-      name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
+	echo "var ShaderAsset = map[string]string{"         >>$@
+	for src in ${ASSET_SHADER}; do \
+      name=$$(echo $$src) \
+      name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
+      name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src | base64; \
       echo "\`,\n\n"; \
@@ -130,9 +120,11 @@ gfx/fontAssets.go: ${ASSET_FONT}
 	echo ""                                         >|$@
 #	echo "// +build linux,arm"                      >>$@
 	echo "package gfx"                              >>$@
-	echo "var FontAsset = map[string]string{"      >>$@
+	echo "var FontAsset = map[string]string{"       >>$@
 	for src in ${ASSET_FONT}; do \
-      name=$$( echo $$src | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
+      name=$$(echo $$src ) \
+      name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
+      name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
       cat $$src | base64 ; \
       echo "\`,\n\n"; \
