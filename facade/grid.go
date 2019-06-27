@@ -300,8 +300,8 @@ func gridVertices(
     x, y := tilePos.X, tilePos.Y
     ox, oy := texOffset.X, texOffset.Y
 
-    th := 1./float32(gfx.GlyphRows)
-    tw := glyphSize.W / ( maxGlyphSize.W * float32(gfx.GlyphCols) )
+    th := 1./float32(gfx.GlyphMapRows)
+    tw := glyphSize.W / ( maxGlyphSize.W * float32(gfx.GlyphMapCols) )
 
     return []float32{
         //vertex            //texcoords        // tile coords     // grid coords
@@ -359,8 +359,8 @@ func (grid *Grid) GenerateData(font *gfx.Font) {
             }
             
             texOffset := gfx.Point{
-                X: float32(glyphCoord.X) / (gfx.GlyphCols),
-                Y: float32(glyphCoord.Y) / (gfx.GlyphRows),
+                X: float32(glyphCoord.X) / (gfx.GlyphMapCols),
+                Y: float32(glyphCoord.Y) / (gfx.GlyphMapRows),
             }
 
             grid.data = append(grid.data, gridVertices(tileSize,glyphSize,maxGlyphSize,gridCoord,tilePos,texOffset)... )
@@ -382,7 +382,7 @@ func getGlyphCoord(run rune) gfx.Coord {
     }
     chr := byte(run)
     
-    cols := byte(gfx.GlyphCols)
+    cols := byte(gfx.GlyphMapCols)
 
     col := chr % cols
     row := chr / cols
@@ -421,7 +421,7 @@ func (grid *Grid) LoadShaders() error {
 
 func (grid *Grid) RenderMap(font *gfx.Font) error {
 
-    rgba, err := font.RenderMap()
+    rgba, err := font.RenderMap(false)
     if err != nil {
         log.Error("fail render font map: %s",err)
         return log.NewError("fail render font map: %s",err)
