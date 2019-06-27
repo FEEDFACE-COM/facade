@@ -20,6 +20,7 @@ import (
 const DEBUG_CLOCK    = true
 const DEBUG_CONFIG   = true
 const DEBUG_FONT     = true
+const DEBUG_SHADER   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
@@ -399,13 +400,14 @@ func main() {
 
         case TEST:
             log.Info(AUTHOR)
-            scanner = NewScanner()
-            server = NewServer(host,port,textPort,readTimeout)
             tester = NewTester(directory)
+            scanner = NewScanner()
+            go scanner.ScanText(texts)
 
+            server = NewServer(host,port,textPort,readTimeout)
             go server.Listen(confs,texts,quers)
             go server.ListenText(texts)
-            go scanner.ScanText(texts)
+
 
             runtime.LockOSThread()
             tester.Init(config) 

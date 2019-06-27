@@ -24,7 +24,7 @@ type ShaderService struct {
 
 func NewShaderService(directory string) *ShaderService {
     ret := &ShaderService{directory: directory}
-    ret.shaders = make( map[ShaderType](map[string]*Shader )
+    ret.shaders = make( map[ShaderType](map[string]*Shader) )
     ret.shaders[VertType] = make(map[string]*Shader)
     ret.shaders[FragType] = make(map[string]*Shader)
     return ret
@@ -43,7 +43,7 @@ func (service *ShaderService) GetShader(name string, typ ShaderType) (*Shader,er
 
 
 
-func (service *FontService) LoadShader(name string, typ ShaderType) error {
+func (service *ShaderService) LoadShader(name string, typ ShaderType) error {
     name = strings.ToLower(name)
     
 
@@ -51,8 +51,8 @@ func (service *FontService) LoadShader(name string, typ ShaderType) error {
     var data []byte = []byte{}
 
     {
-
-        path,err := service.getFilePathForName(name)
+        var path = ""
+        path,err = service.getFilePathForName(name,typ)
     
         if err == nil {
             
@@ -66,7 +66,7 @@ func (service *FontService) LoadShader(name string, typ ShaderType) error {
 
             if DEBUG_SHADERSERVICE { log.Debug("%s no file for shader %s%s: %s",service.Desc(),name,typ,err ) }
 
-            encoded = ""
+            encoded := ""
             switch typ {
                 case VertType:
                     encoded = VertexShaderAsset[name]
@@ -85,6 +85,47 @@ func (service *FontService) LoadShader(name string, typ ShaderType) error {
             }
         }    
     }
+    
+    if len(data) <= 0 {
+        if DEBUG_SHADERSERVICE { log.Debug("%s no data for shader %s.%s",service.Desc(),name,typ) }
+        return log.NewError("no data for shader %s.%s",name,typ)
+        
+    }
+    
+    shader := service.shaders[typ][name]
+    if  shader == nil {
+        shader = NewShader(name,typ)    
+    }
+    
+    err = shader.loadData( data )
+    if err != nil {
+        log.Debug("%s fail load shader %s.%s data: %s",service.Desc(),name,typ,err)
+        return log.NewError("fail to load shader %s.%s data",name,typ)
+    }
 
 
+    if DEBUG_FONTSERVICE { log.Debug("%s add shader %s.%s",service.Desc(),name,typ) }
+    service.shaders[typ][name] = shader
+    
+    
+
+    return nil
 }
+
+func (service *ShaderService) getFilePathForName(name string, typ ShaderType) (string,error) {
+    
+    return (service.directory + "/" + name + "." + string(typ)), nil
+    
+}
+
+
+
+func (service *ShaderService) Desc() string {
+    ret := "shaderservice["
+    ret += fmt.Sprintf("%d verts ",len(service.shaders[VertType]))
+    ret += fmt.Sprintf("%d frags",len(service.shaders[FragType]))
+    ret += "]"
+    return ret
+}
+
+

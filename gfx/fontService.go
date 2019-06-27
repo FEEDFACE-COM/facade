@@ -61,7 +61,8 @@ func (service *FontService) LoadFont(name string) error {
 
     
     if font:=service.fonts[name];   font!=nil {
-        return log.NewError("font %s already loaded: %s",name,font.Desc())
+        return nil
+//        return log.NewError("font %s already loaded: %s",name,font.Desc())
     }
     
     
@@ -104,8 +105,8 @@ func (service *FontService) LoadFont(name string) error {
     font := NewFont(name)
     err = font.loadData( data )
     if err != nil {
-        log.Debug("%s fail load font %s from data: %s",service.Desc(),name,err)
-        return log.NewError("%s fail to load font %s from data",name)
+        log.Debug("%s fail load font %s data: %s",service.Desc(),name,err)
+        return log.NewError("fail to load font %s data",name)
     }
 
 

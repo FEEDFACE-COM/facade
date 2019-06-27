@@ -135,6 +135,10 @@ func (font *Font) loadData(data []byte) error {
 
 func (font *Font) RenderMap(DEBUG bool) (*image.RGBA, error) {
 
+    if font.glyphMap != nil {
+        return font.glyphMap, nil    
+    }
+
     width := font.max.w
     height := font.max.h
 
@@ -146,10 +150,7 @@ func (font *Font) RenderMap(DEBUG bool) (*image.RGBA, error) {
     if DEBUG {
         back = DebugColor
     }
-//    if DEBUG_FONTSERVICE {
-//        back = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
-//    }
-//        
+
     ret := image.NewRGBA( image.Rect(0,0,imageWidth,imageHeight) )
     draw.Draw( ret, ret.Bounds(), back, image.ZP, draw.Src)
 
@@ -226,8 +227,12 @@ func (font *Font) RenderMap(DEBUG bool) (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
 
+
+    
+    
+    font.glyphMap = ret
     if DEBUG_FONTSERVICE {
-        log.Debug("rendered map %s   %dx%d glyphs in %dx%d img",font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
+        log.Debug("%s rendered glyphmap: %dx%d glyphs as %dx%d img",font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
     }
     return ret,nil
     
@@ -238,7 +243,7 @@ func (font *Font) stringForByte(b byte) string {
             return " "
         }
         if strings.ToUpper(font.name) == "OCRAEXT" && b == 0xB7 {
-            log.Debug("special-case ocraext '%c'",b)
+            if DEBUG_FONTSERVICE { log.Debug("%s special-case ocraext char '%c'",font.Desc(), b) }
             return " "
         }
         return fmt.Sprintf("%c",rune(b))    
@@ -292,7 +297,7 @@ func (font *Font) RenderText(text string, DEBUG bool) (*image.RGBA, error) {
     ctx.SetClip( image.Rect(0,0,0,0) )
     
     if DEBUG_FONTSERVICE {
-        log.Debug("rendered '%s' %s   %dx%d glyphs in %dx%d img",text[0:min(len(text),8)],font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
+        log.Debug("%s rendered '%s': %dx%d glyphs as %dx%d img",font.Desc(),text[0:min(len(text),8)],GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
     }
     
     return ret,nil

@@ -25,12 +25,14 @@ type Tester struct {
     debug bool
 
     font *gfx.Font; 
+    vert,frag *gfx.Shader
     
     
     lineBuffer *facade.LineBuffer
     termBuffer *facade.TermBuffer
     
     fontService *gfx.FontService
+    shaderService *gfx.ShaderService
 
     mutex *sync.Mutex
     directory string
@@ -45,6 +47,8 @@ type Tester struct {
     
 }
 
+
+
 func NewTester(directory string) *Tester { 
     ret := &Tester{directory: directory}
     ret.mutex = &sync.Mutex{}
@@ -53,9 +57,69 @@ func NewTester(directory string) *Tester {
 }
 
 
+func (tester *Tester) switchShader(name string, typ gfx.ShaderType) error {
+    var err error
+    
+    name = strings.ToLower(tester.Mode.String()) + "/" + name
+    
+    log.Debug("tester load shader %s.%s",name,typ)
+    err = tester.shaderService.LoadShader(name,typ)
+    if err != nil {
+        log.Error("tester fail load shader %s.%s: %s",name,typ,err)
+        return log.NewError("tester fail load shader %s.%s: %s",name,typ,err)
+    }
+
+    var shader *gfx.Shader
+    shader,err = tester.shaderService.GetShader( name, typ )
+    if err != nil {
+        log.PANIC("tester fail get shader %s.%s: %s",name,typ,err)
+        return log.NewError("tester fail get shader %s.%s: %s",name,typ,err)
+    }
+
+    log.Debug("tester switch to %s shader %s.%s",typ,name,typ)
+    switch typ {
+        case gfx.VertType: 
+            tester.vert = shader
+        case gfx.FragType:
+            tester.frag = shader
+    }
+    return nil
+}
+
+
+func (tester *Tester) switchFont(name string) error {
+    var err error
+    
+    if name != tester.font.GetName() {
+
+        log.Debug("tester load font %s",name )
+        err = tester.fontService.LoadFont( name )
+        if err != nil {
+            log.Debug("tester fail load font %s: %s",name,err)
+            return log.NewError("tester fail load font %s: %s",name,err)
+        }
+        
+        var font *gfx.Font
+        font,err = tester.fontService.GetFont( name )
+        if err != nil {
+            log.Debug("tester fail get font %s: %s",name,err)
+            return log.NewError("tester fail get font %s: %s",name,err)
+        }
+
+
+        log.Debug("tester switch to font %s",name)
+        tester.font = font
+
+    }        
+    
+    return nil
+}
+
 
 
 func (tester *Tester) Init(config *facade.Config) error {
+    var err error    
+
     log.Debug("init tester[%s] %s",tester.directory,config.Desc())
 
     if strings.HasPrefix(tester.directory, "~/") {
@@ -63,64 +127,28 @@ func (tester *Tester) Init(config *facade.Config) error {
     }
 
     tester.fontService = gfx.NewFontService(tester.directory+"/font")
-
-    
-    var err error    
-    {
-    	var name = facade.DEFAULT_FONT
-
-        if cfg := config.GetFont(); cfg!=nil {
-            if cfg.GetSetName() {
-                name = cfg.GetName()
-            }
-        }
-        
-        log.Debug("load font %s",name)
-        err = tester.fontService.LoadFont(name)
-        if err != nil {
-            log.PANIC("tester fail load default font %s: %s",name,err)
-        }
-
-        tester.font,err = tester.fontService.GetFont( name )
-        if err != nil {
-            log.PANIC("tester fail get default font %s: %s",name,err)
-        }
-
-
-    }
-
-    
-    
-    
-    if grid := config.GetGrid(); grid!=nil {
-        
-        if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() }
-        
-    }
+    tester.shaderService = gfx.NewShaderService(tester.directory+"/shader")
 
     tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
     tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),tester.refreshChan) 
-    
-    if grid := config.GetGrid(); grid!=nil {
-	    if grid.GetSetSpeed() { 
-            tester.lineBuffer.SetSpeed( float32(grid.GetSpeed() ) )
-    	}
-    	
-    	if grid.GetSetAdaptive() {
-            tester.lineBuffer.Adaptive = grid.GetAdaptive()
-        }
-        if grid.GetSetDrop() {
-            tester.lineBuffer.Drop = grid.GetDrop()
-        }
 
-        if grid.GetSetSmooth() {
-            tester.lineBuffer.Smooth = grid.GetSmooth()
-        }
+
+    err = tester.switchFont(facade.FontDefaults.Name)
+    if err != nil {
+        log.PANIC("tester missing default font: %s",err)     
+    }
+
+    err = tester.switchShader(facade.GridDefaults.Vert, gfx.VertType)
+    if err != nil {
+        log.PANIC("tester missing default vert shader: %s",err)    
+    }
+
+    err = tester.switchShader(facade.GridDefaults.Frag, gfx.FragType)
+    if err != nil {
+        log.PANIC("tester missing default frag shader: %s",err)    
     }
     
-	if config.GetSetDebug() {
-		tester.debug = config.GetDebug()
-	}
+	tester.Configure(config)
     
     
     gfx.ClockReset()
@@ -129,54 +157,47 @@ func (tester *Tester) Init(config *facade.Config) error {
 
 
 
-func (tester *Tester) GridConfig() *facade.GridConfig {
-
-    return &facade.GridConfig{
-        SetWidth: true,  Width: uint64(tester.termBuffer.GetWidth()),
-        SetHeight: true, Height: uint64(tester.termBuffer.GetHeight()),
-        SetBuffer: true, Buffer: uint64(tester.lineBuffer.GetBuffer()),
-        SetTerminal: true, Terminal: tester.Terminal,
-    }
-}
 
 func (tester *Tester) Configure(config *facade.Config) error {
     var err error
-    
     if config == nil { return nil }
     log.Debug("tester config %s",config.Desc())
 
 
-    if cfg := config.GetFont(); cfg!=nil {
-    
-        if cfg.GetSetName() {
-            name := cfg.GetName()
-            if name != tester.font.GetName() {
-        
-                log.Debug("tester add font %s",name )
-                err = tester.fontService.LoadFont( name )
-                if err != nil {
-                    log.Debug("tester fail add font %s: %s",name,err)
-                }
-                
-                var font *gfx.Font
-                font,err = tester.fontService.GetFont( name )
-                if err == nil {
-                    log.Debug("tester switch to font %s",name)
-                    tester.font = font
-                } else {
-                    log.Debug("tester fail get font %s: %s",name,err)
-                }
-                
-                
-            }        
-        
-            
+
+	if config.GetSetDebug() {
+		tester.debug = config.GetDebug()
+	} else {
+		tester.debug = false	
+	}
+
+
+    if cfg:=config.GetFont(); cfg!=nil {
+
+        if cfg.GetSetName() && cfg.GetName() != tester.font.GetName() {
+            err = tester.switchFont( cfg.GetName() )
+            if err != nil {
+                log.Error("tester fail switch font: %s",err)     
+            }
         }
-        
     }
 
 
     if grid := config.GetGrid(); grid != nil {
+            
+        if grid.GetSetVert() && grid.GetVert() != facade.GridDefaults.Vert {
+            err = tester.switchShader( grid.GetVert(), gfx.VertType )
+            if err != nil {
+                log.Error("tester fail switch shader: %s",err)     
+            }
+        }
+        
+        if grid.GetSetFrag() && grid.GetFrag() != facade.GridDefaults.Frag {
+            err = tester.switchShader( grid.GetFrag(), gfx.FragType )
+            if err != nil {
+                log.Error("tester fail switch shader: %s",err)     
+            }
+        }
         
 
         if grid.GetSetTerminal() { tester.Terminal = grid.GetTerminal() } 
@@ -193,20 +214,10 @@ func (tester *Tester) Configure(config *facade.Config) error {
             tester.lineBuffer.Resize(uint(grid.GetHeight()),uint(grid.GetBuffer()))
         }
         
-	    if grid.GetSetSpeed() { 
-            tester.lineBuffer.SetSpeed( float32(grid.GetSpeed() ) )
-    	}
-    	
-    	if grid.GetSetAdaptive() {
-            tester.lineBuffer.Adaptive = grid.GetAdaptive()
-        }
-        if grid.GetSetDrop() {
-            tester.lineBuffer.Drop = grid.GetDrop()
-        }
-
-        if grid.GetSetSmooth() {
-            tester.lineBuffer.Smooth = grid.GetSmooth()
-        }
+	    if grid.GetSetSpeed()    { tester.lineBuffer.SetSpeed( float32(grid.GetSpeed() ) ) }
+    	if grid.GetSetAdaptive() { tester.lineBuffer.Adaptive = grid.GetAdaptive() }
+        if grid.GetSetDrop()     { tester.lineBuffer.Drop = grid.GetDrop() }
+        if grid.GetSetSmooth()   { tester.lineBuffer.Smooth = grid.GetSmooth() }
         
         if grid.GetSetFill() {
             
@@ -218,15 +229,6 @@ func (tester *Tester) Configure(config *facade.Config) error {
         
 	}
 
-	if config.GetSetDebug() {
-		tester.debug = config.GetDebug()
-	} else {
-		tester.debug = false	
-	}
-
-
-
-    
     return nil
 
 }
@@ -313,9 +315,15 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 func (tester *Tester) InfoMode() string {
     ret := strings.ToLower(tester.Mode.String())    
-    if tester.debug {
-        ret += " DEBUG"	
+    ret += "["
+    if tester.Terminal { 
+        ret += "TT "
     }
+    if tester.debug {
+        ret += "DEBUG "	
+    }
+    ret = strings.TrimRight(ret, " ")
+    ret += "]"
     return ret
     
 }
@@ -335,7 +343,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
 
 
-    for tester.image == nil {
+    for {
         tester.mutex.Lock()
 
         tester.ProcessConf(confChan)
@@ -364,6 +372,13 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
                     log.Info("  %s",tester.font.Desc())
                 }
             }    
+            
+            if DEBUG_SHADER {
+                log.Info("  %s",tester.shaderService.Desc())
+                if tester.vert != nil { log.Info("  %s",tester.vert.Desc()) }
+                if tester.frag != nil { log.Info("  %s",tester.frag.Desc()) }
+            }    
+                
                         
             if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
                 log.Info("")
@@ -400,28 +415,37 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         }
         tester.mutex.Unlock()
+
+
+        if tester.image != nil {
+    
+            outPath := "./font.png"
+            log.Info("write rendered image to %s",outPath)
+            outFile, err := os.Create(outPath)
+            if err != nil {
+                log.Error("fail to create file %s: %s",outPath,err)
+            }
+            writer := bufio.NewWriter(outFile)
+            if err := png.Encode(writer, tester.image); err != nil {
+                log.Error("fail to encode rendered image: %s",err)
+                return log.NewError("fail to encode rendered image: %s",err)
+            }
+            writer.Flush()
+            outFile.Close()
+            tester.image = nil
+            
+        }
+
         
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
         gfx.ClockTick()
-        
+
+
         
     }
     
 
     
-    if tester.image != nil {
-
-
-        log.Info("write rendered image")
-        writer := bufio.NewWriter(os.Stdout)
-        defer writer.Flush()
-        if err := png.Encode(writer, tester.image); err != nil {
-            log.Error("fail to encode rendered image: %s",err)
-            return log.NewError("fail to encode rendered image: %s",err)
-        }
-           
-        
-    }
     
     return nil
 }
