@@ -239,6 +239,13 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
         
         if idx >= total {
+
+            // in case timer is gone somehow
+            if buffer.timer == nil {
+                log.Debug("%s restart timer",buffer.Desc())
+                buffer.scrollOnce(false)    
+            }            
+
             
             if buffer.Drop {
 
@@ -252,12 +259,6 @@ func (buffer *LineBuffer) queueLine(row Line) {
                 return
 
             }
-            
-            // in case timer is gone somehow
-            if buffer.timer == nil {
-                buffer.scrollOnce(false)    
-            }            
-            
             
         }
 
