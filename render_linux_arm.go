@@ -39,6 +39,7 @@ type Renderer struct {
     
     lineBuffer *facade.LineBuffer
     termBuffer *facade.TermBuffer
+    fontService *gfx.FontService
     
     mutex *sync.Mutex
     directory string
@@ -90,8 +91,10 @@ func (renderer *Renderer) Init(config *facade.Config) error {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
 
+    renderer.fontService = gfx.NewFontService(renderer.directory+"/font")
+
+
     gfx.SetShaderDirectory(renderer.directory+"/shader")
-    gfx.SetFontDirectory(renderer.directory+"/font")
     
     err = piglet.CreateContext()
     if err != nil {
@@ -133,11 +136,21 @@ func (renderer *Renderer) Init(config *facade.Config) error {
                 name = cfg.GetName()
             }
         }
-    	renderer.font,err = gfx.GetFont( name )
+        
+        if DEBUG_FONT { log.Debug("load font %s",name) }
+        err = renderer.fontService.LoadFont(name)
         if err != nil {
-            log.PANIC("no default font %s: %s",name,err)    
+            log.Error("renderer fail load font %s: %s",name,err)
+            name = facade.DEFAULT_FONT
+            if DEBUG_FONT { log.Debug("load font %s",name) }
+            err = renderer.fontService.LoadFont(name)
         }
-    	renderer.font.Init()
+        
+    	renderer.font,err = renderer.fontService.GetFont( name )
+        if err != nil {
+            log.PANIC("fail to get font %s: %s",name,err)    
+        }
+    	
     }
     
 
@@ -187,24 +200,41 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
 
 func (renderer *Renderer) Configure(config *facade.Config) error {
-    
     if config == nil { return log.NewError("renderer config nil") }
     
     log.Info("renderer config %s",config.Desc())
+    var err error
 
     if cfg := config.GetFont(); cfg!=nil {
+    
         if cfg.GetSetName() {
             name := cfg.GetName()
-            newFont, err := gfx.GetFont(name)
-    		if err != nil {
-    	   		log.Error("fail to switch font %s",name)
-    	    } else {
-        	   newFont.Init()
-        	   renderer.font = newFont
-        	   log.Info("switch font %s",renderer.font.Desc())
-            }
-        }    
+            if name != renderer.font.GetName() {
+        
+                if DEBUG_FONT { log.Debug("add font %s",name ) }
+                err = renderer.fontService.LoadFont( name )
+                if err != nil {
+                    log.Error("fail add font %s: %s",name,err)
+                }
+                
+                var font *gfx.Font
+                font,err = renderer.fontService.GetFont( name )
+                if err != nil {
+                    log.Error("fail get font %s: %s",name,err)
+                } else {
+                    if DEBUG_FONT { log.Debug("switch to font %s",name) }
+                    renderer.font = font
+                    renderer.ScheduleRefresh()
+
+                }                
+                
+            }        
+        
+            
+        }
+        
     }
+
 
     if cfg := config.GetCamera(); cfg!=nil {
         if cfg.GetSetZoom() {
@@ -439,6 +469,14 @@ func (renderer *Renderer) printDebug() {
             log.Info("  %s", renderer.lineBuffer.Desc() )
             log.Info("  %s", renderer.termBuffer.Desc() )
     }
+
+    if DEBUG_FONT {
+        log.Info("  %s",renderer.fontService.Desc())
+        if renderer.font != nil {
+            log.Info("  %s",renderer.font.Desc())
+        }
+    }    
+    
 
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
  

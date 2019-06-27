@@ -55,8 +55,8 @@ const (
 
 type ShaderType string
 const (
-    VERTEX_SHADER   ShaderType = "vert"
-    FRAGMENT_SHADER ShaderType = "frag"
+    VertType ShaderType = "vert"
+    FragType ShaderType = "frag"
 )
 
 var shaderPath string

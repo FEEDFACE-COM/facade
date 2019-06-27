@@ -89,7 +89,6 @@ ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
 proto: ${PROTOS}
 
 facade/facade.pb.go: facade/facade.proto
-#	protoc -I facade -I gfx $^ --go_out=facade/ --plugin=grpc:proto
 	protoc -I facade -I gfx $^ --go_out=plugins=grpc:facade
 	
 
@@ -113,7 +112,7 @@ gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
 	for src in ${ASSET_VERT}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.vert//'); \
       echo "\n\n\"$${name}\":\`";\
-      cat $$src; \
+      cat $$src | base64; \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}\n\n"                                        >>$@
@@ -121,7 +120,7 @@ gfx/shaderAssets.go: ${ASSET_VERT} ${ASSET_FRAG}
 	for src in ${ASSET_FRAG}; do \
       name=$$(echo $$src | sed -e 's:shader/::;s/.frag//'); \
       echo "\n\n\"$${name}\":\`";\
-      cat $$src; \
+      cat $$src | base64; \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@

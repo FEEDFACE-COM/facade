@@ -71,10 +71,10 @@ func (service *FontService) LoadFont(name string) error {
     
         if err == nil {
             
-            if DEBUG_FONTSERVICE { log.Debug("%s read font %s from file %s",service.Desc(),name,path) }
+            if DEBUG_FONTSERVICE { log.Debug("%s read font %s from %s",service.Desc(),name,path) }
             data, err = ioutil.ReadFile(path)
             if err != nil {
-                return log.NewError("fail to read font file at %s: %s",path,err)
+                return log.NewError("fail to read font from %s: %s",path,err)
             }
             
         } else  { // no file found, try embedded
