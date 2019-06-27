@@ -165,8 +165,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
             case '\t':
 //                if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
 
-                TABWIDTH := 8
-                for c:=0; c<TABWIDTH ; c++ {
+                for c:=0; c<TabWidth ; c++ {
 
                     // ?TWEAK - checking and updating before writing fixes 'man foo' at width 64
                     if buffer.cursor.x > buffer.max.x {
@@ -184,7 +183,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
                     buffer.buffer[ buffer.cursor.y ][ buffer.cursor.x ] = rune(' ')
                     buffer.cursor.x += 1
 
-                    if int(buffer.cursor.x) % TABWIDTH == 1 { //hit tab stop
+                    if int(buffer.cursor.x) % TabWidth == 1 { //hit tab stop
                         break
                     }
 
