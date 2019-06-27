@@ -55,7 +55,7 @@ func (text *Text) RenderTexture(font *Font) error {
     if text.Text == "" {
         text.Texture.LoadEmpty()
     } else {
-        rgba, err := font.RenderTextRGBA(txt)
+        rgba, err := font.RenderText(txt,false)
         if err != nil {
         	return log.NewError("fail render '%s': %s",txt,err)
         } else {

@@ -7,6 +7,7 @@ import (
     "io/ioutil"
     "encoding/base64"
     "image"
+    "image/color"
     log "../log"       
     
 )
@@ -18,6 +19,7 @@ const DEBUG_FONTSERVICE = true
 
 var ForegroundColor = image.White
 var BackgroundColor = image.Transparent
+var DebugColor = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
 
 
 
@@ -42,6 +44,7 @@ func NewFontService(directory string) *FontService {
 
 
 func (service *FontService) GetFont(name string) (*Font,error) {
+    name = strings.ToLower(name)
     ret := service.fonts[ name ]
     if ret == nil {
         return nil, log.NewError("no font for name %s",name)
@@ -50,6 +53,7 @@ func (service *FontService) GetFont(name string) (*Font,error) {
 }
 
 func (service *FontService) LoadFont(name string) error {
+    name = strings.ToLower(name)
     
 
     var err error
@@ -103,6 +107,7 @@ func (service *FontService) LoadFont(name string) error {
         log.Debug("%s fail load font %s from data: %s",service.Desc(),name,err)
         return log.NewError("%s fail to load font %s from data",name)
     }
+
 
     if DEBUG_FONTSERVICE { log.Debug("%s add font %s",service.Desc(),name) }
     service.fonts[name] = font

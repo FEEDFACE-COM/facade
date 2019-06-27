@@ -421,7 +421,7 @@ func (grid *Grid) LoadShaders() error {
 
 func (grid *Grid) RenderMap(font *gfx.Font) error {
 
-    rgba, err := font.RenderMapRGBA()
+    rgba, err := font.RenderMap()
     if err != nil {
         log.Error("fail render font map: %s",err)
         return log.NewError("fail render font map: %s",err)

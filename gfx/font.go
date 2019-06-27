@@ -17,27 +17,30 @@ import (
 var fonts = map[string]*Font {}
 
 
-var foreground = image.White
-var background = image.Transparent
+
 
 const GlyphMapCols  = 0x20
 const GlyphMapRows  = 0x08
 const GlyphMapCount = GlyphMapCols * GlyphMapRows
 
 
-const scratchSize = 8192
-var fontScratch *image.RGBA = image.NewRGBA( image.Rect(0,0,scratchSize,scratchSize) )
+const ScratchSize = 8192
 
 
 type Font struct {
 
+    name string
+
     font *truetype.Font
     context *freetype.Context
+    scratch *image.RGBA
 
     max struct {w, h int}
     Size [GlyphMapCols][GlyphMapRows]Size
     
-    name string
+
+    glyphMap *image.RGBA
+    
 }
 
 
@@ -91,32 +94,46 @@ func (font *Font) loadData(data []byte) error {
         return log.NewError("fail to parse: %s",err)
     }
     if DEBUG_FONTSERVICE { log.Debug("%s data loaded",font.Desc()) }
-    return nil
-}
 
-func (font *Font) Init() {
-    
-    if font.context != nil { 
-        log.Error("skip init %s",font.Desc())
-        return 
-    }
+
+
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
-
+    font.scratch = image.NewRGBA( image.Rect(0,0,ScratchSize,ScratchSize) )
+    
     font.Size, font.max = font.findSizes()
-    if DEBUG_FONTSERVICE { log.Debug("init %s",font.Desc()) }
+
+
+    if DEBUG_FONTSERVICE { log.Debug("%s font setup",font.Desc()) }
+    return nil
+
+
+
 }
 
-func (font *Font) Close() { // do me do me 
+//func (font *Font) Init() {
+//    
+//    if font.context != nil { 
+//        log.Error("skip init %s",font.Desc())
+//        return 
+//    }
+//    font.context = freetype.NewContext()
+//    font.context.SetFont(font.font)
+//
+//    font.Size, font.max = font.findSizes()
+//    if DEBUG_FONTSERVICE { log.Debug("init %s",font.Desc()) }
+//}
+
+//func (font *Font) Close() { // do me do me 
 //    font.scratch = nil // bad idea better keep around
 //    font.context = nil //bad idea better keep around
 //    font.font = nil // bad idea better keep around
 //    font.config.Name = "-" + font.config.Name
 //    log.Debug("close %s",font.Desc())
-}
+//}
 
 
-func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
+func (font *Font) RenderMap(DEBUG bool) (*image.RGBA, error) {
 
     width := font.max.w
     height := font.max.h
@@ -125,11 +142,14 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     imageWidth := GlyphMapCols*width 
     imageHeight := GlyphMapRows*height
 
-    back := background
-    if DEBUG_FONTSERVICE {
-        back = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
+    back := BackgroundColor
+    if DEBUG {
+        back = DebugColor
     }
-        
+//    if DEBUG_FONTSERVICE {
+//        back = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
+//    }
+//        
     ret := image.NewRGBA( image.Rect(0,0,imageWidth,imageHeight) )
     draw.Draw( ret, ret.Bounds(), back, image.ZP, draw.Src)
 
@@ -137,7 +157,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
     ctx.SetDPI( dpi )
     ctx.SetFontSize( pointSize )
     ctx.SetHinting( xfont.HintingNone )
-    ctx.SetSrc( foreground )
+    ctx.SetSrc( ForegroundColor )
     ctx.SetDst(ret)
     ctx.SetClip(ret.Bounds())
 
@@ -145,7 +165,7 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
 
 
     var c byte = 0x00
-    for y:=0; DEBUG_FONTSERVICE && y<GlyphMapRows; y++ {
+    for y:=0; DEBUG && y<GlyphMapRows; y++ {
         
         for x:=0; x<GlyphMapCols; x++ {
             
@@ -189,9 +209,9 @@ func (font *Font) RenderMapRGBA() (*image.RGBA, error) {
             magic_offset := height/5. // this should really come from the font geometrics
             pos := freetype.Pt( x*width, y*height + height - magic_offset)
             
-            ctx.SetSrc( foreground )
-            if DEBUG_FONTSERVICE && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
-                r,g,b,_ := foreground.RGBA()
+            ctx.SetSrc( ForegroundColor )
+            if DEBUG && (  ( y % 2 == 0 && c % 2 == 0 ) || (y%2 != 0 && c %2 != 0) ) {
+                r,g,b,_ := ForegroundColor.RGBA()
                 back := color.RGBA{255 - uint8(r), 255-uint8(g), 255 - uint8(b), 255}
                 ctx.SetSrc( image.NewUniform( back ) )
             }
@@ -230,7 +250,7 @@ func min(a,b int) int {
     return b 
 }
 
-func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
+func (font *Font) RenderText(text string, DEBUG bool) (*image.RGBA, error) {
     
     
     const (
@@ -239,15 +259,20 @@ func (font *Font) RenderTextRGBA(text string) (*image.RGBA, error) {
         rowSpacing = 1.25
     )
     
-    
+
+    background := BackgroundColor
+    if DEBUG {
+        background = DebugColor
+    }
+
 
     ctx := font.context
     ctx.SetDPI( dpi )
     ctx.SetFontSize( pointSize )
     ctx.SetHinting( xfont.HintingFull )
-    ctx.SetSrc( foreground )
-    ctx.SetDst(fontScratch)
-    ctx.SetClip(fontScratch.Bounds())
+    ctx.SetSrc( ForegroundColor )
+    ctx.SetDst(font.scratch)
+    ctx.SetClip(font.scratch.Bounds())
 
     dim,_ := ctx.DrawString(text,freetype.Pt(0,0) )
     
@@ -294,7 +319,7 @@ func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{w,h int}
     ctx.SetFontSize(pointSize)
     ctx.SetHinting( xfont.HintingNone )
     ctx.SetSrc(image.White)
-    ctx.SetDst(fontScratch)
+    ctx.SetDst(font.scratch)
     ctx.SetClip(image.Rect(0,0,1024,1024))
     
     max.h = ctx.PointToFixed( rowSpacing * pointSize ).Ceil()

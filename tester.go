@@ -7,9 +7,9 @@ import (
     "strings"
     "os"
     "sync"
-//    "bufio"
-//    "image/png"
-//    "image"
+    "bufio"
+    "image/png"
+    "image"
     "time"
     log "./log"
     gfx "./gfx"
@@ -22,6 +22,7 @@ type Tester struct {
     Terminal bool
     
     Mode facade.Mode
+    debug bool
 
     font *gfx.Font; 
     
@@ -35,6 +36,9 @@ type Tester struct {
     directory string
     
     prevClock gfx.Clock
+    
+    image *image.RGBA
+    
     
     refreshChan chan bool
         
@@ -113,6 +117,11 @@ func (tester *Tester) Init(config *facade.Config) error {
             tester.lineBuffer.Smooth = grid.GetSmooth()
         }
     }
+    
+	if config.GetSetDebug() {
+		tester.debug = config.GetDebug()
+	}
+    
     
     gfx.ClockReset()
     return nil   
@@ -200,11 +209,19 @@ func (tester *Tester) Configure(config *facade.Config) error {
         }
         
         if grid.GetSetFill() {
-            tester.render( grid.GetFill() )
+            
+            if err:=tester.render( grid.GetFill() );  err!=nil {
+                log.Error("fail render '%': %s",grid.GetFill(),err)
+            }
+
         }
         
-        
+	}
 
+	if config.GetSetDebug() {
+		tester.debug = config.GetDebug()
+	} else {
+		tester.debug = false	
 	}
 
 
@@ -215,10 +232,27 @@ func (tester *Tester) Configure(config *facade.Config) error {
 }
 
 
-func (tester *Tester) render(fill string) {
+func (tester *Tester) render(fill string) error {
     if tester.font != nil {
-        log.Debug("tester render %s with %s",fill,tester.font.Desc())
+        log.Debug("tester render '%s' with %s",fill,tester.font.Desc())
     }
+    var err error
+
+    if fill == "" { //render out glyphmap
+        
+        tester.image,err = tester.font.RenderMap(tester.debug)
+            
+    } else { // render out given string
+        
+        tester.image,err = tester.font.RenderText( fill, tester.debug )
+    }
+    
+    if tester.image == nil {
+        return log.NewError("fail render '%s' with %s: %s",fill,tester.font.Desc(),err)
+    }
+    log.Debug("tester rendered '%s' with %s",fill,tester.font.Desc())
+    return nil  
+    
 }
 
 
@@ -279,9 +313,9 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 
 func (tester *Tester) InfoMode() string {
     ret := strings.ToLower(tester.Mode.String())    
-//    if tester.font != nil {
-//        ret += " " + tester.font.Desc()
-//    }
+    if tester.debug {
+        ret += " DEBUG"	
+    }
     return ret
     
 }
@@ -299,7 +333,9 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
     gfx.ClockTick()
     tester.prevClock = *gfx.NewClock()
 
-    for {
+
+
+    for tester.image == nil {
         tester.mutex.Lock()
 
         tester.ProcessConf(confChan)
@@ -344,6 +380,8 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
             if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
                 log.Debug("")
             }
+            
+            
 
 //            if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
 //                if tester.Terminal {
@@ -368,6 +406,23 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
         
         
     }
+    
+
+    
+    if tester.image != nil {
+
+
+        log.Info("write rendered image")
+        writer := bufio.NewWriter(os.Stdout)
+        defer writer.Flush()
+        if err := png.Encode(writer, tester.image); err != nil {
+            log.Error("fail to encode rendered image: %s",err)
+            return log.NewError("fail to encode rendered image: %s",err)
+        }
+           
+        
+    }
+    
     return nil
 }
 
@@ -376,6 +431,28 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
 
 
+//func SaveRGBA(img *image.RGBA,outPath string)  {
+//
+//    if img == nil {
+//        log.Error("no image to save at "+outPath)
+//        return 
+//    }
+//    
+//    outFile, err := os.Create(outPath)
+//    if err != nil {
+//        log.PANIC("fail to create file %s: %s",outPath,err)
+//    }
+//    defer outFile.Close()
+//    
+//    writer := bufio.NewWriter(outFile)
+//    if err := png.Encode(writer, img); err != nil {
+//        log.PANIC("fail to encode image to %s: %s",err,err)
+//    }
+//    
+//    writer.Flush()
+//    log.Info("wrote image to %s",outPath)
+//    
+//}
 
 
 

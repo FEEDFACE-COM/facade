@@ -316,7 +316,7 @@ func (buffer *LineBuffer) ProcessRunes(runes []rune) {
             case '\t':
 //                if DEBUG_LINEBUFFER { log.Debug("TAB") }
                 for c:=0; c<TabWidth ; c++ {
-                    tmp = append(tmp, c)
+                    tmp = append(tmp, rune(' '))
                 }
                             
             case '\r':
