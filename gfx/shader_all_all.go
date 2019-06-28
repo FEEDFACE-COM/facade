@@ -85,10 +85,10 @@ func shaderFilePath(shaderName string, shaderType ShaderType) string {
 
 
 
-func (shader *Shader) loadSource(src []byte) error {
+func (shader *Shader) loadSource(src string) error {
 //    var err error
 
-    shader.Source = string( src )
+    shader.Source = src
     if DEBUG_FONTSERVICE { log.Debug("%s shader setup",shader.Desc()) }
     return nil
 
