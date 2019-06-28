@@ -620,7 +620,7 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
     ret.refreshChan = make( chan bool, 1 )
     ret.lineBuffer = lineBuffer
     ret.termBuffer = termBuffer
-    ret.program = gfx.GetProgram("grid")
+    ret.program = gfx.NewProgram("grid")
     ret.object = gfx.NewObject("grid")
     ret.texture = gfx.NewTexture("grid")
     return ret

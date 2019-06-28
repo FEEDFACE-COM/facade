@@ -160,7 +160,7 @@ func NewLines(config *LinesConfig) *Lines {
     }
     ret := &Lines{config: *config}
 //    ret.buffer = gfx.NewRingBuffer(config.Height)
-    ret.program = gfx.GetProgram("lines")
+    ret.program = gfx.NewProgram("lines")
     ret.object = gfx.NewObject("lines")
     return ret
 }

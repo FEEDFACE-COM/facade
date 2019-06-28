@@ -96,7 +96,7 @@ func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font) {
     
     var err error
     {
-        draft.program["axis"] = gfx.GetProgram("axis")
+        draft.program["axis"] = gfx.NewProgram("axis")
     
         err = draft.program["axis"].GetCompileShaders("","color","color")
         if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }

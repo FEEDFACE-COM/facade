@@ -69,6 +69,7 @@ func (mask *Mask) Render(debug bool) {
 
 func (mask *Mask) LoadShaders() error {
     var err error
+
     err = mask.program.GetCompileShaders("mask/","def",mask.name)
     if err != nil { 
         return log.NewError("fail load mask shaders: %s",err) 
@@ -100,7 +101,7 @@ func (mask *Mask) Init() {
     mask.object.Init()
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
-    mask.program = GetProgram("mask")
+    mask.program = NewProgram("mask")
     mask.LoadShaders()
 
 

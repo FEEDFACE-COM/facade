@@ -86,7 +86,7 @@ func (program *Program) ReloadShader(shader *Shader) error {
     return nil    
 }
 
-func GetProgram(name string) *Program {
+func NewProgram(name string) *Program {
     ret := &Program{Name: name}
     return ret
 }
