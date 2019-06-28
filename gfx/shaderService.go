@@ -93,7 +93,7 @@ func (service *ShaderService) LoadShader(shaderName string, shaderType ShaderTyp
         shader = NewShader(name,shaderType)    
     }
     
-    err = shader.loadData( data )
+    err = shader.loadSource( string(data) )
     if err != nil {
         log.Debug("%s fail load shader %s data: %s",service.Desc(),name,err)
         return log.NewError("fail to load shader %s data",name)

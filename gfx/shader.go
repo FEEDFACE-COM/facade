@@ -62,6 +62,17 @@ const (
 var shaderPath string
 func SetShaderDirectory(directory string) { shaderPath = path.Clean(directory) }
 
+func (shader *Shader) loadSource(src string) error {
+//    var err error
+
+    shader.Source = src
+    if DEBUG_FONTSERVICE { log.Debug("%s shader setup",shader.Desc()) }
+    return nil
+
+
+
+}
+
 
 func (shader *Shader) LoadShader(filePath string) error {
     var err error
@@ -92,24 +103,28 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
     src, err := loadShaderFile(filePath)
     if err == nil {
         
-        ret = NewShader(shaderName, src, shaderType)
+        ret = NewShader(shaderName, shaderType)
+        ret.loadSource( src )
         go WatchShaderFile(filePath, program, ret)
         return ret,nil
         
     } else {
 
-        src = ShaderAsset[shaderPrefix+shaderName+"."+shaderType]
+        src = ShaderAsset[shaderPrefix+shaderName+"."+string(shaderType)]
         
         if src == "" {
             return nil, log.NewError("fail get %s shader %s from file and map",string(shaderType),shaderName)
         }
         
-        ret := NewShader(shaderPrefix+shaderName, src, shaderType)
+        ret := NewShader(shaderPrefix+shaderName, shaderType)
+        ret.loadSource( src )
         return ret,nil
     }
     
     
 }
+
+
 
 func WatchShaderFile(filePath string, program *Program, shader *Shader) {
         // REM, should verify that we're not alreay watching this file..
@@ -147,8 +162,8 @@ func (shader *Shader) Desc() string {
     return fmt.Sprintf("%s[%s]",shader.Type,shader.Name)
 }
 
-func NewShader(name string, source string, shaderType ShaderType) *Shader {
-    ret := &Shader{Name: name, Source: source, Type: shaderType}
+func NewShader(name string, shaderType ShaderType) *Shader {
+    ret := &Shader{Name: name, Type: shaderType}
     return ret    
 }
 
@@ -162,8 +177,8 @@ func (shader *Shader) Close() {
 func (shader *Shader) CompileShader() error {
     if shader.Shader <= 0 {
         switch shader.Type {
-            case VERTEX_SHADER:    shader.Shader = gl.CreateShader(gl.VERTEX_SHADER)
-            case FRAGMENT_SHADER:  shader.Shader = gl.CreateShader(gl.FRAGMENT_SHADER)
+            case VertType:    shader.Shader = gl.CreateShader(gl.VERTEX_SHADER)
+            case FragType:  shader.Shader = gl.CreateShader(gl.FRAGMENT_SHADER)
         }
     }
             

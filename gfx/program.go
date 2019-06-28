@@ -46,8 +46,8 @@ func RefreshPrograms() {
 }
 
 func (program *Program) HasShader(shader *Shader) bool {
-    if shader.Type == VERTEX_SHADER   && shader.Name == program.vertexShader.Name { return true }
-    if shader.Type == FRAGMENT_SHADER && shader.Name == program.fragmentShader.Name { return true }
+    if shader.Type == VertType   && shader.Name == program.vertexShader.Name { return true }
+    if shader.Type == FragType && shader.Name == program.fragmentShader.Name { return true }
     return false
 }
 
@@ -73,10 +73,10 @@ func (program *Program) ReloadShader(shader *Shader) error {
 //    if err != nil { return err }
 
 //    switch shader.Type {
-//        case VERTEX_SHADER:
+//        case VertType:
 //            program.vertexShader = shader
 //            
-//        case FRAGMENT_SHADER:    
+//        case FragType:    
 //            program.fragmentShader = shader
 //    }
     
@@ -109,13 +109,13 @@ func (program *Program) GetCompileShaders(modeName, vertName, fragName string) e
     var err error
 //    modeVertName, modeFragName := modeName+"/"+vertName, modeName+"/"+FragName
 
-    program.vertexShader, err = GetShader(modeName,vertName,VERTEX_SHADER,program)
+    program.vertexShader, err = GetShader(modeName,vertName,VertType,program)
     if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.vertexShader.CompileShader()
     if err != nil { return log.NewError("fail compile shader: %s",err) }
     
     
-    program.fragmentShader, err = GetShader(modeName,fragName,FRAGMENT_SHADER,program)
+    program.fragmentShader, err = GetShader(modeName,fragName,FragType,program)
     if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail compile shader: %s",err) }
