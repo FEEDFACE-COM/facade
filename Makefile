@@ -25,6 +25,7 @@ ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 
 #ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
 SHADERS ?= def.vert def.frag 
+SHADERS += color.vert color.frag 
 SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
 SHADERS += grid/zstep.vert grid/crawl.vert grid/disk.vert grid/pipe.vert
 SHADERS += mask/def.frag mask/mask.frag mask/debug.frag 

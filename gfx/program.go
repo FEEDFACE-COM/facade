@@ -107,20 +107,19 @@ func (program *Program) UseProgram(debug bool) {
 }
 
 
-func (program *Program) GetCompileShaders(modeName, vertName, fragName string) error {
+func (program *Program) GetCompileShaders(mode, vertName, fragName string) error {
     var err error
-//    modeVertName, modeFragName := modeName+"/"+vertName, modeName+"/"+FragName
 
-    program.vertexShader, err = GetShader(modeName,vertName,VertType)
-    if err != nil { return log.NewError("fail get shader: %s",err) }
+    program.vertexShader, err = program.shaderService.GetShader(vertName, VertType)
+    if err != nil { return log.NewError("fail get vert shader: %s",err) }
     err = program.vertexShader.CompileShader()
-    if err != nil { return log.NewError("fail compile shader: %s",err) }
+    if err != nil { return log.NewError("fail compile vert shader: %s",err) }
     
     
-    program.fragmentShader, err = GetShader(modeName,fragName,FragType)
-    if err != nil { return log.NewError("fail get shader: %s",err) }
+    program.fragmentShader, err = program.shaderService.GetShader(fragName, FragType)
+    if err != nil { return log.NewError("fail get frag shader: %s",err) }
     err = program.fragmentShader.CompileShader()
-    if err != nil { return log.NewError("fail compile shader: %s",err) }
+    if err != nil { return log.NewError("fail compile frag shader: %s",err) }
     
     return nil   
 }

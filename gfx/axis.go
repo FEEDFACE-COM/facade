@@ -19,7 +19,7 @@ type Axis struct {
 }
 
 
-func NewAxis() *Axis { return &gfx.Axis }
+func NewAxis() *Axis { return &Axis{} }
 
 
 func (axis *Axis) Render(camera *Camera, debug bool) {
@@ -62,12 +62,15 @@ func (axis *Axis) Init(shaderService *ShaderService) {
     axis.program = NewProgram("axis",shaderService)
 
     err = axis.program.GetCompileShaders("","color","color")
-    if err != nil { log.Error("fail load color shaders: %s",err) }
-
+    if err != nil { 
+        log.Error("%s fail load axis shaders: %s",axis.Desc(),err) 
+        return
+    }
+    
     err = axis.program.LinkProgram(); 
-    if err != nil { log.Error("fail to link axis program: %s",err) }
+    if err != nil { log.Error("%s fail link axis program: %s",axis.Desc(),err) }
 
-    log.Debug("%s init",axis.Desc())
+//    log.Debug("%s init",axis.Desc())
 }
 
 func (axis *Axis) Desc() string { return "axis[]" }

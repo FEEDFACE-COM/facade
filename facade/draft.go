@@ -80,7 +80,7 @@ func (draft *Draft) Render(camera *gfx.Camera, debug, verbose bool) {
 }
 
 
-func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font, shaderService *ShaderService) {
+func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font, shaderService *gfx.ShaderService) {
 
     draft.camera = camera
 

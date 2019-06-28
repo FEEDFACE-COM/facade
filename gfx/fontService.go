@@ -45,13 +45,24 @@ func NewFontService(directory string) *FontService {
 }
 
 
-func (service *FontService) GetFont(name string) (*Font,error) {
-    name = strings.ToLower(name)
-    ret := service.fonts[ name ]
-    if ret == nil {
-        return nil, log.NewError("no font for name %s",name)
+func (service *FontService) GetFont(fontName string) (*Font,error) {
+    fontName = strings.ToLower(fontName)
+    
+    if service.fonts[fontName] == nil {
+        var err error
+        if DEBUG_FONTSERVICE { log.Debug("%s font %s not loaded",service.Desc(),fontName) }
+        err = service.LoadFont(fontName)
+        if err != nil {
+            log.Error("%s fail get font %s: %s",service.Desc(),fontName,err)
+        }
     }
-    return ret, nil
+
+
+    if service.fonts[fontName] == nil {
+        return nil, log.NewError("no font named %s",fontName)
+    }
+    return service.fonts[fontName], nil
+
 }
 
 func (service *FontService) LoadFont(name string) error {
@@ -176,7 +187,7 @@ func GetFontAssetNames() []string  {
 
 func (service *FontService) Desc() string {
     ret := "fontservice["
-    ret += fmt.Sprintf("%d fonts",len(service.fonts))
+    ret += fmt.Sprintf("%d",len(service.fonts))
     ret += "]"
     return ret
 }

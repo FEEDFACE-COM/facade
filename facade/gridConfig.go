@@ -150,3 +150,22 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
            config.SetFill
 }
 
+
+func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
+    
+    if ! config.GetSetWidth() {
+    
+        if ! config.GetSetHeight() {
+            return
+        }
+        
+        height := config.GetHeight()
+        w := cameraRatio / fontRatio * float32(height)
+        if height == 1 { w = 5. } //special case
+
+        config.SetWidth = true
+        config.Width = uint64(w)
+        
+    }
+}
+

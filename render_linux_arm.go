@@ -17,10 +17,9 @@ import (
 )
 
 
-const DEBUG_RENDER = true
+const DEBUG_RENDERER = true
 
 
-const RENDERER_AVAILABLE = true
 
 
 type Renderer struct {
@@ -40,7 +39,9 @@ type Renderer struct {
     
     lineBuffer *facade.LineBuffer
     termBuffer *facade.TermBuffer
+
     fontService *gfx.FontService
+    shaderService *gfx.ShaderService
     
     mutex *sync.Mutex
     directory string
@@ -122,7 +123,7 @@ func (renderer *Renderer) Init() error {
     
 
 
-    renderer.axis = NewAxis()
+    renderer.axis = gfx.NewAxis()
     renderer.axis.Init(renderer.shaderService)
 
 
@@ -145,7 +146,7 @@ func (renderer *Renderer) Init() error {
     renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),renderer.refreshChan) 
 
     renderer.grid = facade.NewGrid( renderer.lineBuffer, renderer.termBuffer )
-    renderer.grid.Init(renderer.shaderService)
+    renderer.grid.Init(renderer.shaderService,renderer.font)
 
 
     gfx.ClockReset()
@@ -477,6 +478,8 @@ func (renderer *Renderer) Desc() string {
     ret += "]"
     return ret
 }
+
+const RENDERER_AVAILABLE = true
 
 
 
