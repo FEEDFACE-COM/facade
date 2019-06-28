@@ -6,6 +6,7 @@ import (
     "strings"
     "io/ioutil"
     "encoding/base64"
+    "sort"
     "image"
     "image/color"
     log "../log"       
@@ -22,6 +23,7 @@ var BackgroundColor = image.Transparent
 var DebugColor = image.NewUniform( color.RGBA{R: 255, G: 0, B: 0, A: 255} )
 
 
+var Extensions =[]string{ ".ttf", ".ttc" }
 
 
 type FontService struct {
@@ -121,14 +123,13 @@ func (service *FontService) LoadFont(name string) error {
 
 
 func (service *FontService) getFilePathForName(fontName string) (string,error) {
-    var extensions =[]string{ ".ttf", ".ttc" }
     var err error
     files, err := ioutil.ReadDir(service.directory)
     if err != nil {
         return "", log.NewError("fail list fonts: %s",err)
     }
     for _, f := range files {
-        for _, ext := range extensions {
+        for _, ext := range Extensions {
             if strings.ToLower(f.Name()) == strings.ToLower(fontName+ext) {
                 if DEBUG_FONTSERVICE { log.Debug("%s found font file %s",service.Desc(),f.Name()) }
                 return service.directory + "/" + f.Name(), nil
@@ -138,6 +139,39 @@ func (service *FontService) getFilePathForName(fontName string) (string,error) {
     return "",log.NewError("no file for font %s",fontName)
 }
 
+func (service *FontService) GetAvailableNames() []string {
+
+    var ret = GetFontAssetNames()
+    
+//    files, err := ioutil.ReadDir(service.directory)
+//    if err != nil {
+//        return ret
+//    }
+//    for _, f := range files {
+//        for _, ext := range Extensions {
+//            name := strings.ToLower( f.Name() )
+//            if strings.HasSuffix( name, ext ) {
+//                name = strings.TrimSuffix( name, ext )
+//                if FontAsset[name] == "" {
+//
+//                    ret = append(ret, name)
+//
+//                }                
+//            }
+//        }
+//    }
+    sort.Strings(ret)
+    return ret        
+}
+
+func GetFontAssetNames() []string  {
+    var ret []string
+    for n,_ := range FontAsset {
+        ret = append(ret,n)
+    }
+    sort.Strings(ret)
+    return ret
+}
 
 
 func (service *FontService) Desc() string {

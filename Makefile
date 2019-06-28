@@ -20,9 +20,15 @@ ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
 PROTOS=facade/facade.pb.go
 
+FONTS ?= RobotoMono.ttf VT323.ttf
+ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 
-ASSET_FONT=font/RobotoMono.ttf font/VT323.ttf
-ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
+#ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
+SHADERS ?= def.vert def.frag 
+SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
+SHADERS += grid/zstep.vert grid/crawl.vert grid/disk.vert grid/pipe.vert
+SHADERS += mask/def.frag mask/mask.frag mask/debug.frag 
+ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 
 GCFLAGS ?= 
 ifeq (${BUILD_DEBUG},true)
@@ -45,7 +51,7 @@ help:
 
 
 info: 
-	@echo "#Version Info"
+	@echo "#Info"
 	@echo " name       ${BUILD_NAME}"
 	@echo " version    ${BUILD_VERSION}"
 	@echo " platform   ${BUILD_PLATFORM}"

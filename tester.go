@@ -118,7 +118,7 @@ func (tester *Tester) switchFont(name string) error {
 
 
 
-func (tester *Tester) Init(config *facade.Config) error {
+    func (tester *Tester) Init(config *facade.Config) error {
     var err error    
 
     log.Debug("init tester[%s] %s",tester.directory,config.Desc())
@@ -351,52 +351,27 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         if gfx.ClockVerboseFrame() {
 
-
-            if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
-                log.Debug("")
-            }
-        
-        
-            if DEBUG_CLOCK { log.Info( "%s", tester.InfoClock() ) }
-            
-            if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
-                
-            if DEBUG_MODE { 
-                    log.Info("  %s", tester.InfoMode() ) 
-                    log.Info("  %s", tester.lineBuffer.Desc() )
-                    log.Info("  %s", tester.termBuffer.Desc() )
-            }
-            
-            if DEBUG_FONT {
-                log.Info("  %s",tester.fontService.Desc())
-                if tester.font != nil {
-                    log.Info("  %s",tester.font.Desc())
-                }
-            }    
-            
-            if DEBUG_SHADER {
-                log.Info("  %s",tester.shaderService.Desc())
-                if tester.vert != nil { log.Info("  %s",tester.vert.Desc()) }
-                if tester.frag != nil { log.Info("  %s",tester.frag.Desc()) }
-            }    
-                
-                        
+            log.Debug("")
+            log.Info( "%s", tester.InfoClock() )
+//            log.Info("  %s", MemUsage() )
+            log.Info("  %s", tester.InfoMode() ) 
+            log.Info("  %s", tester.lineBuffer.Desc() )
+            log.Info("  %s", tester.termBuffer.Desc() )
+            log.Info("  %s",tester.fontService.Desc())
+            if tester.font != nil { log.Info("  %s",tester.font.Desc()) }
+            log.Info("  %s",tester.shaderService.Desc())
+            if tester.vert != nil { log.Info("  %s",tester.vert.Desc()) }
+            if tester.frag != nil { log.Info("  %s",tester.frag.Desc()) }
             if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
                 log.Info("")
                 if tester.Terminal { 
-                    log.Info(tester.termBuffer.Dump() )
-                } else {
-                    log.Info(tester.lineBuffer.Dump( uint(tester.termBuffer.GetWidth())) )    
+                    log.Info(tester.termBuffer.Dump() ) 
+                } else { 
+                    log.Info(tester.lineBuffer.Dump( uint(tester.termBuffer.GetWidth())) ) 
                 }
-                
             }
-        
-//            if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
-         
-            if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
-                log.Debug("")
-            }
-            
+            log.Debug("")
+        }
             
 
 //            if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
@@ -414,7 +389,6 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 //
 //        }
 
-        }
         tester.mutex.Unlock()
 
 
@@ -451,6 +425,50 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
     return nil
 }
 
+func (tester *Tester) Info() string { 
+    ret := ""
+    
+    ret += InfoVersion()
+    ret += InfoAssets( tester.shaderService.GetAvailableNames(), tester.fontService.GetAvailableNames() )
+    ret += "\n\n"
+
+
+    ret += tester.InfoClock()
+    ret += "\n  " + tester.InfoMode()
+    ret += "\n  " + tester.lineBuffer.Desc()
+    ret += "\n  " + tester.termBuffer.Desc()
+    ret += "\n  " + tester.fontService.Desc()
+    ret += "\n  " + tester.shaderService.Desc()
+    ret += "\n\n"
+            
+
+    
+    return ret
+}
+
+
+
+func (tester *Tester) ProcessQueries(queryChan chan (chan string) ) error {
+
+    log.Debug("tester start process info queries")
+
+    for {
+    
+        chn := <- queryChan
+        info := tester.Info()
+        
+        select {
+            case chn <- info:
+                continue
+            
+            case <-time.After(1000. * time.Millisecond):
+                continue
+        }
+        
+        
+    }
+    
+}
 
 
 

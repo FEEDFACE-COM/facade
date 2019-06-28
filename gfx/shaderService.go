@@ -7,6 +7,7 @@ import (
     "os"
     "io/ioutil"
     "encoding/base64"
+    "sort"
     log "../log"       
     
 )
@@ -122,6 +123,42 @@ func (service *ShaderService) getFilePathForName(name string, typ ShaderType) (s
 
     
     
+}
+
+func (service *ShaderService) GetAvailableNames() []string {
+
+    var ret = GetShaderAssetNames()
+
+//    files, err := ioutil.ReadDir(service.directory)
+//    if err != nil {
+//        return ret
+//    }
+//    var Extensions []string = []string{ "."+string(VertType), "."+string(FragType) }
+//
+//    for _, f := range files {
+//        for _, ext := range Extensions {
+//            name := strings.ToLower( f.Name() )
+//            if strings.HasSuffix( name, ext ) {
+//                name = strings.TrimSuffix( name, ext )
+//                if ShaderAsset[name] == "" {
+//
+//                    ret = append(ret, name)
+//
+//                }                
+//            }
+//        }
+//    }
+    return ret
+}
+
+
+func GetShaderAssetNames() []string {
+    var ret []string
+    for n, _ := range ShaderAsset {
+        ret = append(ret,fmt.Sprintf("%s",n)) 
+    }
+    sort.Strings(ret)
+    return ret
 }
 
 

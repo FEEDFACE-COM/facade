@@ -414,6 +414,7 @@ func main() {
             
             //start processing only after init!
             go tester.ProcessTextSeqs(texts)
+            go tester.ProcessQueries(quers)
             err = tester.Test(confs)
             
 
@@ -533,24 +534,24 @@ func ShowHelp() {
     
 }
 
-func ShowAssets() { fmt.Fprintf(os.Stderr,InfoAssets()) }
-func InfoAssets() string {
+func ShowAssets() { fmt.Fprintf(os.Stderr,InfoAssets(nil,nil)) }
+func InfoAssets(shaders,fonts []string) string {
     ret := ""
-    shaders := gfx.ListShaderNames()
-    fonts := gfx.ListFontNames()
-//    ret += "\nShaders:\n"
-//    for _,s := range shaders {
-//        ret += fmt.Sprintf("  %s\n",s)
-//    }
+    if shaders == nil {
+        shaders = gfx.GetShaderAssetNames()
+    } 
+    if fonts == nil {
+        fonts = gfx.GetFontAssetNames()
+    }
 
     for _,prefix := range []string{"grid/",} {
         for _,suffix := range []string{".vert",".frag"} {
-            ret += "\n" + strings.TrimSuffix(prefix,"/") + " "
-            ret += "-" + strings.TrimPrefix(suffix,".") + "=  "
+            tmp := strings.TrimSuffix(prefix,"/")+" -"+strings.TrimPrefix(suffix,".")
+            ret += fmt.Sprintf("\n%12s= ",tmp)
             for _,shader := range shaders {
                 if strings.HasPrefix(shader,prefix) && strings.HasSuffix(shader,suffix) {
                     ret += strings.TrimSuffix(strings.TrimPrefix(shader,prefix),suffix)
-                    ret += "  "
+                    ret += " "
                 }
                     
             }
@@ -558,19 +559,19 @@ func InfoAssets() string {
     }
     
     
-    ret += "\n-mask=  "
+    ret += fmt.Sprintf("\n%12s= ", "-mask")
     for _,shader := range shaders {
         if strings.HasPrefix(shader,"mask/") && strings.HasSuffix(shader,"frag") {
             ret += strings.TrimSuffix(strings.TrimPrefix(shader,"mask/"),".frag")
-            ret += "  "
+            ret += " "
         }
     }
 
 
-    ret += "\n-font=  "
+    ret += fmt.Sprintf("\n%12s= ", "-font")
     for _,font := range fonts {
         ret += font
-        ret += "  "
+        ret += " "
     }
     ret += "\n"
     return ret

@@ -502,17 +502,14 @@ func (renderer *Renderer) Info() string {
     ret := ""
     
     ret += InfoVersion()
-    ret += InfoAssets()
+    ret += InfoAssets(nil,nil)
     ret += "\n\n"
 
 
     ret += renderer.InfoClock()
-    ret += "\n"
-    ret += "  " + renderer.InfoMode()
-    ret += "\n"
-    ret += "  " + renderer.lineBuffer.Desc()
-    ret += "\n"
-    ret += "  " + renderer.termBuffer.Desc()
+    ret += "\n  " + renderer.InfoMode()
+    ret += "\n  " + renderer.lineBuffer.Desc()
+    ret += "\n  " + renderer.termBuffer.Desc()
     ret += "\n\n"
             
 
