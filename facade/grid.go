@@ -393,7 +393,7 @@ func getGlyphCoord(run rune) gfx.Coord {
 }
 
 
-func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font, shaderService *ShaderService) {
+func (grid *Grid) Init(shaderService *ShaderService) {
     log.Debug("init %s",grid.Desc())
 
 
@@ -490,7 +490,7 @@ func (config *GridConfig) autoWidth(camera *gfx.Camera, font *gfx.Font) {
 
         config.SetWidth = true
         config.Width = uint64(w)
-        log.Debug("autowidth %s",config.Desc())
+        log.Debug("%s autowidth %s",grid.Desc(),config.Desc())
         
         
     }
@@ -505,7 +505,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     if config == nil { return }
 
 
-    log.Debug("config %s",config.Desc())
+    log.Debug("%s config %s",grid.Config(),config.Desc())
 
 
 	config.autoWidth(camera,font)
@@ -538,7 +538,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     }
 
     if true {  //optimize!!
-        log.Debug("rendermap %s",font.Desc())
+        log.Debug("%s rendermap %s",grid.Desc(),font.Desc())
         grid.RenderMap(font)
 //        grid.texture.TexImage()
     }
