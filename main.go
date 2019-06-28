@@ -297,7 +297,8 @@ func main() {
             renderer = NewRenderer(directory)
             go scanner.ScanText(texts)
             runtime.LockOSThread()
-            renderer.Init(config)  
+            renderer.Init()  
+            renderer.Configure(config)  
             go renderer.ProcessTextSeqs(texts)
             err = renderer.Render(nil)
             
@@ -309,7 +310,8 @@ func main() {
             go server.Listen(confs,texts,quers)
             go server.ListenText(texts)
             runtime.LockOSThread()
-            renderer.Init(config) 
+            renderer.Init() 
+            renderer.Configure(config)
             go renderer.ProcessTextSeqs(texts)
             go renderer.ProcessQueries(quers)
             err = renderer.Render(confs)
@@ -410,7 +412,8 @@ func main() {
 
 
             runtime.LockOSThread()
-            tester.Init(config) 
+            tester.Init() 
+            tester.Configure(config)
             
             //start processing only after init!
             go tester.ProcessTextSeqs(texts)

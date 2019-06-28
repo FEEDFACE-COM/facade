@@ -80,7 +80,7 @@ func (draft *Draft) Render(camera *gfx.Camera, debug, verbose bool) {
 }
 
 
-func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font) {
+func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font, shaderService *ShaderService) {
 
     draft.camera = camera
 
@@ -96,7 +96,7 @@ func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font) {
     
     var err error
     {
-        draft.program["axis"] = gfx.NewProgram("axis")
+        draft.program["axis"] = gfx.NewProgram("axis",shaderService)
     
         err = draft.program["axis"].GetCompileShaders("","color","color")
         if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }

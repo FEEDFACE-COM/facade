@@ -18,10 +18,28 @@ const DEBUG_SHADERSERVICE = true
 type ShaderService struct {
 
     shaders map[ShaderType](map[string]*Shader)
-    
     directory string    
-    
+
 }
+
+
+//// global
+//
+//var shaderService *ShaderService
+//
+//
+//func CreateShaderService(directory string) {
+//    if shaderService != nil {
+//        log.PANIC("fail to create shader service, already exists %s",shaderService.Desc())
+//    }
+//    shaderService = NewShaderService(directory)    
+//}
+//
+//func GetShader(shaderName string, shaderType ShaderType) {
+//    return shaderService.GetShader(shaderName, shaderType)    
+//}
+
+
 
 
 func NewShaderService(directory string) *ShaderService {

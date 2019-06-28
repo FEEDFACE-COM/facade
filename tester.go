@@ -118,10 +118,10 @@ func (tester *Tester) switchFont(name string) error {
 
 
 
-    func (tester *Tester) Init(config *facade.Config) error {
+func (tester *Tester) Init() error {
     var err error    
 
-    log.Debug("init tester[%s] %s",tester.directory,config.Desc())
+    log.Debug("init tester[%s]",tester.directory,)
 
     if strings.HasPrefix(tester.directory, "~/") {
         tester.directory = os.Getenv("HOME") + tester.directory[1:]
@@ -148,8 +148,6 @@ func (tester *Tester) switchFont(name string) error {
     if err != nil {
         log.PANIC("tester missing default frag shader: %s",err)    
     }
-    
-	tester.Configure(config)
     
     
     gfx.ClockReset()

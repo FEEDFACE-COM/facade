@@ -19,6 +19,8 @@ type Axis struct {
 }
 
 
+func NewAxis() *Axis { return &gfx.Axis }
+
 
 func (axis *Axis) Render(camera *Camera, debug bool) {
 
@@ -39,7 +41,7 @@ func (axis *Axis) Render(camera *Camera, debug bool) {
 }
     
 
-func (axis *Axis) Init() {
+func (axis *Axis) Init(shaderService *ShaderService) {
     
     const a = 1.0
     axis.data = []float32{ 
@@ -57,7 +59,7 @@ func (axis *Axis) Init() {
     axis.object.BufferData(len(axis.data)*4, axis.data)
 
     var err error    
-    axis.program = NewProgram("axis")
+    axis.program = NewProgram("axis",shaderService)
 
     err = axis.program.GetCompileShaders("","color","color")
     if err != nil { log.Error("fail load color shaders: %s",err) }

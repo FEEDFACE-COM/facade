@@ -97,7 +97,7 @@ func shaderFilePath(shaderName string, shaderType ShaderType) string {
 
 
 
-func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, program *Program) (*Shader,error) {
+func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType/*, program *Program*/) (*Shader,error) {
     var ret *Shader = nil
     filePath := shaderFilePath(shaderPrefix+shaderName,shaderType)
     src, err := loadShaderFile(filePath)
@@ -105,7 +105,7 @@ func GetShader(shaderPrefix string, shaderName string, shaderType ShaderType, pr
         
         ret = NewShader(shaderName, shaderType)
         ret.loadSource( src )
-        go WatchShaderFile(filePath, program, ret)
+/*        go WatchShaderFile(filePath, program, ret)*/
         return ret,nil
         
     } else {
@@ -148,7 +148,7 @@ func WatchShaderFile(filePath string, program *Program, shader *Shader) {
                 }
                 shader.Source, err = loadShaderFile(filePath)       
 //                log.Debug("alert %s %s",program.Desc(),shader.Desc())
-                refreshChan <-Refresh{program: program, shader: shader}
+                ProgramRefreshChannel <-Refresh{program: program, shader: shader}
                 last = info.ModTime()
             }
             

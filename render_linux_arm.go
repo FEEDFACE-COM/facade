@@ -84,9 +84,9 @@ func (renderer *Renderer) checkRefresh() bool {
 }
 
 
-func (renderer *Renderer) Init(config *facade.Config) error {
+func (renderer *Renderer) Init() error {
     var err error
-    log.Info("init renderer[%s] %s",renderer.directory,config.Desc())
+    log.Info("init renderer[%s]",renderer.directory)
     if strings.HasPrefix(renderer.directory, "~/") {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
@@ -118,70 +118,28 @@ func (renderer *Renderer) Init(config *facade.Config) error {
     log.Info("got version %s %s", gl.GoStr(gl.GetString((gl.VERSION))),gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))));
 
 
-    //setup things 
     renderer.mode = facade.Defaults.Mode
     renderer.debug = facade.Defaults.Debug
-    if config.GetSetMode()  { renderer.mode = config.GetMode() }
-    if config.GetSetDebug() { renderer.debug = config.GetDebug() }
     
 
-    
-    renderer.axis = &gfx.Axis{}
+
+    renderer.axis = NewAxis()
+    renderer.axis.Init()
 
 
-    {
-    	var name = facade.DEFAULT_FONT
-        if cfg := config.GetFont(); cfg!=nil {
-            if cfg.GetSetName() {
-                name = cfg.GetName()
-            }
-        }
-        
-        if DEBUG_FONT { log.Debug("load font %s",name) }
-        err = renderer.fontService.LoadFont(name)
-        if err != nil {
-            log.Error("renderer fail load font %s: %s",name,err)
-            name = facade.DEFAULT_FONT
-            if DEBUG_FONT { log.Debug("load font %s",name) }
-            err = renderer.fontService.LoadFont(name)
-        }
-        
-    	renderer.font,err = renderer.fontService.GetFont( name )
-        if err != nil {
-            log.PANIC("fail to get font %s: %s",name,err)    
-        }
-    	
-    }
-    
 
-    {
-        var zoom = facade.CameraDefaults.Zoom
-        var iso = facade.CameraDefaults.Isometric
-        if cfg:=config.GetCamera(); cfg!=nil {
-            if cfg.GetSetZoom() {
-                zoom = cfg.GetZoom()
-            }
-            if cfg.GetSetIsometric() {
-                iso = cfg.GetIsometric()
-            }
-        }
-
-        renderer.camera = gfx.NewCamera( float32(zoom), iso, renderer.screen)
-        renderer.camera.Init()
-	}
-
-
-    {
-        var name = facade.MaskDefaults.Name
-        if cfg:=config.GetMask(); cfg!=nil {
-            if cfg.GetSetName() {
-                name = cfg.GetName()
-            }
-        }
-        renderer.mask = gfx.NewMask(name,renderer.screen)
-        renderer.mask.Init()
+    renderer.font,err = renderer.fontService.GetFont( facade.DEFAULT_FONT )
+    if err != nil {
+        log.PANIC("fail to get default font %s: %s",facade.DEFAULT_FONT,err)    
     }
 
+
+    renderer.camera = gfx.NewCamera( float32(facade.CameraDefaults.Zoom), facade.CameraDefaults.Isometric, renderer.screen)
+    renderer.camera.Init()
+
+
+    renderer.mask = gfx.NewMask(facade.MaskDefaults.Name,renderer.screen)
+    renderer.mask.Init()
 
 
     renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
@@ -189,9 +147,8 @@ func (renderer *Renderer) Init(config *facade.Config) error {
 
     renderer.grid = facade.NewGrid( renderer.lineBuffer, renderer.termBuffer )
     renderer.grid.Init(renderer.camera,renderer.font)
-    renderer.grid.Configure(config.GetGrid(),renderer.camera,renderer.font)
+//    renderer.grid.Configure(config.GetGrid(),renderer.camera,renderer.font)
 
-    renderer.axis.Init()
 
 
     gfx.ClockReset()

@@ -393,8 +393,14 @@ func getGlyphCoord(run rune) gfx.Coord {
 }
 
 
-func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font) {
+func (grid *Grid) Init(camera *gfx.Camera, font *gfx.Font, shaderService *ShaderService) {
     log.Debug("init %s",grid.Desc())
+
+
+    grid.program = gfx.NewProgram("grid",shaderService)
+    grid.object = gfx.NewObject("grid")
+    grid.texture = gfx.NewTexture("grid")
+
 
     grid.texture.Init()
     grid.RenderMap(font)
@@ -620,9 +626,7 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
     ret.refreshChan = make( chan bool, 1 )
     ret.lineBuffer = lineBuffer
     ret.termBuffer = termBuffer
-    ret.program = gfx.NewProgram("grid")
-    ret.object = gfx.NewObject("grid")
-    ret.texture = gfx.NewTexture("grid")
+    
     return ret
 }
 

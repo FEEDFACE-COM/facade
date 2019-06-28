@@ -20,19 +20,21 @@ type Program struct {
     vertexShader *Shader
     fragmentShader *Shader
 	DebugFlag float32
+	
+	shaderService *ShaderService
 }
 
 
 
 type Refresh struct{ program *Program; shader *Shader }
-var refreshChan chan Refresh = make( chan Refresh )
+var ProgramRefreshChannel chan Refresh = make( chan Refresh )
 
 
 func RefreshPrograms() {
     var err error
     select {
         
-        case refresh := <-refreshChan:
+        case refresh := <-ProgramRefreshChannel:
             err = refresh.program.ReloadShader( refresh.shader )
             if err != nil {
                 log.Debug("fail refresh %s %s",refresh.program.Desc(),refresh.shader.Desc())
@@ -86,8 +88,8 @@ func (program *Program) ReloadShader(shader *Shader) error {
     return nil    
 }
 
-func NewProgram(name string) *Program {
-    ret := &Program{Name: name}
+func NewProgram(name string, shaderService *ShaderService) *Program {
+    ret := &Program{Name: name, shaderService: shaderService}
     return ret
 }
 
@@ -109,13 +111,13 @@ func (program *Program) GetCompileShaders(modeName, vertName, fragName string) e
     var err error
 //    modeVertName, modeFragName := modeName+"/"+vertName, modeName+"/"+FragName
 
-    program.vertexShader, err = GetShader(modeName,vertName,VertType,program)
+    program.vertexShader, err = GetShader(modeName,vertName,VertType)
     if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.vertexShader.CompileShader()
     if err != nil { return log.NewError("fail compile shader: %s",err) }
     
     
-    program.fragmentShader, err = GetShader(modeName,fragName,FragType,program)
+    program.fragmentShader, err = GetShader(modeName,fragName,FragType)
     if err != nil { return log.NewError("fail get shader: %s",err) }
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail compile shader: %s",err) }
