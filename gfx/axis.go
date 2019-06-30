@@ -41,7 +41,7 @@ func (axis *Axis) Render(camera *Camera, debug bool) {
 }
     
 
-func (axis *Axis) Init(shaderService *ShaderService) {
+func (axis *Axis) Init(programService *ProgramService) {
     
     const a = 1.0
     axis.data = []float32{ 
@@ -59,7 +59,7 @@ func (axis *Axis) Init(shaderService *ShaderService) {
     axis.object.BufferData(len(axis.data)*4, axis.data)
 
     var err error    
-    axis.program = NewProgram("axis",shaderService)
+    axis.program = NewProgram("axis",programService)
 
     err = axis.program.GetCompileShaders("","color","color")
     if err != nil { 

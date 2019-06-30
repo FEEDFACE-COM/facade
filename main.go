@@ -13,10 +13,10 @@ import (
     log "./log"
     facade "./facade"
     gfx "./gfx"
-//    proto "./facade/proto"
 )
 
 
+const DEBUG_STATUS   = false
 const DEBUG_CLOCK    = true
 const DEBUG_CONFIG   = true
 const DEBUG_FONT     = true
@@ -24,7 +24,7 @@ const DEBUG_SHADER   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
-const DEBUG_MEMORY   = true
+const DEBUG_MEMORY   = false
 const DEBUG_BUFFER   = false
 
 

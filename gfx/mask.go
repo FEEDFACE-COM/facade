@@ -81,7 +81,7 @@ func (mask *Mask) LoadShaders() error {
     return nil
 }
 
-func (mask *Mask) Init(shaderService *ShaderService) {
+func (mask *Mask) Init(programService *ProgramService) {
     w := mask.width  
     h := mask.height 
 
@@ -101,7 +101,7 @@ func (mask *Mask) Init(shaderService *ShaderService) {
     mask.object.Init()
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
-    mask.program = NewProgram("mask",shaderService)
+    mask.program = NewProgram("mask",programService)
     mask.LoadShaders()
 
 

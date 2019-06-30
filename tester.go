@@ -32,7 +32,7 @@ type Tester struct {
     termBuffer *facade.TermBuffer
     
     fontService *gfx.FontService
-    shaderService *gfx.ShaderService
+    programService *gfx.ProgramService
 
     mutex *sync.Mutex
     directory string
@@ -64,14 +64,14 @@ func (tester *Tester) switchShader(shaderName string, shaderType gfx.ShaderType)
     
     
     log.Debug("tester load shader %s",name)
-    err = tester.shaderService.LoadShader(shaderName,shaderType)
+    err = tester.programService.LoadShader(shaderName,shaderType)
     if err != nil {
         log.Error("tester fail load shader %s: %s",name,err)
         return log.NewError("tester fail load shader %s: %s",name,err)
     }
 
     var shader *gfx.Shader
-    shader,err = tester.shaderService.GetShader( name, shaderType )
+    shader,err = tester.programService.GetShader( name, shaderType )
     if err != nil {
         log.PANIC("tester fail get shader %s: %s",name,err)
         return log.NewError("tester fail get shader %s: %s",name,err)
@@ -128,7 +128,7 @@ func (tester *Tester) Init() error {
     }
 
     tester.fontService = gfx.NewFontService(tester.directory+"/font")
-    tester.shaderService = gfx.NewShaderService(tester.directory+"/shader")
+    tester.programService = gfx.NewProgramService(tester.directory+"/shader")
 
     tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
     tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),tester.refreshChan) 
@@ -357,7 +357,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
             log.Info("  %s", tester.termBuffer.Desc() )
             log.Info("  %s",tester.fontService.Desc())
             if tester.font != nil { log.Info("  %s",tester.font.Desc()) }
-            log.Info("  %s",tester.shaderService.Desc())
+            log.Info("  %s",tester.programService.Desc())
             if tester.vert != nil { log.Info("  %s",tester.vert.Desc()) }
             if tester.frag != nil { log.Info("  %s",tester.frag.Desc()) }
             if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
@@ -427,7 +427,7 @@ func (tester *Tester) Info() string {
     ret := ""
     
     ret += InfoVersion()
-    ret += InfoAssets( tester.shaderService.GetAvailableNames(), tester.fontService.GetAvailableNames() )
+    ret += InfoAssets( tester.programService.GetAvailableNames(), tester.fontService.GetAvailableNames() )
     ret += "\n\n"
 
 
@@ -436,7 +436,7 @@ func (tester *Tester) Info() string {
     ret += "\n  " + tester.lineBuffer.Desc()
     ret += "\n  " + tester.termBuffer.Desc()
     ret += "\n  " + tester.fontService.Desc()
-    ret += "\n  " + tester.shaderService.Desc()
+    ret += "\n  " + tester.programService.Desc()
     ret += "\n\n"
             
 

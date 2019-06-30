@@ -22,7 +22,7 @@ type Program struct {
     fragmentShader *Shader
 	DebugFlag float32
 	
-	shaderService *ShaderService
+	programService *ProgramService
 }
 
 
@@ -89,8 +89,8 @@ func (program *Program) ReloadShader(shader *Shader) error {
     return nil    
 }
 
-func NewProgram(name string, shaderService *ShaderService) *Program {
-    ret := &Program{Name: name, shaderService: shaderService}
+func NewProgram(name string, programService *ProgramService) *Program {
+    ret := &Program{Name: name, programService: programService}
     return ret
 }
 
@@ -114,13 +114,13 @@ func (program *Program) GetCompileShaders(mode, vertName, fragName string) error
     vertName = mode + vertName
     fragName = mode + fragName
 
-    program.vertexShader, err = program.shaderService.GetShader(vertName, VertType)
+    program.vertexShader, err = program.programService.GetShader(vertName, VertType)
     if err != nil { return log.NewError("fail get vert shader: %s",err) }
     err = program.vertexShader.CompileShader()
     if err != nil { return log.NewError("fail compile vert shader: %s",err) }
     
     
-    program.fragmentShader, err = program.shaderService.GetShader(fragName, FragType)
+    program.fragmentShader, err = program.programService.GetShader(fragName, FragType)
     if err != nil { return log.NewError("fail get frag shader: %s",err) }
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail compile frag shader: %s",err) }

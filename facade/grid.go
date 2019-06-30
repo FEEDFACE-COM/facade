@@ -394,11 +394,11 @@ func getGlyphCoord(run rune) gfx.Coord {
 }
 
 
-func (grid *Grid) Init(shaderService *gfx.ShaderService, font *gfx.Font) {
+func (grid *Grid) Init(programService *gfx.ProgramService, font *gfx.Font) {
     log.Debug("%s init",grid.Desc())
 
 
-    grid.program = gfx.NewProgram("grid",shaderService)
+    grid.program = gfx.NewProgram("grid",programService)
     grid.object = gfx.NewObject("grid")
     grid.texture = gfx.NewTexture("grid")
 

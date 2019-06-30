@@ -41,7 +41,7 @@ type Renderer struct {
     termBuffer *facade.TermBuffer
 
     fontService *gfx.FontService
-    shaderService *gfx.ShaderService
+    programService *gfx.ProgramService
     
     mutex *sync.Mutex
     directory string
@@ -94,7 +94,7 @@ func (renderer *Renderer) Init() error {
     }
 
     renderer.fontService = gfx.NewFontService(renderer.directory+"/font")
-    renderer.shaderService = gfx.NewShaderService(renderer.directory+"/shader")
+    renderer.programService = gfx.NewProgramService(renderer.directory+"/shader")
 
     err = piglet.CreateContext()
     if err != nil {
@@ -124,7 +124,7 @@ func (renderer *Renderer) Init() error {
 
 
     renderer.axis = gfx.NewAxis()
-    renderer.axis.Init(renderer.shaderService)
+    renderer.axis.Init(renderer.programService)
 
 
 
@@ -139,14 +139,14 @@ func (renderer *Renderer) Init() error {
 
 
     renderer.mask = gfx.NewMask(facade.MaskDefaults.Name,renderer.screen)
-    renderer.mask.Init(renderer.shaderService)
+    renderer.mask.Init(renderer.programService)
 
 
     renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
     renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),renderer.refreshChan) 
 
     renderer.grid = facade.NewGrid( renderer.lineBuffer, renderer.termBuffer )
-    renderer.grid.Init(renderer.shaderService,renderer.font)
+    renderer.grid.Init(renderer.programService,renderer.font)
 
 
     gfx.ClockReset()
@@ -410,38 +410,38 @@ func (renderer *Renderer) printDebug() {
 
     if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
 
-    if ! DEBUG_FRAME {
-        return
-    }
-
-    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
-        log.Debug("")
-    }
-
-
     if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
     
-    if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
-        
-    if DEBUG_MODE { 
-            log.Info("  %s", renderer.InfoMode() ) 
-            log.Info("  %s", renderer.lineBuffer.Desc() )
-            log.Info("  %s", renderer.termBuffer.Desc() )
-    }
 
-    if DEBUG_FONT {
-        log.Info("  %s",renderer.fontService.Desc())
-        if renderer.font != nil {
-            log.Info("  %s",renderer.font.Desc())
+    if  DEBUG_STATUS {
+
+        log.Debug("")
+
+
+        if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
+        
+        if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
+        
+        if DEBUG_MODE { 
+                log.Info("  %s", renderer.InfoMode() ) 
+                log.Info("  %s", renderer.lineBuffer.Desc() )
+                log.Info("  %s", renderer.termBuffer.Desc() )
         }
-    }    
+
+        if DEBUG_FONT {
+            log.Info("  %s",renderer.fontService.Desc())
+            if renderer.font != nil {
+                log.Info("  %s",renderer.font.Desc())
+            }
+
+
+        }    
+
+        log.Debug("")
+    }
     
 
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
- 
-    if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
-        log.Debug("")
-    }
 
     
 }
