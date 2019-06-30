@@ -66,7 +66,7 @@ func (shader *Shader) loadSource(src string) error {
 //    var err error
 
     shader.Source = src
-    if DEBUG_FONTSERVICE { log.Debug("%s shader setup",shader.Desc()) }
+    if DEBUG_FONTSERVICE { log.Debug("%s source loaded",shader.Desc()) }
     return nil
 
 
@@ -159,7 +159,7 @@ func WatchShaderFile(filePath string, program *Program, shader *Shader) {
 
 
 func (shader *Shader) Desc() string {
-    return fmt.Sprintf("%s[%s]",shader.Type,shader.Name)
+    return fmt.Sprintf("shader[%s.%s]",shader.Name,string(shader.Type),)
 }
 
 func NewShader(name string, shaderType ShaderType) *Shader {

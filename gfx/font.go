@@ -24,7 +24,7 @@ const GlyphMapRows  = 0x08
 const GlyphMapCount = GlyphMapCols * GlyphMapRows
 
 
-const ScratchSize = 8192
+const FontScratchSize = 8192
 
 
 type Font struct {
@@ -57,8 +57,8 @@ func (font *Font) MaxSize() Size {
 }
 
 
-func NewFont(name string) *Font {
-    return &Font{name: name}
+func NewFont(name string, scratch *image.RGBA) *Font {
+    return &Font{name: name, scratch: scratch}
 }
 
 
@@ -89,22 +89,22 @@ func (font *Font) loadData(data []byte) error {
     var err error
 
     
+    if DEBUG_FONTSERVICE { log.Debug("%s parse data",font.Desc()) }
     font.font,err = freetype.ParseFont(data)
     if err != nil {
-        return log.NewError("fail to parse: %s",err)
+        return log.NewError("fail parse: %s",err)
     }
-    if DEBUG_FONTSERVICE { log.Debug("%s data loaded",font.Desc()) }
 
 
 
     font.context = freetype.NewContext()
     font.context.SetFont(font.font)
-    font.scratch = image.NewRGBA( image.Rect(0,0,ScratchSize,ScratchSize) )
+//    font.scratch = image.NewRGBA( image.Rect(0,0,ScratchSize,ScratchSize) )
     
+    if DEBUG_FONTSERVICE { log.Debug("%s find sizes",font.Desc()) }
     font.Size, font.max = font.findSizes()
 
 
-    if DEBUG_FONTSERVICE { log.Debug("%s font setup",font.Desc()) }
     return nil
 
 

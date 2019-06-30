@@ -18,7 +18,7 @@ import (
 
 
 const DEBUG_RENDERER = true
-
+const DEBUG_FRAME = false
 
 
 
@@ -157,7 +157,7 @@ func (renderer *Renderer) Init() error {
 func (renderer *Renderer) Configure(config *facade.Config) error {
     if config == nil { return log.NewError("renderer config nil") }
     
-    log.Info("%s config %s",renderer.Desc(),config.Desc())
+    log.Info("%s configure %s",renderer.Desc(),config.Desc())
     var err error
 
 	if config.GetSetDebug() {
@@ -186,6 +186,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
                     if DEBUG_RENDERER { log.Debug("%s switch to font %s",renderer.Desc(),name) }
                     renderer.font = fnt
                     renderer.ScheduleRefresh()
+                    renderer.grid.ScheduleRefresh()
 
                 }                
             }        
@@ -257,6 +258,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         if renderer.checkRefresh() {
             switch renderer.mode {
                 case facade.Mode_GRID:
+                    renderer.grid.RenderMap(renderer.font)
                     renderer.grid.GenerateData(renderer.font)
             }
         }
@@ -404,6 +406,13 @@ func (renderer *Renderer) InfoClock() string {
 
 
 func (renderer *Renderer) printDebug() {
+
+
+    if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
+
+    if ! DEBUG_FRAME {
+        return
+    }
 
     if DEBUG_CLOCK||DEBUG_MODE||DEBUG_BUFFER {
         log.Debug("")

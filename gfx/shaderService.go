@@ -46,7 +46,7 @@ func (service *ShaderService) GetShader(shaderName string, shaderType ShaderType
     }
 
     if service.shaders[indexName] == nil {
-        return nil, log.NewError("no %s shader named %s",shaderType,shaderName)
+        return nil, log.NewError("no shader named %s",indexName)
     }
     return service.shaders[indexName], nil
 }
@@ -62,7 +62,7 @@ func (service *ShaderService) LoadShader(shaderName string, shaderType ShaderTyp
     var data []byte = []byte{}
     
     if service.shaders[indexName] != nil {
-        return log.NewError("refuse load %s shader %s already have %s",shaderType,shaderName,service.shaders[indexName].Desc())     
+        return log.NewError("refuse load shader %s already have %s",indexName,service.shaders[indexName].Desc())     
     }
     
     {
@@ -71,7 +71,7 @@ func (service *ShaderService) LoadShader(shaderName string, shaderType ShaderTyp
     
         if err == nil { // file found, try reading
             
-            if DEBUG_SHADERSERVICE { log.Debug("%s read %s shader %s from %s",service.Desc(),string(shaderType),shaderName,path) }
+            /*if DEBUG_SHADERSERVICE*/ { log.Debug("%s read shader %s from %s",service.Desc(),indexName,path) }
             data, err = ioutil.ReadFile(path)
             if err != nil {
                 return log.NewError("fail read shader %s from %s: %s",shaderName,path,err)
@@ -104,8 +104,8 @@ func (service *ShaderService) LoadShader(shaderName string, shaderType ShaderTyp
     
     err = shader.loadSource( string(data) )
     if err != nil {
-        log.Debug("%s fail load %s shader %s data: %s",service.Desc(),shaderType,shaderName,err)
-        return log.NewError("fail load %s shader %s data",shaderType,shaderName)
+        log.Debug("%s fail load shader %s data: %s",service.Desc(),indexName,err)
+        return log.NewError("fail load shader %s data",shaderType,indexName)
     }
 
 

@@ -12,6 +12,7 @@ import (
     
 )
 
+const DEBUG_PROGRAM = true
 
 type Program struct {
     Name string
@@ -63,7 +64,7 @@ func (program *Program) ReloadShader(shader *Shader) error {
         return nil
     }
 
-    log.Debug("reload %s %s",program.Desc(),shader.Desc())
+    if DEBUG_PROGRAM { log.Debug("%s reload %s",program.Desc(),shader.Desc()) }
 
 
     err = shader.CompileShader()
@@ -110,6 +111,9 @@ func (program *Program) UseProgram(debug bool) {
 func (program *Program) GetCompileShaders(mode, vertName, fragName string) error {
     var err error
 
+    vertName = mode + vertName
+    fragName = mode + fragName
+
     program.vertexShader, err = program.shaderService.GetShader(vertName, VertType)
     if err != nil { return log.NewError("fail get vert shader: %s",err) }
     err = program.vertexShader.CompileShader()
@@ -121,6 +125,7 @@ func (program *Program) GetCompileShaders(mode, vertName, fragName string) error
     err = program.fragmentShader.CompileShader()
     if err != nil { return log.NewError("fail compile frag shader: %s",err) }
     
+    if DEBUG_PROGRAM { log.Debug("%s compiled shaders",program.Desc()) }
     return nil   
 }
 
@@ -141,6 +146,8 @@ func (program *Program) LinkProgram() error {
 	gl.AttachShader(program.Program, program.vertexShader.Shader)
 	gl.AttachShader(program.Program, program.fragmentShader.Shader)
 	gl.LinkProgram(program.Program)
+
+    if DEBUG_PROGRAM { log.Debug("%s attached and linked",program.Desc()) }
 
 	var status int32
 	gl.GetProgramiv(program.Program, gl.LINK_STATUS, &status)
@@ -175,7 +182,6 @@ func (program *Program) Close() {
     }
 }
 
-const DEBUG_PROGRAM = false
 
 
 func (program *Program) VertexAttribPointer(name AttribName, size int32, stride int32, offset int) error {
@@ -253,7 +259,7 @@ func (program *Program) Uniform1i(name UniformName, value int32) (int32,error) {
 }
 
 func (program *Program) Desc() string {
-    tmp := ""
+    tmp := program.Name + " "
     if program.vertexShader != nil { tmp += program.vertexShader.Name }
     if program.fragmentShader != nil { tmp += "," + program.fragmentShader.Name }
     return fmt.Sprintf("prog[%s]",tmp)

@@ -24,7 +24,7 @@ const DEBUG_SHADER   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
 const DEBUG_DIAG     = false
-const DEBUG_MEMORY   = false
+const DEBUG_MEMORY   = true
 const DEBUG_BUFFER   = false
 
 

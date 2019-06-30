@@ -14,7 +14,7 @@ import (
 )
 
 
-const DEBUG_FONTSERVICE = false
+const DEBUG_FONTSERVICE = true
 
 
 
@@ -29,6 +29,7 @@ var Extensions =[]string{ ".ttf", ".ttc" }
 type FontService struct {
     
     fonts map[string]*Font
+    scratch *image.RGBA
 
 
     directory string
@@ -41,6 +42,7 @@ type FontService struct {
 func NewFontService(directory string) *FontService {
     ret := &FontService{directory: directory}
     ret.fonts = make( map[string]*Font )
+    ret.scratch = image.NewRGBA( image.Rect(0,0,FontScratchSize,FontScratchSize) )
     return ret
 }
 
@@ -85,7 +87,7 @@ func (service *FontService) LoadFont(name string) error {
     
         if err == nil {
             
-            if DEBUG_FONTSERVICE { log.Debug("%s read font %s from %s",service.Desc(),name,path) }
+            /*if DEBUG_FONTSERVICE*/ { log.Debug("%s read font %s from %s",service.Desc(),name,path) }
             data, err = ioutil.ReadFile(path)
             if err != nil {
                 return log.NewError("fail to read font from %s: %s",path,err)
@@ -115,7 +117,7 @@ func (service *FontService) LoadFont(name string) error {
         
     }
 
-    font := NewFont(name)
+    font := NewFont(name,service.scratch)
     err = font.loadData( data )
     if err != nil {
         log.Debug("%s fail load font %s data: %s",service.Desc(),name,err)

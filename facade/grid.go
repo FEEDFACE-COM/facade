@@ -14,6 +14,7 @@ import(
 	"github.com/go-gl/mathgl/mgl32"    
 )
 
+const DEBUG_GRID = true
 
 
 type Grid struct {
@@ -45,7 +46,6 @@ type Grid struct {
 
 
 
-const DEBUG_GRID = false
 
 
 func (grid *Grid) ScheduleRefresh() {
@@ -321,7 +321,8 @@ func gridVertices(
 
 func (grid *Grid) GenerateData(font *gfx.Font) {
     grid.data = []float32{}
-    if DEBUG_GRID { log.Debug("generate %s %s",grid.Desc(),font.Desc()) }
+    
+//    if DEBUG_GRID { log.Debug("%s generate vector data %s",grid.Desc(),font.Desc()) }
     
     width, height := int(grid.width), int(grid.height)
     
@@ -394,7 +395,7 @@ func getGlyphCoord(run rune) gfx.Coord {
 
 
 func (grid *Grid) Init(shaderService *gfx.ShaderService, font *gfx.Font) {
-    log.Debug("init %s",grid.Desc())
+    log.Debug("%s init",grid.Desc())
 
 
     grid.program = gfx.NewProgram("grid",shaderService)
@@ -417,6 +418,7 @@ func (grid *Grid) Init(shaderService *gfx.ShaderService, font *gfx.Font) {
 
 func (grid *Grid) LoadShaders() error {
 	var err error
+	if DEBUG_GRID { log.Debug("%s load shaders",grid.Desc()) }
     err = grid.program.GetCompileShaders("grid/",grid.vert,grid.frag)
     if err != nil { return log.NewError("fail load grid shaders: %s",err) }
     err = grid.program.LinkProgram(); 
@@ -426,6 +428,8 @@ func (grid *Grid) LoadShaders() error {
 
 
 func (grid *Grid) RenderMap(font *gfx.Font) error {
+
+//    if DEBUG_GRID { log.Debug("%s  render map with %s",grid.Desc(),font.Desc()) }
 
     rgba, err := font.RenderMap(false)
     if err != nil {
@@ -485,7 +489,7 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
     if config == nil { return }
 
 
-    log.Debug("%s config %s",grid.Config(),config.Desc())
+    log.Debug("%s configure %s",grid.Desc(),config.Desc())
 
 
 	config.autoWidth(camera.Ratio(),font.Ratio())
