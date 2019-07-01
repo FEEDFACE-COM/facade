@@ -247,6 +247,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
     renderer.prevClock = *gfx.NewClock()
     log.Info("%s start render",renderer.Desc())
     for {
+
+
+        if DEBUG_DIAG {
+            DiagStart()    
+        }
         
         verboseFrame := gfx.ClockVerboseFrame()
         
@@ -306,6 +311,12 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
                 log.Error("%s post render gl error: %s",renderer.Desc(),gl.ErrorString(e)) 
             }
         }
+        
+        if DEBUG_DIAG {
+            DiagDone()    
+        }
+        
+        
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
         gfx.ClockTick()
     }
@@ -408,6 +419,8 @@ func (renderer *Renderer) printDebug() {
 
 
     if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
+    
+    if DEBUG_DIAG { log.Info("%s    %s",renderer.InfoClock(),InfoDiag()) }
 
     if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", renderer.InfoClock() ) }
     
@@ -418,8 +431,6 @@ func (renderer *Renderer) printDebug() {
 
 
         if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
-        
-        if DEBUG_DIAG { log.Info("  %s", MemUsage() ) }
         
         if DEBUG_MODE { 
                 log.Info("  %s", renderer.InfoMode() ) 

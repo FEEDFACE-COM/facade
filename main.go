@@ -17,13 +17,13 @@ import (
 
 
 const DEBUG_STATUS   = false
-const DEBUG_CLOCK    = true
+const DEBUG_CLOCK    = false
 const DEBUG_CONFIG   = true
 const DEBUG_FONT     = false
 const DEBUG_SHADER   = false
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false
-const DEBUG_DIAG     = false
+const DEBUG_DIAG     = true
 const DEBUG_MEMORY   = false
 const DEBUG_BUFFER   = false
 

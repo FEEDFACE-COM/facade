@@ -2,8 +2,10 @@
 package main
 
 import (
+    "time"
     "runtime"
     "fmt"
+    gfx "./gfx"
 )
 
 
@@ -31,3 +33,35 @@ func StartGC() {
 
 
 func mib(bits uint64) float64 { return float64(bits) / (1024.*1024) }
+
+
+var diagStart time.Time 
+var diagStats *gfx.RB 
+
+func DiagStart() {
+    diagStart = time.Now()
+}
+
+func DiagDone() {
+    delta := time.Since(diagStart)
+    if diagStats == nil {
+        diagStats = gfx.NewRB( 5 )    
+    }
+    diagStats.Add( float32(delta.Seconds()) ) 
+}
+
+func InfoDiag() string {
+
+    aspf := diagStats.Average()
+    afps := 1. / aspf
+    
+    lspf := diagStats.Last()
+    lfps := 1. / lspf
+
+
+    return fmt.Sprintf("frame render time %.1fms (avg %.1fms) allows %.1ffps (avg %.1ffps) ",lspf*1000.,aspf*1000.,lfps,afps)
+    
+    
+}
+
+

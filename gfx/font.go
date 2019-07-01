@@ -47,9 +47,9 @@ type Font struct {
 
 
 
-func (font *Font) Size(r,c int) Size { 
-    if c < GlyphMapCols && r<GlyphMapRows {
-        return font.size[r][c]
+func (font *Font) Size(col,row int) Size { 
+    if col < GlyphMapCols && row<GlyphMapRows {
+        return font.size[col][row]
     }
     return Size{0,0}
 }
