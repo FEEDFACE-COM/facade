@@ -352,7 +352,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
             gridCoord := gfx.Coord{col,row}
             tilePos := gfx.Point{ float32(x), float32(y) }
             glyphCoord := getGlyphCoord( run )
-            glyphSize := font.Size[glyphCoord.X][glyphCoord.Y]
+            glyphSize := font.Size(glyphCoord.X,glyphCoord.Y)
             maxGlyphSize := font.MaxSize() 
 
             tileSize := gfx.Size{

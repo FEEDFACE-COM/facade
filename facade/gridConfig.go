@@ -10,6 +10,7 @@ import (
     "flag"    
     "fmt"
     "strings"
+    log "../log"
 )
 
 
@@ -154,7 +155,6 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
 func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
     
     if ! config.GetSetWidth() {
-    
         if ! config.GetSetHeight() {
             return
         }
@@ -167,5 +167,6 @@ func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
         config.Width = uint64(w)
         
     }
+    log.Debug("%s autowidth",config.Desc())
 }
 

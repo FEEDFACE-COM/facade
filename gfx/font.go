@@ -47,7 +47,7 @@ type Font struct {
 
 
 
-func (font *Font) Size(r,c uint) Size { 
+func (font *Font) Size(r,c int) Size { 
     if c < GlyphMapCols && r<GlyphMapRows {
         return font.size[r][c]
     }
@@ -245,14 +245,24 @@ func (font *Font) RenderMap(debug bool) (*image.RGBA, error) {
 }
 
 func (font *Font) stringForByte(b byte) string {
-        if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
-            return " "
-        }
-        if strings.ToUpper(font.name) == "OCRAEXT" && b == 0xB7 {
-            if DEBUG_FONTSERVICE { log.Debug("%s special-case ocraext char '%c'",font.Desc(), b) }
-            return " "
-        }
-        return fmt.Sprintf("%c",rune(b))    
+    if b < 0x20 || ( b >= 0x7f && b < 0xa0 ) {
+        return " "
+    }
+    switch strings.ToLower(font.name) {
+    
+        case "ocraext":
+            if b == 0xB7 {
+                if DEBUG_FONTSERVICE { log.Debug("%s special-case ocraext char 0x'%02x'",font.Desc(), b) }
+                return " "
+            }
+            
+        case "robotomono":
+            if b == 0xA0 {
+                if DEBUG_FONTSERVICE { log.Debug("%s special-case robotomono char 0x'%02x'",font.Desc(), b) }
+                return " "
+            }
+    }
+    return fmt.Sprintf("%c",rune(b))    
 }
 
 
