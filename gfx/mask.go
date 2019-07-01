@@ -10,6 +10,8 @@ import(
     
 )
 
+const DEBUG_MASK = true
+
 type Mask struct {
 
     program *Program
@@ -32,14 +34,14 @@ func NewMask(name string, screen Size) *Mask {
 
 
 func (mask *Mask) ConfigureName(name string) {
+    if DEBUG_MASK { log.Debug("%s configure name %s",mask.Desc(),name) }
     if mask.name != name {
-        oldName := mask.name
-        mask.name = name    
-        err := mask.LoadShaders()
+        err := mask.program.Link( "def", name )
         if err != nil {
             log.Error("fail to load mask shader %s: %s",name,err)     
-            mask.name = oldName
-            mask.LoadShaders()            
+//            err = mask.program.LoadShaders( "def", mask.name )
+        } else {
+            mask.name = name    
         }
     }    
 }
@@ -67,19 +69,19 @@ func (mask *Mask) Render(debug bool) {
 
 }
 
-func (mask *Mask) LoadShaders() error {
-    var err error
-
-    err = mask.program.GetCompileShaders("mask/","def",mask.name)
-    if err != nil { 
-        return log.NewError("fail load mask shaders: %s",err) 
-    }
-    err = mask.program.LinkProgram(); 
-    if err != nil { 
-        return log.NewError("fail to link mask program: %s",err) 
-    }
-    return nil
-}
+//func (mask *Mask) LoadShaders() error {
+//    var err error
+//
+//    err = mask.program.GetCompileShaders("mask/","def",mask.name)
+//    if err != nil { 
+//        return log.NewError("fail load mask shaders: %s",err) 
+//    }
+//    err = mask.program.LinkProgram(); 
+//    if err != nil { 
+//        return log.NewError("fail to link mask program: %s",err) 
+//    }
+//    return nil
+//}
 
 func (mask *Mask) Init(programService *ProgramService) {
     w := mask.width  
@@ -101,9 +103,11 @@ func (mask *Mask) Init(programService *ProgramService) {
     mask.object.Init()
     mask.object.BufferData(len(mask.data)*4, mask.data)
 
-    mask.program = NewProgram("mask",programService)
-    mask.LoadShaders()
 
+    mask.program = programService.GetProgram("mask", "mask/")
+    mask.program.Link("def", mask.name )
+
+    if DEBUG_MASK { log.Debug("%s init",mask.Desc()) }
 
 }
 

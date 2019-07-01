@@ -18,7 +18,6 @@ import (
 
 
 const DEBUG_RENDERER = true
-const DEBUG_FRAME = false
 
 
 
@@ -256,17 +255,17 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         
         renderer.ProcessConf(confChan)
         if renderer.checkRefresh() {
+//            if DEBUG_RENDERER { log.Debug("%s refresh",renderer.Desc()) }
             switch renderer.mode {
                 case facade.Mode_GRID:
-                    renderer.grid.RenderMap(renderer.font)
-                    renderer.grid.GenerateData(renderer.font)
+                    renderer.grid.ScheduleRefresh()
             }
         }
         
         gl.BindFramebuffer(gl.FRAMEBUFFER,0)
         gl.Clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT )
 
-        gfx.RefreshPrograms()
+        renderer.programService.CheckRefresh()
 
 
         gl.BlendEquationSeparate(gl.FUNC_ADD,gl.FUNC_ADD)
@@ -410,7 +409,7 @@ func (renderer *Renderer) printDebug() {
 
     if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
 
-    if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
+    if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", renderer.InfoClock() ) }
     
 
     if  DEBUG_STATUS {

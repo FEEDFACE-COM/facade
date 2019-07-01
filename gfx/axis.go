@@ -5,7 +5,7 @@ package gfx
 
 import(
     "github.com/go-gl/mathgl/mgl32"    
-    log "../log"
+//    log "../log"
     gl "src.feedface.com/gfx/piglet/gles2"
     
 )
@@ -58,19 +58,23 @@ func (axis *Axis) Init(programService *ProgramService) {
     axis.object.Init()
     axis.object.BufferData(len(axis.data)*4, axis.data)
 
-    var err error    
-    axis.program = NewProgram("axis",programService)
+    axis.program = programService.GetProgram("axis","")
+    axis.program.Link("color","color")
 
-    err = axis.program.GetCompileShaders("","color","color")
-    if err != nil { 
-        log.Error("%s fail load axis shaders: %s",axis.Desc(),err) 
-        return
-    }
-    
-    err = axis.program.LinkProgram(); 
-    if err != nil { log.Error("%s fail link axis program: %s",axis.Desc(),err) }
+//    var err error    
+//    axis.program = NewProgram("axis",programService)
+//
+//    err = axis.program.GetCompileShaders("","color","color")
+//    if err != nil { 
+//        log.Error("%s fail load axis shaders: %s",axis.Desc(),err) 
+//        return
+//    }
+//    
+//    err = axis.program.LinkProgram(); 
+//    if err != nil { log.Error("%s fail link axis program: %s",axis.Desc(),err) }
 
 //    log.Debug("%s init",axis.Desc())
 }
 
 func (axis *Axis) Desc() string { return "axis[]" }
+

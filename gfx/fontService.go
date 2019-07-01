@@ -52,7 +52,7 @@ func (service *FontService) GetFont(fontName string) (*Font,error) {
     
     if service.fonts[fontName] == nil {
         var err error
-        if DEBUG_FONTSERVICE { log.Debug("%s font %s not loaded",service.Desc(),fontName) }
+        if DEBUG_FONTSERVICE { log.Debug("%s loading font %s",service.Desc(),fontName) }
         err = service.LoadFont(fontName)
         if err != nil {
             log.Error("%s fail get font %s: %s",service.Desc(),fontName,err)

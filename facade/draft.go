@@ -96,17 +96,22 @@ func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font, programService *gfx
     
     var err error
     {
-        draft.program["axis"] = gfx.NewProgram("axis",programService)
-    
-        err = draft.program["axis"].GetCompileShaders("","color","color")
-        if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }
+        draft.program["axis"] = programService.GetProgram("axis","")
 
-        err = draft.program["axis"].LinkProgram()
+        err = draft.program["axis"].Link("color","color")
         if err != nil { log.Error("fail linking %s color shaders: %s","axis",err) }
         
-        if draft.program["axis"] == nil {
-            log.Error("fail Init!!")    
-        }
+//        draft.program["axis"] = gfx.NewProgram("axis","axis",programService)
+    
+//        err = draft.program["axis"].GetCompileShaders("","color","color")
+//        if err != nil { log.Error("fail loading %s color shaders: %s","axis",err) }
+
+//        err = draft.program["axis"].LinkProgram()
+//        if err != nil { log.Error("fail linking %s color shaders: %s","axis",err) }
+//        
+//        if draft.program["axis"] == nil {
+//            log.Error("fail Init!!")    
+//        }
             
     }
     

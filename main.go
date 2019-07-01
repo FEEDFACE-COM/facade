@@ -16,10 +16,10 @@ import (
 )
 
 
-const DEBUG_STATUS   = false
+const DEBUG_STATUS   = true
 const DEBUG_CLOCK    = true
 const DEBUG_CONFIG   = true
-const DEBUG_FONT     = true
+const DEBUG_FONT     = false
 const DEBUG_SHADER   = true
 const DEBUG_MODE     = true
 const DEBUG_GRID     = false

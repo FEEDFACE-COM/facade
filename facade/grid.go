@@ -78,8 +78,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
     
     if grid.checkRefresh() {
-
-	    grid.GenerateData(font)
+//        if DEBUG_GRID { log.Debug("%s refresh",grid.Desc() ) }
+	    grid.generateData(font)
+//	    grid.renderMap(font)
 	    
 	}
     
@@ -319,10 +320,10 @@ func gridVertices(
 
 
 
-func (grid *Grid) GenerateData(font *gfx.Font) {
+func (grid *Grid) generateData(font *gfx.Font) {
     grid.data = []float32{}
     
-//    if DEBUG_GRID { log.Debug("%s generate vector data %s",grid.Desc(),font.Desc()) }
+//    if DEBUG_GRID { log.Debug("%s generate vertex data %s",grid.Desc(),font.Desc()) }
     
     width, height := int(grid.width), int(grid.height)
     
@@ -398,38 +399,28 @@ func (grid *Grid) Init(programService *gfx.ProgramService, font *gfx.Font) {
     log.Debug("%s init",grid.Desc())
 
 
-    grid.program = gfx.NewProgram("grid",programService)
     grid.object = gfx.NewObject("grid")
+    grid.object.Init()
+
     grid.texture = gfx.NewTexture("grid")
-
-
     grid.texture.Init()
-    grid.RenderMap(font)
-//    grid.texture.TexImage()
+    
+    grid.program = programService.GetProgram("grid","grid/")
+    grid.program.Link(grid.vert, grid.frag)
+
+    grid.renderMap(font)
     
 
-    grid.object.Init()
-    grid.LoadShaders()
 
-//	grid.empty.RenderTexture(font)
 	grid.ScheduleRefresh()        
 
 }
 
-func (grid *Grid) LoadShaders() error {
-	var err error
-	if DEBUG_GRID { log.Debug("%s load shaders",grid.Desc()) }
-    err = grid.program.GetCompileShaders("grid/",grid.vert,grid.frag)
-    if err != nil { return log.NewError("fail load grid shaders: %s",err) }
-    err = grid.program.LinkProgram(); 
-    if err != nil { return log.NewError("fail link grid program: %v",err) }
-    return nil
-}
 
 
-func (grid *Grid) RenderMap(font *gfx.Font) error {
+func (grid *Grid) renderMap(font *gfx.Font) error {
 
-//    if DEBUG_GRID { log.Debug("%s  render map with %s",grid.Desc(),font.Desc()) }
+    if DEBUG_GRID { log.Debug("%s render texture map %s",grid.Desc(),font.Desc()) }
 
     rgba, err := font.RenderMap(false)
     if err != nil {
@@ -521,9 +512,10 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
         grid.terminal = config.GetTerminal()
     }
 
+
     if true {  //optimize!!
         log.Debug("%s rendermap %s",grid.Desc(),font.Desc())
-        grid.RenderMap(font)
+        grid.renderMap(font)
 //        grid.texture.TexImage()
     }
 
@@ -556,7 +548,8 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 		if config.GetSetVert() { changed = true; grid.vert = config.GetVert() }
 		if config.GetSetFrag() { changed = true; grid.frag = config.GetFrag() }
 		if changed {
-			err := grid.LoadShaders()    
+    		err := grid.program.Link(grid.vert, grid.frag)
+//			err := grid.LoadShaders()    
 			if err != nil {
 				grid.vert = vert
 				grid.frag = frag
