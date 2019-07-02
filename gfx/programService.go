@@ -107,7 +107,7 @@ func (service *ProgramService) CheckRefresh() {
 
             for _,prog := range( service.programs ) {
                 if prog.HasShader(shdr) {
-                    if DEBUG_PROGRAM { log.Debug("%s refresh %s",service.Desc(),prog.Desc() ) }
+                    if DEBUG_PROGRAMSERVICE { log.Debug("%s refresh %s",service.Desc(),prog.Desc() ) }
                     err = prog.Relink()
                     if err != nil {
                         log.Error("%s fail refresh %s: %s",service.Desc(),prog.Desc(),err)

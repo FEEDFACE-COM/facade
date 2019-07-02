@@ -13,7 +13,6 @@ import (
     
 )
 
-const DEBUG_PROGRAM = true
 
 type Program struct {
     name string
@@ -59,7 +58,7 @@ func (program *Program) UseProgram(debug bool) {
 }
 
 func (program *Program) Relink() error {
-    if DEBUG_PROGRAM { log.Debug("%s relink",program.Desc() ) }
+    if DEBUG_PROGRAMSERVICE { log.Debug("%s relink",program.Desc() ) }
  
     err := program.attachShadersAndLinkProgram()
     if err != nil {
@@ -79,18 +78,18 @@ func (program *Program) Link(vertName,fragName string) error {
     if err != nil {
         program.vertexShader = vert
         program.fragmentShader = frag    
-        if DEBUG_PROGRAM { log.Debug("% fail compile shaders %s,%s: %s",program.Desc(),vertName,fragName,err) }
+        if DEBUG_PROGRAMSERVICE { log.Debug("% fail compile shaders %s,%s: %s",program.Desc(),vertName,fragName,err) }
         return log.NewError("fail compile: %s",err)
     } 
     
     err = program.attachShadersAndLinkProgram()
     if err != nil {
-        if DEBUG_PROGRAM { log.Debug("%s fail link %s,%s: %s",program.Desc(),vertName,fragName,err) }
+        if DEBUG_PROGRAMSERVICE { log.Debug("%s fail link %s,%s: %s",program.Desc(),vertName,fragName,err) }
         program.vertexShader = vert
         program.fragmentShader = frag    
         err2 := program.attachShadersAndLinkProgram()
         if err2 != nil {
-            if DEBUG_PROGRAM { log.Debug("%s reset to previous shaders") }    
+            if DEBUG_PROGRAMSERVICE { log.Debug("%s reset to previous shaders") }    
         }
         return log.NewError("fail link: %s",err)
     }
@@ -117,7 +116,7 @@ func (program *Program) getAndCompileShaders(vertName,fragName string) error {
     if err != nil { 
         return log.NewError("fail compile vert shader: %s",err) 
     } 
-    if DEBUG_PROGRAM { log.Debug("%s compiled vert shader %s",program.Desc(),program.vertexShader.Name) }
+    if DEBUG_PROGRAMSERVICE { log.Debug("%s compiled vert shader %s",program.Desc(),program.vertexShader.Name) }
 
     
     
@@ -129,7 +128,7 @@ func (program *Program) getAndCompileShaders(vertName,fragName string) error {
     if err != nil {
         return log.NewError("fail compile frag shader: %s",err) 
     } 
-    if DEBUG_PROGRAM { log.Debug("%s compiled frag shader %s",program.Desc(),program.fragmentShader.Name) }
+    if DEBUG_PROGRAMSERVICE { log.Debug("%s compiled frag shader %s",program.Desc(),program.fragmentShader.Name) }
 
     return nil
 }
@@ -160,7 +159,7 @@ func (program *Program) attachShadersAndLinkProgram() error {
         log.Debug("%s%s",error,source)
         ret = log.NewError("fail link: %s",error)
 	} else {
-        if DEBUG_PROGRAM { log.Debug("%s attached and linked",program.Desc()) }
+        if DEBUG_PROGRAMSERVICE { log.Debug("%s attached and linked",program.Desc()) }
     }
 
 	gl.DetachShader(program.program, program.vertexShader.Shader)
