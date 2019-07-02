@@ -42,12 +42,15 @@ type Renderer struct {
     fontService *gfx.FontService
     programService *gfx.ProgramService
     
-    mutex *sync.Mutex
+    stateMutex *sync.Mutex
     directory string
     
     refreshChan chan bool
     
     prevClock gfx.Clock
+    
+    tickChannel chan bool
+    
     
 }
 
@@ -55,8 +58,9 @@ type Renderer struct {
 
 func NewRenderer(directory string) *Renderer {
     ret := &Renderer{directory: directory}
-    ret.mutex = &sync.Mutex{}
+    ret.stateMutex = &sync.Mutex{}
     ret.refreshChan = make( chan bool, 1 )
+    ret.tickChannel = make( chan bool, 1 )
     return ret
 }
 
@@ -231,7 +235,39 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 }
 
 
+
+func (renderer *Renderer) tick() {
+
+    for { //forever
+        renderer.tickChannel <- true // wait until can send
+        time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
+    }
+
+}
+
+
+func (renderer *Renderer) tock() {
+    
+    // wait for message
+    <- renderer.tickChannel    
+    
+    // clear all messages
+    for {
+        select {
+            case <- renderer.tickChannel: ;
+            default: return
+        }
+    }
+    
+    // return to render one frame        
+}
+
+
 func (renderer *Renderer) Render(confChan chan facade.Config) error {
+
+    
+    go renderer.tick()
+    
 
     gl.Viewport(0, 0, int32(renderer.screen.W),int32(renderer.screen.H))
     gl.Disable(gl.DEPTH_TEST)
@@ -247,15 +283,13 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
     renderer.prevClock = *gfx.NewClock()
     log.Info("%s start render",renderer.Desc())
     for {
+        if DEBUG_DIAG { DiagStart() }
 
-
-        if DEBUG_DIAG {
-            DiagStart()    
-        }
+        gfx.ClockTick()
         
         verboseFrame := gfx.ClockVerboseFrame()
         
-        renderer.mutex.Lock()
+        renderer.stateMutex.Lock()
         piglet.MakeCurrent()
         
         renderer.ProcessConf(confChan)
@@ -296,13 +330,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         }
 
         piglet.SwapBuffers()
-        renderer.mutex.Unlock()
+        renderer.stateMutex.Unlock()
         
-        // wait for next frame
-        // FIXME, maybe dont wait as long??
-
-
-//        if e != gl.NO_ERROR && verboseFrame { 
 
         e := uint32(gl.NO_ERROR)
         if verboseFrame { 
@@ -312,13 +341,14 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
             }
         }
         
-        if DEBUG_DIAG {
-            DiagDone()    
-        }
+        
+        if DEBUG_DIAG { DiagDone() }
         
         
-        time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
-        gfx.ClockTick()
+        
+        
+        renderer.tock()
+
     }
     return nil
 }

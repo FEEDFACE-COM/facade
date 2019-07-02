@@ -68,7 +68,7 @@ func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     ret.meterBuffer = gfx.NewRB( METER_SAMPLES )
     for i:=0;i<METER_SAMPLES;i++ { ret.meterBuffer.Add(1.0) }
     ret.meterTimestamp = gfx.NOW()
-    ret.meterTimer = gfx.NewTimer(METER_INTERVAL, true, nil)
+    ret.meterTimer = gfx.NewTimer(METER_INTERVAL, true, nil, nil)
     ret.meterTimer.Fun = func() {
         if ret.meterTimestamp + METER_INTERVAL < gfx.NOW() { // no new lines since last check
 //            log.Debug("%s no line since one sec",ret.Desc())
@@ -169,14 +169,13 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
 
 
 
-
-    buffer.timer = gfx.NewTimer( speed, false, custom )
-    buffer.timer.Fun = func() {
+    fun := func() {
         gfx.UnRegisterTimer(buffer.timer)
         buffer.timer = nil
         buffer.dequeueLine(true)
-
     }
+
+    buffer.timer = gfx.NewTimer( speed, false, fun, custom )
     buffer.timer.Start()
 }
 

@@ -39,27 +39,28 @@ var diagStart time.Time
 var diagStats *gfx.RB 
 
 func DiagStart() {
+    if ! DEBUG_DIAG { return }
     diagStart = time.Now()
 }
 
 func DiagDone() {
+    if ! DEBUG_DIAG { return }
     delta := time.Since(diagStart)
     if diagStats == nil {
-        diagStats = gfx.NewRB( 5 )    
+        diagStats = gfx.NewRB( 10 )    
     }
     diagStats.Add( float32(delta.Seconds()) ) 
 }
 
 func InfoDiag() string {
+    if ! DEBUG_DIAG { return "" }
 
     aspf := diagStats.Average()
     afps := 1. / aspf
     
-    lspf := diagStats.Last()
-    lfps := 1. / lspf
 
 
-    return fmt.Sprintf("frame render time %.1fms (avg %.1fms) allows %.1ffps (avg %.1ffps) ",lspf*1000.,aspf*1000.,lfps,afps)
+    return fmt.Sprintf("avg %5.2fms [%.2ffps]",aspf*1000.,afps)
     
     
 }

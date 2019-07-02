@@ -8,7 +8,7 @@ import (
     log "../log"
 )
 
-const VERBOSE_FRAMES = 90
+const VERBOSE_FRAMES = 60
 const CLOCK_RATE = 1.0
 
 

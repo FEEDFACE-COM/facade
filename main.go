@@ -28,8 +28,7 @@ const DEBUG_MEMORY   = false
 const DEBUG_BUFFER   = false
 
 
-const FRAME_RATE = 60.0
-const BUFFER_SIZE = 80
+const FRAME_RATE = 50.0
 
 
 

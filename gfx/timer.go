@@ -32,12 +32,13 @@ func (timer *Timer) Custom() float32 { return timer.custom( timer.fader ) }
 
 
 
-func NewTimer(duration float32, repeat bool, custom func(float32) float32 ) *Timer {
+func NewTimer(duration float32, repeat bool, fun func(), custom func(float32) float32 ) *Timer {
     ret := &Timer{start: NOW(), duration: duration, repeat: repeat}
     ret.custom = func(x float32) float32 { return x }
     if custom != nil {
         ret.custom = custom
     } 
+    ret.Fun = fun
     RegisterTimer(ret)
     return ret
 }
