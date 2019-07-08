@@ -40,9 +40,9 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
         triggerFun: triggerFun,
     }
 
-    if timer.valueFun == nil {
-        timer.valueFun = func(x float32) float32 { return x }
-    }
+//    if timer.valueFun == nil {
+//        timer.valueFun = func(x float32) float32 { return x }
+//    }
     
     
     clock.timers[timer] = timer
@@ -103,6 +103,7 @@ func (clock *Clock) Tick() {
     
 }
 
+func (clock *Clock) Now() float32 { return clock.time } 
 
 func (clock *Clock) Desc() string {
     return fmt.Sprintf("clock[#%05d %.2fs]",clock.frame,clock.time)    

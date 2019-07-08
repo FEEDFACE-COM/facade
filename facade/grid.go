@@ -119,7 +119,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
     }
     grid.program.Uniform2fv(gfx.CURSORPOS, 1, &cursorPos[0] );
 
-    clocknow := float32( gfx.NOW() )
+    clocknow := float32( gfx.Now() )
     grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow )
 
     scroller := float32(0.0)

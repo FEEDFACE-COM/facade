@@ -47,7 +47,7 @@ type Renderer struct {
     
     refreshChan chan bool
     
-    prevClock gfx.Clock
+    prevFrame gfx.ClockFrame
     
     tickChannel chan bool
     
@@ -152,7 +152,7 @@ func (renderer *Renderer) Init() error {
     renderer.grid.Init(renderer.programService,renderer.font)
 
 
-    gfx.ClockReset()
+    gfx.WorldClock().Reset()
     return err
 }
 
@@ -279,15 +279,15 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 //    gl.CullFace(gl.BACK)
 
 
-    gfx.ClockTick()
-    renderer.prevClock = *gfx.NewClock()
+    gfx.WorldClock().Tick()
+    renderer.prevFrame = gfx.WorldClock().Frame()
     log.Info("%s start render",renderer.Desc())
     for {
         if DEBUG_DIAG { DiagStart() }
 
-        gfx.ClockTick()
+        gfx.WorldClock().Tick()
         
-        verboseFrame := gfx.ClockVerboseFrame()
+        verboseFrame := gfx.WorldClock().VerboseFrame()
         
         renderer.stateMutex.Lock()
         piglet.MakeCurrent()
@@ -326,7 +326,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         if verboseFrame { 
 
             renderer.printDebug(); 
-            renderer.prevClock = *gfx.NewClock()
+            renderer.prevFrame = gfx.WorldClock().Frame()
         }
 
         piglet.SwapBuffers()
@@ -440,9 +440,9 @@ func (renderer *Renderer) InfoMode() string {
 }
 
 
-func (renderer *Renderer) InfoClock() string {
-    return fmt.Sprintf("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(renderer.prevClock)  )
-}
+//func (renderer *Renderer) InfoClock() string {
+//    return fmt.Sprintf("%s    %4.1ffps",gfx.ClockDesc(),gfx.ClockDelta(renderer.prevFrame)  )
+//}
 
 
 func (renderer *Renderer) printDebug() {
@@ -450,9 +450,9 @@ func (renderer *Renderer) printDebug() {
 
     if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
     
-    if DEBUG_DIAG { log.Info("%s    %s",renderer.InfoClock(),InfoDiag()) }
+    if DEBUG_DIAG { log.Info("%s    %s",gfx.WorldClock().Info(renderer.prevFrame),InfoDiag()) }
 
-    if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", renderer.InfoClock() ) }
+    if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
     
 
     if  DEBUG_STATUS {
@@ -460,7 +460,7 @@ func (renderer *Renderer) printDebug() {
         log.Debug("")
 
 
-        if DEBUG_CLOCK { log.Info( "%s", renderer.InfoClock() ) }
+        if DEBUG_CLOCK { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
         
         if DEBUG_MODE { 
                 log.Info("  %s", renderer.InfoMode() ) 
@@ -505,7 +505,7 @@ func (renderer *Renderer) Info() string {
     ret += "\n\n"
 
 
-    ret += renderer.InfoClock()
+    ret += gfx.WorldClock().Info(renderer.prevFrame)
     ret += "\n  " + renderer.InfoMode()
     ret += "\n  " + renderer.lineBuffer.Desc()
     ret += "\n  " + renderer.termBuffer.Desc()

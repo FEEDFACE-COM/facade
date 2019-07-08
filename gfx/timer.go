@@ -25,7 +25,14 @@ type Timer struct {
 
 func (timer *Timer) Count() uint     { return timer.count }
 func (timer *Timer) Fader() float32  { return timer.fader }
-func (timer *Timer) Value() float32 { return timer.valueFun( timer.fader ) }
+
+func (timer *Timer) Value() float32 { 
+    if timer.valueFun != nil {
+        return timer.valueFun( timer.fader ) 
+    }
+    return timer.fader
+    
+}
 
 
 
@@ -95,5 +102,14 @@ func (timer *Timer) Tick(now float32) bool {
 
 
 func (timer *Timer) Desc() string { 
-    return fmt.Sprintf("timer[#%d →%4.2f ↑%4.2f]",timer.count,timer.fader,timer.valueFun(timer.fader))
+    ret := fmt.Sprintf("timer[%.2f",timer.duration)
+    if timer.repeat {
+        ret += fmt.Sprintf(" #%d",timer.count)
+    }
+    ret += fmt.Sprintf(" →%4.2f",timer.fader)
+    if timer.valueFun != nil {
+        ret += fmt.Sprintf(" ↑%4.2f",timer.valueFun(timer.fader))
+    }
+    ret += "]"
+    return ret
 }

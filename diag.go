@@ -60,7 +60,7 @@ func InfoDiag() string {
     
 
 
-    return fmt.Sprintf("avg %5.2fms [%.2ffps]",aspf*1000.,afps)
+    return fmt.Sprintf("avg %5.2fms (%.2ffps)",aspf*1000.,afps)
     
     
 }
