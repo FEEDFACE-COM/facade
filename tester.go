@@ -3,7 +3,6 @@
 package main
 
 import (
-    "fmt"
     "strings"
     "os"
     "sync"
@@ -37,7 +36,7 @@ type Tester struct {
     mutex *sync.Mutex
     directory string
     
-    prevClock gfx.Clock
+    prevFrame gfx.ClockFrame
     
     image *image.RGBA
     
@@ -150,7 +149,7 @@ func (tester *Tester) Init() error {
     }
     
     
-    gfx.ClockReset()
+    gfx.WorldClock().Reset()
     return nil   
 }
 
@@ -327,18 +326,14 @@ func (tester *Tester) InfoMode() string {
     
 }
 
-func (tester *Tester) InfoClock() string {
-    return fmt.Sprintf("%s    %4.1f",gfx.ClockDesc(),gfx.ClockDelta(tester.prevClock)  )
-}
-
 
 
 
 
 func (tester *Tester) Test(confChan chan facade.Config) error {
     const FRAME_RATE = 60.
-    gfx.ClockTick()
-    tester.prevClock = *gfx.NewClock()
+    gfx.WorldClock().Tick()
+    tester.prevFrame = gfx.WorldClock().Frame()
 
 
 
@@ -347,10 +342,10 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         tester.ProcessConf(confChan)
 
-        if gfx.ClockVerboseFrame() {
+        if gfx.WorldClock().VerboseFrame() {
 
             log.Debug("")
-            log.Info( "%s", tester.InfoClock() )
+            log.Info( "%s", gfx.WorldClock().Info(tester.prevFrame) )
 //            log.Info("  %s", MemUsage() )
             log.Info("  %s", tester.InfoMode() ) 
             log.Info("  %s", tester.lineBuffer.Desc() )
@@ -411,7 +406,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
         
         time.Sleep( time.Duration( int64(time.Second / FRAME_RATE) ) )
-        gfx.ClockTick()
+        gfx.WorldClock().Tick()
 
 
         
@@ -431,7 +426,7 @@ func (tester *Tester) Info() string {
     ret += "\n\n"
 
 
-    ret += tester.InfoClock()
+    ret += gfx.WorldClock().Info(tester.prevFrame)
     ret += "\n  " + tester.InfoMode()
     ret += "\n  " + tester.lineBuffer.Desc()
     ret += "\n  " + tester.termBuffer.Desc()

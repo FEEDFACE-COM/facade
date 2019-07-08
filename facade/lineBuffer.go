@@ -67,14 +67,13 @@ func NewLineBuffer(rows,offs uint, refreshChan chan bool) *LineBuffer {
     ret.mark = LOWER
     ret.meterBuffer = gfx.NewRB( METER_SAMPLES )
     for i:=0;i<METER_SAMPLES;i++ { ret.meterBuffer.Add(1.0) }
-    ret.meterTimestamp = gfx.NOW()
-    ret.meterTimer = gfx.NewTimer(METER_INTERVAL, true, nil, nil)
-    ret.meterTimer.Fun = func() {
-        if ret.meterTimestamp + METER_INTERVAL < gfx.NOW() { // no new lines since last check
+    ret.meterTimestamp = gfx.Now()
+    ret.meterTimer = gfx.WorldClock().NewTimer(METER_INTERVAL, true, nil, func() {
+        if ret.meterTimestamp + METER_INTERVAL < gfx.Now() { // no new lines since last check
 //            log.Debug("%s no line since one sec",ret.Desc())
             ret.meterBuffer.Add( 1.0 )
         }        
-    }
+    })
 
 
 
@@ -106,7 +105,7 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
 func (buffer *LineBuffer) GetScroller() float32 {
     
     if buffer.timer != nil {
-        return buffer.timer.Custom()
+        return buffer.timer.Value()
     }
     
     return float32(0.0)  
@@ -135,26 +134,26 @@ func (buffer *LineBuffer) dequeueLine(scrollNext bool) {
 
 func (buffer *LineBuffer) scrollOnce(freshLine bool) {
     if buffer.timer != nil {
-        log.Error("%s refuse scroll with existing timer",buffer.Desc())
+        log.Error("%s refuse scroll with existing %s",buffer.Desc(),buffer.timer.Desc())
         return    
     }
     
     //most lines are scrolled ease in / ease out
-    custom := math.EaseInEaseOut
+    valueFun := math.EaseInEaseOut
     speed := float32(buffer.speed)    
     
     tmp := ""
 
 
     if freshLine  {
-        custom = math.EaseInEaseOut
+        valueFun = math.EaseInEaseOut
         tmp += " ease"
     }
 
     if !freshLine  { 
 
         if buffer.Smooth {
-            custom = math.Identity
+            valueFun = math.Identity
             tmp += " smooth"
         }
         if buffer.Adaptive {
@@ -167,16 +166,13 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
     if DEBUG_LINEBUFFER { log.Debug("%s scroll %.2f%s",buffer.Desc(),speed,tmp) }
 
 
-
-
-    fun := func() {
-        gfx.UnRegisterTimer(buffer.timer)
+    triggerFun := func() {
         buffer.timer = nil
         buffer.dequeueLine(true)
     }
 
-    buffer.timer = gfx.NewTimer( speed, false, fun, custom )
-    buffer.timer.Start()
+    buffer.timer = gfx.WorldClock().NewTimer( speed, false, valueFun, triggerFun)
+
 }
 
 
@@ -204,9 +200,9 @@ func (buffer *LineBuffer) pushLine(row Line) {
 func (buffer *LineBuffer) queueLine(row Line) {
 
     // measure speed
-    metered := gfx.NOW()-buffer.meterTimestamp
+    metered := gfx.Now()-buffer.meterTimestamp
     buffer.meterBuffer.Add( metered )
-    buffer.meterTimestamp = gfx.NOW()
+    buffer.meterTimestamp = gfx.Now()
     
     
     // no buffering, just push line    
@@ -241,7 +237,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
             // in case timer is gone somehow
             if buffer.timer == nil {
-                log.Debug("%s restart timer",buffer.Desc())
+                log.Debug("%s restart nil timer",buffer.Desc())
                 buffer.scrollOnce(false)    
             }            
 
@@ -349,7 +345,7 @@ func (buffer *LineBuffer) Fill(fill []string) {
 
     // kill timer
     if buffer.timer != nil {
-        gfx.UnRegisterTimer(buffer.timer)
+        gfx.WorldClock().DeleteTimer( buffer.timer )
         buffer.timer = nil
         buffer.dequeueLine(false)
     }
@@ -391,7 +387,7 @@ func (buffer *LineBuffer) Resize(newRows,newOffs uint) {
 
     // kill timer
     if buffer.timer != nil {
-        gfx.UnRegisterTimer(buffer.timer)
+        gfx.WorldClock().DeleteTimer( buffer.timer )
         buffer.timer = nil
         buffer.dequeueLine(false)
     }
@@ -434,7 +430,7 @@ func (buffer *LineBuffer) SetSpeed(speed float32) {
     
     // kill timer
     if buffer.timer != nil {
-        gfx.UnRegisterTimer(buffer.timer)
+        gfx.WorldClock().DeleteTimer( buffer.timer )
         buffer.timer = nil
         buffer.dequeueLine(false)
     }
