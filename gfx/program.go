@@ -78,7 +78,7 @@ func (program *Program) Link(vertName,fragName string) error {
     if err != nil {
         program.vertexShader = vert
         program.fragmentShader = frag    
-        if DEBUG_PROGRAMSERVICE { log.Debug("% fail compile shaders %s,%s: %s",program.Desc(),vertName,fragName,err) }
+        if DEBUG_PROGRAMSERVICE { log.Debug("%s fail compile shaders %s,%s: %s",program.Desc(),vertName,fragName,err) }
         return log.NewError("fail compile: %s",err)
     } 
     
