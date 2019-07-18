@@ -17,7 +17,6 @@ import (
 )
 
 
-const DEBUG_RENDERER = true
 
 
 
@@ -448,6 +447,8 @@ func (renderer *Renderer) InfoMode() string {
 func (renderer *Renderer) printDebug() {
 
 
+    log.Debug("")
+
     if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
     
     if DEBUG_DIAG { log.Info("%s    %s",gfx.WorldClock().Info(renderer.prevFrame),InfoDiag()) }
@@ -457,7 +458,6 @@ func (renderer *Renderer) printDebug() {
 
     if  DEBUG_STATUS {
 
-        log.Debug("")
 
 
         if DEBUG_CLOCK { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
@@ -477,12 +477,12 @@ func (renderer *Renderer) printDebug() {
 
         }    
 
-        log.Debug("")
     }
     
 
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
 
+    log.Debug("")
     
 }
 
