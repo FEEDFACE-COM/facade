@@ -187,7 +187,7 @@ func (buffer *LineBuffer) pushLine(row Line) {
     for ; r < total-1; r++ {
         buffer.buf[r] = buffer.buf[r+1]
     }
-    buffer.buf[r] = &   row
+    buffer.buf[r] = &row
     if DEBUG_LINEBUFFER { log.Debug("%s push #%d",buffer.Desc(),r) }
 
     select { case buffer.refreshChan <- true: ; default: ; }
@@ -212,18 +212,18 @@ func (buffer *LineBuffer) queueLine(row Line) {
     }
 
     
-    // REM probably should lock mutex?
-    total := buffer.rows + buffer.offs
-
-    idx := buffer.rows
 
     if buffer.buf[buffer.rows] == nil { //first offscreen slot available
 
-        buffer.buf[idx] = &row
+        buffer.buf[buffer.rows] = &row
         buffer.scrollOnce(true) 
         
         
     } else { // first offscreen slot full, find next available
+
+        // REM probably should lock mutex?
+        total := buffer.rows + buffer.offs
+        idx := buffer.rows
 
      
         for ;idx<total;idx++ {
@@ -233,9 +233,14 @@ func (buffer *LineBuffer) queueLine(row Line) {
         }
 
         
-        if idx >= total {
+        if idx < total {
+            
+            buffer.buf[idx] = &row
+            
+        } else { //all slots full
 
-            // in case timer is gone somehow
+            
+            // restart timer in case its gone somehow
             if buffer.timer == nil {
                 log.Debug("%s restart nil timer",buffer.Desc())
                 buffer.scrollOnce(false)    
@@ -245,19 +250,17 @@ func (buffer *LineBuffer) queueLine(row Line) {
             if buffer.Drop {
 
                 log.Debug("%s overflow !! line dropped !!",buffer.Desc())
-                return
                 
             } else {
 
                 if DEBUG_LINEBUFFER { log.Debug("%s overflow, line jumped",buffer.Desc()) }
                 buffer.pushLine(row)
-                return
 
             }
             
+            return
+            
         }
-
-        buffer.buf[idx] = &row
         
     }
     
