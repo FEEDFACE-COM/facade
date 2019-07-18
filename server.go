@@ -175,7 +175,7 @@ func (server *Server) Listen(
     if DEBUG_SERVER { log.Debug("listen %s",server.connStr) }
     listener, err := net.Listen("tcp",server.connStr)
     if err != nil {
-        log.Error("fail to listen %s: %s",server.connStr,err)
+        log.PANIC("fail to listen %s: %s",server.connStr,err)
     }
     
     serv := grpc.NewServer()
@@ -183,7 +183,7 @@ func (server *Server) Listen(
     if DEBUG_SERVER { log.Debug("serve %s",server.connStr) }
     err = serv.Serve(listener)
     if err != nil {
-        log.Error("fail to serve: %s",err)
+        log.PANIC("fail to serve: %s",err)
     }
     if DEBUG_SERVER { log.Debug("listen done.") }
 }
