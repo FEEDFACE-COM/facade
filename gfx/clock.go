@@ -5,12 +5,13 @@ package gfx
 import (
     "time"
     "fmt"
+    "sync"
     log "../log"
 )
 
 
 
-const DEBUG_CLOCK = true
+const DEBUG_CLOCK = false
 
 
 const ClockRate = 1.0
@@ -45,7 +46,9 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 //    }
     
     
+    clock.mux.Lock()
     clock.timers[timer] = timer
+    clock.mux.Unlock()
     
     return timer
     
@@ -53,31 +56,34 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 
 
 func (clock *Clock) DeleteTimer(timer *Timer) {
+    clock.mux.Lock()
 
-    tmp := clock.timers[timer]
+    tmp,ok := clock.timers[timer]
     
-    if tmp != nil {
+    if ok {
         if DEBUG_CLOCK { log.Debug("%s delete %s",clock.Desc(),tmp.Desc()) }
-        clock.timers[timer] = nil    
+        delete(clock.timers,timer)
     } else {
-        log.Debug("%s fail delete timer %s",clock.Desc(), timer.Desc())
+        log.Debug("%s fail delete null timer",clock.Desc())
     }
 
+    clock.mux.Unlock()
 }
 
 
 func (clock *Clock) Reset() {
+    clock.mux.Lock()
 
     if DEBUG_CLOCK { log.Debug("%s reset",clock.Desc()) }
 
     clock.start = time.Now()
     clock.frame = 0
     clock.time = 0.0
-    
+
     for k,_ := range( clock.timers ) {
         delete(clock.timers,k)
     }
-    
+    clock.mux.Unlock()
 }
 
 func (clock *Clock) VerboseFrame() bool {
@@ -87,6 +93,8 @@ func (clock *Clock) VerboseFrame() bool {
 
 
 func (clock *Clock) Tick() {
+
+ 
  
     clock.frame += 1
     clock.time = ClockRate * float32( time.Now().Sub(clock.start).Seconds() )
@@ -96,11 +104,12 @@ func (clock *Clock) Tick() {
         
         if (*timer).Tick( clock.time ) == false {
             
+            clock.mux.Lock()
             delete(clock.timers, timer)
+            clock.mux.Unlock()
             
         }
     }
-    
 }
 
 func (clock *Clock) Now() float32 { return clock.time } 
@@ -133,6 +142,7 @@ type Clock struct {
 
     start time.Time
     timers map[*Timer]*Timer
+    mux sync.Mutex
 }
 
 
