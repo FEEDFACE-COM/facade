@@ -555,8 +555,12 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
                 
         case xtermTable[DECSTBM]:
             var val region
-            fmt.Sscanf(seq.Params[0],"%d",&val.top)
-            fmt.Sscanf(seq.Params[1],"%d",&val.bot)
+            if len( seq.Params ) > 0 {
+                fmt.Sscanf(seq.Params[0],"%d",&val.top)
+            }
+            if len( seq.Params ) > 1 {
+                fmt.Sscanf(seq.Params[1],"%d",&val.bot) // REM, crashes here, with exec w3m feedface.com
+            }
             buffer.setScrollRegion(val.top,val.bot)
 
         case ansi.Table[ansi.SGR]:
