@@ -89,7 +89,9 @@ func (program *Program) Link(vertName,fragName string) error {
         program.fragmentShader = frag    
         err2 := program.attachShadersAndLinkProgram()
         if err2 != nil {
-            if DEBUG_PROGRAMSERVICE { log.Debug("%s reset to previous shaders") }    
+            if DEBUG_PROGRAMSERVICE { log.Debug("%s fail reset to previous shaders: %s",program.Desc(),err2) }    
+        } else {
+            if DEBUG_PROGRAMSERVICE { log.Debug("%s reset to previous shaders",program.Desc()) }
         }
         return log.NewError("fail link: %s",err)
     }
