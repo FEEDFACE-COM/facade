@@ -281,6 +281,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
     gfx.WorldClock().Tick()
     renderer.prevFrame = gfx.WorldClock().Frame()
     log.Info("%s start render",renderer.Desc())
+    
+    renderFailed := false
     for {
         if DEBUG_DIAG { DiagStart() }
 
@@ -332,13 +334,24 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
         renderer.stateMutex.Unlock()
         
 
-        e := uint32(gl.NO_ERROR)
-        if verboseFrame { 
-            e = gl.GetError()
-            if e != gl.NO_ERROR {
-                log.Error("%s post render gl error: %s",renderer.Desc(),gl.ErrorString(e)) 
+    
+        e := gl.GetError()
+        if e == gl.NO_ERROR {
+            if renderFailed { //first success
+                log.Notice("%s render success",renderer.Desc())
             }
+            renderFailed = false
+        } else {
+
+            //HACK: remove gles2 debug output 'glGetError 0x502'
+            os.Stderr.Write([]byte("\b\r") )
+            
+            if renderFailed == false { // first failure
+                log.Error("%s render error: %s",renderer.Desc(),gl.ErrorString(e)) 
+            }
+            renderFailed = true
         }
+        
         
         
         if DEBUG_DIAG { DiagDone() }
@@ -449,9 +462,9 @@ func (renderer *Renderer) printDebug() {
 
     log.Debug("")
 
-    if DEBUG_MEMORY { log.Info("memory usage %s",MemUsage())}
+    if DEBUG_MEMORY { log.Debug("memory usage %s",MemUsage())}
     
-    if DEBUG_DIAG { log.Info("%s    %s",gfx.WorldClock().Info(renderer.prevFrame),InfoDiag()) }
+    if DEBUG_DIAG { log.Debug("%s    %s",gfx.WorldClock().Info(renderer.prevFrame),InfoDiag()) }
 
     if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
     
@@ -463,15 +476,15 @@ func (renderer *Renderer) printDebug() {
         if DEBUG_CLOCK { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
         
         if DEBUG_MODE { 
-                log.Info("  %s", renderer.InfoMode() ) 
-                log.Info("  %s", renderer.lineBuffer.Desc() )
-                log.Info("  %s", renderer.termBuffer.Desc() )
+                log.Debug("  %s", renderer.InfoMode() ) 
+                log.Debug("  %s", renderer.lineBuffer.Desc() )
+                log.Debug("  %s", renderer.termBuffer.Desc() )
         }
 
         if DEBUG_FONT {
             log.Info("  %s",renderer.fontService.Desc())
             if renderer.font != nil {
-                log.Info("  %s",renderer.font.Desc())
+                log.Debug("  %s",renderer.font.Desc())
             }
 
 
