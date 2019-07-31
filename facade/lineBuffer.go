@@ -534,7 +534,7 @@ func (buffer *LineBuffer) Desc() string {
         buffered := buffer.buffered()
         fillage := buffer.fillage()
         ret += fmt.Sprintf("%d+%d ",buffer.rows,buffer.offs)
-        ret += fmt.Sprintf("%3.0f%%=%d/%d ",100.*fillage,buffered,buffer.offs)
+        ret += fmt.Sprintf("%0.2f=%d/%d ",fillage,buffered,buffer.offs)
     }
 
     {
