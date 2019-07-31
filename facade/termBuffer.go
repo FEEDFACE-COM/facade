@@ -403,6 +403,18 @@ func (buffer *TermBuffer) deleteCharacter(cnt uint) {
     }
 }
 
+
+func (buffer *TermBuffer) insertCharacter(cnt uint) {
+    if DEBUG_TERMBUFFER { log.Debug("%s insert  %d chars",buffer.Desc(),cnt) }
+    for i:=uint(0); i<cnt; i++ {
+        for c:=uint(buffer.max.x-1); c>buffer.cursor.x; c-- {
+            buffer.buffer[buffer.cursor.y][c] = buffer.buffer[buffer.cursor.y][c-1]    
+        }
+        buffer.buffer[buffer.cursor.y][buffer.cursor.x] = rune(' ')
+    }
+}
+
+
 func (buffer *TermBuffer) eraseLine(val uint) {
     if DEBUG_TERMBUFFER { log.Debug("%s erase line %d",buffer.Desc(),val) }
     switch val {
@@ -517,6 +529,11 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             fmt.Sscanf(seq.Params[0],"%d",&val)
             buffer.deleteLine(val)
 
+        case ansi.Table[ansi.ICH]:
+            var val uint
+            fmt.Sscanf(seq.Params[0],"%d",&val)
+            buffer.insertCharacter(val)
+
         case ansi.Table[ansi.DCH]:
             var val uint
             fmt.Sscanf(seq.Params[0],"%d",&val)
@@ -567,7 +584,9 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             break // no support for color / weight / decorations
             
         default:
-            if DEBUG_TERMBUFFER { log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Name,sequence.Desc) }
+//            if DEBUG_TERMBUFFER { 
+                log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Name,sequence.Desc) 
+//            }
         
     }
     
