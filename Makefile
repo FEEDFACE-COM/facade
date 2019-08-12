@@ -59,10 +59,14 @@ info:
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo ""
-	@echo "#Sources ${SOURCES}"
-	@echo "#Assets ${ASSETS}"
-	@echo "#Shaders ${ASSET_SHADER}"
-	@echo "#Fonts ${ASSET_FONT}"   
+	@echo "#Sources"
+	@echo "${SOURCES}"
+	@echo "#Assets"
+	@echo "${ASSETS}"
+	@echo "#Shaders"
+	@echo "${ASSET_SHADER}"
+	@echo "#Fonts"   
+	@echo "${ASSET_FONT}"   
 	
 build: ${BUILD_PRODUCT}
 
