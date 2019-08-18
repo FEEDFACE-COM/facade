@@ -20,7 +20,7 @@ ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
 
 PROTOS=facade/facade.pb.go
 
-FONTS ?= RobotoMono.ttf VT323.ttf
+FONTS ?= RobotoMono.ttf VT323.ttf Menlo.ttc OCRAEXT.TTF MONACO.TTF Adore64.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 
 SHADERS ?= def.vert def.frag 
