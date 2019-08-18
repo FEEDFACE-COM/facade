@@ -1,10 +1,10 @@
 
-BUILD_NAME      = fcd
+BUILD_NAME      = facade
 BUILD_VERSION  ?= $(shell git describe --tags)
 BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
 BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
 BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
-BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
+BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 
 BUILD_DEBUG    ?= false
 
