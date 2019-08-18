@@ -83,7 +83,7 @@ get:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME} ${ASSETS} ${PROTOS}
+	-rm -f ${BUILD_PRODUCT} ${ASSETS} ${PROTOS}
 
 ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
