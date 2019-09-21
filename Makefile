@@ -75,8 +75,7 @@ run: ${BUILD_PRODUCT}
 	./${BUILD_PRODUCT} -d -D $$(pwd) recv
 
 demo:
-	for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.7; echo $$l | ./${BUILD_PRODUCT} pipe grid; done; done
-# for f in gfx/*.go; do cat $f | while read l; do sleep 1; echo $l | fcd; done; done
+	@for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.5; echo $$l ; done; done
 
 
 get:
