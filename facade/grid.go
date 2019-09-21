@@ -10,7 +10,7 @@ import(
     gfx "../gfx"
     log "../log"
 //    math "../math32"
-    gl "src.feedface.com/gfx/piglet/gles2"
+    gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"    
 )
 
