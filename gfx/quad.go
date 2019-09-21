@@ -4,7 +4,7 @@
 package gfx
 
 import (
-//    gl "src.feedface.com/gfx/piglet/gles2"
+//    gl "github.com/FEEDFACE-COM/piglet/gles2"
 )    
 
 

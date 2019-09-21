@@ -12,8 +12,8 @@ import (
     log "./log"
     facade "./facade"
     gfx "./gfx"
-    "src.feedface.com/gfx/piglet"
-    gl "src.feedface.com/gfx/piglet/gles2"
+    "github.com/FEEDFACE-COM/piglet"
+    gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 

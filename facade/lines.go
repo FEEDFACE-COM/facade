@@ -8,7 +8,7 @@ package facade
 //      //    "strings"
 //          gfx "../gfx"
 //          log "../log"
-//          gl "src.feedface.com/gfx/piglet/gles2"
+//          gl "github.com/FEEDFACE-COM/piglet/gles2"
 //      //	"github.com/go-gl/mathgl/mgl32"    
 //      )
 //      

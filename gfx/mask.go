@@ -6,7 +6,7 @@ package gfx
 import(
     "fmt"
     log "../log"
-    gl "src.feedface.com/gfx/piglet/gles2"
+    gl "github.com/FEEDFACE-COM/piglet/gles2"
     
 )
 
