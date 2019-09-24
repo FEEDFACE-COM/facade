@@ -13,7 +13,7 @@ import (
     
 )
 
-const DEBUG_PROGRAMSERVICE = true
+const DEBUG_PROGRAMSERVICE = false
 
 
 type ProgramService struct {
