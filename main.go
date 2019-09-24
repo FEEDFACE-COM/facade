@@ -16,7 +16,6 @@ import (
 )
 
 
-const DEBUG_STATUS   = false
 const DEBUG_DIAG     = false
 const DEBUG_CLOCK    = false
 const DEBUG_CONFIG   = false
