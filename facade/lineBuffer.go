@@ -242,14 +242,14 @@ func (buffer *LineBuffer) queueLine(row Line) {
             
             // restart timer in case its gone somehow
             if buffer.timer == nil {
-                log.Debug("%s restart nil timer",buffer.Desc())
+                log.Warning("%s restart nil timer",buffer.Desc())
                 buffer.scrollOnce(false)    
             }            
 
             
             if buffer.Drop {
 
-                log.Debug("%s overflow !! line dropped !!",buffer.Desc())
+                log.Warning("%s overflow !! line dropped !!",buffer.Desc())
                 
             } else {
 

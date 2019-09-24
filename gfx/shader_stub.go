@@ -83,9 +83,7 @@ func NewShader(name string, shaderType ShaderType) *Shader {
 
 func (shader *Shader) Close() {
     if shader.Shader > 0 {
-        log.Debug("delete %s",shader.Desc())    
-//  REM, disabled because gl not present
-//  	gl.DeleteShader(shader.Shader)
+        if DEBUG_PROGRAMSERVICE { log.Debug("delete %s",shader.Desc()) }
     }   
 }
 

@@ -125,7 +125,7 @@ func (service *ProgramService) CheckRefresh() {
 
 func (service *ProgramService) shaderFileChanged(shader *Shader, filePath string) {
 
-    /*if DEBUG_PROGRAMSERVICE*/ { log.Debug("%s reread shader %s from %s",service.Desc(),shader.IndexName(),filePath) }
+    if DEBUG_PROGRAMSERVICE { log.Debug("%s reread shader %s from %s",service.Desc(),shader.IndexName(),filePath) }
     data, err := ioutil.ReadFile(filePath)
     if err != nil {
          log.NewError("fail read shader %s from %s: %s",shader.IndexName(),filePath,err)
@@ -156,7 +156,7 @@ func (service *ProgramService) LoadShader(shaderName string, shaderType ShaderTy
     
         if err == nil { // file found, try reading
             
-            /*if DEBUG_PROGRAMSERVICE*/ { log.Debug("%s read shader %s from %s",service.Desc(),shader.IndexName(),filePath) }
+            if DEBUG_PROGRAMSERVICE { log.Debug("%s read shader %s from %s",service.Desc(),shader.IndexName(),filePath) }
             data, err = ioutil.ReadFile(filePath)
             if err != nil {
                 return log.NewError("fail read shader %s from %s: %s",shaderName,filePath,err)

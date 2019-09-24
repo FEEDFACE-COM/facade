@@ -12,7 +12,6 @@ import (
     
 )
 
-const DEBUG_SHADER = false
 
 type Shader struct {
     Name string
@@ -58,7 +57,7 @@ const (
 
 func (shader *Shader) LoadSource(src string) {
     shader.Source = src
-    if DEBUG_FONTSERVICE { log.Debug("%s source loaded",shader.Desc()) }
+    if DEBUG_PROGRAMSERVICE { log.Debug("%s source loaded",shader.Desc()) }
 }
 
 
@@ -78,7 +77,7 @@ func NewShader(name string, shaderType ShaderType) *Shader {
 
 func (shader *Shader) Close() {
     if shader.Shader > 0 {
-        log.Debug("delete %s",shader.Desc())    
+        if DEBUG_PROGRAMSERVICE { log.Debug("delete %s",shader.Desc()) }
     	gl.DeleteShader(shader.Shader)
     }   
 }

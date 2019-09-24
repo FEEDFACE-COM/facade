@@ -64,7 +64,7 @@ func (clock *Clock) DeleteTimer(timer *Timer) {
         if DEBUG_CLOCK { log.Debug("%s delete %s",clock.Desc(),tmp.Desc()) }
         delete(clock.timers,timer)
     } else {
-        log.Debug("%s fail delete null timer",clock.Desc())
+        log.Error("%s fail delete timer",clock.Desc())
     }
 
     clock.mux.Unlock()
