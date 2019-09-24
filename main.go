@@ -41,7 +41,7 @@ const AUTHOR = `
 `
 
 
-var BUILD_NAME string     = "fcd"
+var BUILD_NAME string     = "facade"
 var BUILD_VERSION string  = "0.0.0"
 var BUILD_PLATFORM string = "os-arch"
 var BUILD_DATE string     = "1970-01-01"
@@ -296,7 +296,9 @@ func main() {
             renderer = NewRenderer(directory)
             go scanner.ScanText(texts)
             runtime.LockOSThread()
-            renderer.Init()  
+            if err=renderer.Init(); err!=nil {
+                log.PANIC("fail to initialize renderer: %s",err)                
+            }
             renderer.Configure(config)  
             go renderer.ProcessTextSeqs(texts)
             err = renderer.Render(nil)
@@ -309,7 +311,9 @@ func main() {
             go server.Listen(confs,texts,quers)
             go server.ListenText(texts)
             runtime.LockOSThread()
-            renderer.Init() 
+            if err=renderer.Init(); err!=nil {
+                log.PANIC("fail to initialize renderer: %s",err)                
+            }
             renderer.Configure(config)
             go renderer.ProcessTextSeqs(texts)
             go renderer.ProcessQueries(quers)
@@ -326,7 +330,7 @@ func main() {
                 if client.SendConf(config); err!=nil { log.Error("fail to send conf: %s",err) }
             }
             if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
-//            defer client.CloseTextStream()
+            defer client.CloseTextStream()
             if err=client.ScanAndSendText(); err!=nil { log.Error("fail to scan and send: %s",err) }
             
 
@@ -392,10 +396,6 @@ func main() {
             }
             if err=client.OpenTextStream(); err!=nil { log.Error("fail to open stream: %s",err) }
             defer client.CloseTextStream()
-
-
-
-
             err = executor.Execute()
             
 
@@ -426,7 +426,7 @@ func main() {
         
 
     if err != nil {
-        log.Error("could not %s: %s",cmd,err)
+        log.Error("fail to %s: %s",cmd,err)
         os.Exit(-1)
     }
     

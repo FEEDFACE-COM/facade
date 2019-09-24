@@ -100,7 +100,7 @@ func (renderer *Renderer) Init() error {
 
     err = piglet.CreateContext()
     if err != nil {
-        log.PANIC("%s fail to initialize renderer: %s",renderer.Desc(),err)    
+        return log.NewError("fail to initialize renderer: %s",err)
     }
     
     w,h := piglet.GetDisplaySize()
@@ -112,7 +112,7 @@ func (renderer *Renderer) Init() error {
 
     err = gl.InitWithProcAddrFunc( piglet.GetProcAddress )
     if err != nil {
-        log.PANIC("%s fail to init GLES: %s",renderer.Desc(),err)    
+        return log.NewError("fail to init GLES: %s",err)    
     }
     
 
@@ -132,7 +132,7 @@ func (renderer *Renderer) Init() error {
 
     renderer.font,err = renderer.fontService.GetFont( facade.DEFAULT_FONT )
     if err != nil {
-        log.PANIC("%s fail to get default font %s: %s",renderer.Desc(),facade.DEFAULT_FONT,err)
+        return log.NewError("fail to get default font %s: %s",facade.DEFAULT_FONT,err)
     }
 
 

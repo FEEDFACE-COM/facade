@@ -1,5 +1,6 @@
 
-// +build !linux !arm
+// +build !linux 
+// +build !arm
 
 package main
 
