@@ -6,19 +6,13 @@ BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else da
 BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 
-BUILD_DEBUG    ?= false
 
 
 
 
-
-#SOURCES=$(filter-out tester.go facade/test.go , $(wildcard *.go */*.go) )
-
-SOURCES=$(wildcard *.go */*.go)
-
-ASSETS=gfx/shaderAssets.go gfx/fontAssets.go
-
-PROTOS=facade/facade.pb.go
+ASSETS  = gfx/shaderAssets.go gfx/fontAssets.go
+PROTOS  = facade/facade.pb.go
+SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
 
 FONTS ?= RobotoMono.ttf VT323.ttf Menlo.ttc OCRAEXT.TTF MONACO.TTF Adore64.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
@@ -31,22 +25,27 @@ SHADERS += mask/def.frag mask/mask.frag mask/debug.frag
 #ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 
+
 GCFLAGS ?= 
-ifeq (${BUILD_DEBUG},true)
-    GCFLAGS += -N -l 
-endif
+# REM, for debug: GCFLAGS="-N -l"; make
 
-LDFLAGS = -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
 
+LDFLAGS ?=
+LDFLAGS += -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
+
+
+BUILD_FLAGS ?= 
+BUILD_FLAGS +=-v
 
 default: build 
 
 help:
 	@echo "#Usage"
 	@echo " make build    # build static executable"
-	@echo " make run      # build and run"
+	@echo " make deps     # fetch go dependencies"
 	@echo " make info     # show build info"
-	@echo " make assets   # build fonts and shaders"
+	@echo " make asset    # build fonts and shaders"
+	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # clean up"
 	
 
@@ -71,14 +70,11 @@ info:
 build: ${BUILD_PRODUCT}
 
 
-run: ${BUILD_PRODUCT}
-	./${BUILD_PRODUCT} -d -D $$(pwd) recv
-
 demo:
 	@for f in ${SOURCES}; do cat $$f | while read l; do sleep 0.5; echo $$l ; done; done
 
 
-get:
+deps:
 	go get -v 
 	
 clean:
@@ -88,7 +84,7 @@ ${BUILD_NAME}: ${BUILD_PRODUCT}
 	cp -f ${BUILD_PRODUCT} ${BUILD_NAME}
 
 ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
-	go build -v -o ${BUILD_PRODUCT} -v -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
+	go build -o ${BUILD_PRODUCT} ${BUILD_FLAGS} -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
 
 
@@ -100,7 +96,7 @@ facade/facade.pb.go: facade/facade.proto
 
 
 
-assets: ${ASSETS}
+asset: ${ASSETS}
 
 font/RobotoMono.ttf:
 	mkdir -p font
@@ -143,5 +139,5 @@ gfx/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help info build clean get assets demo
+.PHONY: help info build clean fetch asset demo proto
 
