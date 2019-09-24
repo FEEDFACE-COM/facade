@@ -22,6 +22,7 @@ var logger Logger = Logger{verbosity: NOTICE}
 func SetVerbosity(verbosity Verbosity) { logger.verbosity = verbosity }
 
 
+func NoticeLogging()  bool { return logger.verbosity >= NOTICE }
 func InfoLogging()  bool { return logger.verbosity >= INFO }
 func DebugLogging() bool { return logger.verbosity >= DEBUG }
 

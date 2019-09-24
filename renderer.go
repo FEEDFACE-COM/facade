@@ -460,42 +460,35 @@ func (renderer *Renderer) InfoMode() string {
 func (renderer *Renderer) printDebug() {
 
 
-    log.Debug("")
+    if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
+        log.Debug("")
+    }
 
     if DEBUG_MEMORY { log.Debug("memory usage %s",MemUsage())}
     
     if DEBUG_DIAG { log.Debug("%s    %s",gfx.WorldClock().Info(renderer.prevFrame),InfoDiag()) }
 
-    if DEBUG_CLOCK && ! DEBUG_STATUS { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
-    
-
-    if  DEBUG_STATUS {
-
-
-
-        if DEBUG_CLOCK { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
+    if DEBUG_CLOCK { log.Info( "%s", gfx.WorldClock().Info(renderer.prevFrame) ) }
         
-        if DEBUG_MODE { 
-                log.Debug("  %s", renderer.InfoMode() ) 
-                log.Debug("  %s", renderer.lineBuffer.Desc() )
-                log.Debug("  %s", renderer.termBuffer.Desc() )
-        }
-
-        if DEBUG_FONT {
-            log.Info("  %s",renderer.fontService.Desc())
-            if renderer.font != nil {
-                log.Debug("  %s",renderer.font.Desc())
-            }
-
-
-        }    
-
+    if DEBUG_MODE { 
+            log.Debug("  %s", renderer.InfoMode() ) 
+            log.Debug("  %s", renderer.lineBuffer.Desc() )
+            log.Debug("  %s", renderer.termBuffer.Desc() )
     }
-    
+
+    if DEBUG_FONT {
+        log.Info("  %s",renderer.fontService.Desc())
+        if renderer.font != nil {
+            log.Debug("  %s",renderer.font.Desc())
+        }
+    }
+
 
     if DEBUG_BUFFER &&  log.DebugLogging() { renderer.dumpBuffer() }
 
-    log.Debug("")
+    if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
+        log.Debug("")
+    }
     
 }
 
