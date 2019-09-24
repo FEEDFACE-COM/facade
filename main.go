@@ -16,16 +16,16 @@ import (
 )
 
 
-const DEBUG_STATUS   = true
-const DEBUG_DIAG     = true
+const DEBUG_STATUS   = false
+const DEBUG_DIAG     = false
 const DEBUG_CLOCK    = false
 const DEBUG_CONFIG   = false
 const DEBUG_FONT     = false
 const DEBUG_SHADER   = false
-const DEBUG_MODE     = true
+const DEBUG_MODE     = false
 const DEBUG_MEMORY   = false
 const DEBUG_BUFFER   = false
-const DEBUG_RENDERER = true
+const DEBUG_RENDERER = false
 
 
 const FRAME_RATE = 60.0

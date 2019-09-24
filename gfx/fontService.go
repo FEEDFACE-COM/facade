@@ -14,7 +14,7 @@ import (
 )
 
 
-const DEBUG_FONTSERVICE = true
+const DEBUG_FONTSERVICE = false
 
 
 

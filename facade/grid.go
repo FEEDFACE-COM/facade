@@ -14,7 +14,7 @@ import(
 	"github.com/go-gl/mathgl/mgl32"    
 )
 
-const DEBUG_GRID = true
+const DEBUG_GRID = false
 
 
 type Grid struct {
