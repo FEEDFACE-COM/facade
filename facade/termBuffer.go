@@ -251,7 +251,7 @@ func (buffer *TermBuffer) saveBuffer() {
 
 func (buffer *TermBuffer) restoreBuffer() {
     if buffer.altBuffer == nil {
-        log.Debug("%s cannot restore nil buffer",buffer.Desc())
+        log.Warning("%s cannot restore nil buffer",buffer.Desc())
         return
     }
     // rem check for same size!!
@@ -276,7 +276,7 @@ func (buffer *TermBuffer) saveCursor() {
 
 func (buffer *TermBuffer) restoreCursor() {
     if buffer.altCursor == nil {
-        log.Debug("%s cannot restore nil cursor",buffer.Desc())
+        log.Warning("%s cannot restore nil cursor",buffer.Desc())
         return
     }
     if DEBUG_TERMBUFFER { log.Debug("%s restore cursor",buffer.Desc()) }
@@ -331,7 +331,7 @@ func (buffer *TermBuffer) erasePage(val uint) {
             buffer.buffer = makeBuffer(buffer.cols,buffer.rows)
             buffer.cursor = pos{1,1}
         default:
-            log.Debug("erase page %d not implemented!!",val)
+            log.Warning("erase page %d not implemented!!",val)
     }
 }
 
@@ -431,7 +431,7 @@ func (buffer *TermBuffer) eraseLine(val uint) {
                 buffer.buffer[buffer.cursor.y][c] = rune(' ')    
             }
         default:
-            log.Debug("erase line %d not implemented!!",val)
+            log.Warning("erase line %d not implemented!!",val)
     }
 }
 
@@ -585,7 +585,7 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
             
         default:
 //            if DEBUG_TERMBUFFER { 
-                log.Debug("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Name,sequence.Desc) 
+                log.Warning("%s unhandled sequence %s '%s'",buffer.Desc(),sequence.Name,sequence.Desc) 
 //            }
         
     }

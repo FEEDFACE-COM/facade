@@ -237,9 +237,9 @@ func (font *Font) RenderMap(debug bool) (*image.RGBA, error) {
     if ! debug {
         font.glyphMap = ret
     }
-    if DEBUG_FONTSERVICE {
-        log.Debug("%s rendered glyphmap: %dx%d glyphs as %dx%d img",font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
-    }
+    
+    if DEBUG_FONTSERVICE { log.Debug("%s rendered glyphmap: %dx%d glyphs as %dx%d img",font.Desc(),GlyphMapCols,GlyphMapRows,imageWidth,imageHeight) }
+
     return ret,nil
     
 }
@@ -312,9 +312,7 @@ func (font *Font) RenderText(text string, DEBUG bool) (*image.RGBA, error) {
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
     
-    if DEBUG_FONTSERVICE {
-        log.Debug("%s rendered '%s': %dx%d glyphs as %dx%d img",font.Desc(),text[0:min(len(text),8)],GlyphMapCols,GlyphMapRows,imageWidth,imageHeight)
-    }
+    if DEBUG_FONTSERVICE { log.Debug("%s rendered '%s': %dx%d glyphs as %dx%d img",font.Desc(),text[0:min(len(text),8)],GlyphMapCols,GlyphMapRows,imageWidth,imageHeight) }
     
     return ret,nil
 }
@@ -387,9 +385,7 @@ func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{w,h int}
 
     ctx.SetDst(nil)
     ctx.SetClip( image.Rect(0,0,0,0) )
-    if DEBUG_FONTSERVICE {
-        log.Debug("%s found max size %.1dx%.1d",font.Desc(),max.w,max.h)
-    }
+    if DEBUG_FONTSERVICE { log.Debug("%s found max size %.1dx%.1d",font.Desc(),max.w,max.h) }
     return size,max
 
 }

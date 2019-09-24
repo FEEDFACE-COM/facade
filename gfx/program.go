@@ -157,8 +157,7 @@ func (program *Program) attachShadersAndLinkProgram() error {
 	gl.GetProgramiv(program.program, gl.LINK_STATUS, &status)
 	if status == gl.FALSE {
         error,source := program.getLinkError()   	
-//        log.Error("%s fail link: %s",program.Desc(),error)
-        log.Debug("%s%s",error,source)
+        log.Error("%s%s",error,source)
         ret = log.NewError("fail link: %s",error)
 	} else {
         if DEBUG_PROGRAMSERVICE { log.Debug("%s attached and linked",program.Desc()) }
