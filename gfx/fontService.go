@@ -30,7 +30,7 @@ type FontService struct {
     
     fonts map[string]*Font
     scratch *image.RGBA
-
+    asset map[string]string
 
     directory string
     

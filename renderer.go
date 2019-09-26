@@ -60,6 +60,8 @@ func NewRenderer(directory string) *Renderer {
     ret.stateMutex = &sync.Mutex{}
     ret.refreshChan = make( chan bool, 1 )
     ret.tickChannel = make( chan bool, 1 )
+    ret.fontService = gfx.NewFontService(directory+"/font",facade.FontAsset)
+    ret.programService = gfx.NewProgramService(directory+"/shader",facade.ShaderAsset)
     return ret
 }
 
@@ -95,8 +97,6 @@ func (renderer *Renderer) Init() error {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
 
-    renderer.fontService = gfx.NewFontService(renderer.directory+"/font",facade.fontAsset)
-    renderer.programService = gfx.NewProgramService(renderer.directory+"/shader",facade.shaderAsset)
 
     err = piglet.CreateContext()
     if err != nil {
@@ -507,7 +507,7 @@ func (renderer *Renderer) Info() string {
     ret := ""
     
     ret += InfoVersion()
-    ret += InfoAssets(nil,nil)
+    ret += InfoAssets(renderer.programService.GetAvailableNames(),renderer.fontService.GetAvailableNames())
     ret += "\n\n"
 
 
