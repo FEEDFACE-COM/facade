@@ -39,10 +39,11 @@ type FontService struct {
 
 
 
-func NewFontService(directory string) *FontService {
+func NewFontService(directory string, asset map [string]string) *FontService {
     ret := &FontService{directory: directory}
     ret.fonts = make( map[string]*Font )
     ret.scratch = image.NewRGBA( image.Rect(0,0,FontScratchSize,FontScratchSize) )
+    ret.asset = asset
     return ret
 }
 
@@ -97,7 +98,7 @@ func (service *FontService) LoadFont(name string) error {
 
             if DEBUG_FONTSERVICE { log.Debug("%s no file for font %s: %s",service.Desc(),name,err ) }
 
-            encoded := FontAsset[name]
+            encoded := service.asset[name]
             if encoded == "" {
                 return log.NewError("no data for embedded font %s",name)    
             }
@@ -154,7 +155,10 @@ func (service *FontService) getFilePathForName(fontName string) (string,error) {
 
 func (service *FontService) GetAvailableNames() []string {
 
-    var ret = GetFontAssetNames()
+    var ret []string
+    for n,_ := range service.asset {
+        ret = append(ret,n)
+    }
     
 //    files, err := ioutil.ReadDir(service.directory)
 //    if err != nil {
@@ -165,7 +169,7 @@ func (service *FontService) GetAvailableNames() []string {
 //            name := strings.ToLower( f.Name() )
 //            if strings.HasSuffix( name, ext ) {
 //                name = strings.TrimSuffix( name, ext )
-//                if FontAsset[name] == "" {
+//                if service.asset[name] == "" {
 //
 //                    ret = append(ret, name)
 //
@@ -177,14 +181,6 @@ func (service *FontService) GetAvailableNames() []string {
     return ret        
 }
 
-func GetFontAssetNames() []string  {
-    var ret []string
-    for n,_ := range FontAsset {
-        ret = append(ret,n)
-    }
-    sort.Strings(ret)
-    return ret
-}
 
 
 func (service *FontService) Desc() string {

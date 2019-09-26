@@ -95,8 +95,8 @@ func (renderer *Renderer) Init() error {
         renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
     }
 
-    renderer.fontService = gfx.NewFontService(renderer.directory+"/font")
-    renderer.programService = gfx.NewProgramService(renderer.directory+"/shader")
+    renderer.fontService = gfx.NewFontService(renderer.directory+"/font",facade.fontAsset)
+    renderer.programService = gfx.NewProgramService(renderer.directory+"/shader",facade.shaderAsset)
 
     err = piglet.CreateContext()
     if err != nil {
