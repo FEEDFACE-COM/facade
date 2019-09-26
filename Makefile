@@ -21,7 +21,7 @@ SHADERS ?= def.vert def.frag
 SHADERS += color.vert color.frag 
 SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
 SHADERS += grid/bent.vert grid/crawl.vert grid/disk.vert grid/pipe.vert grid/roll.vert grid/wave.vert grid/rowz.vert 
-SHADERS += mask/def.frag mask/mask.frag mask/debug.frag 
+SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
 #ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 

@@ -126,8 +126,8 @@ func (tester *Tester) Init() error {
         tester.directory = os.Getenv("HOME") + tester.directory[1:]
     }
 
-    tester.fontService = gfx.NewFontService(tester.directory+"/font")
-    tester.programService = gfx.NewProgramService(tester.directory+"/shader")
+    tester.fontService = gfx.NewFontService(tester.directory+"/font",facade.FontAsset)
+    tester.programService = gfx.NewProgramService(tester.directory+"/shader",facade.ShaderAsset)
 
     tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width),uint(facade.GridDefaults.Height)) 
     tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height),uint(facade.GridDefaults.Buffer),tester.refreshChan) 

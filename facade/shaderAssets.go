@@ -1,5 +1,5 @@
 
-package gfx
+package facade
 var ShaderAsset = map[string]string{
 
 
@@ -443,6 +443,16 @@ dyArIFBJLzIuICk7CiAgICBmbG9hdCBmMSA9IGNvcyggZnJlcSAqIHl5ICogUEkgKyBub3cgKyBQ
 SS8yLiApOwogICAgZmxvYXQgZCA9ICBmMCArIC8qKHNjcm9sbGVyKSAqICovKGYxIC0gZjApOwog
 ICAgcG9zLnogKz0gRiAqIGQ7CiAgICBwb3MueiAtPSBGOwoKCiAgICAKICAgIGdsX1Bvc2l0aW9u
 ID0gcHJvamVjdGlvbiAqIHZpZXcgKiBtb2RlbCAqIHBvczsKfQo=
+`,
+
+
+
+
+"mask/def.vert":`
+CnVuaWZvcm0gZmxvYXQgZGVidWdGbGFnOwoKYXR0cmlidXRlIHZlYzMgdmVydGV4OwphdHRyaWJ1
+dGUgdmVjMiB0ZXhDb29yZDsKCnZhcnlpbmcgdmVjMiB2VGV4Q29vcmQ7Cgpib29sIERFQlVHID0g
+ZGVidWdGbGFnID4gMC4wOwoKCnZvaWQgbWFpbigpIHsKICAgIHZUZXhDb29yZCA9IHRleENvb3Jk
+OwogICAgZ2xfUG9zaXRpb24gPSB2ZWM0KHZlcnRleCwxLik7Cn0K
 `,
 
 

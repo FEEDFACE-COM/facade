@@ -35,8 +35,8 @@ func NewProgramService(directory string, asset map[string]string) *ProgramServic
     ret := &ProgramService{directory: directory}
     ret.shaders = make( map[string]*Shader )
     ret.programs = make( map[string]*Program )
-    ret.asset = asset
     ret.refresh = []*Shader{}
+    ret.asset = asset
     return ret
 }
 
@@ -47,8 +47,6 @@ func (service *ProgramService) GetProgram(name,mode string) *Program {
         service.programs[name] = NewProgram(name,mode,service)
         
     }
-
-
     return service.programs[name]    
 }
 
@@ -173,9 +171,9 @@ func (service *ProgramService) LoadShader(shaderName string, shaderType ShaderTy
 
             if DEBUG_PROGRAMSERVICE { log.Debug("%s %s",service.Desc(),err ) }
 
-            encoded := service.asset[shaderName]
+            encoded := service.asset[indexName]
             if encoded == "" {
-                return log.NewError("no asset data for shader %s",shaderName)    
+                return log.NewError("no asset data for shader %s",indexName)    
             }
 
             if DEBUG_PROGRAMSERVICE { log.Debug("%s decode embedded shader %s",service.Desc(),shaderName) }

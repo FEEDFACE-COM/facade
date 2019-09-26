@@ -12,7 +12,6 @@ import (
     "runtime"
     log "./log"
     facade "./facade"
-    gfx "./gfx"
 )
 
 
@@ -535,15 +534,15 @@ func ShowHelp() {
     
 }
 
-func ShowAssets() { fmt.Fprintf(os.Stderr,InfoAssets(nil,nil)) }
+func ShowAssets() { 
+
+    //FIXME    
+    fmt.Fprintf(os.Stderr,InfoAssets(nil,nil)) 
+}
+
+
 func InfoAssets(shaders,fonts []string) string {
     ret := ""
-    if shaders == nil {
-        shaders = gfx.GetShaderAssetNames()
-    } 
-    if fonts == nil {
-        fonts = gfx.GetFontAssetNames()
-    }
 
     for _,prefix := range []string{"grid/",} {
         for _,suffix := range []string{".vert",".frag"} {
