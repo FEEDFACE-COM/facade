@@ -10,7 +10,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 
 
 
-ASSETS  = gfx/shaderAssets.go gfx/fontAssets.go
+ASSETS  = facade/shaderAssets.go facade/fontAssets.go
 PROTOS  = facade/facade.pb.go
 SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
 
@@ -91,7 +91,7 @@ ${BUILD_PRODUCT}: ${SOURCES} ${ASSETS} ${PROTOS}
 proto: ${PROTOS}
 
 facade/facade.pb.go: facade/facade.proto
-	protoc -I facade -I gfx $^ --go_out=plugins=grpc:facade
+	protoc -I facade $^ --go_out=plugins=grpc:facade
 	
 
 
@@ -106,10 +106,10 @@ font/VT323.ttf:
 	mkdir -p font
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
 
-gfx/shaderAssets.go: ${ASSET_SHADER}
+facade/shaderAssets.go: ${ASSET_SHADER}
 	echo ""                                             >|$@
 #	echo "// +build linux,arm"                          >>$@
-	echo "package gfx"                                  >>$@
+	echo "package facade"                               >>$@
 	echo "var ShaderAsset = map[string]string{"         >>$@
 	for src in ${ASSET_SHADER}; do \
       name=$$(echo $$src) \
@@ -122,10 +122,10 @@ gfx/shaderAssets.go: ${ASSET_SHADER}
 	echo "}"                                            >>$@
 
 
-gfx/fontAssets.go: ${ASSET_FONT}
+facade/fontAssets.go: ${ASSET_FONT}
 	echo ""                                         >|$@
 #	echo "// +build linux,arm"                      >>$@
-	echo "package gfx"                              >>$@
+	echo "package facade"                           >>$@
 	echo "var FontAsset = map[string]string{"       >>$@
 	for src in ${ASSET_FONT}; do \
       name=$$(echo $$src ) \

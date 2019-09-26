@@ -18,6 +18,8 @@ const DEBUG_PROGRAMSERVICE = false
 
 type ProgramService struct {
 
+    asset map[string]string
+
     shaders map[string]*Shader
     programs map[string]*Program
     directory string    
@@ -29,10 +31,11 @@ type ProgramService struct {
 
 
 
-func NewProgramService(directory string) *ProgramService {
+func NewProgramService(directory string, asset map[string]string) *ProgramService {
     ret := &ProgramService{directory: directory}
     ret.shaders = make( map[string]*Shader )
     ret.programs = make( map[string]*Program )
+    ret.asset = asset
     ret.refresh = []*Shader{}
     return ret
 }
@@ -170,7 +173,7 @@ func (service *ProgramService) LoadShader(shaderName string, shaderType ShaderTy
 
             if DEBUG_PROGRAMSERVICE { log.Debug("%s %s",service.Desc(),err ) }
 
-            encoded := ShaderAsset[shaderName]
+            encoded := service.asset[shaderName]
             if encoded == "" {
                 return log.NewError("no asset data for shader %s",shaderName)    
             }
@@ -216,7 +219,11 @@ func (service *ProgramService) getFilePathForName(shaderName string, shaderType 
 
 func (service *ProgramService) GetAvailableNames() []string {
 
-    var ret = GetShaderAssetNames()
+
+    var ret []string
+    for n, _ := range service.asset {
+        ret = append(ret,fmt.Sprintf("%s",n)) 
+    }
 
 //    files, err := ioutil.ReadDir(service.directory)
 //    if err != nil {
@@ -229,7 +236,7 @@ func (service *ProgramService) GetAvailableNames() []string {
 //            name := strings.ToLower( f.Name() )
 //            if strings.HasSuffix( name, ext ) {
 //                name = strings.TrimSuffix( name, ext )
-//                if ShaderAsset[name] == "" {
+//                if service.asset[name] == "" {
 //
 //                    ret = append(ret, name)
 //
@@ -237,18 +244,12 @@ func (service *ProgramService) GetAvailableNames() []string {
 //            }
 //        }
 //    }
-    return ret
-}
 
-
-func GetShaderAssetNames() []string {
-    var ret []string
-    for n, _ := range ShaderAsset {
-        ret = append(ret,fmt.Sprintf("%s",n)) 
-    }
     sort.Strings(ret)
     return ret
 }
+
+
 
 
 
