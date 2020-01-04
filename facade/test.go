@@ -1,20 +1,19 @@
-
 package facade
 
 //import(
 //    "../gfx"
-//    log "../log"    
+//    log "../log"
 //)
 //
 //type Test struct {
 //    termBuffer *TermBuffer
 //    lineBuffer *LineBuffer
-//    
+//
 //    state GridState
 //    refreshChan chan bool
-//    
-//    
-//    
+//
+//
+//
 //}
 
 //func (test *Test) Width() uint { return test.state.Width }
@@ -28,7 +27,7 @@ package facade
 //    ret.refreshChan = make( chan bool, 1 )
 //    ret.termBuffer = termBuffer
 //    ret.lineBuffer = lineBuffer
-//    ret.termBuffer.Resize(ret.state.Width,ret.state.Height)   
+//    ret.termBuffer.Resize(ret.state.Width,ret.state.Height)
 //    ret.lineBuffer.Resize(ret.state.Height,ret.state.BufLen)
 //    return ret
 //
@@ -38,7 +37,7 @@ package facade
 //func (test *Test) Init(font *gfx.Font) {
 //
 //    log.Debug("init %s",test.Desc())
-//    
+//
 //}
 //
 //
@@ -46,26 +45,26 @@ package facade
 //    if config == nil { return }
 //    log.Debug("test config %s",config.Desc())
 //
-//    if width,ok := config.Width(); ok && width != 0 && width != test.state.Width { 
-//	    test.state.Width = width 
-//        test.termBuffer.Resize(test.state.Width,test.state.Height)   
-//	} 
+//    if width,ok := config.Width(); ok && width != 0 && width != test.state.Width {
+//	    test.state.Width = width
+//        test.termBuffer.Resize(test.state.Width,test.state.Height)
+//	}
 //
-//    if height,ok := config.Height(); ok && height != 0 && height != test.state.Height { 
-//	    test.state.Height = height 
+//    if height,ok := config.Height(); ok && height != 0 && height != test.state.Height {
+//	    test.state.Height = height
 //        test.lineBuffer.Resize(test.state.Height,test.state.BufLen)
-//        test.termBuffer.Resize(test.state.Width,test.state.Height)   
+//        test.termBuffer.Resize(test.state.Width,test.state.Height)
 //    }
-//    
+//
 //    if buflen,ok := config.BufLen(); ok && buflen != 0 && buflen != test.state.BufLen {
 //        test.state.BufLen = buflen
 //        test.lineBuffer.Resize(test.state.Height,test.state.BufLen)
 //    }
-//    
+//
 //    if term,ok := config.Term(); ok && term != test.state.Term {
 //        test.state.Term = term
 //    }
-//    
+//
 //    test.ScheduleRefresh()
 //}
 //
@@ -75,7 +74,7 @@ package facade
 //func (test *Test) ScheduleRefresh() {
 //
 //    select { case test.refreshChan <- true: ; default: ; }
-//	
+//
 //}
 //
 //
