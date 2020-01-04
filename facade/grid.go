@@ -426,12 +426,48 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 //
 //}
 
-func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Font) {
-	if config == nil {
-		return
-	}
 
-	log.Debug("%s configure %s", grid.Desc(), config.Desc())
+
+func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
+    var config *GridConfig = nil
+
+	if terminal != nil {
+
+    	log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
+        if terminal.GetGrid() != nil {
+            config = terminal.GetGrid()
+        }
+
+	} else if lines != nil {
+
+    	log.Debug("%s configure %s", grid.Desc(), lines.Desc())
+        if lines.GetGrid() != nil {
+            config = lines.GetGrid()
+        }
+		if lines.GetSetDownward() {
+			grid.downward = lines.GetDownward()
+		}
+		if lines.GetSetSpeed() {
+			grid.lineBuffer.SetSpeed(float32(lines.GetSpeed()))
+		}
+
+		if lines.GetSetAdaptive() {
+			grid.lineBuffer.Adaptive = lines.GetAdaptive()
+		}
+		if lines.GetSetDrop() {
+			grid.lineBuffer.Drop = lines.GetDrop()
+		}
+
+		if lines.GetSetSmooth() {
+			grid.lineBuffer.Smooth = lines.GetSmooth()
+		}
+	   
+        
+    } else {
+        return
+    }
+
+    
 
 	config.autoWidth(camera.Ratio(), font.Ratio())
 
@@ -447,8 +483,8 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 			changed = true
 		}
 
-		if config.GetSetBuffer() && uint(config.GetBuffer()) != grid.buffer {
-			grid.buffer = uint(config.GetBuffer())
+		if lines != nil && lines.GetSetBuffer() && uint(lines.GetBuffer()) != grid.buffer {
+			grid.buffer = uint(lines.GetBuffer())
 			changed = true
 		}
 
@@ -458,36 +494,12 @@ func (grid *Grid) Configure(config *GridConfig, camera *gfx.Camera, font *gfx.Fo
 		}
 	}
 
-	if config.GetSetTerminal() {
-		grid.terminal = config.GetTerminal()
-	}
-
 	if true { //optimize!!
 		log.Debug("%s rendermap %s", grid.Desc(), font.Desc())
 		grid.renderMap(font)
 		//        grid.texture.TexImage()
 	}
 
-	{
-		if config.GetSetDownward() {
-			grid.downward = config.GetDownward()
-		}
-		if config.GetSetSpeed() {
-			grid.lineBuffer.SetSpeed(float32(config.GetSpeed()))
-		}
-
-		if config.GetSetAdaptive() {
-			grid.lineBuffer.Adaptive = config.GetAdaptive()
-		}
-		if config.GetSetDrop() {
-			grid.lineBuffer.Drop = config.GetDrop()
-		}
-
-		if config.GetSetSmooth() {
-			grid.lineBuffer.Smooth = config.GetSmooth()
-		}
-
-	}
 
 	{
 		changed := false
@@ -542,10 +554,9 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 	ret.width = uint(GridDefaults.GetWidth())
 	ret.height = uint(GridDefaults.GetHeight())
 
-	ret.downward = GridDefaults.GetDownward()
+	ret.downward = LineDefaults.GetDownward()
 
-	ret.terminal = GridDefaults.GetTerminal()
-	ret.buffer = uint(GridDefaults.GetBuffer())
+	ret.buffer = uint(LineDefaults.GetBuffer())
 
 	ret.vert = GridDefaults.GetVert()
 	ret.frag = GridDefaults.GetFrag()
@@ -553,6 +564,12 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 	ret.refreshChan = make(chan bool, 1)
 	ret.lineBuffer = lineBuffer
 	ret.termBuffer = termBuffer
+
+    if termBuffer != nil {
+        ret.terminal = true
+    } else {
+        ret.terminal = false
+    }
 
 	return ret
 }
@@ -566,14 +583,18 @@ func (grid *Grid) Config() *GridConfig {
 		SetWidth: true, Width: uint64(grid.width),
 		SetHeight: true, Height: uint64(grid.height),
 
-		SetSpeed: true, Speed: float64(grid.lineBuffer.Speed()),
-		SetDownward: true, Downward: grid.downward,
-		SetAdaptive: true, Adaptive: grid.lineBuffer.Adaptive,
-
-		SetTerminal: true, Terminal: grid.terminal,
-		SetBuffer: true, Buffer: uint64(grid.buffer),
-
 		SetVert: true, Vert: grid.vert,
 		SetFrag: true, Frag: grid.frag,
 	}
 }
+
+
+func (grid *Grid) LineConfig() *LineConfig {
+    return &LineConfig{
+		SetSpeed: true, Speed: float64(grid.lineBuffer.Speed()),
+		SetDownward: true, Downward: grid.downward,
+		SetAdaptive: true, Adaptive: grid.lineBuffer.Adaptive,
+		SetBuffer: true, Buffer: uint64(grid.buffer),
+    }
+}
+
