@@ -8,7 +8,7 @@ import (
 
 var DEFAULT_DIRECTORY = "~/src/gfx/facade"
 
-var DEFAULT_MODE Mode = Mode_GRID
+var DEFAULT_MODE Mode = Mode_LINE
 
 var Defaults = Config{
 	Mode:  DEFAULT_MODE,
@@ -31,9 +31,13 @@ func (config *Config) Desc() string {
 		ret += mask.Desc() + " "
 	}
 
-	if grid := config.GetGrid(); grid != nil {
-		ret += grid.Desc() + " "
+	if terminal := config.GetTerminal(); terminal != nil {
+		ret += terminal.Desc() + " "
 	}
+	if lines := config.GetLines(); lines != nil {
+		ret += lines.Desc() + " "
+	}
+
 	if config.GetSetDebug() {
 		if config.GetDebug() {
 			ret += "DEBUG "
@@ -49,8 +53,11 @@ func (config *Config) Desc() string {
 
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "debug draw")
-	if grid := config.GetGrid(); grid != nil {
-		grid.AddFlags(flagset)
+	if terminal := config.GetTerminal(); terminal != nil {
+		terminal.AddFlags(flagset)
+	}
+	if lines := config.GetLines(); lines != nil {
+		lines.AddFlags(flagset)
 	}
 	if font := config.GetFont(); font != nil {
 		font.AddFlags(flagset)
@@ -74,9 +81,15 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 		}
 	})
 
-	if grid := config.GetGrid(); grid != nil {
-		if !grid.VisitFlags(flagset) {
-			config.Grid = nil
+	if terminal := config.GetTerminal(); terminal != nil {
+		if !terminal.VisitFlags(flagset) {
+			config.Terminal = nil
+		} // no flags used
+	}
+
+	if lines := config.GetLines(); lines != nil {
+		if !lines.VisitFlags(flagset) {
+			config.Lines = nil
 		} // no flags used
 	}
 

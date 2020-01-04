@@ -4,8 +4,9 @@ syntax = "proto3";
 package facade;
 
 enum Mode {
-    GRID  = 0;
-    DRAFT = 16;
+    TERM    =  0;
+    LINE    =  1;
+    DRAFT   = 16;
 }
 
 
@@ -34,59 +35,58 @@ message RawText {
 
 message Config {
     
-    bool SetDebug = 1;  bool Debug   = 2;
-    bool SetMode  = 3;  Mode Mode    = 4;
-    
+    bool SetDebug = 1;  bool Debug = 2;    
+    bool SetMode  = 3;  Mode Mode  = 4;
+
+    FontConfig Font     = 5;
+    CameraConfig Camera = 6;
+    MaskConfig Mask     = 7;
+
+    TermConfig Terminal = 13;
+    LineConfig Lines    = 14;
+
     
 
-      FontConfig Font   = 5;
-    CameraConfig Camera = 6;
-      MaskConfig Mask   = 7;
-    
-      GridConfig Grid   = 8;
-                   
 }
 
 
 message FontConfig {
-
     bool SetName = 1;  string Name = 2;
-
 }
 
 
 message CameraConfig {
-
     bool SetZoom       = 1; double Zoom      = 2;
     bool SetIsometric  = 3;   bool Isometric = 4;
-
 }
 
 
 message MaskConfig {
-
     bool SetName = 1;  string Name = 2;
-
 }
 
 
-message GridConfig {
+message TermConfig {
+    GridConfig Grid = 1;  
+}
 
+
+message LineConfig {
+    GridConfig Grid = 1;  
+    bool SetDownward = 3;     bool Downward =  4;
+    bool SetSpeed    = 5;   double Speed    =  6;
+    bool SetAdaptive = 7;     bool Adaptive =  8;
+    bool SetDrop     = 9;     bool Drop     = 10;
+    bool SetSmooth   =11;     bool Smooth   = 12;
+    bool SetBuffer   =13;   uint64 Buffer   = 14;  
+}
+
+message GridConfig {
     bool SetWidth    = 1;   uint64 Width    = 2;
     bool SetHeight   = 3;   uint64 Height   = 4;
-
-    bool SetDownward = 5;     bool Downward =  6;
-    bool SetSpeed    = 7;   double Speed    =  8;
-    bool SetAdaptive = 9;     bool Adaptive = 10;
-    bool SetDrop     =11;     bool Drop     = 12;
-    bool SetSmooth   =13;     bool Smooth   = 14;
-
-    bool SetBuffer   = 15;   uint64 Buffer  = 16;
-    bool SetTerminal = 17;    bool Terminal = 18;
-    
-    bool SetVert     = 19;  string Vert     = 20;
-    bool SetFrag     = 21;  string Frag     = 22;
-    bool SetFill     = 23;  string Fill     = 24;
+    bool SetFill     = 7;   string Fill     = 8;
+    bool SetVert     = 9;   string Vert     = 10;
+    bool SetFrag     = 11; string Frag      = 12;
 }
 
 

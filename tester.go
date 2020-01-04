@@ -1,9 +1,6 @@
 package main
 
 import (
-	facade "./facade"
-	gfx "./gfx"
-	log "./log"
 	"bufio"
 	"image"
 	"image/png"
@@ -11,17 +8,23 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	facade "./facade"
+	gfx "./gfx"
+	log "./log"
 	//    proto "./facade/proto"
 )
 
 type Tester struct {
 	Terminal bool
 
-	Mode  facade.Mode
+	mode  facade.Mode
 	debug bool
 
 	font       *gfx.Font
 	vert, frag *gfx.Shader
+
+	gridConfig *facade.GridConfig
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
@@ -48,14 +51,15 @@ func NewTester(directory string) *Tester {
 
 func (tester *Tester) switchShader(shaderName string, shaderType gfx.ShaderType) error {
 	var err error
-	shaderName = strings.ToLower(tester.Mode.String()) + "/" + strings.ToLower(shaderName)
-	name := shaderName + "." + string(shaderType)
+
+	shaderName = "grid" + "/" + strings.ToLower(shaderName)
+	name := shaderName // + "." + string(shaderType)
 
 	log.Debug("tester load shader %s", name)
 	err = tester.programService.LoadShader(shaderName, shaderType)
 	if err != nil {
 		log.Error("tester fail load shader %s: %s", name, err)
-		return log.NewError("tester fail load shader %s: %s", name, err)
+		//return log.NewError("tester fail load shader %s: %s", name, err)
 	}
 
 	var shader *gfx.Shader
@@ -111,11 +115,17 @@ func (tester *Tester) Init() error {
 		tester.directory = os.Getenv("HOME") + tester.directory[1:]
 	}
 
+	tester.gridConfig = &facade.GridDefaults
+	tester.gridConfig.SetWidth = true
+	tester.gridConfig.SetHeight = true
+	tester.gridConfig.SetFrag = true
+	tester.gridConfig.SetVert = true
+
 	tester.fontService = gfx.NewFontService(tester.directory+"/font", facade.FontAsset)
 	tester.programService = gfx.NewProgramService(tester.directory+"/shader", facade.ShaderAsset)
 
 	tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
-	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.GridDefaults.Buffer), tester.refreshChan)
+	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), tester.refreshChan)
 
 	err = tester.switchFont(facade.FontDefaults.Name)
 	if err != nil {
@@ -159,49 +169,78 @@ func (tester *Tester) Configure(config *facade.Config) error {
 		}
 	}
 
-	if grid := config.GetGrid(); grid != nil {
+	var grid *facade.GridConfig = nil
 
-		if grid.GetSetVert() && grid.GetVert() != facade.GridDefaults.Vert {
+	if terminal := config.GetTerminal(); terminal != nil {
+
+		if terminal.GetGrid() != nil {
+			grid = terminal.GetGrid()
+		}
+
+	}
+
+	if lines := config.GetLines(); lines != nil {
+
+		if lines.GetGrid() != nil {
+			grid = lines.GetGrid()
+		}
+
+		if lines.GetSetBuffer() {
+			tester.lineBuffer.Resize(uint(tester.gridConfig.GetHeight()), uint(lines.GetBuffer()))
+		}
+
+		if lines.GetSetSpeed() {
+			tester.lineBuffer.SetSpeed(float32(lines.GetSpeed()))
+		}
+
+		if lines.GetSetAdaptive() {
+			tester.lineBuffer.Adaptive = lines.GetAdaptive()
+		}
+
+		if lines.GetSetDrop() {
+			tester.lineBuffer.Drop = lines.GetDrop()
+		}
+
+		if lines.GetSetSmooth() {
+			tester.lineBuffer.Smooth = lines.GetSmooth()
+		}
+
+	}
+
+	if grid != nil {
+
+		if grid.GetSetVert() {
 			err = tester.switchShader(grid.GetVert(), gfx.VertType)
 			if err != nil {
 				log.Error("tester fail switch shader: %s", err)
+			} else {
+				tester.gridConfig.Vert = grid.GetVert()
 			}
 		}
 
-		if grid.GetSetFrag() && grid.GetFrag() != facade.GridDefaults.Frag {
+		if grid.GetSetFrag() {
 			err = tester.switchShader(grid.GetFrag(), gfx.FragType)
 			if err != nil {
 				log.Error("tester fail switch shader: %s", err)
+			} else {
+				tester.gridConfig.Frag = grid.GetFrag()
 			}
 		}
 
-		if grid.GetSetTerminal() {
-			tester.Terminal = grid.GetTerminal()
+		if grid.GetSetWidth() {
+			tester.gridConfig.Width = grid.GetWidth()
 		}
 
-		if (grid.GetSetWidth() && grid.GetWidth() != tester.termBuffer.GetWidth()) ||
-			(grid.GetSetHeight() && grid.GetHeight() != tester.termBuffer.GetHeight()) {
-
-			tester.termBuffer.Resize(uint(grid.GetWidth()), uint(grid.GetHeight()))
+		if grid.GetSetHeight() {
+			tester.gridConfig.Height = grid.GetHeight()
 		}
 
-		if (grid.GetSetBuffer() && grid.GetBuffer() != tester.lineBuffer.GetBuffer()) ||
-			(grid.GetSetHeight() && grid.GetHeight() != tester.lineBuffer.GetHeight()) {
-
-			tester.lineBuffer.Resize(uint(grid.GetHeight()), uint(grid.GetBuffer()))
+		if grid.GetSetWidth() || grid.GetSetHeight() {
+			tester.termBuffer.Resize(uint(tester.gridConfig.Width), uint(tester.gridConfig.Height))
 		}
 
-		if grid.GetSetSpeed() {
-			tester.lineBuffer.SetSpeed(float32(grid.GetSpeed()))
-		}
-		if grid.GetSetAdaptive() {
-			tester.lineBuffer.Adaptive = grid.GetAdaptive()
-		}
-		if grid.GetSetDrop() {
-			tester.lineBuffer.Drop = grid.GetDrop()
-		}
-		if grid.GetSetSmooth() {
-			tester.lineBuffer.Smooth = grid.GetSmooth()
+		if grid.GetSetHeight() {
+			tester.lineBuffer.Resize(uint(tester.gridConfig.Height), uint(tester.lineBuffer.GetBuffer()))
 		}
 
 		if grid.GetSetFill() {
@@ -210,6 +249,15 @@ func (tester *Tester) Configure(config *facade.Config) error {
 				log.Error("fail render '%': %s", grid.GetFill(), err)
 			}
 
+		}
+
+	}
+
+	if config.GetSetMode() {
+
+		if tester.mode != config.GetMode() {
+			log.Info("switch mode %s", config.GetMode())
+			tester.mode = config.GetMode()
 		}
 
 	}
@@ -284,16 +332,14 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 }
 
 func (tester *Tester) InfoMode() string {
-	ret := strings.ToLower(tester.Mode.String())
-	ret += "["
-	if tester.Terminal {
-		ret += "TT "
-	}
+	ret := "mode[ " + strings.ToLower(tester.mode.String()) + " ]"
+	ret += " "
+	ret += tester.gridConfig.Desc()
 	if tester.debug {
-		ret += "DEBUG "
+		ret += " DEBUG "
 	}
 	ret = strings.TrimRight(ret, " ")
-	ret += "]"
+	ret += ""
 	return ret
 
 }
@@ -327,11 +373,11 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 			if tester.frag != nil {
 				log.Info("  %s", tester.frag.Desc())
 			}
-			if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
+			if DEBUG_BUFFER && tester.mode == facade.Mode_LINE {
 				log.Info("")
-				if tester.Terminal {
+				if tester.mode == facade.Mode_TERM {
 					log.Info(tester.termBuffer.Dump())
-				} else {
+				} else if tester.mode == facade.Mode_LINE {
 					log.Info(tester.lineBuffer.Dump(uint(tester.termBuffer.GetWidth())))
 				}
 			}

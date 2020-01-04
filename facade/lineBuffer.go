@@ -1,12 +1,13 @@
 package facade
 
 import (
+	"fmt"
+	"strings"
+
 	gfx "../gfx"
 	log "../log"
 	math "../math32"
-	"fmt"
 	"github.com/pborman/ansi"
-	"strings"
 )
 
 const DEBUG_LINEBUFFER = false
@@ -50,10 +51,10 @@ func NewLineBuffer(rows, offs uint, refreshChan chan bool) *LineBuffer {
 	}
 	total := rows + offs
 	ret := &LineBuffer{
-		speed:    float32(GridDefaults.Speed),
-		Adaptive: GridDefaults.Adaptive,
-		Drop:     GridDefaults.Drop,
-		Smooth:   GridDefaults.Smooth,
+		speed:    float32(LineDefaults.Speed),
+		Adaptive: LineDefaults.Adaptive,
+		Drop:     LineDefaults.Drop,
+		Smooth:   LineDefaults.Smooth,
 	}
 	ret.rows = rows
 	ret.offs = offs

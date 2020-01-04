@@ -5,9 +5,11 @@ package facade
 import (
 	"fmt"
 	"strings"
+
 	//    "math"
 	gfx "../gfx"
 	log "../log"
+
 	//    math "../math32"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"

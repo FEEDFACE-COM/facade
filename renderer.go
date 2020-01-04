@@ -3,16 +3,17 @@
 package main
 
 import (
-	facade "./facade"
-	gfx "./gfx"
-	log "./log"
 	"fmt"
-	"github.com/FEEDFACE-COM/piglet"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	facade "./facade"
+	gfx "./gfx"
+	log "./log"
+	"github.com/FEEDFACE-COM/piglet"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Renderer struct {
@@ -21,7 +22,8 @@ type Renderer struct {
 	mode  facade.Mode
 	debug bool
 
-	grid *facade.Grid
+	terminal *facade.Grid
+	lines    *facade.Grid
 
 	font   *gfx.Font
 	camera *gfx.Camera
@@ -126,8 +128,11 @@ func (renderer *Renderer) Init() error {
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.GridDefaults.Buffer), renderer.refreshChan)
 
-	renderer.grid = facade.NewGrid(renderer.lineBuffer, renderer.termBuffer)
-	renderer.grid.Init(renderer.programService, renderer.font)
+	renderer.terminal = facade.NewGrid("term", renderer.termBuffer)
+	renderer.terminal.Init(renderer.programService, renderer.font)
+
+	renderer.lines = facade.NewGrid("line", renderer.lineBuffer)
+	renderer.lines.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
 	return err
@@ -168,7 +173,8 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 					}
 					renderer.font = fnt
 					renderer.ScheduleRefresh()
-					renderer.grid.ScheduleRefresh()
+					renderer.terminal.ScheduleRefresh()
+					renderer.lines.ScheduleRefresh()
 
 				}
 			}
@@ -194,14 +200,23 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		renderer.grid.Configure(cfg, renderer.camera, renderer.font)
 	}
 
-	if config.GetSetMode() {
-		mode := config.GetMode()
-		if renderer.mode != mode {
+	if cfg := config.GetTerminal(); cfg != nil {
+		renderer.terminal.Configure(cfg, renderer.camera, renderer.font)
+	}
 
-			log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
-			renderer.mode = mode
+	if cfg := config.GetLines(); cfg != nil {
+		renderer.lines.Configure(cfg, renderer.camera, renderer.font)
+	}
 
-		}
+	if cfg := config.GetMode(); cfg != nil {
+
+		// mode := config.GetMode()
+		// if renderer.mode != mode {
+
+		// 	log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
+		// 	renderer.mode = mode
+
+		// }
 
 	}
 
@@ -268,8 +283,10 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		if renderer.checkRefresh() {
 			//            if DEBUG_RENDERER { log.Debug("%s refresh",renderer.Desc()) }
 			switch renderer.mode {
-			case facade.Mode_GRID:
-				renderer.grid.ScheduleRefresh()
+			case facade.Mode_TERMINAL:
+				renderer.terminal.ScheduleRefresh()
+			case facade.Mode_LINES:
+				renderer.lines.ScheduleRefresh()
 			}
 		}
 
@@ -281,8 +298,10 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD)
 		gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
 		switch renderer.mode {
-		case facade.Mode_GRID:
-			renderer.grid.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+		case facade.Mode_TERMINAL:
+			renderer.terminal.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+		case facade.Mode_LINES:
+			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
 		if renderer.debug {
@@ -395,8 +414,10 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 func (renderer *Renderer) InfoMode() string {
 	mode := ""
 	switch renderer.mode {
-	case facade.Mode_GRID:
-		mode = renderer.grid.Desc()
+	case facade.Mode_TERMINAL:
+		mode = "term " + renderer.terminal.Desc()
+	case facade.Mode_LINES:
+		mode = "lines " + renderer.lines.Desc()
 	}
 	dbg := ""
 	if renderer.debug {
