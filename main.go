@@ -181,14 +181,19 @@ func main() {
 
 			switch strings.ToUpper(mode) {
 
-			case facade.Mode_GRID.String():
+			case facade.Mode_TERM.String():
 				config.SetMode = true
-				config.Mode = facade.Mode_GRID
-				config.Grid = &facade.GridConfig{}
+				config.Mode = facade.Mode_TERM
+				config.Terminal = &facade.TermConfig{}
+
+			case facade.Mode_LINE.String():
+				config.SetMode = true
+				config.Mode = facade.Mode_LINE
+				config.Lines = &facade.LineConfig{}
 
 			case facade.Mode_DRAFT.String():
 				config.SetMode = true
-				config.Mode = facade.Mode_GRID
+				config.Mode = facade.Mode_DRAFT
 			}
 			args = args[1:]
 
@@ -233,7 +238,7 @@ func main() {
 		args = modeFlags.Args()
 
 		if len(args) <= 0 { // no command given
-			ShowHelpMode(facade.Mode_GRID.String(), EXEC, modeFlags)
+			ShowHelpMode(facade.Mode_TERM.String(), EXEC, modeFlags)
 			os.Exit(-2)
 		}
 
@@ -327,25 +332,23 @@ func main() {
 	case EXEC:
 
 		var cols, rows = facade.GridDefaults.Width, facade.GridDefaults.Height
-		if config.GetGrid() == nil {
-			config.Grid = &facade.GridConfig{}
+		if config.GetTerminal() == nil {
+			config.Terminal = &facade.TermConfig{}
+			config.Terminal.Grid = &facade.GridConfig{}
 		}
 
-		if config.GetGrid().GetSetWidth() {
-			cols = config.GetGrid().GetWidth()
+		if config.GetTerminal().GetGrid().GetSetWidth() {
+			cols = config.GetTerminal().GetGrid().GetWidth()
 		}
-		if config.GetGrid().GetSetWidth() {
-			rows = config.GetGrid().GetHeight()
+		if config.GetTerminal().GetGrid().GetSetHeight() {
+			rows = config.GetTerminal().GetGrid().GetHeight()
 		}
 
-		config.Grid.Width = cols
-		config.Grid.SetWidth = true
+		config.Terminal.Grid.Width = cols
+		config.Terminal.Grid.SetWidth = true
 
-		config.Grid.Height = rows
-		config.Grid.SetHeight = true
-
-		config.Grid.Terminal = true
-		config.Grid.SetTerminal = true
+		config.Terminal.Grid.Height = rows
+		config.Terminal.Grid.SetHeight = true
 
 		client = NewClient(host, port, connectTimeout)
 		executor = NewExecutor(client, uint(cols), uint(rows), path, args)
@@ -430,7 +433,7 @@ func ShowHelpMode(mode string, cmd Command, flagset *flag.FlagSet) {
 
 func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
 	modes := []string{}
-	for _, m := range []facade.Mode{facade.Mode_GRID} {
+	for _, m := range []facade.Mode{facade.Mode_LINE} {
 		modes = append(modes, string(m))
 	}
 	switches := "-"
@@ -476,7 +479,8 @@ func ShowCommands() {
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_GRID.String()), "character grid")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "terminal")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINE.String()), "line scroll")
 }
 
 func ShowHelp() {
