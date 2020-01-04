@@ -126,12 +126,12 @@ func (renderer *Renderer) Init() error {
 	renderer.mask.Init(renderer.programService)
 
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
-	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.GridDefaults.Buffer), renderer.refreshChan)
+	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
 
-	renderer.terminal = facade.NewGrid("term", renderer.termBuffer)
+	renderer.terminal = facade.NewGrid(nil,renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
 
-	renderer.lines = facade.NewGrid("line", renderer.lineBuffer)
+	renderer.lines = facade.NewGrid(renderer.lineBuffer,nil)
 	renderer.lines.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
@@ -196,28 +196,21 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		}
 	}
 
-	if cfg := config.GetGrid(); cfg != nil {
-		renderer.grid.Configure(cfg, renderer.camera, renderer.font)
+	if cfg := config.GetLines(); cfg != nil {
+		renderer.lines.Configure(cfg, nil, renderer.camera, renderer.font)
 	}
 
 	if cfg := config.GetTerminal(); cfg != nil {
-		renderer.terminal.Configure(cfg, renderer.camera, renderer.font)
+		renderer.terminal.Configure(nil, cfg, renderer.camera, renderer.font)
 	}
 
-	if cfg := config.GetLines(); cfg != nil {
-		renderer.lines.Configure(cfg, renderer.camera, renderer.font)
-	}
 
-	if cfg := config.GetMode(); cfg != nil {
-
-		// mode := config.GetMode()
-		// if renderer.mode != mode {
-
-		// 	log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
-		// 	renderer.mode = mode
-
-		// }
-
+	if config.GetSetMode() {
+        mode := config.GetMode()
+        if renderer.mode != mode {
+            log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
+            renderer.mode = mode
+        }
 	}
 
 	return nil
@@ -283,9 +276,9 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		if renderer.checkRefresh() {
 			//            if DEBUG_RENDERER { log.Debug("%s refresh",renderer.Desc()) }
 			switch renderer.mode {
-			case facade.Mode_TERMINAL:
+			case facade.Mode_TERM:
 				renderer.terminal.ScheduleRefresh()
-			case facade.Mode_LINES:
+			case facade.Mode_LINE:
 				renderer.lines.ScheduleRefresh()
 			}
 		}
@@ -298,9 +291,9 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD)
 		gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE)
 		switch renderer.mode {
-		case facade.Mode_TERMINAL:
+		case facade.Mode_TERM:
 			renderer.terminal.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
-		case facade.Mode_LINES:
+		case facade.Mode_LINE:
 			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
@@ -414,9 +407,9 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 func (renderer *Renderer) InfoMode() string {
 	mode := ""
 	switch renderer.mode {
-	case facade.Mode_TERMINAL:
+	case facade.Mode_TERM:
 		mode = "term " + renderer.terminal.Desc()
-	case facade.Mode_LINES:
+	case facade.Mode_LINE:
 		mode = "lines " + renderer.lines.Desc()
 	}
 	dbg := ""
