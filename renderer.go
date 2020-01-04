@@ -139,6 +139,7 @@ func (renderer *Renderer) Init() error {
 }
 
 func (renderer *Renderer) Configure(config *facade.Config) error {
+    changed := false
 	if config == nil {
 		return log.NewError("renderer config nil")
 	}
@@ -157,7 +158,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		if cfg.GetSetName() {
 			name := cfg.GetName()
 			if name != renderer.font.GetName() {
-
+                changed = true
 				err = renderer.fontService.LoadFont(name)
 				if err != nil {
 					log.Error("%s fail load font %s: %s", renderer.Desc(), name, err)
@@ -182,6 +183,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	}
 
 	if cfg := config.GetCamera(); cfg != nil {
+    	changed = true
 		if cfg.GetSetZoom() {
 			renderer.camera.ConfigureZoom(float32(cfg.GetZoom()))
 		}
@@ -191,27 +193,36 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	}
 
 	if cfg := config.GetMask(); cfg != nil {
+    	changed = true
 		if cfg.GetSetName() {
 			renderer.mask.ConfigureName(cfg.GetName())
 		}
 	}
 
 	if cfg := config.GetLines(); cfg != nil {
+    	changed = true
 		renderer.lines.Configure(cfg, nil, renderer.camera, renderer.font)
 	}
 
 	if cfg := config.GetTerminal(); cfg != nil {
+    	changed = true
 		renderer.terminal.Configure(nil, cfg, renderer.camera, renderer.font)
 	}
 
 
 	if config.GetSetMode() {
+    	changed = true
         mode := config.GetMode()
         if renderer.mode != mode {
             log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
             renderer.mode = mode
         }
 	}
+	
+	if changed {
+        renderer.printDebug()
+        renderer.prevFrame = gfx.WorldClock().Frame()
+    }
 
 	return nil
 }
@@ -278,6 +289,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			switch renderer.mode {
 			case facade.Mode_TERM:
 				renderer.terminal.ScheduleRefresh()
+				
 			case facade.Mode_LINE:
 				renderer.lines.ScheduleRefresh()
 			}
@@ -305,8 +317,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA, gl.ZERO, gl.ONE)
 		renderer.mask.Render(renderer.debug)
 
-		if verboseFrame {
-
+		if DEBUG_PERIODIC  && verboseFrame {
 			renderer.printDebug()
 			renderer.prevFrame = gfx.WorldClock().Frame()
 		}
@@ -388,6 +399,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			renderer.lineBuffer.ProcessRunes(text)
 			renderer.termBuffer.ProcessRunes(text)
 			renderer.ScheduleRefresh()
+			renderer.printDebug()
+			renderer.prevFrame = gfx.WorldClock().Frame()
 			//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
 			//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 			//            }
@@ -396,6 +409,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			renderer.lineBuffer.ProcessSequence(seq)
 			renderer.termBuffer.ProcessSequence(seq)
 			renderer.ScheduleRefresh()
+			renderer.printDebug()
+			renderer.prevFrame = gfx.WorldClock().Frame()
 			//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
 			//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 			//            }
@@ -466,14 +481,16 @@ func (renderer *Renderer) printDebug() {
 }
 
 func (renderer *Renderer) dumpBuffer() {
-	//    if ! DEBUG_BUFFER {
-	//        return
-	//    }
-	//    if renderer.mode  == facade.Mode_GRID {
-	//        os.Stdout.Write( []byte( renderer.grid.DumpBuffer() ) )
-	//    }
-	//    os.Stdout.Write( []byte( "\n" ) )
-	//    os.Stdout.Sync()
+    if ! DEBUG_BUFFER {
+        return
+    }
+    if renderer.mode  == facade.Mode_TERM {
+        os.Stdout.Write( []byte( renderer.terminal.DumpBuffer() ) )
+    } else if renderer.mode == facade.Mode_LINE {
+        os.Stdout.Write( []byte( renderer.lines.DumpBuffer() ) )
+    }
+    os.Stdout.Write( []byte( "\n" ) )
+    os.Stdout.Sync()
 }
 
 func (renderer *Renderer) Info() string {

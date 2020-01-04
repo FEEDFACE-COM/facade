@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const DEBUG_SERVER = false
+const DEBUG_SERVER = true
 const DEBUG_SERVER_DUMP = false
 
 type Server struct {

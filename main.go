@@ -16,14 +16,15 @@ import (
 )
 
 const (
+    DEBUG_PERIODIC = false
 	DEBUG_DIAG     = false
-	DEBUG_CLOCK    = false
+	DEBUG_CLOCK    = true
 	DEBUG_CONFIG   = false
 	DEBUG_FONT     = false
 	DEBUG_SHADER   = false
-	DEBUG_MODE     = false
+	DEBUG_MODE     = true
 	DEBUG_MEMORY   = false
-	DEBUG_BUFFER   = false
+	DEBUG_BUFFER   = true
 	DEBUG_RENDERER = false
 )
 

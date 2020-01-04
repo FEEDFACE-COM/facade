@@ -431,14 +431,14 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
     var config *GridConfig = nil
 
-	if terminal != nil {
+	if grid.terminal && terminal != nil {
 
     	log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
         if terminal.GetGrid() != nil {
             config = terminal.GetGrid()
         }
 
-	} else if lines != nil {
+	} else if ! grid.terminal && lines != nil {
 
     	log.Debug("%s configure %s", grid.Desc(), lines.Desc())
         if lines.GetGrid() != nil {
@@ -464,6 +464,7 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 	   
         
     } else {
+    	log.Debug("%s cannot configure", grid.Desc())
         return
     }
 
@@ -489,8 +490,11 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 		}
 
 		if changed {
-			grid.lineBuffer.Resize(grid.height, grid.buffer)
-			grid.termBuffer.Resize(grid.width, grid.height)
+    		if grid.terminal {
+    			grid.termBuffer.Resize(grid.width, grid.height)
+            } else {
+    			grid.lineBuffer.Resize(grid.height, grid.buffer)
+            }
 		}
 	}
 
@@ -524,9 +528,11 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 
 	if config.GetSetFill() {
 		fillStr := grid.fill(config.GetFill())
-		grid.lineBuffer.Fill(fillStr)
-		grid.termBuffer.Fill(fillStr)
-
+		if grid.terminal {
+    		grid.termBuffer.Fill(fillStr)
+        } else {
+    		grid.lineBuffer.Fill(fillStr)
+        }
 	}
 
 	grid.ScheduleRefresh()
@@ -590,11 +596,16 @@ func (grid *Grid) Config() *GridConfig {
 
 
 func (grid *Grid) LineConfig() *LineConfig {
-    return &LineConfig{
-		SetSpeed: true, Speed: float64(grid.lineBuffer.Speed()),
+    ret := &LineConfig{
 		SetDownward: true, Downward: grid.downward,
-		SetAdaptive: true, Adaptive: grid.lineBuffer.Adaptive,
 		SetBuffer: true, Buffer: uint64(grid.buffer),
     }
+    if grid.lineBuffer != nil {
+        ret.SetSpeed = true
+        ret.Speed = float64(grid.lineBuffer.Speed())    
+		ret.SetAdaptive = true
+		ret.Adaptive = grid.lineBuffer.Adaptive
+    }
+    return ret
 }
 
