@@ -561,7 +561,7 @@ func (buffer *LineBuffer) Dump(width uint) string {
 		ret += "\n"
 
 		if i == buffer.rows-1 {
-			ret += "---+"
+			ret += "----+"
 			for c := uint(0); c < width; c++ {
 				ret += "-"
 			}
