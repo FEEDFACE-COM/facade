@@ -1,14 +1,10 @@
-
 package log
 
 import (
-    "fmt"
-    "errors"    
+	"errors"
+	"fmt"
 )
 
-
-func NewError(format string, args ...interface{}) error { 
-    return errors.New( fmt.Sprintf(format,args...) ) 
+func NewError(format string, args ...interface{}) error {
+	return errors.New(fmt.Sprintf(format, args...))
 }
-
-
