@@ -455,34 +455,17 @@ func ShowHelpMode(mode string, cmd Command, flagset *flag.FlagSet) {
 }
 
 func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
-	modes := []string{}
-	for _, m := range []facade.Mode{facade.Mode_LINE} {
-		modes = append(modes, string(m))
-	}
-	switches := ""
-	flags := ""
-	flagSetMap[cmd].VisitAll(func(f *flag.Flag) {
-		name, _ := flag.UnquoteUsage(f)
-		if name != "" {
-			name = "=" + name
-		}
-		if len(f.Name) == 1 && name == "" {
-			switches += f.Name
-		}
-		if len(f.Name) > 1 || name != "" {
-			flags += " [-" + f.Name + name + "]"
-		}
-	})
-	if switches != "" {
-    	switches = "-[" + switches + "] "
-    }
-
+    var modes []string
+    modes = append(modes, strings.ToLower( facade.Mode_TERM.String() ))
+    modes = append(modes, strings.ToLower( facade.Mode_LINE.String() ))
+    
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-    fmt.Fprintf(os.Stderr, "  %s %s %s%s\n", BUILD_NAME, cmd, switches, flags)
     switch cmd {
-        case INFO,EXEC:
+        case INFO:
+            fmt.Fprintf(os.Stderr, "  %s %s [flags]\n", BUILD_NAME, cmd)
         default:
+            fmt.Fprintf(os.Stderr, "  %s %s [flags] %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
             ShowModes()
 	}
 
@@ -495,18 +478,18 @@ func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", READ, "read text from stdin and render")
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", RECV, "receive text from remote and render ")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", RECV, "receive text from client and render ")
 	}
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to remote server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "change configuration of remote server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdout,stderr to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", INFO, "show available shaders and fonts of remote server ")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "change configuration of server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", INFO, "show available shaders and fonts of server ")
 }
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "terminal")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINE.String()), "line scroll")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINE.String()), "line scroller")
 }
 
 func ShowHelp() {

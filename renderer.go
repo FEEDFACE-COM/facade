@@ -396,8 +396,14 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 		item := <-textChan
 		text, seq := item.Text, item.Seq
 		if text != nil && len(text) > 0 {
-			renderer.lineBuffer.ProcessRunes(text)
-			renderer.termBuffer.ProcessRunes(text)
+    		switch renderer.mode {
+    		case facade.Mode_TERM: 
+                renderer.termBuffer.ProcessRunes(text)
+
+            case facade.Mode_LINE:
+                renderer.lineBuffer.ProcessRunes(text)
+            }
+                            
 			renderer.ScheduleRefresh()
 			renderer.printDebug()
 			renderer.prevFrame = gfx.WorldClock().Frame()
@@ -406,8 +412,12 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			//            }
 		}
 		if seq != nil {
-			renderer.lineBuffer.ProcessSequence(seq)
-			renderer.termBuffer.ProcessSequence(seq)
+    		switch renderer.mode {
+    		case facade.Mode_TERM: 
+    			renderer.termBuffer.ProcessSequence(seq)
+            case facade.Mode_LINE:
+                renderer.lineBuffer.ProcessSequence(seq)
+    		}
 			renderer.ScheduleRefresh()
 			renderer.printDebug()
 			renderer.prevFrame = gfx.WorldClock().Frame()
