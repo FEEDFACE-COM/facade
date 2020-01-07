@@ -3,6 +3,7 @@ package facade
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 )
 
@@ -52,7 +53,7 @@ func (config *Config) Desc() string {
 }
 
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
-	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "debug draw")
+	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
 	if terminal := config.GetTerminal(); terminal != nil {
 		terminal.AddFlags(flagset)
 	}
@@ -111,4 +112,20 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 		} // no flags used
 	}
 
+}
+
+func (config *Config) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
+	config.AddFlags(tmp)
+	tmp.VisitAll(fun)
+	return ret
 }
