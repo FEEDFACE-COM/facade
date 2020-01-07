@@ -2,6 +2,7 @@ package facade
 
 import (
 	"flag"
+	"fmt"
 )
 
 const DEFAULT_FONT = "RobotoMono"
@@ -31,4 +32,20 @@ func (config *FontConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		}
 	})
 	return config.SetName
+}
+
+func (config *FontConfig) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	tmp := flag.NewFlagSet("font", flag.ExitOnError)
+	config.AddFlags(tmp)
+	tmp.VisitAll(fun)
+	return ret
 }
