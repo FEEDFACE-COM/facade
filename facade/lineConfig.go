@@ -16,7 +16,7 @@ var LineDefaults LineConfig = LineConfig{
 	Drop:     true,
 	Smooth:   true,
 	Buffer:   8,
-	Grid:     &GridConfig{},
+	Grid:     nil,
 }
 
 func (config *LineConfig) Desc() string {
@@ -101,18 +101,16 @@ func (config *LineConfig) Desc() string {
 
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 
-	if config.GetGrid() == nil {
-		config.Grid = &GridConfig{}
+	if config.GetGrid() != nil {
+		config.GetGrid().AddFlags(flagset)
 	}
 
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
 	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
-	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "smooth speed?")
+	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "smooth scrolling?")
 	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
-	flagset.BoolVar(&config.Adaptive, "adapt", LineDefaults.Adaptive, "adapt speed?")
-	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer lines")
-
-	config.Grid.AddFlags(flagset)
+	flagset.BoolVar(&config.Adaptive, "adapt", LineDefaults.Adaptive, "adaptive scroll speed?")
+	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
 
 }
 
@@ -157,4 +155,21 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		config.SetSmooth ||
 		config.SetBuffer
 
+}
+
+func (config *LineConfig) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	ret += GridDefaults.Help()
+	tmp := flag.NewFlagSet("line", flag.ExitOnError)
+	config.AddFlags(tmp)
+	tmp.VisitAll(fun)
+	return ret
 }

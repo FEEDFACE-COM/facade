@@ -20,7 +20,7 @@ var GridDefaults GridConfig = GridConfig{
 }
 
 func (config *GridConfig) Desc() string {
-	ret := "grid["
+	ret := ""
 	{
 		wok := config.GetSetWidth()
 		hok := config.GetSetHeight()
@@ -59,7 +59,7 @@ func (config *GridConfig) Desc() string {
 		ret += config.GetFill() + " "
 	}
 	ret = strings.TrimRight(ret, " ")
-	ret += "]"
+	ret += ""
 	return ret
 }
 
@@ -123,4 +123,25 @@ func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
 
 	}
 	log.Debug("%s autowidth", config.Desc())
+}
+
+func (config *GridConfig) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	tmp := flag.NewFlagSet("grid", flag.ExitOnError)
+	config.AddFlags(tmp)
+	for _, s := range []string{"frag", "vert", "w", "h", "fill"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			fun(flg)
+		}
+	}
+	//tmp.VisitAll(fun)
+	return ret
 }

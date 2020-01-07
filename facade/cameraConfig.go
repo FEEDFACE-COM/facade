@@ -28,7 +28,7 @@ func (config *CameraConfig) Desc() string {
 
 func (config *CameraConfig) AddFlags(flagset *flag.FlagSet) {
 	flagset.Float64Var(&config.Zoom, "zoom", CameraDefaults.Zoom, "camera zoom")
-	flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera iso?")
+	flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera isometric?")
 }
 
 func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
@@ -45,4 +45,20 @@ func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		}
 	})
 	return config.SetZoom || config.SetIsometric
+}
+
+func (config *CameraConfig) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	tmp := flag.NewFlagSet("camera", flag.ExitOnError)
+	config.AddFlags(tmp)
+	tmp.VisitAll(fun)
+	return ret
 }

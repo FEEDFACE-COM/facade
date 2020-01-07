@@ -5,11 +5,12 @@ package facade
 //
 import (
 	"flag"
+	"fmt"
 	"strings"
 )
 
 var TermDefaults TermConfig = TermConfig{
-	Grid: &GridConfig{},
+	Grid: nil,
 }
 
 func (config *TermConfig) Desc() string {
@@ -24,11 +25,8 @@ func (config *TermConfig) Desc() string {
 
 func (config *TermConfig) AddFlags(flagset *flag.FlagSet) {
 
-	if config.GetGrid() == nil {
-		config.Grid = &GridConfig{}
-	}
-	if grid := config.GetGrid(); grid != nil {
-		grid.AddFlags(flagset)
+	if config.GetGrid() != nil {
+		config.GetGrid().AddFlags(flagset)
 	}
 
 }
@@ -43,4 +41,20 @@ func (config *TermConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		setGrid = grid.VisitFlags(flagset)
 	}
 	return setGrid
+}
+func (config *TermConfig) Help() string {
+	ret := ""
+	fun := func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
+	}
+
+	ret += GridDefaults.Help()
+	tmp := flag.NewFlagSet("term", flag.ExitOnError)
+	config.AddFlags(tmp)
+	tmp.VisitAll(fun)
+	return ret
 }

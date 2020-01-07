@@ -95,37 +95,33 @@ func main() {
 		flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
 	}
 
-	//for _, cmd := range []Command{PIPE, EXEC} {
-	//		flags[cmd].UintVar(&textPort, "tp", textPort, "connect to `port` for text")
-	//}
-
 	for _, cmd := range []Command{PIPE, CONF, EXEC, INFO} {
-		flags[cmd].UintVar(&port, "p", port, "connect to `port`")
-		flags[cmd].StringVar(&host, "h", DEFAULT_CONNECT_HOST, "connect to `host`")
-		flags[cmd].Float64Var(&connectTimeout, "t", connectTimeout, "timeout connect after `seconds`")
+		flags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
+		flags[cmd].StringVar(&host, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
+		flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
 	}
 
 	if flags[RECV] != nil {
-		flags[RECV].UintVar(&port, "cp", port, "listen on `port` for messages")
-		flags[RECV].UintVar(&textPort, "tp", textPort, "listen on `port` for raw text")
-		flags[RECV].StringVar(&host, "h", DEFAULT_LISTEN_HOST, "listen on `host`")
-		flags[RECV].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`")
+		flags[RECV].UintVar(&port, "port", port, "listen on `port` for messages")
+		flags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
+		flags[RECV].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		flags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
 	if flags[TEST] != nil {
-		flags[TEST].UintVar(&port, "cp", port, "listen on `port` for messages")
-		flags[TEST].UintVar(&textPort, "tp", textPort, "listen on `port` for raw text")
-		flags[TEST].StringVar(&host, "h", DEFAULT_LISTEN_HOST, "listen on `host`")
-		flags[TEST].Float64Var(&readTimeout, "t", readTimeout, "timeout read after `seconds`")
+		flags[TEST].UintVar(&port, "port", port, "listen on `port` for messages")
+		flags[TEST].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
+		flags[TEST].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		flags[TEST].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
 	{
-		flag.CommandLine.StringVar(&directory, "D", directory, "directory")
+		flag.CommandLine.StringVar(&directory, "D", directory, "working directory")
 	}
 
-	flag.CommandLine.BoolVar(&verbose, "v", verbose, "show info messages")
-	flag.CommandLine.BoolVar(&debug, "d", debug, "show debug messages")
-	flag.CommandLine.BoolVar(&quiet, "q", quiet, "show warnings only")
+	flag.CommandLine.BoolVar(&verbose, "v", verbose, "show info messages?")
+	flag.CommandLine.BoolVar(&debug, "d", debug, "show debug messages?")
+	flag.CommandLine.BoolVar(&quiet, "q", quiet, "show warnings only?")
 
 	flag.Parse()
 	if flag.NArg() < 1 {
@@ -158,7 +154,7 @@ func main() {
 		}
 		fallthrough
 	case PIPE, CONF, EXEC, TEST:
-		flags[cmd].Usage = func() { ShowHelpCommand(cmd, flags) }
+		flags[cmd].Usage = func() { ShowHelpCommand(cmd, *flags[cmd]) }
 		flags[cmd].Parse(flag.Args()[1:])
 	}
 
@@ -168,75 +164,71 @@ func main() {
 	config.Mask = &facade.MaskConfig{}
 
 	var args []string
-	var mode string
 	var modeFlags *flag.FlagSet
 
 	switch cmd {
 
+	case EXEC:
 
-    case EXEC:
+		config.SetMode = true
+		config.Mode = facade.Mode_TERM
+		config.Terminal = &facade.TermConfig{}
 
-        config.SetMode = true
-        config.Mode = facade.Mode_TERM
-        config.Terminal = &facade.TermConfig{}
-    
-        
-    
 		args = flags[cmd].Args()
-        if len(args) > 0 && strings.ToUpper( args[0] ) == facade.Mode_TERM.String() {
-            args = args[1:]
-        }
-        
-        modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
-        modeFlags.Usage = func() { ShowHelpMode(mode, EXEC, modeFlags) }
+		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
+			args = args[1:]
+		}
 
-        config.AddFlags(modeFlags)
-        modeFlags.Parse(args)
-        config.VisitFlags(modeFlags)
+		modeFlags = flag.NewFlagSet("term", flag.ExitOnError)
+		modeFlags.Usage = func() { ShowHelpMode(config.Mode, EXEC) }
 
+		config.AddFlags(modeFlags)
+		modeFlags.Parse(args)
+		config.VisitFlags(modeFlags)
 
 		args = modeFlags.Args()
-		log.Debug("got flags %v",args)
-        if len(args) <= 0 {
-            ShowHelpMode(facade.Mode_TERM.String(), EXEC, modeFlags)            
-            os.Exit(-2)
-        }
+		log.Debug("got flags %v", args)
+		if len(args) <= 0 {
+			ShowHelpMode(facade.Mode_TERM, EXEC)
+			os.Exit(-2)
+		}
 
 		path = args[0]
 		args = args[1:]
-
-
-
 
 	case READ, RECV, PIPE, CONF, TEST:
 		// parse mode, if given
 		args = flags[cmd].Args()
 
 		if cmd != INFO && len(args) > 0 {
-			mode = strings.ToLower(args[0])
 
-			switch strings.ToUpper(mode) {
+			switch strings.ToUpper(args[0]) {
 
 			case facade.Mode_TERM.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_TERM
 				config.Terminal = &facade.TermConfig{}
+				config.Terminal.Grid = &facade.GridConfig{}
 
 			case facade.Mode_LINE.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_LINE
 				config.Lines = &facade.LineConfig{}
+				config.Lines.Grid = &facade.GridConfig{}
 
 			case facade.Mode_DRAFT.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_DRAFT
+
+			default:
+				ShowHelpCommand(cmd, *flags[cmd])
+				os.Exit(-2)
+
 			}
+
 			args = args[1:]
-
-			modeFlags = flag.NewFlagSet(mode, flag.ExitOnError)
-			modeFlags.Usage = func() { ShowHelpMode(mode, cmd, modeFlags) }
-
-			config.AddFlags(modeFlags)
+			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
+			modeFlags.Usage = func() { ShowHelpMode(config.Mode, cmd) }
 			modeFlags.Parse(args)
 			config.VisitFlags(modeFlags)
 
@@ -254,7 +246,7 @@ func main() {
 		} else {
 
 			// query remote host
-			flags[INFO].Usage = func() { ShowHelpCommand(INFO, flags) }
+			flags[INFO].Usage = func() { ShowHelpCommand(INFO, *flags[INFO]) }
 			flags[INFO].Parse(flag.Args()[1:])
 
 		}
@@ -268,7 +260,6 @@ func main() {
 		os.Exit(-2)
 
 	}
-
 
 	var err error
 	confs := make(chan facade.Config)
@@ -326,7 +317,7 @@ func main() {
 
 	case CONF:
 		if config == nil {
-			ShowHelpMode(mode, cmd, modeFlags)
+			ShowHelpMode(facade.Mode_DRAFT, cmd)
 			os.Exit(-1)
 		}
 		log.Debug("configure %s", config.Desc())
@@ -423,54 +414,50 @@ func main() {
 	os.Exit(0)
 }
 
-func ShowHelpMode(mode string, cmd Command, flagset *flag.FlagSet) {
-	mode = strings.ToLower(mode)
-	switches := "-"
-	flags := ""
-	flagset.VisitAll(func(f *flag.Flag) {
-		name, _ := flag.UnquoteUsage(f)
-		if name != "" {
-			name = "="
-		}
-		if len(f.Name) == 1 && name == "" {
-			switches += f.Name
-		}
-		if len(f.Name) > 1 || name != "" {
-			flags += " [-" + f.Name + name + "]"
-		}
-	})
+func ShowHelpMode(mode facade.Mode, cmd Command) {
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-	fmt.Fprintf(os.Stderr, "  %s %s %s [%s]%s\n", BUILD_NAME, cmd, mode, switches, flags)
+	fmt.Fprintf(os.Stderr, "  %s %s %s [flags]\n", BUILD_NAME, cmd, strings.ToLower(mode.String()))
+
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flagset.VisitAll(func(f *flag.Flag) {
-		tmp, _ := flag.UnquoteUsage(f)
-		typ := ""
-		if tmp != "" {
-			typ = fmt.Sprintf("(%s)", tmp)
-		}
-		fmt.Fprintf(os.Stderr, "  -%-8s %-24s %-8s\n", f.Name, f.Usage, typ)
-	})
+
+	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
+
+	switch mode {
+	case facade.Mode_LINE:
+		fmt.Fprintf(os.Stderr, "%s", facade.LineDefaults.Help())
+	case facade.Mode_TERM:
+		fmt.Fprintf(os.Stderr, "%s", facade.TermDefaults.Help())
+	}
+
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
-func ShowHelpCommand(cmd Command, flagSetMap map[Command]*flag.FlagSet) {
-    var modes []string
-    modes = append(modes, strings.ToLower( facade.Mode_TERM.String() ))
-    modes = append(modes, strings.ToLower( facade.Mode_LINE.String() ))
-    
+func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
+	var modes []string
+	modes = append(modes, strings.ToLower(facade.Mode_TERM.String()))
+	modes = append(modes, strings.ToLower(facade.Mode_LINE.String()))
+
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-    switch cmd {
-        case INFO:
-            fmt.Fprintf(os.Stderr, "  %s %s [flags]\n", BUILD_NAME, cmd)
-        default:
-            fmt.Fprintf(os.Stderr, "  %s %s [flags] %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
-            ShowModes()
+	switch cmd {
+	case INFO:
+		fmt.Fprintf(os.Stderr, "  %s %s [flags]\n", BUILD_NAME, cmd)
+	default:
+		fmt.Fprintf(os.Stderr, "  %s %s [flags]  %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
+		ShowModes()
 	}
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flagSetMap[cmd].PrintDefaults()
+	flags.VisitAll(func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		fmt.Fprintf(os.Stderr, "  -%-24s %-24s\n", name, f.Usage)
+	})
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
@@ -481,7 +468,7 @@ func ShowCommands() {
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", RECV, "receive text from client and render ")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "change configuration of server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "change server configuration")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", INFO, "show available shaders and fonts of server ")
 }
@@ -493,16 +480,6 @@ func ShowModes() {
 }
 
 func ShowHelp() {
-	flags := ""
-	flag.CommandLine.VisitAll(func(f *flag.Flag) {
-		name, _ := flag.UnquoteUsage(f)
-		if name != "" {
-			name = "=" + name
-		}
-		if len(f.Name) >= 1 {
-			flags += " [-" + f.Name + name + "]"
-		}
-	})
 	cmds := []string{}
 	if RENDERER_AVAILABLE {
 		for _, c := range []Command{READ, RECV} {
@@ -515,10 +492,16 @@ func ShowHelp() {
 
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-	fmt.Fprintf(os.Stderr, "  %s %s      %s\n", BUILD_NAME, flags, strings.Join(cmds, " | "))
+	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flag.PrintDefaults()
+	flag.VisitAll(func(f *flag.Flag) {
+		name := f.Name
+		if f.DefValue != "false" && f.DefValue != "true" {
+			name = f.Name + "=" + f.DefValue
+		}
+		fmt.Fprintf(os.Stderr, "  -%-24s %-24s\n", name, f.Usage)
+	})
 	fmt.Fprintf(os.Stderr, "\n")
 
 }
@@ -564,9 +547,10 @@ func InfoAssets(shaders, fonts []string) string {
 }
 
 func ShowVersion() { fmt.Fprintf(os.Stderr, InfoVersion()) }
+
 func InfoVersion() string {
 	ret := ""
 	ret += AUTHOR
-	ret += fmt.Sprintf("\n%s version %s for %s, built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
+	ret += fmt.Sprintf("\n%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
 	return ret
 }
