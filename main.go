@@ -424,6 +424,7 @@ func ShowHelpMode(mode facade.Mode, cmd Command) {
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
 
 	switch mode {
 	case facade.Mode_LINE:
