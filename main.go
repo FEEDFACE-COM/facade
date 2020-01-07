@@ -182,7 +182,7 @@ func main() {
 			args = args[1:]
 		}
 
-		modeFlags = flag.NewFlagSet("term", flag.ExitOnError)
+		modeFlags = flag.NewFlagSet("exec", flag.ExitOnError)
 		modeFlags.SetOutput(bufio.NewWriter(nil))
 		modeFlags.Usage = func() { ShowHelpMode(EXEC, config.Mode, *modeFlags) }
 
@@ -204,7 +204,7 @@ func main() {
 		args = flags[cmd].Args()
 
 		// parse mode, if given
-		if cmd != INFO && len(args) > 0 {
+		if len(args) > 0 {
 
 			switch strings.ToUpper(args[0]) {
 
@@ -233,7 +233,9 @@ func main() {
 			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
 			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags) }
 			modeFlags.SetOutput(bufio.NewWriter(nil))
+			//modeFlags.PrintDefaults()
 			config.AddFlags(modeFlags)
+			modeFlags.Parse(args[1:])
 			config.VisitFlags(modeFlags)
 		}
 
