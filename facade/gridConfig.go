@@ -20,7 +20,7 @@ var GridDefaults GridConfig = GridConfig{
 }
 
 func (config *GridConfig) Desc() string {
-	ret := ""
+	ret := "grid["
 	{
 		wok := config.GetSetWidth()
 		hok := config.GetSetHeight()
@@ -59,7 +59,7 @@ func (config *GridConfig) Desc() string {
 		ret += config.GetFill() + " "
 	}
 	ret = strings.TrimRight(ret, " ")
-	ret += ""
+	ret += "]"
 	return ret
 }
 
