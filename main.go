@@ -242,7 +242,7 @@ func main() {
 
 	case INFO:
 		// no args, print local info
-		if len(flag.Args()) <= 1 {
+		if len(globalFlags.Args()) <= 1 {
 			ShowVersion()
 			ShowAssets(directory)
 			fmt.Fprintf(os.Stderr, "\n\n")
@@ -252,7 +252,7 @@ func main() {
 			// query remote host
 			commandFlags[INFO].Usage = func() { ShowHelpCommand(INFO, *commandFlags[INFO]) }
 			commandFlags[INFO].SetOutput(bufio.NewWriter(nil))
-			commandFlags[INFO].Parse(flag.Args()[1:])
+			commandFlags[INFO].Parse(globalFlags.Args()[1:])
 
 		}
 
