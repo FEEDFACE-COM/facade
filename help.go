@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	facade "./facade"
+	gfx "./gfx"
 )
 
-func ShowHelp() {
+func ShowHelp(flags flag.FlagSet) {
 	cmds := []string{}
 	if RENDERER_AVAILABLE {
 		for _, c := range []Command{READ, RECV} {
@@ -25,7 +26,7 @@ func ShowHelp() {
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flag.VisitAll(func(f *flag.Flag) {
+	flags.VisitAll(func(f *flag.Flag) {
 		name := f.Name
 		if f.DefValue != "false" && f.DefValue != "true" {
 			name = f.Name + "=" + f.DefValue
@@ -90,25 +91,41 @@ func ShowCommands() {
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", RECV, "receive text from client and render ")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "change server configuration")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send configuration to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", INFO, "show available shaders and fonts of server ")
 }
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINE.String()), "line scroller")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
 }
 
-func ShowAssets() {
+func ShowAssets(directory string) {
 
-	//FIXME
-	fmt.Fprintf(os.Stderr, InfoAssets(nil, nil))
+	fontService := gfx.NewFontService(directory+"/font", facade.FontAsset)
+	programService := gfx.NewProgramService(directory+"/shader", facade.ShaderAsset)
+
+	fmt.Fprintf(os.Stderr, InfoAssets(programService.GetAvailableNames(), fontService.GetAvailableNames()))
 }
 
 func InfoAssets(shaders, fonts []string) string {
 	ret := ""
+
+	ret += fmt.Sprintf("\n%12s= ", "-font")
+	for _, font := range fonts {
+		ret += font
+		ret += " "
+	}
+
+	ret += fmt.Sprintf("\n%12s= ", "-mask")
+	for _, shader := range shaders {
+		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
+			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
+			ret += " "
+		}
+	}
 
 	for _, prefix := range []string{"grid/"} {
 		for _, suffix := range []string{".vert", ".frag"} {
@@ -124,28 +141,17 @@ func InfoAssets(shaders, fonts []string) string {
 		}
 	}
 
-	ret += fmt.Sprintf("\n%12s= ", "-mask")
-	for _, shader := range shaders {
-		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
-			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
-			ret += " "
-		}
-	}
-
-	ret += fmt.Sprintf("\n%12s= ", "-font")
-	for _, font := range fonts {
-		ret += font
-		ret += " "
-	}
 	ret += "\n"
 	return ret
 }
 
-func ShowVersion() { fmt.Fprintf(os.Stderr, InfoVersion()) }
+func ShowVersion() {
+	fmt.Fprintf(os.Stderr, "%s", AUTHOR)
+	fmt.Fprintf(os.Stderr, "%s", InfoVersion())
+}
 
 func InfoVersion() string {
 	ret := ""
-	ret += AUTHOR
 	ret += fmt.Sprintf("\n%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
 	return ret
 }
