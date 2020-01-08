@@ -82,9 +82,11 @@ func main() {
 
 	log.SetVerbosity(log.NOTICE)
 
-	flag.Usage = ShowHelp
+	globalFlags := flag.NewFlagSet("", flag.ExitOnError)
+	globalFlags.SetOutput(bufio.NewWriter(nil))
+	globalFlags.Usage = func() { ShowHelp(*globalFlags) }
 
-	flags := make(map[Command]*flag.FlagSet)
+	commandFlags := make(map[Command]*flag.FlagSet)
 
 	var commands = []Command{CONF, PIPE, EXEC, INFO, TEST}
 	if RENDERER_AVAILABLE {
@@ -93,42 +95,41 @@ func main() {
 	}
 
 	for _, cmd := range commands {
-		flags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
-		flags[cmd].Usage = ShowHelp
-		flags[cmd].SetOutput(bufio.NewWriter(nil))
+		commandFlags[cmd] = flag.NewFlagSet(string(cmd), flag.ExitOnError)
+		commandFlags[cmd].Usage = func() { ShowHelp(*globalFlags) }
+		commandFlags[cmd].SetOutput(bufio.NewWriter(nil))
 	}
 
 	for _, cmd := range []Command{PIPE, CONF, EXEC, INFO} {
-		flags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
-		flags[cmd].StringVar(&host, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
-		flags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
+		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
+		commandFlags[cmd].StringVar(&host, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
+		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
 	}
 
-	if flags[RECV] != nil {
-		flags[RECV].UintVar(&port, "port", port, "listen on `port` for messages")
-		flags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		flags[RECV].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
-		flags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
+	if commandFlags[RECV] != nil {
+		commandFlags[RECV].UintVar(&port, "port", port, "listen on `port` for messages")
+		commandFlags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
+		commandFlags[RECV].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		commandFlags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
-	if flags[TEST] != nil {
-		flags[TEST].UintVar(&port, "port", port, "listen on `port` for messages")
-		flags[TEST].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		flags[TEST].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
-		flags[TEST].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
+	if commandFlags[TEST] != nil {
+		commandFlags[TEST].UintVar(&port, "port", port, "listen on `port` for messages")
+		commandFlags[TEST].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
+		commandFlags[TEST].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		commandFlags[TEST].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
 	{
-		flag.CommandLine.StringVar(&directory, "D", directory, "working directory")
+		globalFlags.StringVar(&directory, "D", directory, "working directory")
+		globalFlags.BoolVar(&verbose, "v", verbose, "show info messages?")
+		globalFlags.BoolVar(&debug, "d", debug, "show debug messages?")
+		globalFlags.BoolVar(&quiet, "q", quiet, "show warnings only?")
 	}
 
-	flag.CommandLine.BoolVar(&verbose, "v", verbose, "show info messages?")
-	flag.CommandLine.BoolVar(&debug, "d", debug, "show debug messages?")
-	flag.CommandLine.BoolVar(&quiet, "q", quiet, "show warnings only?")
-
-	flag.Parse()
-	if flag.NArg() < 1 {
-		ShowHelp()
+	globalFlags.Parse(os.Args[1:])
+	if globalFlags.NArg() < 1 {
+		ShowHelp(*globalFlags)
 		os.Exit(-2)
 	}
 	if debug {
@@ -147,18 +148,18 @@ func main() {
 	var executor *Executor
 	var path string
 
-	cmd := Command(flag.Args()[0])
+	cmd := Command(globalFlags.Args()[0])
 
 	switch cmd {
 	case READ, RECV:
 		if !RENDERER_AVAILABLE {
-			ShowHelp()
+			ShowHelp(*globalFlags)
 			os.Exit(-2)
 		}
 		fallthrough
 	case PIPE, CONF, EXEC, TEST:
-		flags[cmd].Usage = func() { ShowHelpCommand(cmd, *flags[cmd]) }
-		flags[cmd].Parse(flag.Args()[1:])
+		commandFlags[cmd].Usage = func() { ShowHelpCommand(cmd, *commandFlags[cmd]) }
+		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
 
 	var config *facade.Config = &facade.Config{}
@@ -177,7 +178,7 @@ func main() {
 		config.Mode = facade.Mode_TERM
 		config.Terminal = &facade.TermConfig{}
 
-		args = flags[cmd].Args()
+		args = commandFlags[cmd].Args()
 		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
 			args = args[1:]
 		}
@@ -201,7 +202,7 @@ func main() {
 		args = args[1:]
 
 	case READ, RECV, PIPE, CONF, TEST:
-		args = flags[cmd].Args()
+		args = commandFlags[cmd].Args()
 
 		// parse mode, if given
 		if len(args) > 0 {
@@ -225,7 +226,7 @@ func main() {
 				config.Mode = facade.Mode_DRAFT
 
 			default:
-				ShowHelpCommand(cmd, *flags[cmd])
+				ShowHelpCommand(cmd, *commandFlags[cmd])
 				os.Exit(-2)
 
 			}
@@ -233,7 +234,6 @@ func main() {
 			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
 			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags) }
 			modeFlags.SetOutput(bufio.NewWriter(nil))
-			//modeFlags.PrintDefaults()
 			config.AddFlags(modeFlags)
 			modeFlags.Parse(args[1:])
 			config.VisitFlags(modeFlags)
@@ -243,26 +243,24 @@ func main() {
 		// no args, print local info
 		if len(flag.Args()) <= 1 {
 			ShowVersion()
-			if log.InfoLogging() {
-				ShowAssets()
-			}
+			ShowAssets(directory)
 			fmt.Fprintf(os.Stderr, "\n\n")
 			os.Exit(0)
 		} else {
 
 			// query remote host
-			flags[INFO].Usage = func() { ShowHelpCommand(INFO, *flags[INFO]) }
-			flags[INFO].SetOutput(bufio.NewWriter(nil))
-			flags[INFO].Parse(flag.Args()[1:])
+			commandFlags[INFO].Usage = func() { ShowHelpCommand(INFO, *commandFlags[INFO]) }
+			commandFlags[INFO].SetOutput(bufio.NewWriter(nil))
+			commandFlags[INFO].Parse(flag.Args()[1:])
 
 		}
 
 	case HELP:
-		ShowHelp()
+		ShowHelp(*globalFlags)
 		os.Exit(-2)
 
 	default:
-		ShowHelp()
+		ShowHelp(*globalFlags)
 		os.Exit(-2)
 
 	}
