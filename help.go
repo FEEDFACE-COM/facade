@@ -39,7 +39,11 @@ func ShowHelp(flags flag.FlagSet) {
 func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-	fmt.Fprintf(os.Stderr, "  %s %s %s [flags]\n", BUILD_NAME, cmd, strings.ToLower(mode.String()))
+	if cmd == EXEC {
+    	fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)
+    } else {
+    	fmt.Fprintf(os.Stderr, "  %s %s %s [flags]\n", BUILD_NAME, cmd, strings.ToLower(mode.String()))
+    }
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
 
@@ -68,6 +72,8 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	switch cmd {
 	case INFO:
 		fmt.Fprintf(os.Stderr, "  %s %s [flags]\n", BUILD_NAME, cmd)
+    case EXEC:
+    	fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)    
 	default:
 		fmt.Fprintf(os.Stderr, "  %s %s [flags]  %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
 		ShowModes()

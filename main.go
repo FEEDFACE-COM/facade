@@ -177,6 +177,7 @@ func main() {
 		config.SetMode = true
 		config.Mode = facade.Mode_TERM
 		config.Terminal = &facade.TermConfig{}
+        config.Terminal.Grid = &facade.GridConfig{}
 
 		args = commandFlags[cmd].Args()
 		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
@@ -192,7 +193,7 @@ func main() {
 		config.VisitFlags(modeFlags)
 
 		args = modeFlags.Args()
-		log.Debug("got flags %v", args)
+		log.Debug("execute %v", args)
 		if len(args) <= 0 {
 			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags)
 			os.Exit(-2)
