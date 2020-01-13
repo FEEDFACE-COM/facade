@@ -474,15 +474,15 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 			grid.lineBuffer.SetSpeed(float32(lines.GetSpeed()))
 		}
 
-		if lines.GetSetAdaptive() {
-			grid.lineBuffer.Adaptive = lines.GetAdaptive()
+		if lines.GetSetFixed() {
+			grid.lineBuffer.Fixed = lines.GetFixed()
 		}
 		if lines.GetSetDrop() {
 			grid.lineBuffer.Drop = lines.GetDrop()
 		}
 
-		if lines.GetSetSmooth() {
-			grid.lineBuffer.Smooth = lines.GetSmooth()
+		if lines.GetSetStop() {
+			grid.lineBuffer.Stop = lines.GetStop()
 		}
 
 	} else {
@@ -628,8 +628,8 @@ func (grid *Grid) LineConfig() *LineConfig {
 	if grid.lineBuffer != nil {
 		ret.SetSpeed = true
 		ret.Speed = float64(grid.lineBuffer.Speed())
-		ret.SetAdaptive = true
-		ret.Adaptive = grid.lineBuffer.Adaptive
+		ret.SetFixed = true
+		ret.Fixed = grid.lineBuffer.Fixed
 	}
 	return ret
 }

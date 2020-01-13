@@ -517,11 +517,11 @@ func (buffer *LineBuffer) Desc() string {
 	}
 
 	{
-		ret += fmt.Sprintf("spd%.2f ", buffer.speed)
+		ret += fmt.Sprintf("speed%.2f ", buffer.speed)
 		if buffer.Fixed {
 			ret += fmt.Sprintf("fixed ")
 		} else if !buffer.Fixed {
-			ret += fmt.Sprintf("adapt %.2f ", buffer.adaptedSpeed())
+			ret += fmt.Sprintf("adapt%.2f ", buffer.adaptedSpeed())
 		}
 
 		ret += fmt.Sprintf("avg%.2f ", buffer.meterBuffer.Average())
