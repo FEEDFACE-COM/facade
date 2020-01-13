@@ -177,7 +177,7 @@ func main() {
 		config.SetMode = true
 		config.Mode = facade.Mode_TERM
 		config.Terminal = &facade.TermConfig{}
-        config.Terminal.Grid = &facade.GridConfig{}
+		config.Terminal.Grid = &facade.GridConfig{}
 
 		args = commandFlags[cmd].Args()
 		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {

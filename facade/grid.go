@@ -68,10 +68,11 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	// REM maybe also if grid.checkReconfig then grid.Configure??
 
 	if grid.checkRefresh() {
-		//        if DEBUG_GRID { log.Debug("%s refresh",grid.Desc() ) }
+		if DEBUG_GRID {
+			log.Debug("%s refresh", grid.Desc())
+		}
 		grid.generateData(font)
-		//	    grid.renderMap(font)
-
+		grid.renderMap(font)
 	}
 
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -171,10 +172,10 @@ func (grid *Grid) fill(name string) []string {
 	//also, clear!
 
 	case "title":
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
-        return strings.Split(`
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
+		return strings.Split(`
  _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
 |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
 |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
@@ -182,9 +183,9 @@ func (grid *Grid) fill(name string) []string {
 			"\n")[1:]
 
 	case "title2":
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return strings.Split(`
  _  _   _  _   _   _
 |_ |_| /  |_| | \ |_
@@ -195,9 +196,9 @@ func (grid *Grid) fill(name string) []string {
 			"\n")[1:]
 
 	case "title3":
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return strings.Split(`
               
 F A C A D E   
@@ -209,9 +210,9 @@ F A C A D E
 			"\n")[1:]
 
 	case "title4":
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return []string{
 			"F A C A D E",
 		}
@@ -236,9 +237,9 @@ F A C A D E
 			}
 			ret = append(ret, tmp)
 		}
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return ret
 
 	case "alpha":
@@ -251,24 +252,24 @@ F A C A D E
 			ret = append(ret, tmp)
 			s += 1
 		}
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return ret
 
 	case "clear":
 		ret := []string{}
-		w,h := int(grid.width), int(grid.height)
+		w, h := int(grid.width), int(grid.height)
 		for r := 0; r < h; r++ {
-    		s := ""
-    		for c := 0; c < w; c++ {
-        		s += " "
-            } 
+			s := ""
+			for c := 0; c < w; c++ {
+				s += " "
+			}
 			ret = append(ret, s)
 		}
-        if DEBUG_GRID {
-            log.Debug("%s fill %s",grid.Desc(),name)
-        }
+		if DEBUG_GRID {
+			log.Debug("%s fill %s", grid.Desc(), name)
+		}
 		return ret
 
 	}
@@ -420,7 +421,6 @@ func (grid *Grid) renderMap(font *gfx.Font) error {
 	}
 	grid.texture.TexImage()
 
-	grid.ScheduleRefresh()
 	return nil
 }
 
@@ -451,24 +451,22 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 //
 //}
 
-
-
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
-    var config *GridConfig = nil
+	var config *GridConfig = nil
 
 	if grid.terminal && terminal != nil {
 
-    	log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
-        if terminal.GetGrid() != nil {
-            config = terminal.GetGrid()
-        }
+		log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
+		if terminal.GetGrid() != nil {
+			config = terminal.GetGrid()
+		}
 
-	} else if ! grid.terminal && lines != nil {
+	} else if !grid.terminal && lines != nil {
 
-    	log.Debug("%s configure %s", grid.Desc(), lines.Desc())
-        if lines.GetGrid() != nil {
-            config = lines.GetGrid()
-        }
+		log.Debug("%s configure %s", grid.Desc(), lines.Desc())
+		if lines.GetGrid() != nil {
+			config = lines.GetGrid()
+		}
 		if lines.GetSetDownward() {
 			grid.downward = lines.GetDownward()
 		}
@@ -486,14 +484,16 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 		if lines.GetSetSmooth() {
 			grid.lineBuffer.Smooth = lines.GetSmooth()
 		}
-	   
-        
-    } else {
-    	log.Debug("%s cannot configure", grid.Desc())
-        return
-    }
 
-    
+	} else {
+		log.Debug("%s cannot configure", grid.Desc())
+		return
+	}
+
+	// if true { //optimize!!
+	// 	log.Debug("%s rendermap %s", grid.Desc(), font.Desc())
+	// 	grid.renderMap(font)
+	// }
 
 	config.autoWidth(camera.Ratio(), font.Ratio())
 
@@ -515,20 +515,14 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 		}
 
 		if changed {
-    		if grid.terminal {
-    			grid.termBuffer.Resize(grid.width, grid.height)
-            } else {
-    			grid.lineBuffer.Resize(grid.height, grid.buffer)
-            }
+			if grid.termBuffer != nil {
+				grid.termBuffer.Resize(grid.width, grid.height)
+			}
+			if grid.lineBuffer != nil {
+				grid.lineBuffer.Resize(grid.height, grid.buffer)
+			}
 		}
 	}
-
-	if true { //optimize!!
-		log.Debug("%s rendermap %s", grid.Desc(), font.Desc())
-		grid.renderMap(font)
-		//        grid.texture.TexImage()
-	}
-
 
 	{
 		changed := false
@@ -553,11 +547,12 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 
 	if config.GetSetFill() {
 		fillStr := grid.fill(config.GetFill())
-		if grid.terminal {
-    		grid.termBuffer.Fill(fillStr)
-        } else {
-    		grid.lineBuffer.Fill(fillStr)
-        }
+		if grid.termBuffer != nil {
+			grid.termBuffer.Fill(fillStr)
+		}
+		if grid.lineBuffer != nil {
+			grid.lineBuffer.Fill(fillStr)
+		}
 	}
 
 	grid.ScheduleRefresh()
@@ -565,19 +560,25 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 }
 
 func (grid *Grid) DescBuffer() string {
-	if grid.terminal {
-		return grid.termBuffer.Desc()
-	} else {
-		return grid.lineBuffer.Desc()
+	ret := ""
+	if grid.termBuffer != nil {
+		ret += grid.termBuffer.Desc()
 	}
+	if grid.lineBuffer != nil {
+		ret += grid.lineBuffer.Desc()
+	}
+	return ret
 }
 
 func (grid *Grid) DumpBuffer() string {
-	if grid.terminal {
-		return grid.termBuffer.Dump()
-	} else {
-		return grid.lineBuffer.Dump(grid.width)
+	ret := ""
+	if grid.termBuffer != nil {
+		ret += grid.termBuffer.Dump()
 	}
+	if grid.lineBuffer != nil {
+		ret += grid.lineBuffer.Dump(grid.width)
+	}
+	return ret
 }
 
 func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
@@ -596,11 +597,11 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 	ret.lineBuffer = lineBuffer
 	ret.termBuffer = termBuffer
 
-    if termBuffer != nil {
-        ret.terminal = true
-    } else {
-        ret.terminal = false
-    }
+	if termBuffer != nil {
+		ret.terminal = true
+	} else {
+		ret.terminal = false
+	}
 
 	return ret
 }
@@ -619,18 +620,16 @@ func (grid *Grid) Config() *GridConfig {
 	}
 }
 
-
 func (grid *Grid) LineConfig() *LineConfig {
-    ret := &LineConfig{
+	ret := &LineConfig{
 		SetDownward: true, Downward: grid.downward,
 		SetBuffer: true, Buffer: uint64(grid.buffer),
-    }
-    if grid.lineBuffer != nil {
-        ret.SetSpeed = true
-        ret.Speed = float64(grid.lineBuffer.Speed())    
+	}
+	if grid.lineBuffer != nil {
+		ret.SetSpeed = true
+		ret.Speed = float64(grid.lineBuffer.Speed())
 		ret.SetAdaptive = true
 		ret.Adaptive = grid.lineBuffer.Adaptive
-    }
-    return ret
+	}
+	return ret
 }
-
