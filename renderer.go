@@ -434,13 +434,13 @@ func (renderer *Renderer) InfoMode() string {
 	case facade.Mode_TERM:
 		mode = "term " + renderer.terminal.Desc()
 	case facade.Mode_LINE:
-		mode = "lines " + renderer.lines.Desc()
+		mode = "line " + renderer.lines.Desc()
 	}
 	dbg := ""
 	if renderer.debug {
 		dbg = " DEBUG"
 	}
-	return fmt.Sprintf("%s\n  %s %s %s%s", mode, renderer.camera.Desc(), renderer.font.Desc(), renderer.mask.Desc(), dbg)
+	return fmt.Sprintf("%s\n  %s %s %s%s", mode, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc(), dbg)
 
 }
 
