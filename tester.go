@@ -193,16 +193,16 @@ func (tester *Tester) Configure(config *facade.Config) error {
 			tester.lineBuffer.SetSpeed(float32(lines.GetSpeed()))
 		}
 
-		if lines.GetSetAdaptive() {
-			tester.lineBuffer.Adaptive = lines.GetAdaptive()
+		if lines.GetSetFixed() {
+			tester.lineBuffer.Fixed = lines.GetFixed()
 		}
 
 		if lines.GetSetDrop() {
 			tester.lineBuffer.Drop = lines.GetDrop()
 		}
 
-		if lines.GetSetSmooth() {
-			tester.lineBuffer.Smooth = lines.GetSmooth()
+		if lines.GetSetStop() {
+			tester.lineBuffer.Stop = lines.GetStop()
 		}
 
 	}

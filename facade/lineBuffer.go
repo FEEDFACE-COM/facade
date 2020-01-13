@@ -17,7 +17,7 @@ type Mark int
 
 const (
 	LOWER Mark = -1
-	LEVEL Mark =  0
+	LEVEL Mark = 0
 	UPPER Mark = +1
 )
 
@@ -27,11 +27,11 @@ type LineBuffer struct {
 	buf  []*Line
 	rem  []rune
 
-	timer    *gfx.Timer
-	speed    float32
-	Adaptive bool
-	Drop     bool
-	Smooth   bool
+	timer *gfx.Timer
+	speed float32
+	Fixed bool
+	Drop  bool
+	Stop  bool
 
 	refreshChan chan bool
 
@@ -51,10 +51,10 @@ func NewLineBuffer(rows, offs uint, refreshChan chan bool) *LineBuffer {
 	}
 	total := rows + offs
 	ret := &LineBuffer{
-		speed:    float32(LineDefaults.Speed),
-		Adaptive: LineDefaults.Adaptive,
-		Drop:     LineDefaults.Drop,
-		Smooth:   LineDefaults.Smooth,
+		speed: float32(LineDefaults.Speed),
+		Fixed: LineDefaults.Fixed,
+		Drop:  LineDefaults.Drop,
+		Stop:  LineDefaults.Stop,
 	}
 	ret.rows = rows
 	ret.offs = offs
@@ -147,18 +147,21 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
 
 	if freshLine {
 		valueFun = math.EaseInEaseOut
-		tmp += " ease"
+		tmp += " fresh"
 	}
 
 	if !freshLine {
 
-		if buffer.Smooth {
+		if buffer.Stop {
+			tmp += " stop"
+		} else {
 			valueFun = math.Identity
-			tmp += " smooth"
 		}
-		if buffer.Adaptive {
+
+		if buffer.Fixed {
+			tmp += " fixed"
+		} else {
 			speed = buffer.adaptedSpeed()
-			tmp += " adapted"
 		}
 	}
 
@@ -515,18 +518,21 @@ func (buffer *LineBuffer) Desc() string {
 
 	{
 		ret += fmt.Sprintf("spd%.2f ", buffer.speed)
-		if buffer.Adaptive {
-			ret += fmt.Sprintf("adp%.2f ", buffer.adaptedSpeed())
+		if buffer.Fixed {
+			ret += fmt.Sprintf("fixed ")
+		} else if !buffer.Fixed {
+			ret += fmt.Sprintf("adapt %.2f ", buffer.adaptedSpeed())
 		}
 
 		ret += fmt.Sprintf("avg%.2f ", buffer.meterBuffer.Average())
 	}
 
+	if buffer.Stop {
+		ret += "stop "
+	}
+
 	if !buffer.Drop {
 		ret += "!drop "
-	}
-	if !buffer.Smooth {
-		ret += "!smooth "
 	}
 
 	if DEBUG_LINEBUFFER {

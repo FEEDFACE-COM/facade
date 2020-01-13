@@ -75,9 +75,9 @@ message LineConfig {
     GridConfig Grid = 1;  
     bool SetDownward = 3;     bool Downward =  4;
     bool SetSpeed    = 5;   double Speed    =  6;
-    bool SetAdaptive = 7;     bool Adaptive =  8;
+    bool SetFixed    = 7;     bool Fixed    =  8;
     bool SetDrop     = 9;     bool Drop     = 10;
-    bool SetSmooth   =11;     bool Smooth   = 12;
+    bool SetStop     =11;     bool Stop     = 12;
     bool SetBuffer   =13;   uint64 Buffer   = 14;  
 }
 

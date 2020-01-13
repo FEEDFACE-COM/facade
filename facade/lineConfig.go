@@ -12,9 +12,9 @@ import (
 var LineDefaults LineConfig = LineConfig{
 	Downward: false,
 	Speed:    1.0,
-	Adaptive: true,
+	Fixed:    false,
 	Drop:     true,
-	Smooth:   true,
+	Stop:     false,
 	Buffer:   8,
 	Grid:     nil,
 }
@@ -36,9 +36,9 @@ func (config *LineConfig) Desc() string {
 		down, adapt, drop, smooth := "", "", "", ""
 		dok := config.GetSetDownward()
 		sok := config.GetSetSpeed()
-		aok := config.GetSetAdaptive()
+		aok := config.GetSetFixed()
 		pok := config.GetSetDrop()
-		mok := config.GetSetSmooth()
+		mok := config.GetSetStop()
 
 		if dok {
 			if config.GetDownward() {
@@ -49,10 +49,10 @@ func (config *LineConfig) Desc() string {
 			}
 		}
 		if aok {
-			if config.GetAdaptive() {
+			if config.GetFixed() {
 				adapt = "a"
 			}
-			if !config.GetAdaptive() {
+			if !config.GetFixed() {
 				adapt = "á"
 			}
 		}
@@ -66,10 +66,10 @@ func (config *LineConfig) Desc() string {
 		}
 
 		if mok {
-			if config.GetSmooth() {
+			if config.GetStop() {
 				smooth = "s"
 			}
-			if !config.GetSmooth() {
+			if !config.GetStop() {
 				smooth = "ś"
 			}
 		}
@@ -107,9 +107,9 @@ func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "line scroll downward?")
 	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "line drop lines?")
-	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "line continuous scroll?")
+	flagset.BoolVar(&config.Stop, "smooth", LineDefaults.Stop, "line continuous scroll?")
 	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "line scroll speed")
-	flagset.BoolVar(&config.Adaptive, "adapt", LineDefaults.Adaptive, "line adaptive scroll?")
+	flagset.BoolVar(&config.Fixed, "adapt", LineDefaults.Fixed, "line adaptive scroll?")
 	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "line buffer length")
 
 }
@@ -127,7 +127,7 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 			}
 		case "smooth":
 			{
-				config.SetSmooth = true
+				config.SetStop = true
 			}
 		case "speed":
 			{
@@ -135,7 +135,7 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 			}
 		case "adapt":
 			{
-				config.SetAdaptive = true
+				config.SetFixed = true
 			}
 		case "buffer":
 			{
@@ -150,9 +150,9 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return setGrid ||
 		config.SetDownward ||
 		config.SetSpeed ||
-		config.SetAdaptive ||
+		config.SetFixed ||
 		config.SetDrop ||
-		config.SetSmooth ||
+		config.SetStop ||
 		config.SetBuffer
 
 }
@@ -164,8 +164,8 @@ func (config *LineConfig) Help() string {
 		if f.DefValue != "false" && f.DefValue != "true" {
 			name = f.Name + "=" + f.DefValue
 		} else if f.DefValue == "true" {
-    		name = f.Name + "=f"
-        }
+			name = f.Name + "=f"
+		}
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
