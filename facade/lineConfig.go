@@ -105,12 +105,12 @@ func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 		config.GetGrid().AddFlags(flagset)
 	}
 
-	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
-	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
-	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "smooth scrolling?")
-	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
-	flagset.BoolVar(&config.Adaptive, "adapt", LineDefaults.Adaptive, "adaptive scroll speed?")
-	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
+	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "line scroll downward?")
+	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "line drop lines?")
+	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "line continuous scroll?")
+	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "line scroll speed")
+	flagset.BoolVar(&config.Adaptive, "adapt", LineDefaults.Adaptive, "line adaptive scroll?")
+	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "line buffer length")
 
 }
 
@@ -163,7 +163,9 @@ func (config *LineConfig) Help() string {
 		name := f.Name
 		if f.DefValue != "false" && f.DefValue != "true" {
 			name = f.Name + "=" + f.DefValue
-		}
+		} else if f.DefValue == "true" {
+    		name = f.Name + "=f"
+        }
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 

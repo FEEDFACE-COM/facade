@@ -16,9 +16,9 @@ const DEBUG_LINEBUFFER_DUMP = false
 type Mark int
 
 const (
-	LOWER Mark = -1.0
-	LEVEL Mark = 0.0
-	UPPER Mark = +1.0
+	LOWER Mark = -1
+	LEVEL Mark =  0
+	UPPER Mark = +1
 )
 
 type LineBuffer struct {
@@ -139,7 +139,7 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
 		return
 	}
 
-	//most lines are scrolled ease in / ease out
+	//single lines are scrolled ease in / ease out
 	valueFun := math.EaseInEaseOut
 	speed := float32(buffer.speed)
 
@@ -428,6 +428,7 @@ func (buffer *LineBuffer) SetSpeed(speed float32) {
 }
 
 func (buffer *LineBuffer) fillage() float32 { return float32(buffer.buffered()) / float32(buffer.offs) }
+
 func (buffer *LineBuffer) buffered() uint {
 	cnt := uint(0)
 	for i := buffer.rows; i < buffer.rows+buffer.offs; i++ {
@@ -529,12 +530,12 @@ func (buffer *LineBuffer) Desc() string {
 	}
 
 	if DEBUG_LINEBUFFER {
-		mp := map[int]string{
-			-1: "lower",
-			0:  "level",
-			+1: "upper",
+		mp := map[Mark]string{
+			LOWER: "lower",
+			LEVEL: "level",
+			UPPER: "upper",
 		}
-		ret += " " + mp[int(buffer.mark)]
+		ret += " " + mp[buffer.mark]
 	}
 
 	ret = strings.TrimSuffix(ret, " ")
