@@ -69,7 +69,7 @@ func (config *GridConfig) AddFlags(flagset *flag.FlagSet) {
 	flagset.Uint64Var(&config.Height, "h", GridDefaults.Height, "grid height")
 	flagset.StringVar(&config.Vert, "vert", GridDefaults.Vert, "vertex shader")
 	flagset.StringVar(&config.Frag, "frag", GridDefaults.Frag, "fragment shader")
-	flagset.StringVar(&config.Fill, "fill", GridDefaults.Fill, "fill pattern")
+	flagset.StringVar(&config.Fill, "fill", GridDefaults.Fill, "grid fill pattern")
 
 }
 
