@@ -356,11 +356,11 @@ func (tester *Tester) InfoMode() string {
 	mode := ""
 	switch tester.mode {
 	case facade.Mode_TERM:
-		mode = "term " + tester.gridConfig.Desc()
+		mode = "term" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_LINE:
-		mode = "line " + tester.gridConfig.Desc()
+		mode = "line" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_TAGS:
-		mode = "tags "
+		mode = "tags" + tester.shaderConfig.Desc()
 	}
 	dbg := ""
 	if tester.debug {
