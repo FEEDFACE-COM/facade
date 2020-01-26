@@ -57,6 +57,8 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "%s", facade.LineDefaults.Help())
 	case facade.Mode_TERM:
 		fmt.Fprintf(os.Stderr, "%s", facade.TermDefaults.Help())
+	case facade.Mode_TAGS:
+		fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
 	}
 
 	fmt.Fprintf(os.Stderr, "\n")
@@ -66,6 +68,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	var modes []string
 	modes = append(modes, strings.ToLower(facade.Mode_TERM.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_LINE.String()))
+	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
 
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
@@ -106,6 +109,7 @@ func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINE.String()), "line scroller")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TAGS.String()), "tag cloud")
 }
 
 func ShowAssets(directory string) {
@@ -133,7 +137,7 @@ func InfoAssets(shaders, fonts []string) string {
 		}
 	}
 
-	for _, prefix := range []string{"grid/"} {
+	for _, prefix := range []string{"grid/", "set/"} {
 		for _, suffix := range []string{".vert", ".frag"} {
 			tmp := strings.TrimSuffix(prefix, "/") + " -" + strings.TrimPrefix(suffix, ".")
 			ret += fmt.Sprintf("\n%12s= ", tmp)
