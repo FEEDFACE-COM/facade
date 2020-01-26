@@ -10,54 +10,39 @@ import (
 )
 
 var TagDefaults TagConfig = TagConfig{
-	Vert: "def",
-	Frag: "def",
+	Shader: nil,
 }
 
 func (config *TagConfig) Desc() string {
 	ret := "tags["
-	{
-		vok := config.GetSetVert()
-		fok := config.GetSetFrag()
-		if vok {
-			ret += config.GetVert()
-		}
-		if vok || fok {
-			ret += ","
-		}
-		if fok {
-			ret += config.GetFrag()
-		}
-		if vok || fok {
-			ret += " "
-		}
+	if shader := config.GetShader(); shader != nil {
+		ret += shader.Desc() + " "
 	}
+
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
 func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
-
-	flagset.StringVar(&config.Vert, "vert", GridDefaults.Vert, "vertex shader")
-	flagset.StringVar(&config.Frag, "frag", GridDefaults.Frag, "fragment shader")
-
+	if config.GetShader() != nil {
+		config.GetShader().AddFlags(flagset)
+	}
 }
 
 func (config *TagConfig) VisitFlags(flagset *flag.FlagSet) bool {
+	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
-		case "vert":
-			{
-				config.SetVert = true
-			}
-		case "frag":
-			{
-				config.SetFrag = true
-			}
 		}
 	})
-	return config.SetVert || config.SetFrag
+	if shader := config.GetShader(); shader != nil {
+		if shader.VisitFlags(flagset) {
+			ret = true
+		}
+	}
+
+	return ret
 }
 
 func (config *TagConfig) Help() string {
@@ -70,9 +55,10 @@ func (config *TagConfig) Help() string {
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
+	ret += ShaderDefaults.Help()
 	tmp := flag.NewFlagSet("set", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"frag", "vert"} {
+	for _, s := range []string{} {
 		if flg := tmp.Lookup(s); flg != nil {
 			fun(flg)
 		}

@@ -177,6 +177,7 @@ func main() {
 		config.SetMode = true
 		config.Mode = facade.Mode_TERM
 		config.Terminal = &facade.TermConfig{}
+		config.Terminal.Shader = &facade.ShaderConfig{}
 		config.Terminal.Grid = &facade.GridConfig{}
 
 		args = commandFlags[cmd].Args()
@@ -214,18 +215,21 @@ func main() {
 				config.SetMode = true
 				config.Mode = facade.Mode_TERM
 				config.Terminal = &facade.TermConfig{}
+				config.Terminal.Shader = &facade.ShaderConfig{}
 				config.Terminal.Grid = &facade.GridConfig{}
 
 			case facade.Mode_LINE.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_LINE
 				config.Lines = &facade.LineConfig{}
+				config.Lines.Shader = &facade.ShaderConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
 
 			case facade.Mode_TAGS.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_TAGS
 				config.Tags = &facade.TagConfig{}
+				config.Tags.Shader = &facade.ShaderConfig{}
 
 			case facade.Mode_DRAFT.String():
 				config.SetMode = true

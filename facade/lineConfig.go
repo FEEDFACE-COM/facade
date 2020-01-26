@@ -16,11 +16,14 @@ var LineDefaults LineConfig = LineConfig{
 	Drop:     true,
 	Stop:     false,
 	Buffer:   8,
-	Grid:     nil,
 }
 
 func (config *LineConfig) Desc() string {
 	ret := "line["
+
+	if shader := config.GetShader(); shader != nil {
+		ret += shader.Desc() + " "
+	}
 
 	if grid := config.GetGrid(); grid != nil {
 		ret += " " + grid.Desc() + " "
@@ -101,6 +104,9 @@ func (config *LineConfig) Desc() string {
 
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 
+	if config.GetShader() != nil {
+		config.GetShader().AddFlags(flagset)
+	}
 	if config.GetGrid() != nil {
 		config.GetGrid().AddFlags(flagset)
 	}
@@ -115,45 +121,54 @@ func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 }
 
 func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
+	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "down":
 			{
 				config.SetDownward = true
+				ret = true
 			}
 		case "drop":
 			{
 				config.SetDrop = true
+				ret = true
 			}
 		case "stop":
 			{
 				config.SetStop = true
+				ret = true
 			}
 		case "speed":
 			{
 				config.SetSpeed = true
+				ret = true
 			}
 		case "fixed":
 			{
 				config.SetFixed = true
+				ret = true
 			}
 		case "buffer":
 			{
 				config.SetBuffer = true
+				ret = true
 			}
 		}
 	})
-	setGrid := false
-	if grid := config.GetGrid(); grid != nil {
-		setGrid = grid.VisitFlags(flagset)
+
+	if shader := config.GetShader(); shader != nil {
+		if shader.VisitFlags(flagset) {
+			ret = true
+		}
 	}
-	return setGrid ||
-		config.SetDownward ||
-		config.SetSpeed ||
-		config.SetFixed ||
-		config.SetDrop ||
-		config.SetStop ||
-		config.SetBuffer
+
+	if grid := config.GetGrid(); grid != nil {
+		if grid.VisitFlags(flagset) {
+			ret = true
+		}
+	}
+	return ret
 
 }
 
@@ -169,6 +184,7 @@ func (config *LineConfig) Help() string {
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
+	ret += ShaderDefaults.Help()
 	ret += GridDefaults.Help()
 	tmp := flag.NewFlagSet("line", flag.ExitOnError)
 	config.AddFlags(tmp)

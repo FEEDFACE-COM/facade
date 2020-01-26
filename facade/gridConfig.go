@@ -14,8 +14,6 @@ import (
 var GridDefaults GridConfig = GridConfig{
 	Width:  32,
 	Height: 8,
-	Vert:   "def",
-	Frag:   "def",
 	Fill:   "",
 }
 
@@ -38,23 +36,6 @@ func (config *GridConfig) Desc() string {
 		}
 	}
 
-	{
-		vok := config.GetSetVert()
-		fok := config.GetSetFrag()
-		if vok {
-			ret += config.GetVert()
-		}
-		if vok || fok {
-			ret += ","
-		}
-		if fok {
-			ret += config.GetFrag()
-		}
-		if vok || fok {
-			ret += " "
-		}
-	}
-
 	if config.GetSetFill() {
 		ret += config.GetFill() + " "
 	}
@@ -64,11 +45,8 @@ func (config *GridConfig) Desc() string {
 }
 
 func (config *GridConfig) AddFlags(flagset *flag.FlagSet) {
-
 	flagset.Uint64Var(&config.Width, "w", GridDefaults.Width, "grid width")
 	flagset.Uint64Var(&config.Height, "h", GridDefaults.Height, "grid height")
-	flagset.StringVar(&config.Vert, "vert", GridDefaults.Vert, "vertex shader")
-	flagset.StringVar(&config.Frag, "frag", GridDefaults.Frag, "fragment shader")
 	flagset.StringVar(&config.Fill, "fill", GridDefaults.Fill, "grid fill pattern")
 
 }
@@ -84,14 +62,6 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
 			{
 				config.SetHeight = true
 			}
-		case "vert":
-			{
-				config.SetVert = true
-			}
-		case "frag":
-			{
-				config.SetFrag = true
-			}
 		case "fill":
 			{
 				config.SetFill = true
@@ -100,8 +70,6 @@ func (config *GridConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	})
 	return config.SetWidth ||
 		config.SetHeight ||
-		config.SetVert ||
-		config.SetFrag ||
 		config.SetFill
 }
 
@@ -137,7 +105,7 @@ func (config *GridConfig) Help() string {
 
 	tmp := flag.NewFlagSet("grid", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"frag", "vert", "w", "h", "fill"} {
+	for _, s := range []string{"w", "h", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			fun(flg)
 		}

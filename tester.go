@@ -25,7 +25,8 @@ type Tester struct {
 	font       *gfx.Font
 	vert, frag *gfx.Shader
 
-	gridConfig *facade.GridConfig
+	shaderConfig *facade.ShaderConfig
+	gridConfig   *facade.GridConfig
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
@@ -117,11 +118,13 @@ func (tester *Tester) Init() error {
 		tester.directory = os.Getenv("HOME") + tester.directory[1:]
 	}
 
+	tester.shaderConfig = &facade.ShaderDefaults
+	tester.shaderConfig.SetFrag = true
+	tester.shaderConfig.SetVert = true
+
 	tester.gridConfig = &facade.GridDefaults
 	tester.gridConfig.SetWidth = true
 	tester.gridConfig.SetHeight = true
-	tester.gridConfig.SetFrag = true
-	tester.gridConfig.SetVert = true
 
 	tester.fontService = gfx.NewFontService(tester.directory+"/font", facade.FontAsset)
 	tester.programService = gfx.NewProgramService(tester.directory+"/shader", facade.ShaderAsset)
@@ -135,12 +138,12 @@ func (tester *Tester) Init() error {
 		log.PANIC("tester missing default font: %s", err)
 	}
 
-	err = tester.switchShader(facade.GridDefaults.Vert, gfx.VertType)
+	err = tester.switchShader(facade.ShaderDefaults.Vert, gfx.VertType)
 	if err != nil {
 		log.PANIC("tester missing default vert shader: %s", err)
 	}
 
-	err = tester.switchShader(facade.GridDefaults.Frag, gfx.FragType)
+	err = tester.switchShader(facade.ShaderDefaults.Frag, gfx.FragType)
 	if err != nil {
 		log.PANIC("tester missing default frag shader: %s", err)
 	}
@@ -172,9 +175,14 @@ func (tester *Tester) Configure(config *facade.Config) error {
 		}
 	}
 
+	var shader *facade.ShaderConfig = nil
 	var grid *facade.GridConfig = nil
 
 	if terminal := config.GetTerminal(); terminal != nil {
+
+		if terminal.GetShader() != nil {
+			shader = terminal.GetShader()
+		}
 
 		if terminal.GetGrid() != nil {
 			grid = terminal.GetGrid()
@@ -183,6 +191,10 @@ func (tester *Tester) Configure(config *facade.Config) error {
 	}
 
 	if lines := config.GetLines(); lines != nil {
+
+		if lines.GetShader() != nil {
+			shader = lines.GetShader()
+		}
 
 		if lines.GetGrid() != nil {
 			grid = lines.GetGrid()
@@ -210,25 +222,29 @@ func (tester *Tester) Configure(config *facade.Config) error {
 
 	}
 
+	if shader != nil {
+
+		if shader.GetSetVert() {
+			err = tester.switchShader(shader.GetVert(), gfx.VertType)
+			if err != nil {
+				log.Error("tester fail switch shader: %s", err)
+			} else {
+				tester.shaderConfig.Vert = shader.GetVert()
+			}
+		}
+
+		if shader.GetSetFrag() {
+			err = tester.switchShader(shader.GetFrag(), gfx.FragType)
+			if err != nil {
+				log.Error("tester fail switch shader: %s", err)
+			} else {
+				tester.shaderConfig.Frag = shader.GetFrag()
+			}
+		}
+
+	}
+
 	if grid != nil {
-
-		if grid.GetSetVert() {
-			err = tester.switchShader(grid.GetVert(), gfx.VertType)
-			if err != nil {
-				log.Error("tester fail switch shader: %s", err)
-			} else {
-				tester.gridConfig.Vert = grid.GetVert()
-			}
-		}
-
-		if grid.GetSetFrag() {
-			err = tester.switchShader(grid.GetFrag(), gfx.FragType)
-			if err != nil {
-				log.Error("tester fail switch shader: %s", err)
-			} else {
-				tester.gridConfig.Frag = grid.GetFrag()
-			}
-		}
 
 		if grid.GetSetWidth() {
 			tester.gridConfig.Width = grid.GetWidth()
