@@ -38,6 +38,9 @@ func (config *Config) Desc() string {
 	if lines := config.GetLines(); lines != nil {
 		ret += lines.Desc() + " "
 	}
+	if tags := config.GetTags(); tags != nil {
+		ret += tags.Desc()
+	}
 
 	if config.GetSetDebug() {
 		if config.GetDebug() {
@@ -54,6 +57,9 @@ func (config *Config) Desc() string {
 
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
+	if tags := config.GetTags(); tags != nil {
+		tags.AddFlags(flagset)
+	}
 	if terminal := config.GetTerminal(); terminal != nil {
 		terminal.AddFlags(flagset)
 	}
@@ -92,6 +98,13 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 		if !lines.VisitFlags(flagset) {
 			config.Lines = nil
 		} // no flags used
+	}
+
+	if tags := config.GetTags(); tags != nil {
+		if !tags.VisitFlags(flagset) {
+			config.Tags = nil
+		}
+
 	}
 
 	if font := config.GetFont(); font != nil {

@@ -9,14 +9,15 @@ import (
 	"strings"
 )
 
-var TermDefaults TermConfig = TermConfig{
-	Grid: nil,
-}
+var TermDefaults TermConfig = TermConfig{}
 
 func (config *TermConfig) Desc() string {
 	ret := "term["
+	if shader := config.GetShader(); shader != nil {
+		ret += shader.Desc() + " "
+	}
 	if grid := config.GetGrid(); grid != nil {
-		ret += grid.Desc()
+		ret += grid.Desc() + " "
 	}
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
@@ -24,23 +25,33 @@ func (config *TermConfig) Desc() string {
 }
 
 func (config *TermConfig) AddFlags(flagset *flag.FlagSet) {
+	if config.GetShader() != nil {
+		config.GetShader().AddFlags(flagset)
+	}
 
 	if config.GetGrid() != nil {
 		config.GetGrid().AddFlags(flagset)
 	}
-
 }
 
 func (config *TermConfig) VisitFlags(flagset *flag.FlagSet) bool {
+	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		}
 	})
-	setGrid := false
-	if grid := config.GetGrid(); grid != nil {
-		setGrid = grid.VisitFlags(flagset)
+	if shader := config.GetShader(); shader != nil {
+		if shader.VisitFlags(flagset) {
+			ret = true
+		}
 	}
-	return setGrid
+
+	if grid := config.GetGrid(); grid != nil {
+		if grid.VisitFlags(flagset) {
+			ret = true
+		}
+	}
+	return ret
 }
 func (config *TermConfig) Help() string {
 	ret := ""
@@ -52,6 +63,7 @@ func (config *TermConfig) Help() string {
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
+	ret += ShaderDefaults.Help()
 	ret += GridDefaults.Help()
 	tmp := flag.NewFlagSet("term", flag.ExitOnError)
 	config.AddFlags(tmp)

@@ -67,14 +67,21 @@ message MaskConfig {
     bool SetName = 1;  string Name = 2;
 }
 
+message ShaderConfig {
+    bool SetVert     = 1;   string Vert    = 2;
+    bool SetFrag     = 3;   string Frag    = 4;
+}
+
 
 message TermConfig {
-    GridConfig Grid = 1;  
+    ShaderConfig Shader = 1;
+    GridConfig Grid     = 2;  
 }
 
 
 message LineConfig {
-    GridConfig Grid = 1;  
+    ShaderConfig Shader = 1;
+    GridConfig Grid     = 2;  
     bool SetDownward = 3;     bool Downward =  4;
     bool SetSpeed    = 5;   double Speed    =  6;
     bool SetFixed    = 7;     bool Fixed    =  8;
@@ -84,16 +91,13 @@ message LineConfig {
 }
 
 message GridConfig {
-    bool SetVert     = 1;   string Vert    = 2;
-    bool SetFrag     = 3;   string Frag    = 4;
-    bool SetWidth    = 5;   uint64 Width   = 6;
-    bool SetHeight   = 7;   uint64 Height  = 8;
-    bool SetFill     = 9;   string Fill    = 10;
+    bool SetWidth    = 1;   uint64 Width   = 2;
+    bool SetHeight   = 3;   uint64 Height  = 4;
+    bool SetFill     = 5;   string Fill    = 6;
 }
 
 message TagConfig {
-    bool SetVert     = 1;   string Vert    = 2;
-    bool SetFrag     = 3;   string Frag    = 4;
+    ShaderConfig Shader = 1;
 }
 
 
