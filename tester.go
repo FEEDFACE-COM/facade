@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"image"
 	"image/png"
 	"os"
@@ -28,6 +29,7 @@ type Tester struct {
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
+	setBuffer  *facade.SetBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -126,6 +128,7 @@ func (tester *Tester) Init() error {
 
 	tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), tester.refreshChan)
+	tester.setBuffer = facade.NewSetBuffer(tester.refreshChan)
 
 	err = tester.switchFont(facade.FontDefaults.Name)
 	if err != nil {
@@ -308,10 +311,12 @@ func (tester *Tester) ProcessTextSeqs(bufChan chan facade.TextSeq) error {
 		if text != nil && len(text) > 0 {
 			tester.lineBuffer.ProcessRunes(text)
 			tester.termBuffer.ProcessRunes(text)
+			tester.setBuffer.ProcessRunes(text)
 		}
 		if seq != nil {
 			tester.lineBuffer.ProcessSequence(seq)
 			tester.termBuffer.ProcessSequence(seq)
+			tester.setBuffer.ProcessSequence(seq)
 		}
 	}
 	return nil
@@ -332,79 +337,49 @@ func (tester *Tester) ProcessRawConfs(rawChan chan facade.Config, confChan chan 
 }
 
 func (tester *Tester) InfoMode() string {
-	ret := "mode[ " + strings.ToLower(tester.mode.String()) + " ]"
-	ret += " "
-	ret += tester.gridConfig.Desc()
-	if tester.debug {
-		ret += " DEBUG "
+	mode := ""
+	switch tester.mode {
+	case facade.Mode_TERM:
+		mode = "term " + tester.gridConfig.Desc()
+	case facade.Mode_LINE:
+		mode = "line " + tester.gridConfig.Desc()
+	case facade.Mode_TAGS:
+		mode = "tags "
 	}
-	ret = strings.TrimRight(ret, " ")
-	ret += ""
-	return ret
+	dbg := ""
+	if tester.debug {
+		dbg = " DEBUG"
+	}
+	return fmt.Sprintf("%s\n  %s%s", mode, tester.font.Desc(), dbg)
 
 }
 
 func (tester *Tester) Test(confChan chan facade.Config) error {
 	const FRAME_RATE = 60.
-	gfx.WorldClock().Tick()
 	tester.prevFrame = gfx.WorldClock().Frame()
 
 	for {
+
+		gfx.WorldClock().Tick()
+		verboseFrame := gfx.WorldClock().VerboseFrame()
+
 		tester.mutex.Lock()
 
 		tester.ProcessConf(confChan)
+		tester.programService.CheckRefresh()
 
-		if gfx.WorldClock().VerboseFrame() {
+		if DEBUG_PERIODIC && verboseFrame {
 
-			log.Debug("")
-			log.Info("%s", gfx.WorldClock().Info(tester.prevFrame))
-			//            log.Info("  %s", MemUsage() )
-			log.Info("  %s", tester.InfoMode())
-			log.Info("  %s", tester.lineBuffer.Desc())
-			log.Info("  %s", tester.termBuffer.Desc())
-			log.Info("  %s", tester.fontService.Desc())
-			if tester.font != nil {
-				log.Info("  %s", tester.font.Desc())
-			}
-			log.Info("  %s", tester.programService.Desc())
-			if tester.vert != nil {
-				log.Info("  %s", tester.vert.Desc())
-			}
-			if tester.frag != nil {
-				log.Info("  %s", tester.frag.Desc())
-			}
-			if DEBUG_BUFFER && tester.mode == facade.Mode_LINE {
-				log.Info("")
-				if tester.mode == facade.Mode_TERM {
-					log.Info(tester.termBuffer.Dump())
-				} else if tester.mode == facade.Mode_LINE {
-					log.Info(tester.lineBuffer.Dump(uint(tester.termBuffer.GetWidth())))
-				}
-			}
-			log.Debug("")
+			tester.printDebug()
+			tester.prevFrame = gfx.WorldClock().Frame()
 		}
-
-		//            if DEBUG_BUFFER && tester.Mode == facade.Mode_GRID {
-		//                if tester.Terminal {
-		//                    os.Stdout.Write( []byte( tester.termBuffer.Dump() ) )
-		//                } else {
-		//                    os.Stdout.Write( []byte( tester.lineBuffer.Dump( tester.GetWidth ) ) )
-		//                }
-		//                os.Stdout.Write( []byte( "\n" ) )
-		//                os.Stdout.Sync()
-		//            }
-		//
-		//
-		//
-		//
-		//        }
 
 		tester.mutex.Unlock()
 
 		if tester.image != nil {
 
 			outPath := "./font.png"
-			log.Info("write rendered image to %s", outPath)
+			log.Info("render image to %s", outPath)
 			outFile, err := os.Create(outPath)
 			if err != nil {
 				log.Error("fail to create file %s: %s", outPath, err)
@@ -421,7 +396,6 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 		}
 
 		time.Sleep(time.Duration(int64(time.Second / FRAME_RATE)))
-		gfx.WorldClock().Tick()
 
 	}
 
@@ -465,6 +439,63 @@ func (tester *Tester) ProcessQueries(queryChan chan (chan string)) error {
 
 	}
 
+}
+
+func (tester *Tester) printDebug() {
+
+	if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
+		log.Debug("")
+	}
+
+	if DEBUG_MEMORY {
+		log.Debug("memory usage %s", MemUsage())
+	}
+
+	if DEBUG_DIAG {
+		log.Debug("%s    %s", gfx.WorldClock().Info(tester.prevFrame), InfoDiag())
+	}
+
+	if DEBUG_CLOCK {
+		log.Info("%s", gfx.WorldClock().Info(tester.prevFrame))
+	}
+
+	if DEBUG_MODE {
+		log.Debug("  %s", tester.InfoMode())
+		log.Debug("  %s", tester.lineBuffer.Desc())
+		log.Debug("  %s", tester.termBuffer.Desc())
+		log.Debug("  %s", tester.setBuffer.Desc())
+	}
+
+	if DEBUG_FONT {
+		log.Info("  %s", tester.fontService.Desc())
+		if tester.font != nil {
+			log.Debug("  %s", tester.font.Desc())
+		}
+	}
+
+	if DEBUG_BUFFER && log.DebugLogging() {
+		tester.dumpBuffer()
+	}
+
+	if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
+		log.Debug("")
+	}
+
+}
+
+func (tester *Tester) dumpBuffer() {
+	if !DEBUG_BUFFER {
+		return
+	}
+	if tester.mode == facade.Mode_TERM {
+		os.Stdout.Write([]byte(tester.termBuffer.Dump()))
+	} else if tester.mode == facade.Mode_LINE {
+		os.Stdout.Write([]byte(tester.lineBuffer.Dump(uint(tester.gridConfig.GetWidth()))))
+	} else if tester.mode == facade.Mode_TAGS {
+		os.Stdout.Write([]byte(tester.setBuffer.Dump()))
+	}
+	os.Stdout.Write([]byte("\n"))
+	os.Stdout.Sync()
 }
 
 //func SaveRGBA(img *image.RGBA,outPath string)  {

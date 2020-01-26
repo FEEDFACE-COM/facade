@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	DEBUG_PERIODIC = false
+	DEBUG_PERIODIC = true
 	DEBUG_DIAG     = false
 	DEBUG_CLOCK    = true
 	DEBUG_CONFIG   = false
@@ -221,6 +221,11 @@ func main() {
 				config.Mode = facade.Mode_LINE
 				config.Lines = &facade.LineConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
+
+			case facade.Mode_TAGS.String():
+				config.SetMode = true
+				config.Mode = facade.Mode_TAGS
+				config.Tags = &facade.TagConfig{}
 
 			case facade.Mode_DRAFT.String():
 				config.SetMode = true

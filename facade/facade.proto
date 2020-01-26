@@ -6,6 +6,7 @@ package facade;
 enum Mode {
     TERM    =  0;
     LINE    =  1;
+    TAGS    =  2;
     DRAFT   = 16;
 }
 
@@ -44,6 +45,7 @@ message Config {
 
     TermConfig Terminal = 13;
     LineConfig Lines    = 14;
+    TagConfig  Tags     = 15;
 
     
 
@@ -82,13 +84,17 @@ message LineConfig {
 }
 
 message GridConfig {
-    bool SetWidth    = 1;   uint64 Width    = 2;
-    bool SetHeight   = 3;   uint64 Height   = 4;
-    bool SetFill     = 7;   string Fill     = 8;
-    bool SetVert     = 9;   string Vert     = 10;
-    bool SetFrag     = 11; string Frag      = 12;
+    bool SetVert     = 1;   string Vert    = 2;
+    bool SetFrag     = 3;   string Frag    = 4;
+    bool SetWidth    = 5;   uint64 Width   = 6;
+    bool SetHeight   = 7;   uint64 Height  = 8;
+    bool SetFill     = 9;   string Fill    = 10;
 }
 
+message TagConfig {
+    bool SetVert     = 1;   string Vert    = 2;
+    bool SetFrag     = 3;   string Frag    = 4;
+}
 
 
 
