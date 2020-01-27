@@ -65,7 +65,7 @@ func (grid *Grid) checkRefresh() bool {
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
-	// REM maybe also if grid.checkReconfig then grid.Configure??
+	// REM maybe also if grid.checkReconfig then grid.S??
 
 	if grid.checkRefresh() {
 		if DEBUG_GRID {
@@ -452,21 +452,21 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 //}
 
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
+    var shader *ShaderConfig = nil
 	var config *GridConfig = nil
 
 	if grid.terminal && terminal != nil {
 
 		log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
-		if terminal.GetGrid() != nil {
-			config = terminal.GetGrid()
-		}
+        shader = terminal.GetShader()
+        config = terminal.GetGrid()
 
 	} else if !grid.terminal && lines != nil {
 
 		log.Debug("%s configure %s", grid.Desc(), lines.Desc())
-		if lines.GetGrid() != nil {
-			config = lines.GetGrid()
-		}
+		shader = lines.GetShader()
+        config = lines.GetGrid()
+
 		if lines.GetSetDownward() {
 			grid.downward = lines.GetDownward()
 		}
@@ -527,14 +527,20 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 	{
 		changed := false
 		vert, frag := grid.vert, grid.frag
-		if config.GetSetVert() {
-			changed = true
-			grid.vert = config.GetVert()
-		}
-		if config.GetSetFrag() {
-			changed = true
-			grid.frag = config.GetFrag()
-		}
+
+        if shader != nil {
+                            
+            if shader.GetSetVert() {
+                changed = true
+                grid.vert = shader.GetVert()
+    		}
+    		
+            if shader.GetSetFrag() {
+                changed = true
+                grid.frag = shader.GetFrag()
+            }
+        }
+            
 		if changed {
 			err := grid.program.Link(grid.vert, grid.frag)
 			//			err := grid.LoadShaders()
@@ -590,8 +596,8 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 
 	ret.buffer = uint(LineDefaults.GetBuffer())
 
-	ret.vert = GridDefaults.GetVert()
-	ret.frag = GridDefaults.GetFrag()
+    ret.vert = ShaderDefaults.GetVert()
+    ret.frag = ShaderDefaults.GetFrag()
 
 	ret.refreshChan = make(chan bool, 1)
 	ret.lineBuffer = lineBuffer
@@ -614,10 +620,15 @@ func (grid *Grid) Config() *GridConfig {
 	return &GridConfig{
 		SetWidth: true, Width: uint64(grid.width),
 		SetHeight: true, Height: uint64(grid.height),
-
-		SetVert: true, Vert: grid.vert,
-		SetFrag: true, Frag: grid.frag,
 	}
+}
+
+func (grid *Grid) ShaderConfig() *ShaderConfig {
+    ret := &ShaderConfig{
+        SetVert: true, Vert: grid.vert,
+        SetFrag: true, Frag: grid.frag,
+    }
+    return ret
 }
 
 func (grid *Grid) LineConfig() *LineConfig {
@@ -633,3 +644,6 @@ func (grid *Grid) LineConfig() *LineConfig {
 	}
 	return ret
 }
+
+
+

@@ -98,6 +98,7 @@ message GridConfig {
 
 message TagConfig {
     ShaderConfig Shader = 1;
+    bool SetFill        =  3;   string Fill    = 4;
 }
 
 

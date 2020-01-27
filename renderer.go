@@ -24,6 +24,8 @@ type Renderer struct {
 
 	terminal *facade.Grid
 	lines    *facade.Grid
+	
+	tags     * facade.Set
 
 	font   *gfx.Font
 	camera *gfx.Camera
@@ -33,6 +35,7 @@ type Renderer struct {
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
+	setBuffer *facade.SetBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -127,12 +130,17 @@ func (renderer *Renderer) Init() error {
 
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
+	renderer.setBuffer = facade.NewSetBuffer( renderer.refreshChan )
 
 	renderer.terminal = facade.NewGrid(nil, renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
 
 	renderer.lines = facade.NewGrid(renderer.lineBuffer, nil)
 	renderer.lines.Init(renderer.programService, renderer.font)
+	
+	
+	renderer.tags = facade.NewSet(renderer.setBuffer)
+	renderer.tags.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
 	return err
@@ -176,6 +184,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
 					renderer.lines.ScheduleRefresh()
+					renderer.tags.ScheduleRefresh()
 
 				}
 			}
@@ -208,6 +217,11 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		changed = true
 		renderer.terminal.Configure(nil, cfg, renderer.camera, renderer.font)
 	}
+	
+	if cfg := config.GetTags(); cfg != nil {
+    	changed = true
+    	renderer.tags.Configure(cfg, renderer.camera, renderer.font)
+    }
 
 	if config.GetSetMode() {
 		changed = true
@@ -291,7 +305,12 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 			case facade.Mode_LINE:
 				renderer.lines.ScheduleRefresh()
+
+			case facade.Mode_TAGS:
+                renderer.tags.ScheduleRefresh()
+
 			}
+                
 		}
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
@@ -306,6 +325,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.terminal.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		case facade.Mode_LINE:
 			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+        case facade.Mode_TAGS:
+            renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
 		if renderer.debug {
@@ -401,6 +422,10 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 			case facade.Mode_LINE:
 				renderer.lineBuffer.ProcessRunes(text)
+			
+			case facade.Mode_TAGS:
+                renderer.setBuffer.ProcessRunes(text)
+
 			}
 
 			renderer.ScheduleRefresh()
@@ -416,6 +441,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.termBuffer.ProcessSequence(seq)
 			case facade.Mode_LINE:
 				renderer.lineBuffer.ProcessSequence(seq)
+            case facade.Mode_TAGS:
+                renderer.setBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
 			renderer.printDebug()
@@ -432,15 +459,17 @@ func (renderer *Renderer) InfoMode() string {
 	mode := ""
 	switch renderer.mode {
 	case facade.Mode_TERM:
-		mode = "term " + renderer.terminal.Desc()
+		mode = "term " + renderer.terminal.Desc() + " " + renderer.terminal.ShaderConfig().Desc()
 	case facade.Mode_LINE:
-		mode = "line " + renderer.lines.Desc()
+		mode = "line " + renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
+    case facade.Mode_TAGS:
+        mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
 	}
 	dbg := ""
 	if renderer.debug {
 		dbg = " DEBUG"
 	}
-	return fmt.Sprintf("%s\n  %s %s %s%s", mode, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc(), dbg)
+	return fmt.Sprintf("%s%s\n  %s %s %s", mode ,dbg, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc())
 
 }
 
@@ -470,6 +499,7 @@ func (renderer *Renderer) printDebug() {
 		log.Debug("  %s", renderer.InfoMode())
 		log.Debug("  %s", renderer.lineBuffer.Desc())
 		log.Debug("  %s", renderer.termBuffer.Desc())
+		log.Debug("  %s", renderer.setBuffer.Desc())
 	}
 
 	if DEBUG_FONT {
@@ -497,7 +527,9 @@ func (renderer *Renderer) dumpBuffer() {
 		os.Stdout.Write([]byte(renderer.terminal.DumpBuffer()))
 	} else if renderer.mode == facade.Mode_LINE {
 		os.Stdout.Write([]byte(renderer.lines.DumpBuffer()))
-	}
+	} else if renderer.mode == facade.Mode_TAGS {
+    	os.Stdout.Write([]byte(renderer.setBuffer.Dump() ))
+    }
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()
 }

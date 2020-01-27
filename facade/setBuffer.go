@@ -61,14 +61,14 @@ func (buffer *SetBuffer) addItem(text []rune) {
     item, ok := buffer.buf[idx]
     if ok {
         if DEBUG_SETBUFFER {
-            log.Debug("%s again seen item %s",buffer.Desc(),idx)
+            log.Debug("%s item seen again: '%s'",buffer.Desc(),idx)
         }
         item.count += 1
 
 
     } else {
         if DEBUG_SETBUFFER {
-            log.Debug("%s first seen item %s",buffer.Desc(),idx)
+            log.Debug("%s item first seen: '%s'",buffer.Desc(),idx)
         }
         item = &SetItem{}
         item.text = text 
@@ -78,6 +78,28 @@ func (buffer *SetBuffer) addItem(text []rune) {
 
 }
 
+
+func (buffer *SetBuffer) Clear() {
+    buffer.buf = make(map[string] *SetItem)
+}
+
+
+func (buffer *SetBuffer) Fill(fill []string) {
+
+    buffer.buf = make(map[string] *SetItem)
+
+    rows := uint(len(fill))
+    if DEBUG_SETBUFFER {
+        log.Debug("%s fill %s items",buffer.Desc(), rows)
+    }
+    
+    for r:=uint(0); r<rows; r++  {
+        
+        buffer.addItem( []rune( fill[r] ) )
+            
+    }
+    
+}
 
 func (buffer *SetBuffer) Desc() string {
     return fmt.Sprintf("setbuffer[%d]",len(buffer.buf))
