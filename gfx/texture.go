@@ -4,6 +4,7 @@ package gfx
 
 import (
 	log "../log"
+    "fmt"
 	"errors"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"image"
@@ -27,6 +28,13 @@ type Texture struct {
 
 func NewTexture(name string) *Texture {
 	return &Texture{Name: name}
+}
+
+
+func (texture *Texture) Desc() string {
+    ret := ""
+    ret += fmt.Sprintf("texture['%s' %.0fx%.0f]",texture.Name,texture.Size.Width,texture.Size.Height)
+    return ret
 }
 
 func (texture *Texture) LoadFile(path string) error {
