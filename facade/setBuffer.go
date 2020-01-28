@@ -22,6 +22,9 @@ type SetBuffer struct {
     buf map[string] *SetItem
     rem []rune
     duration float32
+    
+	refreshChan chan bool
+    
 }
 
 
@@ -31,6 +34,7 @@ func NewSetBuffer(refreshChan chan bool) *SetBuffer {
         duration: float32(TagDefaults.Duration),
     }
     ret.buf = make(map[string] *SetItem)
+	ret.refreshChan = refreshChan
     return ret
 }
 
@@ -59,6 +63,18 @@ func (buffer *SetBuffer) ProcessRunes(runes []rune) {
 }
 
 
+
+func (buffer *SetBuffer) Tags(max int) []string {
+    ret := []string{}
+    for idx := range buffer.buf {
+        ret = append(ret,idx)
+    }
+    if len(ret) < max {
+        return ret
+    }
+    return ret[0:max-1]
+    }
+
 func (buffer *SetBuffer) addItem(text []rune) {
     //lock?
     idx := string(text)
@@ -83,7 +99,10 @@ func (buffer *SetBuffer) addItem(text []rune) {
             log.Debug("%s item added: '%s'",buffer.Desc(),idx)
         }
     }
-
+	select {
+	case buffer.refreshChan <- true:
+	default:
+	}
 }
 
 func (buffer *SetBuffer) deleteItem(idx string) {
@@ -91,10 +110,18 @@ func (buffer *SetBuffer) deleteItem(idx string) {
     if DEBUG_SETBUFFER {
         log.Debug("%s item expired: '%s'",buffer.Desc(),idx)
     }
+	select {
+	case buffer.refreshChan <- true:
+	default:
+	}
 }
 
 func (buffer *SetBuffer) Clear() {
     buffer.buf = make(map[string] *SetItem)
+	select {
+	case buffer.refreshChan <- true:
+	default:
+	}
 }
 
 

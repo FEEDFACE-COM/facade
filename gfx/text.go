@@ -41,6 +41,7 @@ func (text *Text) RenderTexture(font *Font) error {
 
 	if text.Texture != nil {
 		//REM, cleanup old, then rerender!
+		log.Error("TODO: CLEANUP!!")
 		return nil
 	}
 
@@ -63,3 +64,5 @@ func (text *Text) RenderTexture(font *Font) error {
 	text.Texture.TexImage()
 	return nil
 }
+
+
