@@ -11,6 +11,7 @@ import (
 
 var TagDefaults TagConfig = TagConfig{
 	Shader: nil,
+	Duration: 1.0,
 }
 
 func (config *TagConfig) Desc() string {
@@ -18,6 +19,12 @@ func (config *TagConfig) Desc() string {
 	if shader := config.GetShader(); shader != nil {
 		ret += shader.Desc() + " "
 	}
+
+    dok := config.GetSetDuration()
+    if dok {
+        ret += fmt.Sprintf("%.1f",config.GetDuration())    
+    }
+
 
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
@@ -28,12 +35,18 @@ func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
 	if config.GetShader() != nil {
 		config.GetShader().AddFlags(flagset)
 	}
+	flagset.Float64Var(&config.Duration, "life", TagDefaults.Duration, "tag lifetime")
 }
 
 func (config *TagConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
+		case "life":
+			{
+				config.SetDuration = true
+				ret = true
+			}
 		}
 	})
 	if shader := config.GetShader(); shader != nil {

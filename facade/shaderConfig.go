@@ -15,7 +15,7 @@ var ShaderDefaults ShaderConfig = ShaderConfig{
 }
 
 func (config *ShaderConfig) Desc() string {
-	ret := "["
+	ret := ""
 
 	{
 		vok := config.GetSetVert()
@@ -35,7 +35,7 @@ func (config *ShaderConfig) Desc() string {
 	}
 
 	ret = strings.TrimRight(ret, " ")
-	ret += "]"
+	ret += ""
 	return ret
 }
 

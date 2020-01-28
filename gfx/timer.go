@@ -28,6 +28,10 @@ func (timer *Timer) Value() float32 {
 
 }
 
+func (timer *Timer) Restart(now float32) {
+    timer.start = now
+}
+
 //
 //func NewTimer(duration float32, repeat bool, fun func(), custom func(float32) float32 ) *Timer {
 //    ret := &Timer{start: NOW(), duration: duration, repeat: repeat}

@@ -21,12 +21,15 @@ type SetItem struct {
 type SetBuffer struct {
     buf map[string] *SetItem
     rem []rune
+    duration float32
 }
 
 
 
 func NewSetBuffer(refreshChan chan bool) *SetBuffer {
-    ret := &SetBuffer{}
+    ret := &SetBuffer{
+        duration: float32(TagDefaults.Duration),
+    }
     ret.buf = make(map[string] *SetItem)
     return ret
 }
@@ -55,29 +58,40 @@ func (buffer *SetBuffer) ProcessRunes(runes []rune) {
     buffer.rem = tmp
 }
 
+
 func (buffer *SetBuffer) addItem(text []rune) {
     //lock?
     idx := string(text)
     item, ok := buffer.buf[idx]
     if ok {
-        if DEBUG_SETBUFFER {
-            log.Debug("%s item seen again: '%s'",buffer.Desc(),idx)
-        }
         item.count += 1
-
+        item.timer.Restart( gfx.Now() )
+        if DEBUG_SETBUFFER {
+            log.Debug("%s item refreshed: '%s'",buffer.Desc(),idx)
+        }
 
     } else {
-        if DEBUG_SETBUFFER {
-            log.Debug("%s item first seen: '%s'",buffer.Desc(),idx)
+        triggerFun := func() {
+            buffer.deleteItem(idx)
         }
         item = &SetItem{}
         item.text = text 
         item.count = 1
+        item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[idx] = item
+        if DEBUG_SETBUFFER {
+            log.Debug("%s item added: '%s'",buffer.Desc(),idx)
+        }
     }
 
 }
 
+func (buffer *SetBuffer) deleteItem(idx string) {
+    delete(buffer.buf,idx)
+    if DEBUG_SETBUFFER {
+        log.Debug("%s item expired: '%s'",buffer.Desc(),idx)
+    }
+}
 
 func (buffer *SetBuffer) Clear() {
     buffer.buf = make(map[string] *SetItem)
@@ -102,7 +116,7 @@ func (buffer *SetBuffer) Fill(fill []string) {
 }
 
 func (buffer *SetBuffer) Desc() string {
-    return fmt.Sprintf("setbuffer[%d]",len(buffer.buf))
+    return fmt.Sprintf("setbuffer[%.1f #%d]",buffer.duration,len(buffer.buf))
 }
 
 func (buffer *SetBuffer) Dump() string {
@@ -118,4 +132,9 @@ func (buffer *SetBuffer) Dump() string {
     return ret
 }
 
+func (buffer *SetBuffer) Duration() float32 { return buffer.duration }
+
+func (buffer *SetBuffer) SetDuration(duration float32) {
+	buffer.duration = duration
+}
 
