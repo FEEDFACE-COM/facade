@@ -95,6 +95,8 @@ func (set *Set) Init(programService *gfx.ProgramService, font *gfx.Font) {
 
 
 func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font) {
+
+    log.Debug("%s configure %s", set.Desc(), config.Desc())
     
     var shader *ShaderConfig = nil
     
@@ -126,6 +128,11 @@ func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font)
 			}
 		}
 	}
+	
+    if config.GetSetDuration() {
+        set.buffer.SetDuration( float32(config.GetDuration()) )
+    }
+	
 
 	if config.GetSetFill() {
 		fillStr := set.fill( config.GetFill() ) 
@@ -181,7 +188,11 @@ func (set *Set) Desc() string {
 }
 
 func (set *Set) Config() *TagConfig {
-    return &TagConfig{}
+    ret := &TagConfig{
+        SetDuration: true, Duration: float64(set.buffer.Duration()),
+    }
+    return ret
+    
 }
 
 func (set *Set) ShaderConfig() *ShaderConfig {

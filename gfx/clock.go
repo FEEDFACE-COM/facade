@@ -37,6 +37,9 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 	clock.mux.Lock()
 	clock.timers[timer] = timer
 	clock.mux.Unlock()
+	if DEBUG_CLOCK {
+		log.Debug("%s add %s", clock.Desc(),timer.Desc())
+	}
 
 	return timer
 
