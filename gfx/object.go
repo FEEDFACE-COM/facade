@@ -30,6 +30,9 @@ func (object *Object) BindBuffer() {
 }
 
 func (object *Object) BufferData(size int, value []float32) {
+    if size <= 0 {
+        return
+    }
 	gl.BindBuffer(gl.ARRAY_BUFFER, object.object)
 	gl.BufferData(gl.ARRAY_BUFFER, size, gl.Ptr(value), gl.STATIC_DRAW)
 }
