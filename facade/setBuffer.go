@@ -14,6 +14,7 @@ const DEBUG_SETBUFFER = true
 type SetItem struct {
     text []rune
     count uint
+    index uint
     timer *gfx.Timer
 }
 
@@ -22,6 +23,7 @@ type SetBuffer struct {
     buf map[string] *SetItem
     rem []rune
     duration float32
+    nextIndex uint
     
 	refreshChan chan bool
     
@@ -74,6 +76,17 @@ func (buffer *SetBuffer) Tags(max int) []string {
     }
     return ret[0:max-1]
     }
+    
+    
+func (buffer *SetBuffer) Items(max int) []*SetItem {
+    ret := []*SetItem{}
+    
+    for _,v := range buffer.buf {
+        ret = append(ret, v)
+    }
+    
+    return ret
+}    
 
 func (buffer *SetBuffer) addItem(text []rune) {
     //lock?
@@ -91,8 +104,10 @@ func (buffer *SetBuffer) addItem(text []rune) {
             buffer.deleteItem(idx)
         }
         item = &SetItem{}
-        item.text = text 
+        item.text = text        
         item.count = 1
+        item.index = buffer.nextIndex
+        buffer.nextIndex += 1
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[idx] = item
         if DEBUG_SETBUFFER {
