@@ -28,7 +28,8 @@ type SetBuffer struct {
     rem []rune
     duration float32
     nextIndex uint
-    count uint
+    count int
+    max int
     
 	refreshChan chan bool
 	mutex *sync.Mutex
@@ -42,11 +43,21 @@ func NewSetBuffer(refreshChan chan bool) *SetBuffer {
         duration: float32(TagDefaults.Duration),
     }
     ret.count = 0
+    ret.max = int(TagDefaults.Slot)
     ret.buf = make(map[string] *SetItem)
 	ret.refreshChan = refreshChan
 	ret.mutex = &sync.Mutex{}
     return ret
 }
+
+
+func (buffer *SetBuffer) ScheduleRefresh() {
+	select {
+	case buffer.refreshChan <- true:
+	default:
+	}
+}
+
 
 func (buffer *SetBuffer) ProcessSequence(seq *ansi.S) {
     return
@@ -122,10 +133,10 @@ func (buffer *SetBuffer) Items(max int) []*SetItem {
 }    
 
 func (buffer *SetBuffer) addItem(text []rune) {
-    desc := buffer.Desc()
     
     if len(text) <= 0 {
         log.Debug("%s not adding empty string",buffer.Desc())
+        return
     }
 
     tag := string(text)
@@ -142,7 +153,12 @@ func (buffer *SetBuffer) addItem(text []rune) {
 //            log.Debug("%s refreshed: '%s'",desc,tag)
 //        }
 
+    } else if len(buffer.buf) >= buffer.max {
+
+        log.Debug("%s at %d/%d capacity, drop item '%s'",buffer.Desc(),len(buffer.buf),buffer.max,tag)
+            
     } else {
+
         triggerFun := func() {
             buffer.deleteItem(tag)
         }
@@ -153,41 +169,42 @@ func (buffer *SetBuffer) addItem(text []rune) {
         buffer.nextIndex += 1
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[tag] = item
-        buffer.count += 1
+        buffer.count = len(buffer.buf)
         if DEBUG_SETBUFFER {
-            log.Debug("%s item added: '%s'",desc,tag)
+            log.Debug("%s added '%s': %.1f",buffer.Desc(),tag,item.timer.Fader())
         }
     }
 	buffer.mutex.Unlock()
-    
-	select {
-	case buffer.refreshChan <- true:
-	default:
-	}
+    buffer.ScheduleRefresh()
 }
 
 func (buffer *SetBuffer) deleteItem(idx string) {
-    buffer.mutex.Lock() //thread #1 waits here
+    buffer.mutex.Lock()
     delete(buffer.buf,idx)
-    buffer.count -= 1
+    buffer.count = len(buffer.buf)
 	buffer.mutex.Unlock()
     if DEBUG_SETBUFFER {
-        log.Debug("%s item expired: '%s'",buffer.Desc(),idx)
+        log.Debug("%s item expired '%s'",buffer.Desc(),idx)
     }
-	select {
-	case buffer.refreshChan <- true:
-	default:
-	}
+    buffer.ScheduleRefresh()
 }
 
 func (buffer *SetBuffer) Clear() {
+    old := []*gfx.Timer{}
+    
     buffer.mutex.Lock()
+    for _,item := range buffer.buf {
+        old = append(old,item.timer)
+    }
+    
     buffer.buf = make(map[string] *SetItem)
-	select {
-	case buffer.refreshChan <- true:
-	default:
-	}
 	buffer.mutex.Unlock()
+	
+	for _,timer := range old {
+    	gfx.WorldClock().DeleteTimer(timer)
+    }
+
+    buffer.ScheduleRefresh()
 }
 
 
@@ -209,14 +226,14 @@ func (buffer *SetBuffer) Fill(fill []string) {
 }
 
 func (buffer *SetBuffer) Desc() string {
-    ret := fmt.Sprintf("setbuffer[%.1f #%d]",buffer.duration,buffer.count)
+    ret := fmt.Sprintf("setbuffer[%d/%d %.1f ]",buffer.count,buffer.max,buffer.duration)
     return ret
 }
 
 func (buffer *SetBuffer) Dump() string {
     ret := ""
     
-    items := buffer.Items(32)
+    items := buffer.Items(buffer.max)
     for _,item := range items {    
     
         txt := string(item.tag)
@@ -224,14 +241,50 @@ func (buffer *SetBuffer) Dump() string {
         if item.timer != nil {
             rem = fmt.Sprintf("%4.1f",item.timer.Fader())
         }
-        ret += fmt.Sprintf("#%05d %s %5d# %s\n",item.index,rem,item.count,txt) 
+        ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.index,rem,item.count,txt) 
     }
     return ret
 }
+
+func (buffer *SetBuffer) Max() int { return buffer.max }
 
 func (buffer *SetBuffer) Duration() float32 { return buffer.duration }
 
 func (buffer *SetBuffer) SetDuration(duration float32) {
 	buffer.duration = duration
+}
+
+func (buffer *SetBuffer) Resize(max int) {
+    if max <= 0 {
+        return
+    }
+    if DEBUG_SETBUFFER {
+        log.Debug("%s resize %d",buffer.Desc(),max)
+    }
+    
+
+    items := buffer.Items(max)
+    buffer.mutex.Lock()
+    old := buffer.buf
+    buffer.max = max
+    buffer.buf = make(map[string] *SetItem, max)
+
+    for _,item := range items {
+        tag := item.tag
+        buffer.buf[tag] = item
+        delete(old, tag)
+    }
+    buffer.count = len(buffer.buf)
+    buffer.mutex.Unlock()    
+
+    for _,item := range old {
+        gfx.WorldClock().DeleteTimer(item.timer)
+    }
+    
+    if DEBUG_SETBUFFER {
+        log.Debug("%s resized",buffer.Desc())
+    }
+    
+    buffer.ScheduleRefresh()
 }
 

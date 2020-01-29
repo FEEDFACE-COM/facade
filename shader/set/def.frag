@@ -3,11 +3,11 @@ uniform float now;
 uniform float debugFlag;
 uniform sampler2D texture;
 
-uniform float tagCount;
+uniform float tagMax;
 uniform float tagMaxWidth;
 uniform float tagFader;
 uniform float tagIndex;
-
+uniform float tagCount;
 
 varying vec2 vTexCoord;
 
@@ -30,23 +30,27 @@ void main() {
 
     if (col.a > 0.0 ) {
         if ( tagFader < .125 ) {
-    //        col.g = 0.0;
-    //        col.b = 0.0;
             col.a = EaseOut(tagFader * 8.);
         } else if (tagFader < .75 ) {
-    //        col.r = 0.0;
-    //        col.b = 0.0;
             col.a = 1.0;
         } else {
-    //        col.r = 0.0;
             col.a = 1. - EaseOut(3./4. + tagFader * 4.);
         }
     }
     
     col.rgb *= col.a;
+    
     if (DEBUG) { 
         col.rgb = vec3(1.,1.,1.);
-//        col.g = tagIndex / tagCount;
+        if ( tagFader < .125 ) {
+            col.r = 0.0;
+            col.b = 0.0;
+        } else if (tagFader < .75 ) {
+            col.r = 0.0;
+        } else {
+            col.g = 0.0;
+            col.b = 0.0;
+        }
         col.a = 1.0;
     } 
 

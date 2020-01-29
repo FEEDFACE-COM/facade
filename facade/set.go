@@ -31,7 +31,6 @@ type Set struct {
     vert, frag string
 
 
-    max int
     
     
     texItem map[string] *TexItem
@@ -53,9 +52,10 @@ type Set struct {
 
 
 const (
+    TAGMAX      gfx.UniformName = "tagMax"
+    TAGINDEX    gfx.UniformName = "tagIndex"
 	TAGCOUNT    gfx.UniformName = "tagCount"
 	TAGWIDTH    gfx.UniformName = "tagWidth"
-    TAGINDEX    gfx.UniformName = "tagIndex"
     TAGFADER    gfx.UniformName = "tagFader"
 )
 
@@ -95,11 +95,10 @@ func NewSet(setBuffer *SetBuffer) *Set {
     ret.vert = ShaderDefaults.GetVert()
     ret.frag = ShaderDefaults.GetFrag()
     
-    ret.max = 10
-    ret.texItem = make( map[string] *TexItem, ret.max)
+    ret.buffer = setBuffer
+    ret.texItem = make( map[string] *TexItem, ret.buffer.Max())
     
     ret.refreshChan = make(chan bool, 1)
-    ret.buffer = setBuffer
     return ret
 }
 
@@ -108,18 +107,18 @@ func (set *Set) generateData(font *gfx.Font) {
 
     old := set.texItem
     
-    set.texItem = make( map[string] *TexItem, set.max)
+    set.texItem = make( map[string] *TexItem, set.buffer.Max())
     
     
-    bufferItems := set.buffer.Items(set.max)
+    bufferItems := set.buffer.Items(set.buffer.Max())
 
 
     for _,item := range bufferItems {
         
         tag := item.tag
 
-        if len(set.texItem) >= set.max {
-            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.max)
+        if len(set.texItem) >= set.buffer.Max() {
+            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.buffer.Max())
             break
         }
 
@@ -159,7 +158,7 @@ func (set *Set) generateData(font *gfx.Font) {
             set.texItem[tag].texture = texture
             
             if DEBUG_SET {
-                log.Debug("%s prepped %s: %s",set.Desc(),tag,set.texItem[tag].texture.Desc())
+                log.Debug("%s prepped %s %.1f",set.Desc(),set.texItem[tag].texture.Desc(),set.texItem[tag].item.timer.Fader())
             }
             
         }
@@ -239,9 +238,9 @@ func (set *Set) generateData(font *gfx.Font) {
     }
     
     set.object.BufferData(len(set.data) * 4, set.data)
-    if DEBUG_SET {
-        log.Debug("%s generated %d tags %d float",set.Desc(),len(set.tags),len(set.data))
-    }
+//    if DEBUG_SET {
+//        log.Debug("%s generated %d tags %d float",set.Desc(),len(set.tags),len(set.data))
+//    }
     
     
 }
@@ -249,7 +248,7 @@ func (set *Set) generateData(font *gfx.Font) {
 
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
 
-    scaleHeight := float32(1.) / float32(set.max)
+    scaleHeight := float32(1.) / float32(set.buffer.Max())
     return scaleHeight * 2.
 
 }
@@ -269,11 +268,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-    tagCount := float32( set.max )
-    set.program.Uniform1fv(TAGCOUNT, 1, &tagCount)
+    tagMax := float32( set.buffer.Max() )
+    set.program.Uniform1fv(TAGMAX, 1, &tagMax)
 
-    
-    
     set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
     
 	clocknow := float32(gfx.Now())
@@ -311,9 +308,12 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	
     	var index float32;
     	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
-        index = float32( uint32(crc) % uint32(set.max) )    	
+        index = float32( uint32(crc) % uint32(set.buffer.Max()) )    	
 //    	index = float32(item.index)
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
+
+        tagCount := float32( item.count )
+        set.program.Uniform1fv(TAGCOUNT, 1, &tagCount)
 
 
 //        if DEBUG_SET && verbose {
@@ -402,6 +402,9 @@ func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font)
         set.buffer.SetDuration( float32(config.GetDuration()) )
     }
 	
+	if config.GetSetSlot() {
+    	set.buffer.Resize( int(config.GetSlot()) )
+    }
 
 	if config.GetSetFill() {
 		fillStr := set.fill( config.GetFill() ) 

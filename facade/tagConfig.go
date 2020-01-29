@@ -12,6 +12,7 @@ import (
 var TagDefaults TagConfig = TagConfig{
 	Shader: nil,
 	Duration: 1.0,
+	Slot: 10,
 }
 
 func (config *TagConfig) Desc() string {
@@ -22,9 +23,13 @@ func (config *TagConfig) Desc() string {
 
     dok := config.GetSetDuration()
     if dok {
-        ret += fmt.Sprintf("%.1f",config.GetDuration())    
+        ret += fmt.Sprintf("%.1f ",config.GetDuration())    
     }
 
+    sok := config.GetSetSlot()
+    if sok {
+        ret += fmt.Sprintf("%d ",config.GetSlot())
+    }
 
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
@@ -36,6 +41,7 @@ func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
 		config.GetShader().AddFlags(flagset)
 	}
 	flagset.Float64Var(&config.Duration, "life", TagDefaults.Duration, "tag lifetime")
+	flagset.Uint64Var(&config.Slot, "slot", TagDefaults.Slot, "tag slot count")
 	flagset.StringVar(&config.Fill, "fill", TagDefaults.Fill, "tag fill pattern")
 }
 
@@ -45,6 +51,9 @@ func (config *TagConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		switch flg.Name {
 		case "life":
             config.SetDuration = true
+            ret = true
+		case "slot":
+            config.SetSlot = true
             ret = true
 		case "fill":
             config.SetFill = true
@@ -73,7 +82,7 @@ func (config *TagConfig) Help() string {
 	ret += ShaderDefaults.Help()
 	tmp := flag.NewFlagSet("set", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"life", "fill"} {
+	for _, s := range []string{"life", "slot", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			fun(flg)
 		}

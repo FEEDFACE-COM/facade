@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+//	"runtime/debug"
 
 	facade "./facade"
 	log "./log"
@@ -77,6 +78,10 @@ func main() {
 	go func() {
 		sig := <-signals
 		log.Notice("%s", sig)
+//		var buf = make( []byte, 0x8000 )
+//		cnt := runtime.Stack(buf,true)
+//		os.Stderr.Write(buf[:cnt])
+//		os.Stderr.Sync()
 		os.Exit(0)
 	}()
 

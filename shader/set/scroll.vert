@@ -25,14 +25,6 @@ varying vec2 vTexCoord;
 
 bool DEBUG = debugFlag > 0.0;
 
-mat4 scaleMatrix(float a) {
-    return mat4(
-         a, 0., 0., 0.,
-        0.,  a, 0., 0.,
-        0., 0., 1., 0.,
-        0., 0., 0., 1.
-    );
-}
 
 
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
@@ -47,23 +39,25 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 
 void main() {
     vTexCoord = texCoord;
-    float fader = tagFader;
     
     vec4 pos = vec4(vertex,1);
 
-    float a = tagIndex / tagMax * TAU;
-    
-    float r = tagMax/8. + fader * tagMax/4.;
-    
-    float x = r * cos(a);
-    float y = r * sin(a);
-    
-    pos.x += x;
-    pos.y += y;    
-    pos.z += tagMax * (fader/2.);
+    pos.y -= 0.5;
+    pos.y -= tagMax/2.;
+    pos.y += mod( tagIndex+1., tagMax);    
+  
 
-    mat4 v = view * scaleMatrix( 1. + fader );
-        
-    gl_Position = projection * v * model * pos;
+    float tw = tagWidth;
+    tw += log(tagCount);
+    pos.z += log(tagCount);
+
+    pos.x -= tw/2.;
+    pos.x += (tagMax/2.) * ratio;
+    
+    pos.x -= tagFader * ( tagMax * ratio - tw);
+    pos.y += tagFader;    
+    
+    
+    gl_Position = projection * view * model * pos;
 }
 

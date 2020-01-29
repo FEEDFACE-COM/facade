@@ -32,37 +32,8 @@ func (timer *Timer) Restart(now float32) {
     timer.start = now
 }
 
-//
-//func NewTimer(duration float32, repeat bool, fun func(), custom func(float32) float32 ) *Timer {
-//    ret := &Timer{start: NOW(), duration: duration, repeat: repeat}
-//    ret.custom = func(x float32) float32 { return x }
-//    if custom != nil {
-//        ret.custom = custom
-//    }
-//    ret.Fun = fun
-//    RegisterTimer(ret)
-//    return ret
-//}
-//
 
-//func (timer *Timer) Close() {
-//    //todo: dereg
-//}
-
-//func (timer *Timer) Reset() {
-//    timer.start = NOW()
-//    timer.fader = 0.0
-//    timer.count = 0
-//}
-//
-//func (timer *Timer) Start() {
-//    timer.start = NOW()
-//    timer.fader = 0.0
-//    timer.count = 0
-//    if DEBUG_CLOCK { log.Debug("%s start",timer.Desc()) }
-//}
-
-func (timer *Timer) Tick(now float32) bool {
+func (timer *Timer) Tick(now float32) (bool, func()) {
 	t := now - timer.start
 	d := timer.duration
 
@@ -77,18 +48,14 @@ func (timer *Timer) Tick(now float32) bool {
 			log.Debug("%s trigger", timer.Desc())
 		}
 
-		if timer.triggerFun != nil {
-			timer.triggerFun()
-		}
-
 		if timer.repeat { //keep triggered repeating timer
 			timer.start = now
-			return true
+			return true, timer.triggerFun
 		}
 
-		return false // remove triggered single time
+		return false, timer.triggerFun // remove triggered single time
 	}
-	return true // keep untriggered timer
+	return true, nil // keep untriggered timer
 }
 
 func (timer *Timer) Desc() string {
