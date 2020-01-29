@@ -247,7 +247,7 @@ func min(a, b int) int {
 func (font *Font) RenderText(text string, DEBUG bool) (*image.RGBA, error) {
 
 	const (
-		pointSize  = 72.0
+		pointSize  = 48.0
 		dpi        = 144.0
 		rowSpacing = 1.25
 	)

@@ -18,6 +18,8 @@ import (
 
 const DEBUG_SET = true
 
+
+
 type TexItem struct {
     texture *gfx.Texture
     item *SetItem
@@ -111,10 +113,13 @@ func (set *Set) generateData(font *gfx.Font) {
     
     bufferItems := set.buffer.Items(set.max)
 
-    count := 0
-    for tag,item := range bufferItems {
 
-        if count >= set.max {
+    for _,item := range bufferItems {
+        
+        tag := item.tag
+
+        if len(set.texItem) >= set.max {
+            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.max)
             break
         }
 
@@ -124,33 +129,40 @@ func (set *Set) generateData(font *gfx.Font) {
             delete(old, tag)
 
         } else {               //create new texture
-             MAX_LENGTH := 22  // found experimentally
             
-            set.texItem[tag] = &TexItem{}
-            set.texItem[tag].item = item
+            
+            rgba, err := font.RenderText(tag, false)
+            if err != nil {
+                log.Error("%s fail render '%s': %s", set.Desc(), tag, err)
+                continue
+            } 
 
-            set.texItem[tag].texture = gfx.NewTexture(tag)
-            set.texItem[tag].texture.Init()
-
-            txt := tag
-            if len(txt) > MAX_LENGTH {
-                txt = txt[:MAX_LENGTH]
+            texture := gfx.NewTexture(tag)
+            texture.Init()
+            
+            err = texture.LoadRGBA(rgba)
+            if err != nil {
+                log.Error("%s fail load rgba '%s': %s", set.Desc(), tag, err)
+                texture.Close()
+                continue
             }
             
-            rgba, err := font.RenderText(txt, false)
+            err = texture.TexImage()
             if err != nil {
-                log.Error("%s fail render '%s': %s", set.Desc(), txt, err)
+                log.Error("%s fail teximage '%s': %s", set.Desc(), tag, err)
+                texture.Close()
                 continue
-            } else {
-                set.texItem[tag].texture.LoadRGBA(rgba)
-                set.texItem[tag].texture.TexImage()
-                if DEBUG_SET {
-                    log.Debug("%s prepped %s: %s",set.Desc(),tag,set.texItem[tag].texture.Desc())
-                }
+            }
+
+            set.texItem[tag] = &TexItem{}
+            set.texItem[tag].item = item
+            set.texItem[tag].texture = texture
+            
+            if DEBUG_SET {
+                log.Debug("%s prepped %s: %s",set.Desc(),tag,set.texItem[tag].texture.Desc())
             }
             
         }
-        count += 1
     }
     
     // remove old textures
@@ -219,9 +231,9 @@ func (set *Set) generateData(font *gfx.Font) {
         }
         set.data = append(set.data, data...)
         set.tags = append(set.tags, tag)
-        if DEBUG_SET {
-            log.Debug("%s append #%d '%s' %s",set.Desc(),idx,tag,texture.Desc())
-        }
+//        if DEBUG_SET {
+//            log.Debug("%s append #%d '%s' %s",set.Desc(),idx,tag,texture.Desc())
+//        }
         idx += 1
         
     }
@@ -239,25 +251,7 @@ func (set *Set) autoScale(camera *gfx.Camera) float32 {
 
     scaleHeight := float32(1.) / float32(set.max)
     return scaleHeight * 2.
-//
-//
-//    width := float32(1.)
-//    for _,item := range set.texItem {
-//        if item.texture.Size.Width > width {
-//            width = item.texture.Size.Width
-//        }
-//    }
-//    
-//	scaleWidth := float32( 1./ width )
-//
-//	if scaleWidth < scaleHeight {
-//		return scaleWidth
-//	} else {
-//		return scaleHeight
-//	}
 
-    return float32(0.1)
-	return float32(1.0)
 }
 
 
@@ -322,9 +316,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
 
 
-        if DEBUG_SET && verbose {
-        	log.Debug("%s has hash %08x index #%.0f",tag,crc,index)
-        }	
+//        if DEBUG_SET && verbose {
+//        	log.Debug("%s has hash %08x index #%.0f",tag,crc,index)
+//        }	
 
         var width float32;
         width = float32(texture.Size.Width / texture.Size.Height)        

@@ -14,6 +14,8 @@ import (
 	"os"
 )
 
+const DEBUG_TEXTURE = true
+
 type Texture struct {
 	Name string
 	Size struct {
@@ -109,6 +111,14 @@ func (texture *Texture) Close() {
 }
 
 func (texture *Texture) TexImage() error {
+    width := texture.rgba.Rect.Size().X
+    height := texture.rgba.Rect.Size().Y
+    data := texture.rgba.Pix
+    
+    if len(data) <= 0 || len(data) != 4 * width * height {
+        return log.NewError("invalid rgba data: %d byte for %dx%d image",len(data),width,height)
+    }
+
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture.texture)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
@@ -119,12 +129,12 @@ func (texture *Texture) TexImage() error {
 		gl.TEXTURE_2D,
 		0,
 		gl.RGBA,
-		int32(texture.rgba.Rect.Size().X),
-		int32(texture.rgba.Rect.Size().Y),
+		int32(width),
+		int32(height),
 		0,
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
-		gl.Ptr(texture.rgba.Pix))
+		gl.Ptr(data))
 	//    log.Debug("+tex #%d",texture.texture)
 	return nil
 }
