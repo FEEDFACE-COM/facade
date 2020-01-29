@@ -78,11 +78,12 @@ func (buffer *SetBuffer) Tags(max int) []string {
     }
     
     
-func (buffer *SetBuffer) Items(max int) []*SetItem {
-    ret := []*SetItem{}
+func (buffer *SetBuffer) Items(max int) map[string] *SetItem {
     
-    for _,v := range buffer.buf {
-        ret = append(ret, v)
+    ret := make( map[string] *SetItem )
+    
+    for k,v := range buffer.buf {
+        ret[k] = v
     }
     
     return ret

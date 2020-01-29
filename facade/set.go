@@ -40,8 +40,8 @@ type Set struct {
  	object  *gfx.Object
 
 
- 	bind []*gfx.Texture
 	data []float32
+	tags []string
 
 	refreshChan chan bool
     
@@ -50,7 +50,7 @@ type Set struct {
 
 const (
 	TAGCOUNT    gfx.UniformName = "tagCount"
-	TAGMAXWIDTH gfx.UniformName = "tagMaxWidth"
+	TAGWIDTH    gfx.UniformName = "tagWidth"
     TAGINDEX    gfx.UniformName = "tagIndex"
     TAGFADER    gfx.UniformName = "tagFader"
 )
@@ -109,11 +109,13 @@ func (set *Set) generateData(font *gfx.Font) {
     
     bufferItems := set.buffer.Items(set.max)
 
-    
-    for _,item := range bufferItems {
+    count := 0
+    for tag,item := range bufferItems {
 
-        tag := string(item.text)
-        
+        if count >= set.max {
+            break
+        }
+
         if old[tag] != nil {   //reuse existing textures
 
             set.texItem[tag] = old[tag]
@@ -144,9 +146,9 @@ func (set *Set) generateData(font *gfx.Font) {
                     log.Debug("%s prepped %s: %s",set.Desc(),tag,set.texItem[tag].texture.Desc())
                 }
             }
-
             
         }
+        count += 1
     }
     
     // remove old textures
@@ -164,10 +166,10 @@ func (set *Set) generateData(font *gfx.Font) {
     //setup vertex + bind order arrays
 
     set.data = []float32{}
-    set.bind = []*gfx.Texture{}
+    set.tags = []string{}
 
     idx := 0
-    for _,item := range set.texItem  {
+    for tag,item := range set.texItem  {
 
         texture := item.texture
 
@@ -214,9 +216,9 @@ func (set *Set) generateData(font *gfx.Font) {
             -w/2.,  +h/2.,  0.0,       0., 0.,   /*   idx,    fdr, */  // A
         }
         set.data = append(set.data, data...)
-        set.bind = append(set.bind, texture)
+        set.tags = append(set.tags, tag)
         if DEBUG_SET {
-            log.Debug("%s append #%d %s",set.Desc(),idx,texture.Desc())
+            log.Debug("%s append #%d '%s' %s",set.Desc(),idx,tag,texture.Desc())
         }
         idx += 1
         
@@ -224,14 +226,38 @@ func (set *Set) generateData(font *gfx.Font) {
     
     set.object.BufferData(len(set.data) * 4, set.data)
     if DEBUG_SET {
-        log.Debug("%s bufferdata %d",set.Desc(),len(set.data)*4)
-    }
-    if DEBUG_SET {
-        log.Debug("%s generated %d binds %d float",set.Desc(),len(set.bind),len(set.data))
+        log.Debug("%s generated %d tags %d float",set.Desc(),len(set.tags),len(set.data))
     }
     
     
 }
+
+
+func (set *Set) autoScale(camera *gfx.Camera) float32 {
+
+    scaleHeight := float32(1.) / float32(set.max)
+    return scaleHeight * 2.
+//
+//
+//    width := float32(1.)
+//    for _,item := range set.texItem {
+//        if item.texture.Size.Width > width {
+//            width = item.texture.Size.Width
+//        }
+//    }
+//    
+//	scaleWidth := float32( 1./ width )
+//
+//	if scaleWidth < scaleHeight {
+//		return scaleWidth
+//	} else {
+//		return scaleHeight
+//	}
+
+    return float32(0.1)
+	return float32(1.0)
+}
+
 
 func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
@@ -247,18 +273,12 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-    tagCount := float32( len(set.bind) )
+    tagCount := float32( set.max )
     set.program.Uniform1fv(TAGCOUNT, 1, &tagCount)
 
-    maxWidth := float32(0.1)
-	for _,texture := range set.bind {
-    	if texture.Size.Width > maxWidth {
-        	maxWidth = texture.Size.Width
-        }
-    }
-    set.program.Uniform1fv(TAGMAXWIDTH, 1, &maxWidth)
     
     
+    set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
     
 	clocknow := float32(gfx.Now())
 	set.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
@@ -266,6 +286,8 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	camera.Uniform(set.program)
 	
 	scale := float32(1.0)
+	scale = set.autoScale(camera)
+
 	model := mgl32.Ident4()
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
 	//	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
@@ -276,25 +298,32 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2)*4, (3)*4)
 
     count := int32(1)
-
 	offset := int32(0)
 	
-	index := float32(0.0)
-	for _,texture := range set.bind {
+	for _,tag := range set.tags {
+
+        texture := set.texItem[tag].texture
+        item := set.texItem[tag].item
     	
-        if DEBUG_SET && verbose {
-            log.Debug("%s render texture %s",set.Desc(),texture.Desc())
-        }
 
         texture.BindTexture()
         texture.Uniform(set.program)
 
-        var fader float32;
-
+        var fader float32
+        fader = item.timer.Fader()
     	set.program.Uniform1fv(TAGFADER, 1, &fader)
     	
+    	var index float32;
+    	index = float32(item.index)
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
-        
+
+        var width float32;
+        width = float32(texture.Size.Width / texture.Size.Height)        
+        set.program.Uniform1fv(TAGWIDTH, 1, &width)
+
+        if DEBUG_SET && verbose {
+            log.Debug("%s render '%s' #%.0f f%.1f  %s",set.Desc(),tag,index,fader,texture.Desc())
+        }
         
         if !debug || debug {
             set.program.SetDebug(false)
@@ -307,7 +336,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
             gl.BindTexture(gl.TEXTURE_2D, 0)
             gl.DrawArrays(gl.LINE_STRIP, int32(offset*(2*3)), int32(count*2*3))
         }
-        index += 1.
         offset += 1
     }
     

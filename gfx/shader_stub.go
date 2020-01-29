@@ -25,12 +25,6 @@ const (
 	VIEW        UniformName = "view"
 	SCREENRATIO UniformName = "ratio"
 	TEXTURE     UniformName = "texture"
-	TILECOUNT   UniformName = "tileCount"
-	TILESIZE    UniformName = "tileSize"
-	TILEOFFSET  UniformName = "tileOffset"
-	CURSORPOS   UniformName = "cursorPos"
-	SCROLLER    UniformName = "scroller"
-	DOWNWARD    UniformName = "downward"
 	CLOCKNOW    UniformName = "now"
 )
 
@@ -40,8 +34,6 @@ const (
 	VERTEX    AttribName = "vertex"
 	COLOR     AttribName = "color"
 	TEXCOORD  AttribName = "texCoord"
-	TILECOORD AttribName = "tileCoord"
-	GRIDCOORD AttribName = "gridCoord"
 )
 
 type ShaderType string
