@@ -38,6 +38,23 @@ type Grid struct {
 	refreshChan chan bool
 }
 
+
+const (
+	TILECOUNT   gfx.UniformName = "tileCount"
+	TILESIZE    gfx.UniformName = "tileSize"
+	TILEOFFSET  gfx.UniformName = "tileOffset"
+	CURSORPOS   gfx.UniformName = "cursorPos"
+	SCROLLER    gfx.UniformName = "scroller"
+	DOWNWARD    gfx.UniformName = "downward"
+)
+
+const (
+	TILECOORD gfx.AttribName = "tileCoord"
+	GRIDCOORD gfx.AttribName = "gridCoord"
+)
+
+
+
 func (grid *Grid) ScheduleRefresh() {
 
 	select {
@@ -81,10 +98,10 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	grid.object.BindBuffer()
 
 	tileCount := mgl32.Vec2{float32(grid.width), float32(grid.height)}
-	grid.program.Uniform2fv(gfx.TILECOUNT, 1, &tileCount[0])
+	grid.program.Uniform2fv(TILECOUNT, 1, &tileCount[0])
 
 	tileSize := mgl32.Vec2{font.MaxSize().W / font.MaxSize().H, font.MaxSize().H / font.MaxSize().H}
-	grid.program.Uniform2fv(gfx.TILESIZE, 1, &tileSize[0])
+	grid.program.Uniform2fv(TILESIZE, 1, &tileSize[0])
 
 	tileOffset := mgl32.Vec2{-1., 0.0}
 	if grid.width%2 == 0 { //even columns
@@ -96,7 +113,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	if grid.downward && !grid.terminal {
 		tileOffset[1] += 1.
 	}
-	grid.program.Uniform2fv(gfx.TILEOFFSET, 1, &tileOffset[0])
+	grid.program.Uniform2fv(TILEOFFSET, 1, &tileOffset[0])
 
 	cursorPos := mgl32.Vec2{-1., -1.}
 	if grid.terminal {
@@ -104,7 +121,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 		cursorPos[0] = float32(x)
 		cursorPos[1] = float32(y)
 	}
-	grid.program.Uniform2fv(gfx.CURSORPOS, 1, &cursorPos[0])
+	grid.program.Uniform2fv(CURSORPOS, 1, &cursorPos[0])
 
 	clocknow := float32(gfx.Now())
 	grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
@@ -116,7 +133,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 			scroller *= -1.
 		}
 	}
-	grid.program.Uniform1f(gfx.SCROLLER, scroller)
+	grid.program.Uniform1f(SCROLLER, scroller)
 
 	camera.Uniform(grid.program)
 
@@ -132,8 +149,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 	grid.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+2+2)*4, (0)*4)
 	grid.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+2+2)*4, (3)*4)
-	grid.program.VertexAttribPointer(gfx.TILECOORD, 2, (3+2+2+2)*4, (3+2)*4)
-	grid.program.VertexAttribPointer(gfx.GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4)
+	grid.program.VertexAttribPointer(    TILECOORD, 2, (3+2+2+2)*4, (3+2)*4)
+	grid.program.VertexAttribPointer(    GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4)
 
 	count := int32(grid.width * (grid.height + 1))
 	offset := int32(0)
