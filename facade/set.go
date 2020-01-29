@@ -5,9 +5,11 @@ package facade
 import (
 //    "fmt"
     "strings"
+    "hash/crc32"
     
     gfx "../gfx"
     log "../log"
+    
     
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
@@ -122,7 +124,7 @@ func (set *Set) generateData(font *gfx.Font) {
             delete(old, tag)
 
         } else {               //create new texture
-             MAX_LENGTH := 20
+             MAX_LENGTH := 22  // found experimentally
             
             set.texItem[tag] = &TexItem{}
             set.texItem[tag].item = item
@@ -314,15 +316,22 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	set.program.Uniform1fv(TAGFADER, 1, &fader)
     	
     	var index float32;
-    	index = float32(item.index)
+    	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
+        index = float32( uint32(crc) % uint32(set.max) )    	
+//    	index = float32(item.index)
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
+
+
+        if DEBUG_SET && verbose {
+        	log.Debug("%s has hash %08x index #%.0f",tag,crc,index)
+        }	
 
         var width float32;
         width = float32(texture.Size.Width / texture.Size.Height)        
         set.program.Uniform1fv(TAGWIDTH, 1, &width)
 
         if DEBUG_SET && verbose {
-            log.Debug("%s render '%s' #%.0f f%.1f  %s",set.Desc(),tag,index,fader,texture.Desc())
+            log.Debug("%s render #%.0f f%.1f  %s",set.Desc(),index,fader,texture.Desc())
         }
         
         if !debug || debug {

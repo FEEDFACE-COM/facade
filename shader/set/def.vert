@@ -43,15 +43,15 @@ void main() {
 
     pos.y -= 0.5;
     pos.y -= tagCount/2.;
-    pos.y += mod( tagIndex, tagCount);    
+    pos.y += mod( tagIndex+1., tagCount);    
   
+
+    pos.x -= tagWidth/2.;
+    pos.x += 5. * ratio;
+    
+    pos.x -= tagFader * ( 10. * ratio - tagWidth);
   
-    pos.x += tagWidth/2.;
-    pos.x -= 5.*ratio;
-    
-    pos.x += tagFader * 10. ;
-    
-    
+    pos.y += tagFader;    
     
     gl_Position = projection * view * model * pos;
 }

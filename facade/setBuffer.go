@@ -110,7 +110,7 @@ func (buffer *SetBuffer) addItem(text []rune) {
         item.index = buffer.nextIndex
         buffer.nextIndex += 1
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
-        buffer.buf[idx] = item
+        buffer.buf[idx] = item // fatal error: concurrent map iteration and map write
         if DEBUG_SETBUFFER {
             log.Debug("%s item added: '%s'",buffer.Desc(),idx)
         }
@@ -164,7 +164,7 @@ func (buffer *SetBuffer) Desc() string {
 
 func (buffer *SetBuffer) Dump() string {
     ret := ""
-    for _,itm := range(buffer.buf) {
+    for _,itm := range(buffer.buf) { // fatal error: concurrent map iteration and map write
         txt := string(itm.text)
         rem := " "
         if itm.timer != nil {
