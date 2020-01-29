@@ -97,9 +97,10 @@ message GridConfig {
 }
 
 message TagConfig {
-    ShaderConfig Shader = 1;
+    ShaderConfig Shader =  1;
     bool SetDuration    =  3;  double Duration = 4;
-    bool SetFill        =  5;   string Fill    = 6;
+    bool SetSlot        =  5;  uint64 Slot     = 6;
+    bool SetFill        =  7;   string Fill    = 8;
 }
 
 

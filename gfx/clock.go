@@ -30,15 +30,10 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 		triggerFun: triggerFun,
 	}
 
-	//    if timer.valueFun == nil {
-	//        timer.valueFun = func(x float32) float32 { return x }
-	//    }
-
-//    log.Debug("lock for add")
 	clock.mux.Lock()
 	clock.timers[timer] = timer
 	clock.mux.Unlock()
-//    log.Debug("unlocked for add")
+
 	if DEBUG_CLOCK {
 		log.Debug("%s add %s", clock.Desc(),timer.Desc())
 	}
@@ -48,7 +43,7 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 }
 
 func (clock *Clock) DeleteTimer(timer *Timer) {
-//    log.Debug("lock for delete")
+
 	clock.mux.Lock()
 
 	tmp, ok := clock.timers[timer]
@@ -59,15 +54,13 @@ func (clock *Clock) DeleteTimer(timer *Timer) {
 		}
 		delete(clock.timers, timer)
 	} else {
-		log.Error("%s fail delete timer", clock.Desc())
+		log.Debug("%s fail delete timer", clock.Desc())
 	}
 
 	clock.mux.Unlock()
-//    log.Debug("unlocked for delete")
 }
 
 func (clock *Clock) Reset() {
-//    log.Debug("lock for reset")
 	clock.mux.Lock()
 
 	if DEBUG_CLOCK {
@@ -82,7 +75,6 @@ func (clock *Clock) Reset() {
 		delete(clock.timers, k)
 	}
 	clock.mux.Unlock()
-//    log.Debug("unlocked for reset")
 }
 
 func (clock *Clock) VerboseFrame() bool {
@@ -90,23 +82,30 @@ func (clock *Clock) VerboseFrame() bool {
 }
 
 func (clock *Clock) Tick() {
-    expired := []*Timer{}
+
+    triggers := []func(){}
+
+    clock.mux.Lock()
+
 	clock.frame += 1
 	clock.time = ClockRate * float32(time.Now().Sub(clock.start).Seconds())
 
-	for _, timer := range clock.timers { // concurrent map iteration and map write
-    
-		if (*timer).Tick(clock.time) == false {
-            expired = append(expired, timer)
+	for _, timer := range clock.timers {
+
+        keep, fun := (*timer).Tick(clock.time)    
+		if keep == false {
+    		delete(clock.timers,timer)
 		}
+		if fun != nil { //keep note of triggers
+    		triggers = append(triggers, fun)
+        }
 	}
-//    log.Debug("lock for expire")
-    clock.mux.Lock()
-    for _,timer := range expired {
-        delete(clock.timers, timer)
-    }
 	clock.mux.Unlock()
-//    log.Debug("unlocked for expire")
+
+    // now that we're unlocked, run triggers
+    for _,fun := range triggers {
+        fun()
+    }
 }
 
 func (clock *Clock) Now() float32 { return clock.time }
