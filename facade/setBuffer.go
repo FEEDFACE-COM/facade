@@ -148,10 +148,13 @@ func (buffer *SetBuffer) addItem(text []rune) {
     item, ok := buffer.buf[tag]
     if ok {
         item.count += 1
-        item.timer.Restart( gfx.Now() )
-//        if DEBUG_SETBUFFER {
-//            log.Debug("%s refreshed: '%s'",desc,tag)
-//        }
+        r := item.timer.Extend( gfx.Now() )
+//        item.timer.Restart( gfx.Now() )
+        if DEBUG_SETBUFFER {
+            if r {
+                log.Debug("%s extended: '%s'",item.timer.Desc(),tag)
+            }
+        }
 
     } else if len(buffer.buf) >= buffer.max {
 
@@ -239,7 +242,8 @@ func (buffer *SetBuffer) Dump() string {
         txt := string(item.tag)
         rem := "    "
         if item.timer != nil {
-            rem = fmt.Sprintf("%4.1f",item.timer.Fader())
+            rem = item.timer.Desc()
+//            rem = fmt.Sprintf("%4.1f %4.1f",item.timer.Fader(),item.timer.Remaining(gfx.Now()))
         }
         ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.index,rem,item.count,txt) 
     }
