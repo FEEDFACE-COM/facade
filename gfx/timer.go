@@ -15,10 +15,17 @@ type Timer struct {
 	start    float32
 	duration float32
 	repeat   bool
+
+	bias   float32
 }
+
 
 func (timer *Timer) Count() uint    { return timer.count }
 func (timer *Timer) Fader() float32 { return timer.fader }
+
+func (timer *Timer) Remaining(now float32) float32 { 
+    return timer.duration - (now - timer.start)
+}
 
 func (timer *Timer) Value() float32 {
 	if timer.valueFun != nil {
@@ -28,16 +35,45 @@ func (timer *Timer) Value() float32 {
 
 }
 
-func (timer *Timer) Restart(now float32) {
+//func (timer *Timer) Restart(now float32) {
+//    timer.start = now
+//    timer.amp = 1.
+//    timer.bias = 0.
+//}
+
+func (timer *Timer) Extend(now float32) bool {
+    
+    
+    const MAX = float32( 0.95 )
+    
+    if timer.fade(now) >= MAX {
+        timer.bias = 0.
+        timer.start = now
+        return false
+
+    } 
+
+    timer.bias = timer.fade(now)
     timer.start = now
+    
+    return true
+        
+}
+    
+
+
+func (timer *Timer) fade(now float32) float32 {
+    t := now - timer.start
+    d := timer.duration
+    b := timer.bias
+
+    return b + (1.-b) * (t/d) 
+    
 }
 
-
 func (timer *Timer) Tick(now float32) (bool, func()) {
-	t := now - timer.start
-	d := timer.duration
-
-	timer.fader = math.Clamp(t / d)
+    
+    timer.fader = math.Clamp( timer.fade(now) )
 
 	//triggered?
 	if now > timer.start+timer.duration {
@@ -59,11 +95,16 @@ func (timer *Timer) Tick(now float32) (bool, func()) {
 }
 
 func (timer *Timer) Desc() string {
-	ret := fmt.Sprintf("timer[%.2f", timer.duration)
+    run := Now() - timer.start
+	ret := fmt.Sprintf("timer[%.1f/%.1f", run,timer.duration)
 	if timer.repeat {
 		ret += fmt.Sprintf(" #%d", timer.count)
-	}
-	ret += fmt.Sprintf(" →%4.2f", timer.fader)
+    }
+	if timer.bias == 0.0 {
+    	ret += fmt.Sprintf("     →%4.2f", timer.fader)
+    } else {
+        ret += fmt.Sprintf(" %4.2f+%4.2f", timer.bias,(1.-timer.bias)*timer.fader)    
+    }
 	if timer.valueFun != nil {
 		ret += fmt.Sprintf(" ↑%4.2f", timer.valueFun(timer.fader))
 	}

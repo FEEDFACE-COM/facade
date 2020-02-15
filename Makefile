@@ -58,14 +58,13 @@ info:
 	@echo " platform   ${BUILD_PLATFORM}"
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
-	@echo ""
-	@echo "#Sources"
+	@echo "\n#Sources"
 	@echo "${SOURCES}"
-	@echo "#Assets"
+	@echo "\n#Assets"
 	@echo "${ASSETS}"
-	@echo "#Shaders"
+	@echo "\n#Shaders"
 	@echo "${ASSET_SHADER}"
-	@echo "#Fonts"   
+	@echo "\n#Fonts"   
 	@echo "${ASSET_FONT}"   
 	
 build: ${BUILD_PRODUCT}
