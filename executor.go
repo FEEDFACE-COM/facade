@@ -23,7 +23,7 @@ type Executor struct {
 	client     *Client
 }
 
-const DEBUG_EXEC = true
+const DEBUG_EXEC = false
 const DEBUG_EXEC_DUMP = false
 
 func NewExecutor(client *Client, cols, rows uint, path string, args []string) *Executor {

@@ -10,7 +10,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_SETBUFFER = true
+const DEBUG_SETBUFFER = false
 
 const maxTagLength = 32 // found experimentally
 

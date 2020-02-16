@@ -16,7 +16,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 )
 
-const DEBUG_CLIENT = true
+const DEBUG_CLIENT = false
 const DEBUG_CLIENT_DUMP = false
 
 type Client struct {

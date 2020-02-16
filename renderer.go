@@ -232,7 +232,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		}
 	}
 
-	if changed {
+	if changed && DEBUG_EVENTS { 
 		renderer.printDebug()
 		renderer.prevFrame = gfx.WorldClock().Frame()
 	}
@@ -429,11 +429,15 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			}
 
 			renderer.ScheduleRefresh()
-			renderer.printDebug()
-			renderer.prevFrame = gfx.WorldClock().Frame()
+
+            if DEBUG_EVENTS {
+    			renderer.printDebug()
+                renderer.prevFrame = gfx.WorldClock().Frame()
 			//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
 			//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 			//            }
+            }
+	   		
 		}
 		if seq != nil {
 			switch renderer.mode {
@@ -445,11 +449,13 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
                 renderer.setBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
-			renderer.printDebug()
-			renderer.prevFrame = gfx.WorldClock().Frame()
+			if DEBUG_EVENTS {
+    			renderer.printDebug()
+	       		renderer.prevFrame = gfx.WorldClock().Frame()
 			//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
 			//                log.Debug( "%s", renderer.grid.DumpBuffer() )
 			//            }
+            }
 		}
 	}
 	return nil

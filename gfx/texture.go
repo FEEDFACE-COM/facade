@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-const DEBUG_TEXTURE = true
+const DEBUG_TEXTURE = false
 
 type Texture struct {
 	Name string
