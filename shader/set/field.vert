@@ -21,18 +21,8 @@ attribute vec2 texCoord;
 
 varying vec2 vTexCoord;
 
-varying vec4 vPos;
 
 bool DEBUG = debugFlag > 0.0;
-
-mat4 scaleMatrix(float a) {
-    return mat4(
-         a, 0., 0., 0.,
-        0.,  a, 0., 0.,
-        0., 0., 1., 0.,
-        0., 0., 0., 1.
-    );
-}
 
 
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
@@ -57,7 +47,7 @@ void main() {
     pos.x *= tagMax/10.;
     pos.y *= tagMax/10.;
     
-    float rx = 0.5 * tagMax/2.;
+    float rx = tagMax/4.;
     float ry = tagMax/2.;
     
     float idx = tagIndex/tagMax;
@@ -65,6 +55,7 @@ void main() {
     float w = 2.*TAU;
     float o = PI/2. + PI/2.;
     a = idx * w + o;
+
     pos.x += rx * cos(a);
     pos.y += ry * sin(a);
         
@@ -75,17 +66,11 @@ void main() {
         pos.x -= tagMax/2.;
     
     }
-
-
     pos.z -= tagMax; 
     pos.z += fader * 1.5 * tagMax;
 
-    mat4 v = view;
-//    v = view * scaleMatrix( 1.  );
-
-    
         
-    gl_Position = projection * v * model * pos;
+    gl_Position = projection * view * model * pos;
     vPos =    gl_Position;
 }
 
