@@ -19,6 +19,7 @@ import (
 
 const (
 	DEBUG_PERIODIC = true
+	DEBUG_EVENTS   = false
 	DEBUG_DIAG     = false
 	DEBUG_CLOCK    = true
 	DEBUG_CONFIG   = false
@@ -26,7 +27,7 @@ const (
 	DEBUG_SHADER   = false
 	DEBUG_MODE     = true
 	DEBUG_MEMORY   = false
-	DEBUG_BUFFER   = true
+	DEBUG_BUFFER   = false
 	DEBUG_RENDERER = false
 )
 
