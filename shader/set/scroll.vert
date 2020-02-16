@@ -42,20 +42,11 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y -= 0.5;
-    pos.y -= tagMax/2.;
-    pos.y += mod( tagIndex+1., tagMax);    
-  
-
-    float tw = tagWidth;
-    tw += log(tagCount);
-    pos.z += log(tagCount);
-
-    pos.x -= tw/2.;
-    pos.x += (tagMax/2.) * ratio;
+    pos.y -= tagMax/2.;    
+    pos.y += (tagIndex/tagMax) * tagMax;
     
-    pos.x -= tagFader * ( tagMax * ratio - tw);
-    pos.y += tagFader;    
+    pos.x += (tagMax/2.) * ratio ;
+    pos.x -= tagFader * ( tagMax * ratio);
     
     
     gl_Position = projection * view * model * pos;

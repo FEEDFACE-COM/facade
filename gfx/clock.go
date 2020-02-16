@@ -60,6 +60,18 @@ func (clock *Clock) DeleteTimer(timer *Timer) {
 	clock.mux.Unlock()
 }
 
+func (clock *Clock) Toggle() {
+    clock.paused = !clock.paused 
+    clock.pausetime = clock.running() - clock.pausetime
+    if DEBUG_CLOCK {
+        s := "unpaused"
+        if clock.paused { s = "paused" }
+        log.Debug("%s %s",clock.Desc(),s)
+    }
+}
+
+
+
 func (clock *Clock) Reset() {
 	clock.mux.Lock()
 
@@ -81,14 +93,23 @@ func (clock *Clock) VerboseFrame() bool {
 	return clock.frame%VerboseFrames == 0
 }
 
+func (clock *Clock) running() float32 {
+    return ClockRate * float32(time.Now().Sub(clock.start).Seconds())
+}
+
 func (clock *Clock) Tick() {
 
     triggers := []func(){}
 
     clock.mux.Lock()
 
-	clock.frame += 1
-	clock.time = ClockRate * float32(time.Now().Sub(clock.start).Seconds())
+    if clock.paused {
+        clock.frame += 1
+        clock.time = clock.pausetime
+    } else {
+        clock.frame += 1
+        clock.time = clock.running() - clock.pausetime 
+    }	   
 
 	for _, timer := range clock.timers {
 
@@ -109,9 +130,12 @@ func (clock *Clock) Tick() {
 }
 
 func (clock *Clock) Now() float32 { return clock.time }
+func (clock *Clock) Paused() bool { return clock.paused }
 
 func (clock *Clock) Desc() string {
-	return fmt.Sprintf("clock[#%05d %.2fs]", clock.frame, clock.time)
+    s := ""
+    if clock.paused { s = " PAUSED" }
+	return fmt.Sprintf("clock[#%05d %.2fs%s]", clock.frame, clock.time,s)
 }
 
 func (clock *Clock) Info(prev ClockFrame) string {
@@ -124,6 +148,9 @@ func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, T
 type Clock struct {
 	frame uint
 	time  float32
+	
+	paused bool
+	pausetime float32
 
 	start  time.Time
 	timers map[*Timer]*Timer

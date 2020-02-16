@@ -45,6 +45,8 @@ type Renderer struct {
 
 	refreshChan chan bool
 
+    paused bool
+
 	prevFrame gfx.ClockFrame
 
 	tickChannel chan bool
@@ -266,7 +268,7 @@ func (renderer *Renderer) tock() {
 	// return to render one frame
 }
 
-func (renderer *Renderer) Render(confChan chan facade.Config) error {
+func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan bool) error {
 
 	go renderer.tick()
 
@@ -296,7 +298,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		renderer.stateMutex.Lock()
 		piglet.MakeCurrent()
 
-		renderer.ProcessConf(confChan)
+		renderer.ProcessConf(confChan,pauseChan)
 		if renderer.checkRefresh() {
 			//            if DEBUG_RENDERER { log.Debug("%s refresh",renderer.Desc()) }
 			switch renderer.mode {
@@ -329,7 +331,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
             renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
-		if renderer.debug {
+		if renderer.debug && renderer.paused {
 			renderer.axis.Render(renderer.camera, renderer.debug)
 		}
 
@@ -372,11 +374,21 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 	return nil
 }
 
-func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
+func (renderer *Renderer) TogglePause() {
+    gfx.WorldClock().Toggle()
+    if DEBUG_RENDERER {
+        log.Debug("%s toggle pause",renderer.Desc())
+    }
+}
+
+func (renderer *Renderer) ProcessConf(confChan chan facade.Config, pauseChan chan bool) {
 
 	select {
 	case conf := <-confChan:
 		renderer.Configure(&conf)
+    
+    case <-pauseChan:
+        renderer.TogglePause()
 
 	default:
 		//nop
@@ -415,6 +427,11 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 	for {
 		item := <-textChan
 		text, seq := item.Text, item.Seq
+		
+		if renderer.paused {
+    		continue
+        }
+		
 		if text != nil && len(text) > 0 {
 			switch renderer.mode {
 			case facade.Mode_TERM:

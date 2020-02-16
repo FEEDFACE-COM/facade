@@ -26,19 +26,25 @@ float EaseIn(float x) {  return  -1. * cos(x*PI/2.            ) + 1.  ; }
 void main() {
     vec4 col;
     col = texture2D(texture, vTexCoord); 
+//    col = vec4(1.,1.,1.,1);
 
-
+//    col /= 4.;
+    
+    float z = 1.;
     if (col.a > 0.0 ) {
         if ( tagFader < .125 ) {
-            col.a = EaseOut(tagFader * 8.);
+            z = EaseOut(tagFader * 8.);
         } else if (tagFader < .75 ) {
-            col.a = 1.0;
+            z = 1.0;
         } else {
-            col.a = 1. - EaseOut(3./4. + tagFader * 4.);
+            z = 1. - EaseOut(3./4. + tagFader * 4.);
         }
     }
     
-    col.rgb *= col.a;
+    col.a = col.a * z;
+    
+    
+//    col.rgb *= col.a;
     
     if (DEBUG) { 
         col.rgb = vec3(1.,1.,1.);
@@ -56,6 +62,6 @@ void main() {
 
     if (!gl_FrontFacing) { col.a /= 4.; }
 
-    gl_FragColor = col;
+    gl_FragColor = 4. * gl_FragColor + 1. * col;
     
 }
