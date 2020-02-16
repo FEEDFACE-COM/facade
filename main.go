@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"time"
 	"strings"
 
 	//"bufio"
@@ -74,17 +75,11 @@ func main() {
 	quiet, verbose, debug := false, false, false
 	directory := facade.DEFAULT_DIRECTORY
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		sig := <-signals
-		log.Notice("%s", sig)
-//		var buf = make( []byte, 0x8000 )
-//		cnt := runtime.Stack(buf,true)
-//		os.Stderr.Write(buf[:cnt])
-//		os.Stderr.Sync()
-		os.Exit(0)
-	}()
+	var err error
+	confs := make(chan facade.Config)
+	texts := make(chan facade.TextSeq)
+	quers := make(chan (chan string))
+	pause := make(chan bool, 10)
 
 	log.SetVerbosity(log.NOTICE)
 
@@ -145,6 +140,27 @@ func main() {
 	} else if quiet {
 		log.SetVerbosity(log.WARNING)
 	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+    	last := time.Now()
+        for { 
+    		sig := <-signals
+    		if !debug || ( time.Now().Sub(last) < 250 * time.Millisecond ) {
+                log.Notice("SIGNAL %s",sig)
+                os.Exit(0)
+            } else {
+        		log.Notice("signal %s", sig)
+                select {
+                    case pause <- true:
+                    default:
+                }
+            }
+            last = time.Now()
+        }
+	}()
+
 
 	var client *Client
 	var server *Server
@@ -281,10 +297,6 @@ func main() {
 
 	}
 
-	var err error
-	confs := make(chan facade.Config)
-	texts := make(chan facade.TextSeq)
-	quers := make(chan (chan string))
 	switch cmd {
 
 	case READ:
@@ -298,7 +310,7 @@ func main() {
 		}
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
-		err = renderer.Render(nil)
+		err = renderer.Render(nil,pause)
 
 	case RECV:
 		log.Info(AUTHOR)
@@ -313,7 +325,7 @@ func main() {
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 		go renderer.ProcessQueries(quers)
-		err = renderer.Render(confs)
+		err = renderer.Render(confs,pause)
 
 	case PIPE:
 		client = NewClient(host, port, connectTimeout)

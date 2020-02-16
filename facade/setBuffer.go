@@ -18,6 +18,7 @@ const maxTagLength = 32 // found experimentally
 type SetItem struct {
     tag string
     count uint
+    serial uint
     index uint
     timer *gfx.Timer
 }
@@ -27,7 +28,7 @@ type SetBuffer struct {
     buf map[string] *SetItem
     rem []rune
     duration float32
-    nextIndex uint
+    nextSerial uint
     count int
     max int
     
@@ -115,8 +116,8 @@ func (buffer *SetBuffer) Items(max int) []*SetItem {
         for k,v := range tmp {
             
             // if smallest seen, keep note of key
-            if v.index < min {
-                min = v.index
+            if v.serial < min {
+                min = v.serial
                 key = k
             } 
             
@@ -168,8 +169,8 @@ func (buffer *SetBuffer) addItem(text []rune) {
         item = &SetItem{}
         item.tag = tag
         item.count = 1
-        item.index = buffer.nextIndex
-        buffer.nextIndex += 1
+        item.serial = buffer.nextSerial
+        buffer.nextSerial += 1
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[tag] = item
         buffer.count = len(buffer.buf)
@@ -245,7 +246,7 @@ func (buffer *SetBuffer) Dump() string {
             rem = item.timer.Desc()
 //            rem = fmt.Sprintf("%4.1f %4.1f",item.timer.Fader(),item.timer.Remaining(gfx.Now()))
         }
-        ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.index,rem,item.count,txt) 
+        ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.serial,rem,item.count,txt) 
     }
     return ret
 }

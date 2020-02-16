@@ -307,9 +307,12 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	set.program.Uniform1fv(TAGFADER, 1, &fader)
     	
     	var index float32;
-    	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
-        index = float32( uint32(crc) % uint32(set.buffer.Max()) )    	
-//    	index = float32(item.index)
+        if true {
+        	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
+            index = float32( uint32(crc) % uint32(set.buffer.Max()) )    	
+        } else {
+            index = float32( uint32(item.index) % uint32(set.buffer.Max()) )
+        }
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
 
         tagCount := float32( item.count )
