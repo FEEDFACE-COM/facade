@@ -9,7 +9,8 @@ uniform float tagFader;
 uniform float tagIndex;
 uniform float tagCount;
 
-varying vec2 vTexCoord;
+varying vec4 vPosition;
+varying vec4 vTexCoord;
 
 bool DEBUG    = debugFlag > 0.0;
 
@@ -25,7 +26,11 @@ float EaseIn(float x) {  return  -1. * cos(x*PI/2.            ) + 1.  ; }
 
 void main() {
     vec4 col;
-    col = texture2D(texture, vTexCoord); 
+    vec4 pos = vPosition;
+    vec4 tex = vTexCoord;
+    
+    
+    col = texture2DProj(texture, tex);
 //    col = vec4(1.,1.,1.,1);
 
 //    col /= 4.;

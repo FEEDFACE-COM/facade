@@ -226,27 +226,6 @@ func (service *ProgramService) GetAvailableNames() []string {
 	for n, _ := range service.asset {
 		ret = append(ret, fmt.Sprintf("%s", n))
 	}
-
-	//    files, err := ioutil.ReadDir(service.directory)
-	//    if err != nil {
-	//        return ret
-	//    }
-	//    var Extensions []string = []string{ "."+string(VertType), "."+string(FragType) }
-	//
-	//    for _, f := range files {
-	//        for _, ext := range Extensions {
-	//            name := strings.ToLower( f.Name() )
-	//            if strings.HasSuffix( name, ext ) {
-	//                name = strings.TrimSuffix( name, ext )
-	//                if service.asset[name] == "" {
-	//
-	//                    ret = append(ret, name)
-	//
-	//                }
-	//            }
-	//        }
-	//    }
-
 	sort.Strings(ret)
 	return ret
 }
@@ -254,7 +233,6 @@ func (service *ProgramService) GetAvailableNames() []string {
 func (service *ProgramService) Desc() string {
 	ret := "programservice["
 	ret += fmt.Sprintf("%d", len(service.shaders))
-	//    ret += fmt.Sprintf("%d",len(service.shaders[FragType]))
 	ret += "]"
 	return ret
 }

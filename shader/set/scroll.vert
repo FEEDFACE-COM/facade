@@ -19,7 +19,8 @@ uniform float ratio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 
-varying vec2 vTexCoord;
+varying vec4 vTexCoord;
+varying vec4 vPosition;
 
 
 
@@ -38,9 +39,11 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 
 
 void main() {
-    vTexCoord = texCoord;
+    vTexCoord.xy = texCoord.xy;
     
-    vec4 pos = vec4(vertex,1);
+    vec4 pos,tex;
+    pos = vec4(vertex,1);
+    tex = vec4(texCoord.xy, 1., 1.);
 
     pos.y -= tagMax/2.;    
     pos.y += (tagIndex/tagMax) * tagMax;
@@ -48,6 +51,8 @@ void main() {
     pos.x += (tagMax/2.) * ratio ;
     pos.x -= tagFader * ( tagMax * ratio);
     
+    vPosition = pos;
+    vTexCoord = tex;
     
     gl_Position = projection * view * model * pos;
 }

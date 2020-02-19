@@ -9,10 +9,9 @@ uniform float tagFader;
 uniform float tagIndex;
 uniform float tagCount;
 
-varying vec4 vPosition;
-varying vec4 vTexCoord;
+varying vec2 vTexCoord;
 
-
+varying vec4 vPos;
 
 bool DEBUG    = debugFlag > 0.0;
 
@@ -28,20 +27,34 @@ float EaseIn(float x) {  return  -1. * cos(x*PI/2.            ) + 1.  ; }
 
 void main() {
     vec4 col;
-    vec4 pos = vPosition;
-    vec4 tex = vTexCoord;
-    
-    
-    col = texture2DProj(texture, tex);
-    
-    if (DEBUG) {
-        col.a = 1.0;
-        col.rg = tex.xy;    
-        col.b = 1.;//tex.z;
+    col = texture2D(texture, vTexCoord); 
+
+
+    if (col.a > 0.0 ) {
+        if ( tagFader < .125 ) {
+            col.a = EaseOut(tagFader * 8.);
+        } else if (tagFader < .75 ) {
+            col.a = 1.0;
+        } else {
+            col.a = 1. - EaseOut(3./4. + tagFader * 4.);
+        }
     }
     
+    col.rgb *= col.a;
     
-
+    if (DEBUG) { 
+        col.rgb = vec3(1.,1.,1.);
+        if ( tagFader < .125 ) {
+            col.r = 0.0;
+            col.b = 0.0;
+        } else if (tagFader < .75 ) {
+            col.r = 0.0;
+        } else {
+            col.g = 0.0;
+            col.b = 0.0;
+        }
+        col.a = 1.0;
+    } 
 
     if (!gl_FrontFacing) { col.a /= 4.; }
 

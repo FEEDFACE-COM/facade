@@ -45,8 +45,6 @@ type Renderer struct {
 
 	refreshChan chan bool
 
-    paused bool
-
 	prevFrame gfx.ClockFrame
 
 	tickChannel chan bool
@@ -331,7 +329,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan boo
             renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
-		if renderer.debug && renderer.paused {
+		if renderer.debug && gfx.WorldClock().Paused() {
 			renderer.axis.Render(renderer.camera, renderer.debug)
 		}
 
@@ -428,7 +426,7 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 		item := <-textChan
 		text, seq := item.Text, item.Seq
 		
-		if renderer.paused {
+		if gfx.WorldClock().Paused() {
     		continue
         }
 		

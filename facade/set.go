@@ -205,6 +205,13 @@ func (set *Set) generateData(font *gfx.Font) {
      B          C
 
 
+     A          D
+    0,0________1,0
+     |          |
+     |          |
+    0,1________1,1
+     B          C
+
 
   A
   |\
@@ -219,14 +226,14 @@ func (set *Set) generateData(font *gfx.Font) {
 */
 
         data := []float32{
-        //   x,   y,    z,             tx, ty,    index,  fader
-            -w/2.,  +h/2.,  0.0,       0., 0.,   /*   idx,    fdr, */  // A
-            -w/2.,  -h/2.,  0.0,       0., 1.,   /*   idx,    fdr, */  // B
-            +w/2.,  -h/2.,  0.0,       1., 1.,   /*   idx,    fdr, */  // C
-                                                 /*                */
-            +w/2.,  -h/2.,  0.0,       1., 1.,   /*   idx,    fdr, */  // C
-            +w/2.,  +h/2.,  0.0,       1., 0.,   /*   idx,    fdr, */  // D
-            -w/2.,  +h/2.,  0.0,       0., 0.,   /*   idx,    fdr, */  // A
+        //   x,   y,    z,             tx, ty,   
+            -w/2.,  +h/2.,  0.0,       0., 0.,    // A
+            -w/2.,  -h/2.,  0.0,       0., 1.,    // B
+            +w/2.,  -h/2.,  0.0,       1., 1.,    // C
+
+            +w/2.,  -h/2.,  0.0,       1., 1.,    // C
+            +w/2.,  +h/2.,  0.0,       1., 0.,    // D
+            -w/2.,  +h/2.,  0.0,       0., 0.,    // A
         }
         set.data = append(set.data, data...)
         set.tags = append(set.tags, tag)
@@ -288,7 +295,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	
 
 	set.program.VertexAttribPointer(gfx.VERTEX,   3, (3+2)*4, (0)*4)
-	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2)*4, (3)*4)
+	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2)*4, (0+3)*4)
 
     count := int32(1)
 	offset := int32(0)
@@ -307,11 +314,11 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	set.program.Uniform1fv(TAGFADER, 1, &fader)
     	
     	var index float32;
-        if true {
+        if false {
         	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
             index = float32( uint32(crc) % uint32(set.buffer.Max()) )    	
         } else {
-            index = float32( uint32(item.index) % uint32(set.buffer.Max()) )
+            index = float32( uint32(item.serial) % uint32(set.buffer.Max()) )
         }
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
 

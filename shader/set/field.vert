@@ -19,9 +19,9 @@ uniform float ratio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 
-varying vec2 vTexCoord;
+varying vec4 vTexCoord;
+varying vec4 vPosition;
 
-varying vec4 vPos;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -46,10 +46,10 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 
 
 void main() {
-    vTexCoord = texCoord;
     float fader = tagFader;
     
-    vec4 pos = vec4(vertex,1);
+    vec4 pos;
+    pos = vec4(vertex,1);
 
     float a;
 
@@ -82,9 +82,10 @@ void main() {
     mat4 v = view;
 //    v = view * scaleMatrix( 1.  );
 
+    vPosition = pos;
+    vTexCoord = vec4(texCoord.xy,1.,1.);
     
         
     gl_Position = projection * v * model * pos;
-    vPos =    gl_Position;
 }
 
