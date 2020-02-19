@@ -98,9 +98,10 @@ message GridConfig {
 
 message TagConfig {
     ShaderConfig Shader =  1;
-    bool SetDuration    =  3;  double Duration = 4;
-    bool SetSlot        =  5;  uint64 Slot     = 6;
-    bool SetFill        =  7;   string Fill    = 8;
+    bool SetDuration    =  3;  double Duration  =  4;
+    bool SetSlot        =  5;  uint64 Slot      =  6;
+    bool SetShuffle     =  7;  bool Shuffle     =  8;
+    bool SetFill        =  9;  string Fill      = 10;
 }
 
 

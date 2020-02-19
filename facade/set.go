@@ -5,18 +5,14 @@ package facade
 import (
 //    "fmt"
     "strings"
-    "hash/crc32"
-    
     gfx "../gfx"
     log "../log"
-    
-    
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 )    
 
 
-const DEBUG_SET = false
+const DEBUG_SET = true
 
 
 
@@ -29,15 +25,12 @@ type TexItem struct {
 type Set struct {
 
     vert, frag string
-
-
-    
     
     texItem map[string] *TexItem
         
     
 
-    buffer *SetBuffer
+    buffer *TagBuffer
 
 	program *gfx.Program
  	object  *gfx.Object
@@ -89,14 +82,14 @@ func (set *Set) checkRefresh() bool {
 }
 
 
-func NewSet(setBuffer *SetBuffer) *Set {
+func NewSet(setBuffer *TagBuffer) *Set {
     ret := &Set{}
     
     ret.vert = ShaderDefaults.GetVert()
     ret.frag = ShaderDefaults.GetFrag()
     
     ret.buffer = setBuffer
-    ret.texItem = make( map[string] *TexItem, ret.buffer.Max())
+    ret.texItem = make( map[string] *TexItem, ret.buffer.SlotCount())
     
     ret.refreshChan = make(chan bool, 1)
     return ret
@@ -107,18 +100,18 @@ func (set *Set) generateData(font *gfx.Font) {
 
     old := set.texItem
     
-    set.texItem = make( map[string] *TexItem, set.buffer.Max())
+    set.texItem = make( map[string] *TexItem, set.buffer.SlotCount())
     
     
-    bufferItems := set.buffer.Items(set.buffer.Max())
+    bufferItems := set.buffer.Items(set.buffer.SlotCount())
 
 
     for _,item := range bufferItems {
         
         tag := item.tag
 
-        if len(set.texItem) >= set.buffer.Max() {
-            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.buffer.Max())
+        if len(set.texItem) >= set.buffer.SlotCount() {
+            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.buffer.SlotCount())
             break
         }
 
@@ -255,7 +248,7 @@ func (set *Set) generateData(font *gfx.Font) {
 
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
 
-    scaleHeight := float32(1.) / float32(set.buffer.Max())
+    scaleHeight := float32(1.) / float32(set.buffer.SlotCount())
     return scaleHeight * 2.
 
 }
@@ -275,7 +268,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-    tagMax := float32( set.buffer.Max() )
+    tagMax := float32( set.buffer.SlotCount() )
     set.program.Uniform1fv(TAGMAX, 1, &tagMax)
 
     set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
@@ -314,12 +307,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     	set.program.Uniform1fv(TAGFADER, 1, &fader)
     	
     	var index float32;
-        if false {
-        	crc := crc32.Checksum( []byte(tag) , crc32.IEEETable)
-            index = float32( uint32(crc) % uint32(set.buffer.Max()) )    	
-        } else {
-            index = float32( uint32(item.serial) % uint32(set.buffer.Max()) )
-        }
+    	index = float32(item.index)
     	set.program.Uniform1fv(TAGINDEX, 1, &index)
 
         tagCount := float32( item.count )
@@ -414,6 +402,10 @@ func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font)
 	
 	if config.GetSetSlot() {
     	set.buffer.Resize( int(config.GetSlot()) )
+    }
+    
+    if config.GetShuffle() {
+        set.buffer.shuffle = config.GetShuffle()
     }
 
 	if config.GetSetFill() {
