@@ -30,7 +30,7 @@ type Tester struct {
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
-	setBuffer  *facade.SetBuffer
+	tagBuffer  *facade.TagBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -131,7 +131,7 @@ func (tester *Tester) Init() error {
 
 	tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), tester.refreshChan)
-	tester.setBuffer = facade.NewSetBuffer(tester.refreshChan)
+	tester.tagBuffer = facade.NewTagBuffer(tester.refreshChan)
 
 	err = tester.switchFont(facade.FontDefaults.Name)
 	if err != nil {
@@ -327,12 +327,12 @@ func (tester *Tester) ProcessTextSeqs(bufChan chan facade.TextSeq) error {
 		if text != nil && len(text) > 0 {
 			tester.lineBuffer.ProcessRunes(text)
 			tester.termBuffer.ProcessRunes(text)
-			tester.setBuffer.ProcessRunes(text)
+			tester.tagBuffer.ProcessRunes(text)
 		}
 		if seq != nil {
 			tester.lineBuffer.ProcessSequence(seq)
 			tester.termBuffer.ProcessSequence(seq)
-			tester.setBuffer.ProcessSequence(seq)
+			tester.tagBuffer.ProcessSequence(seq)
 		}
 	}
 	return nil
@@ -479,7 +479,7 @@ func (tester *Tester) printDebug() {
 		log.Debug("  %s", tester.InfoMode())
 		log.Debug("  %s", tester.lineBuffer.Desc())
 		log.Debug("  %s", tester.termBuffer.Desc())
-		log.Debug("  %s", tester.setBuffer.Desc())
+		log.Debug("  %s", tester.tagBuffer.Desc())
 	}
 
 	if DEBUG_FONT {
@@ -508,7 +508,7 @@ func (tester *Tester) dumpBuffer() {
 	} else if tester.mode == facade.Mode_LINE {
 		os.Stdout.Write([]byte(tester.lineBuffer.Dump(uint(tester.gridConfig.GetWidth()))))
 	} else if tester.mode == facade.Mode_TAGS {
-		os.Stdout.Write([]byte(tester.setBuffer.Dump()))
+		os.Stdout.Write([]byte(tester.tagBuffer.Dump()))
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()

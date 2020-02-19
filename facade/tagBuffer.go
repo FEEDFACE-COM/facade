@@ -10,7 +10,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_SETBUFFER = true
+const DEBUG_TAGBUFFER = true
 
 const maxTagLength = 32 // found experimentally
 
@@ -24,13 +24,16 @@ type SetItem struct {
 }
 
 
-type SetBuffer struct {
+type TagBuffer struct {
     buf map[string] *SetItem
     rem []rune
+
+    slotCount int
     duration float32
+    shuffle bool
+
     nextSerial uint
     count int
-    max int
     
 	refreshChan chan bool
 	mutex *sync.Mutex
@@ -39,12 +42,12 @@ type SetBuffer struct {
 
 
 
-func NewSetBuffer(refreshChan chan bool) *SetBuffer {
-    ret := &SetBuffer{
+func NewTagBuffer(refreshChan chan bool) *TagBuffer {
+    ret := &TagBuffer{
         duration: float32(TagDefaults.Duration),
     }
     ret.count = 0
-    ret.max = int(TagDefaults.Slot)
+    ret.slotCount = int(TagDefaults.Slot)
     ret.buf = make(map[string] *SetItem)
 	ret.refreshChan = refreshChan
 	ret.mutex = &sync.Mutex{}
@@ -52,7 +55,7 @@ func NewSetBuffer(refreshChan chan bool) *SetBuffer {
 }
 
 
-func (buffer *SetBuffer) ScheduleRefresh() {
+func (buffer *TagBuffer) ScheduleRefresh() {
 	select {
 	case buffer.refreshChan <- true:
 	default:
@@ -60,11 +63,11 @@ func (buffer *SetBuffer) ScheduleRefresh() {
 }
 
 
-func (buffer *SetBuffer) ProcessSequence(seq *ansi.S) {
+func (buffer *TagBuffer) ProcessSequence(seq *ansi.S) {
     return
 }
 
-func (buffer *SetBuffer) ProcessRunes(runes []rune) {
+func (buffer *TagBuffer) ProcessRunes(runes []rune) {
 
     rem := append(buffer.rem, runes ... )
     tmp := []rune{}
@@ -88,7 +91,7 @@ func (buffer *SetBuffer) ProcessRunes(runes []rune) {
 
     
     
-func (buffer *SetBuffer) Items(max int) []*SetItem {
+func (buffer *TagBuffer) Items(max int) []*SetItem {
     
     buffer.mutex.Lock()
     
@@ -133,7 +136,7 @@ func (buffer *SetBuffer) Items(max int) []*SetItem {
     return ret
 }    
 
-func (buffer *SetBuffer) addItem(text []rune) {
+func (buffer *TagBuffer) addItem(text []rune) {
     
     if len(text) <= 0 {
         log.Debug("%s not adding empty string",buffer.Desc())
@@ -151,15 +154,15 @@ func (buffer *SetBuffer) addItem(text []rune) {
         item.count += 1
         r := item.timer.Extend( gfx.Now() )
 //        item.timer.Restart( gfx.Now() )
-        if DEBUG_SETBUFFER {
+        if DEBUG_TAGBUFFER {
             if r {
                 log.Debug("%s extended: '%s'",item.timer.Desc(),tag)
             }
         }
 
-    } else if len(buffer.buf) >= buffer.max {
+    } else if len(buffer.buf) >= buffer.slotCount {
 
-        log.Debug("%s at %d/%d capacity, drop item '%s'",buffer.Desc(),len(buffer.buf),buffer.max,tag)
+        log.Debug("%s at %d/%d capacity, drop item '%s'",buffer.Desc(),len(buffer.buf),buffer.slotCount,tag)
             
     } else {
 
@@ -174,7 +177,7 @@ func (buffer *SetBuffer) addItem(text []rune) {
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[tag] = item
         buffer.count = len(buffer.buf)
-        if DEBUG_SETBUFFER {
+        if DEBUG_TAGBUFFER {
             log.Debug("%s added '%s': %.1f",buffer.Desc(),tag,item.timer.Fader())
         }
     }
@@ -182,18 +185,18 @@ func (buffer *SetBuffer) addItem(text []rune) {
     buffer.ScheduleRefresh()
 }
 
-func (buffer *SetBuffer) deleteItem(idx string) {
+func (buffer *TagBuffer) deleteItem(idx string) {
     buffer.mutex.Lock()
     delete(buffer.buf,idx)
     buffer.count = len(buffer.buf)
 	buffer.mutex.Unlock()
-    if DEBUG_SETBUFFER {
+    if DEBUG_TAGBUFFER {
         log.Debug("%s item expired '%s'",buffer.Desc(),idx)
     }
     buffer.ScheduleRefresh()
 }
 
-func (buffer *SetBuffer) Clear() {
+func (buffer *TagBuffer) Clear() {
     old := []*gfx.Timer{}
     
     buffer.mutex.Lock()
@@ -212,12 +215,12 @@ func (buffer *SetBuffer) Clear() {
 }
 
 
-func (buffer *SetBuffer) Fill(fill []string) {
+func (buffer *TagBuffer) Fill(fill []string) {
 
     buffer.Clear()
 
     rows := uint(len(fill))
-    if DEBUG_SETBUFFER {
+    if DEBUG_TAGBUFFER {
         log.Debug("%s fill %s items",buffer.Desc(), rows)
     }
     
@@ -229,15 +232,19 @@ func (buffer *SetBuffer) Fill(fill []string) {
     
 }
 
-func (buffer *SetBuffer) Desc() string {
-    ret := fmt.Sprintf("setbuffer[%d/%d %.1f ]",buffer.count,buffer.max,buffer.duration)
+func (buffer *TagBuffer) Desc() string {
+    s := ""
+    if buffer.shuffle {
+        s = " ⧢"
+    }
+    ret := fmt.Sprintf("tagbuffer[%d/%d %.1f%s]",buffer.count,buffer.slotCount,buffer.duration,s)
     return ret
 }
 
-func (buffer *SetBuffer) Dump() string {
+func (buffer *TagBuffer) Dump() string {
     ret := ""
     
-    items := buffer.Items(buffer.max)
+    items := buffer.Items(buffer.slotCount)
     for _,item := range items {    
     
         txt := string(item.tag)
@@ -251,28 +258,28 @@ func (buffer *SetBuffer) Dump() string {
     return ret
 }
 
-func (buffer *SetBuffer) Max() int { return buffer.max }
+func (buffer *TagBuffer) SlotCount() int { return buffer.slotCount }
 
-func (buffer *SetBuffer) Duration() float32 { return buffer.duration }
+func (buffer *TagBuffer) Duration() float32 { return buffer.duration }
 
-func (buffer *SetBuffer) SetDuration(duration float32) {
+func (buffer *TagBuffer) SetDuration(duration float32) {
 	buffer.duration = duration
 }
 
-func (buffer *SetBuffer) Resize(max int) {
-    if max <= 0 {
+func (buffer *TagBuffer) Resize(slotCount int) {
+    if slotCount <= 0 {
         return
     }
-    if DEBUG_SETBUFFER {
-        log.Debug("%s resize %d",buffer.Desc(),max)
+    if DEBUG_TAGBUFFER {
+        log.Debug("%s resize %d",buffer.Desc(),slotCount)
     }
     
 
-    items := buffer.Items(max)
+    items := buffer.Items(slotCount)
     buffer.mutex.Lock()
     old := buffer.buf
-    buffer.max = max
-    buffer.buf = make(map[string] *SetItem, max)
+    buffer.slotCount = slotCount
+    buffer.buf = make(map[string] *SetItem, slotCount)
 
     for _,item := range items {
         tag := item.tag
@@ -286,7 +293,7 @@ func (buffer *SetBuffer) Resize(max int) {
         gfx.WorldClock().DeleteTimer(item.timer)
     }
     
-    if DEBUG_SETBUFFER {
+    if DEBUG_TAGBUFFER {
         log.Debug("%s resized",buffer.Desc())
     }
     
