@@ -17,8 +17,10 @@ type ClockFrame struct {
 	Time  float32
 }
 
+
 func Now() float32       { return worldClock.time }
 func WorldClock() *Clock { return worldClock }
+
 
 func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float32) float32, triggerFun func()) *Timer {
 
@@ -139,8 +141,10 @@ func (clock *Clock) Desc() string {
 }
 
 func (clock *Clock) Info(prev ClockFrame) string {
+    s := ""
+    if clock.paused { s = " PAUSED" }
 	fps := float32(clock.frame-prev.Frame) / (clock.time - prev.Time)
-	return fmt.Sprintf("#%05d %.2fs %.2ffps", clock.frame, clock.time, fps)
+	return fmt.Sprintf("#%05d %.2fs %.2ffps%s", clock.frame, clock.time, fps,s)
 }
 
 func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, Time: clock.time} }
