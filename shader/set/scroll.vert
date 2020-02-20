@@ -7,12 +7,12 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float tagMax;
-uniform float tagIndex;
+uniform float wordMax;
+uniform float wordIndex;
 
-uniform float tagWidth;
-uniform float tagFader;
-uniform float tagCount;
+uniform float wordWidth;
+uniform float wordFader;
+uniform float wordCount;
 
 uniform float ratio;
 
@@ -45,11 +45,11 @@ void main() {
     pos = vec4(vertex,1);
     tex = vec4(texCoord.xy, 1., 1.);
 
-    pos.y -= tagMax/2.;    
-    pos.y += (tagIndex/tagMax) * tagMax;
+    pos.y -= wordMax/2.;    
+    pos.y += (wordIndex/wordMax) * wordMax;
     
-    pos.x += (tagMax/2.) * ratio ;
-    pos.x -= tagFader * ( tagMax * ratio);
+    pos.x += (wordMax/2.) * ratio ;
+    pos.x -= wordFader * ( wordMax * ratio);
     
     vPosition = pos;
     vTexCoord = tex;

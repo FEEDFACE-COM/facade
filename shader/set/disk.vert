@@ -7,12 +7,12 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float tagMax;
-uniform float tagIndex;
+uniform float wordMax;
+uniform float wordIndex;
 
-uniform float tagWidth;
-uniform float tagFader;
-uniform float tagCount;
+uniform float wordWidth;
+uniform float wordFader;
+uniform float wordCount;
 
 uniform float ratio;
 
@@ -83,10 +83,10 @@ void main() {
 
     
     float inner = 8.;
-    float outer = inner + tagWidth * 1.;
+    float outer = inner + wordWidth * 1.;
 
-    float alpha = (TAU/tagMax) / 2.0;
-    float gamma = (TAU/tagMax) * -1. * tagIndex;
+    float alpha = (TAU/wordMax) / 2.0;
+    float gamma = (TAU/wordMax) * -1. * wordIndex;
 
 
 
