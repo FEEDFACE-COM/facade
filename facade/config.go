@@ -9,7 +9,7 @@ import (
 
 var DEFAULT_DIRECTORY = "~/src/gfx/facade"
 
-var DEFAULT_MODE Mode = Mode_LINE
+var DEFAULT_MODE Mode = Mode_LINES
 
 var Defaults = Config{
 	Mode:  DEFAULT_MODE,

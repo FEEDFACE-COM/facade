@@ -240,18 +240,26 @@ func main() {
 				config.Terminal.Shader = &facade.ShaderConfig{}
 				config.Terminal.Grid = &facade.GridConfig{}
 
-			case facade.Mode_LINE.String():
+			case facade.Mode_LINES.String():
 				config.SetMode = true
-				config.Mode = facade.Mode_LINE
+				config.Mode = facade.Mode_LINES
 				config.Lines = &facade.LineConfig{}
 				config.Lines.Shader = &facade.ShaderConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
+
+			case facade.Mode_WORDS.String():
+				config.SetMode = true
+				config.Mode = facade.Mode_WORDS
+				config.Words = &facade.WordConfig{}
+				config.Words.Shader = &facade.ShaderConfig{}
+				config.Words.Set = &facade.SetConfig{}
 
 			case facade.Mode_TAGS.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_TAGS
 				config.Tags = &facade.TagConfig{}
 				config.Tags.Shader = &facade.ShaderConfig{}
+				config.Tags.Set = &facade.SetConfig{}
 
 			case facade.Mode_DRAFT.String():
 				config.SetMode = true

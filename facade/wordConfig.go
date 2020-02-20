@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-var TagDefaults TagConfig = TagConfig{
+var WordDefaults WordConfig = WordConfig{
 	Shader: nil,
 	Set: nil,
 }
 
-func (config *TagConfig) Desc() string {
-	ret := "tags["
+func (config *WordConfig) Desc() string {
+	ret := "words["
 	if shader := config.GetShader(); shader != nil {
 		ret += shader.Desc() + " "
 	}
@@ -29,7 +29,7 @@ func (config *TagConfig) Desc() string {
 	return ret
 }
 
-func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *WordConfig) AddFlags(flagset *flag.FlagSet) {
 	if config.GetShader() != nil {
 		config.GetShader().AddFlags(flagset)
 	}
@@ -38,7 +38,7 @@ func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
 	}
 }
 
-func (config *TagConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *WordConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
 	if shader := config.GetShader(); shader != nil {
 		if shader.VisitFlags(flagset) {
@@ -54,7 +54,7 @@ func (config *TagConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return ret
 }
 
-func (config *TagConfig) Help() string {
+func (config *WordConfig) Help() string {
 	ret := ""
 	fun := func(f *flag.Flag) {
 		name := f.Name
@@ -66,7 +66,7 @@ func (config *TagConfig) Help() string {
 
 	ret += ShaderDefaults.Help()
 	ret += SetDefaults.Help()
-	tmp := flag.NewFlagSet("tag", flag.ExitOnError)
+	tmp := flag.NewFlagSet("word", flag.ExitOnError)
 	config.AddFlags(tmp)
 	for _, s := range []string{} {
 		if flg := tmp.Lookup(s); flg != nil {

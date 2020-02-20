@@ -3,11 +3,11 @@ uniform float now;
 uniform float debugFlag;
 uniform sampler2D texture;
 
-uniform float tagMax;
-uniform float tagMaxWidth;
-uniform float tagFader;
-uniform float tagIndex;
-uniform float tagCount;
+uniform float wordMax;
+uniform float wordMaxWidth;
+uniform float wordFader;
+uniform float wordIndex;
+uniform float wordCount;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;

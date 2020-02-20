@@ -7,12 +7,12 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float tagMax;
-uniform float tagIndex;
+uniform float wordMax;
+uniform float wordIndex;
 
-uniform float tagWidth;
-uniform float tagFader;
-uniform float tagCount;
+uniform float wordWidth;
+uniform float wordFader;
+uniform float wordCount;
 
 uniform float ratio;
 
@@ -35,18 +35,18 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 
 
 void main() {
-    float fader = tagFader;
+    float fader = wordFader;
     
     vec4 pos = vec4(vertex,1);
 
-    bool odd = mod(tagIndex,2.0) == 1.0;
+    bool odd = mod(wordIndex,2.0) == 1.0;
     
     if (odd) {
-        pos.x += tagWidth/2.;
+        pos.x += wordWidth/2.;
     } else {
-        pos.x -= tagWidth/2.;
+        pos.x -= wordWidth/2.;
     }
-    pos.y -= (tagIndex - tagMax/2.)/2.;
+    pos.y -= (wordIndex - wordMax/2.)/2.;
 
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);

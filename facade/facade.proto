@@ -5,8 +5,9 @@ package facade;
 
 enum Mode {
     TERM    =  0;
-    LINE    =  1;
-    TAGS    =  2;
+    LINES   =  1;
+    WORDS   =  2;
+    TAGS    =  3;
     DRAFT   = 16;
 }
 
@@ -45,7 +46,8 @@ message Config {
 
     TermConfig Terminal = 13;
     LineConfig Lines    = 14;
-    TagConfig  Tags     = 15;
+    WordConfig Words    = 15;
+    TagConfig  Tags     = 16;
 
     
 
@@ -96,12 +98,24 @@ message GridConfig {
     bool SetFill     = 5;   string Fill    = 6;
 }
 
+
+
+message WordConfig {
+    ShaderConfig Shader =  1;
+    SetConfig Set       =  2;
+}
+
 message TagConfig {
     ShaderConfig Shader =  1;
-    bool SetDuration    =  3;  double Duration  =  4;
-    bool SetSlot        =  5;  uint64 Slot      =  6;
-    bool SetShuffle     =  7;  bool Shuffle     =  8;
-    bool SetFill        =  9;  string Fill      = 10;
+    SetConfig Set       =  2;
+}
+
+
+message SetConfig {
+    bool SetDuration    =  1;  double Duration  =  2;
+    bool SetSlot        =  3;  uint64 Slot      =  4;
+    bool SetShuffle     =  5;  bool Shuffle     =  6;
+    bool SetFill        =  7;  string Fill      =  8;
 }
 
 

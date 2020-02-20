@@ -30,7 +30,7 @@ type Tester struct {
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
-	tagBuffer  *facade.TagBuffer
+	wordBuffer  *facade.WordBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -131,7 +131,7 @@ func (tester *Tester) Init() error {
 
 	tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), tester.refreshChan)
-	tester.tagBuffer = facade.NewTagBuffer(tester.refreshChan)
+	tester.wordBuffer = facade.NewWordBuffer(false, tester.refreshChan)
 
 	err = tester.switchFont(facade.FontDefaults.Name)
 	if err != nil {
@@ -327,12 +327,12 @@ func (tester *Tester) ProcessTextSeqs(bufChan chan facade.TextSeq) error {
 		if text != nil && len(text) > 0 {
 			tester.lineBuffer.ProcessRunes(text)
 			tester.termBuffer.ProcessRunes(text)
-			tester.tagBuffer.ProcessRunes(text)
+			tester.wordBuffer.ProcessRunes(text)
 		}
 		if seq != nil {
 			tester.lineBuffer.ProcessSequence(seq)
 			tester.termBuffer.ProcessSequence(seq)
-			tester.tagBuffer.ProcessSequence(seq)
+			tester.wordBuffer.ProcessSequence(seq)
 		}
 	}
 	return nil
@@ -357,10 +357,12 @@ func (tester *Tester) InfoMode() string {
 	switch tester.mode {
 	case facade.Mode_TERM:
 		mode = "term" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
-	case facade.Mode_LINE:
+	case facade.Mode_LINES:
 		mode = "line" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_TAGS:
 		mode = "tags" + tester.shaderConfig.Desc()
+	case facade.Mode_WORDS:
+		mode = "words" + tester.shaderConfig.Desc()
 	}
 	dbg := ""
 	if tester.debug {
@@ -479,7 +481,7 @@ func (tester *Tester) printDebug() {
 		log.Debug("  %s", tester.InfoMode())
 		log.Debug("  %s", tester.lineBuffer.Desc())
 		log.Debug("  %s", tester.termBuffer.Desc())
-		log.Debug("  %s", tester.tagBuffer.Desc())
+		log.Debug("  %s", tester.wordBuffer.Desc())
 	}
 
 	if DEBUG_FONT {
@@ -505,10 +507,12 @@ func (tester *Tester) dumpBuffer() {
 	}
 	if tester.mode == facade.Mode_TERM {
 		os.Stdout.Write([]byte(tester.termBuffer.Dump()))
-	} else if tester.mode == facade.Mode_LINE {
+	} else if tester.mode == facade.Mode_LINES {
 		os.Stdout.Write([]byte(tester.lineBuffer.Dump(uint(tester.gridConfig.GetWidth()))))
 	} else if tester.mode == facade.Mode_TAGS {
-		os.Stdout.Write([]byte(tester.tagBuffer.Dump()))
+		os.Stdout.Write([]byte(tester.wordBuffer.Dump()))
+	} else if tester.mode == facade.Mode_WORDS {
+		os.Stdout.Write([]byte(tester.wordBuffer.Dump()))
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()

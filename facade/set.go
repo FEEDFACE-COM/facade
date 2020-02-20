@@ -18,7 +18,7 @@ const DEBUG_SET = true
 
 type TexItem struct {
     texture *gfx.Texture
-    item *SetItem
+    item *Word
 }
 
 
@@ -28,9 +28,7 @@ type Set struct {
     
     texItem map[string] *TexItem
         
-    
-
-    buffer *TagBuffer
+    wordBuffer *WordBuffer
 
 	program *gfx.Program
  	object  *gfx.Object
@@ -45,11 +43,11 @@ type Set struct {
 
 
 const (
-    TAGMAX      gfx.UniformName = "tagMax"
-    TAGINDEX    gfx.UniformName = "tagIndex"
-	TAGCOUNT    gfx.UniformName = "tagCount"
-	TAGWIDTH    gfx.UniformName = "tagWidth"
-    TAGFADER    gfx.UniformName = "tagFader"
+    WORDMAX   gfx.UniformName = "wordMax"
+    WORDINDEX gfx.UniformName = "wordIndex"
+	WORDCOUNT gfx.UniformName = "wordCount"
+	WORDWIDTH gfx.UniformName = "wordWidth"
+    WORDFADER gfx.UniformName = "wordFader"
 )
 
 const (
@@ -82,14 +80,15 @@ func (set *Set) checkRefresh() bool {
 }
 
 
-func NewSet(setBuffer *TagBuffer) *Set {
-    ret := &Set{}
+func NewSet(buffer *WordBuffer) *Set {
+    ret := &Set{
+        wordBuffer: buffer,
+    }
     
     ret.vert = ShaderDefaults.GetVert()
     ret.frag = ShaderDefaults.GetFrag()
     
-    ret.buffer = setBuffer
-    ret.texItem = make( map[string] *TexItem, ret.buffer.SlotCount())
+    ret.texItem = make( map[string] *TexItem, ret.wordBuffer.SlotCount())
     
     ret.refreshChan = make(chan bool, 1)
     return ret
@@ -100,18 +99,18 @@ func (set *Set) generateData(font *gfx.Font) {
 
     old := set.texItem
     
-    set.texItem = make( map[string] *TexItem, set.buffer.SlotCount())
-    
-    
-    bufferItems := set.buffer.Items(set.buffer.SlotCount())
+    set.texItem = make( map[string] *TexItem, set.wordBuffer.SlotCount())
+
+
+    bufferItems := set.wordBuffer.Words(set.wordBuffer.SlotCount())
 
 
     for _,item := range bufferItems {
         
         tag := item.tag
 
-        if len(set.texItem) >= set.buffer.SlotCount() {
-            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.buffer.SlotCount())
+        if len(set.texItem) >= set.wordBuffer.SlotCount() {
+            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.wordBuffer.SlotCount())
             break
         }
 
@@ -248,7 +247,7 @@ func (set *Set) generateData(font *gfx.Font) {
 
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
 
-    scaleHeight := float32(1.) / float32(set.buffer.SlotCount())
+    scaleHeight := float32(1.) / float32(set.wordBuffer.SlotCount())
     return scaleHeight * 2.
 
 }
@@ -268,8 +267,8 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-    tagMax := float32( set.buffer.SlotCount() )
-    set.program.Uniform1fv(TAGMAX, 1, &tagMax)
+    tagMax := float32( set.wordBuffer.SlotCount() )
+    set.program.Uniform1fv(WORDMAX, 1, &tagMax)
 
     set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
     
@@ -304,14 +303,14 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
         var fader float32
         fader = item.timer.Fader()
-    	set.program.Uniform1fv(TAGFADER, 1, &fader)
+    	set.program.Uniform1fv(WORDFADER, 1, &fader)
     	
     	var index float32;
     	index = float32(item.index)
-    	set.program.Uniform1fv(TAGINDEX, 1, &index)
+    	set.program.Uniform1fv(WORDINDEX, 1, &index)
 
         tagCount := float32( item.count )
-        set.program.Uniform1fv(TAGCOUNT, 1, &tagCount)
+        set.program.Uniform1fv(WORDCOUNT, 1, &tagCount)
 
 
 //        if DEBUG_SET && verbose {
@@ -320,7 +319,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
         var width float32;
         width = float32(texture.Size.Width / texture.Size.Height)        
-        set.program.Uniform1fv(TAGWIDTH, 1, &width)
+        set.program.Uniform1fv(WORDWIDTH, 1, &width)
 
         if DEBUG_SET && verbose {
             log.Debug("%s render #%.0f f%.1f  %s",set.Desc(),index,fader,texture.Desc())
@@ -361,13 +360,23 @@ func (set *Set) Init(programService *gfx.ProgramService, font *gfx.Font) {
 }
 
 
-func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font) {
-
-    log.Debug("%s configure %s", set.Desc(), config.Desc())
-    
+func (set *Set) Configure(words *WordConfig, tags *TagConfig, camera *gfx.Camera, font *gfx.Font) {
     var shader *ShaderConfig = nil
-    
-    shader = config.GetShader()
+	var config *SetConfig = nil
+
+	if tags != nil {
+        log.Debug("%s configure %s", set.Desc(), tags.Desc())
+        shader = tags.GetShader()
+        config = tags.GetSet()
+    } else if words != nil {
+        log.Debug("%s configure %s", set.Desc(), words.Desc())
+        shader = words.GetShader()
+        config = words.GetSet()
+	} else {
+		log.Debug("%s cannot configure", set.Desc())
+		return
+	}
+
     
 	{
 		changed := false
@@ -397,21 +406,21 @@ func (set *Set) Configure(config *TagConfig, camera *gfx.Camera, font *gfx.Font)
 	}
 	
     if config.GetSetDuration() {
-        set.buffer.SetDuration( float32(config.GetDuration()) )
+        set.wordBuffer.SetDuration( float32(config.GetDuration()) )
     }
 	
 	if config.GetSetSlot() {
-    	set.buffer.Resize( int(config.GetSlot()) )
+    	set.wordBuffer.Resize( int(config.GetSlot()) )
     }
     
     if config.GetShuffle() {
-        set.buffer.shuffle = config.GetShuffle()
+        set.wordBuffer.shuffle = config.GetShuffle()
     }
 
 	if config.GetSetFill() {
 		fillStr := set.fill( config.GetFill() ) 
-		if set.buffer != nil {
-    		set.buffer.Fill(fillStr)
+		if set.wordBuffer != nil {
+    		set.wordBuffer.Fill(fillStr)
 		}
 	}
 
@@ -459,16 +468,18 @@ zulu
 
 func (set *Set) Desc() string {
     ret := "tags["
-    ret += fmt.Sprintf("%d/%d",len(set.buffer.buf),set.buffer.SlotCount())
-    ret += fmt.Sprintf(" %.1f",set.buffer.Duration())
+    ret += fmt.Sprintf("%d/%d",len(set.wordBuffer.tags),set.wordBuffer.SlotCount())
+    ret += fmt.Sprintf(" %.1f",set.wordBuffer.Duration())
     ret += "]"
     return ret 
     
 }
 
-func (set *Set) Config() *TagConfig {
-    ret := &TagConfig{
-        SetDuration: true, Duration: float64(set.buffer.Duration()),
+func (set *Set) Config() *SetConfig {
+    ret := &SetConfig{
+        SetDuration: true, Duration: float64(set.wordBuffer.Duration()),
+        SetSlot: true, Slot: uint64(set.wordBuffer.SlotCount()),
+        SetShuffle: true, Shuffle: bool(set.wordBuffer.Shuffle()),
     }
     return ret
     

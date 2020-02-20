@@ -3,11 +3,11 @@ uniform float now;
 uniform float debugFlag;
 uniform sampler2D texture;
 
-uniform float tagMax;
-uniform float tagMaxWidth;
-uniform float tagFader;
-uniform float tagIndex;
-uniform float tagCount;
+uniform float wordMax;
+uniform float wordMaxWidth;
+uniform float wordFader;
+uniform float wordIndex;
+uniform float wordCount;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
@@ -35,12 +35,12 @@ void main() {
     
     float z = 1.;
     if (col.a > 0.0 ) {
-        if ( tagFader < .125 ) {
-            z = EaseOut(tagFader * 8.);
-        } else if (tagFader < .75 ) {
+        if ( wordFader < .125 ) {
+            z = EaseOut(wordFader * 8.);
+        } else if (wordFader < .75 ) {
             z = 1.0;
         } else {
-            z = 1. - EaseOut(3./4. + tagFader * 4.);
+            z = 1. - EaseOut(3./4. + wordFader * 4.);
         }
     }
     
@@ -51,9 +51,9 @@ void main() {
     
 //    if (DEBUG) { 
 //        col.rgb = vec3(1.,1.,1.);
-//        if ( tagFader < .125 ) {
+//        if ( wordFader < .125 ) {
 //            col.r = 0.;
-//        } else if (tagFader < .75 ) {
+//        } else if (wordFader < .75 ) {
 //        } else {
 //            col.g = 0.;
 //        }
@@ -63,9 +63,9 @@ void main() {
 
     if (DEBUG) {
         col.rgb = vec3(1.,1.,1.);
-        if (tagCount > 5. ) {
+        if (wordCount > 5. ) {
             col.g = 0.;
-        } else if (tagCount > 1. ) {
+        } else if (wordCount > 1. ) {
             col.r = 0.;
         }
         col.a = 1.0;
