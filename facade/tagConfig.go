@@ -11,9 +11,9 @@ import (
 
 var TagDefaults TagConfig = TagConfig{
 	Shader: nil,
-	Duration: 1.0,
+	Duration: 2.0,
 	Shuffle: false,
-	Slot: 10,
+	Slot: 8,
 }
 
 func (config *TagConfig) Desc() string {

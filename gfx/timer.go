@@ -20,6 +20,10 @@ type Timer struct {
 }
 
 
+func (timer *Timer) SetDuration(duration float32) {
+    timer.duration = duration
+}
+
 func (timer *Timer) Count() uint    { return timer.count }
 func (timer *Timer) Fader() float32 { return timer.fader }
 
