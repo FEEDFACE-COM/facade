@@ -18,23 +18,22 @@ const maxTagLength = 32 // found experimentally
 type SetItem struct {
     tag string
     count uint
-    serial uint
     index uint
     timer *gfx.Timer
 }
 
 
 type TagBuffer struct {
-    buf map[string] *SetItem
-    rem []rune
 
+    buf map[string] *SetItem
+
+    indices []uint
+    
     slotCount int
     duration float32
     shuffle bool
-
-    nextSerial uint
-    count int
     
+    rem []rune
 	refreshChan chan bool
 	mutex *sync.Mutex
     
@@ -46,9 +45,12 @@ func NewTagBuffer(refreshChan chan bool) *TagBuffer {
     ret := &TagBuffer{
         duration: float32(TagDefaults.Duration),
     }
-    ret.count = 0
     ret.slotCount = int(TagDefaults.Slot)
     ret.buf = make(map[string] *SetItem)
+    ret.indices = make( []uint, ret.slotCount)
+    for i:=0;i<ret.slotCount;i++ {
+        ret.indices[i] = uint(i)
+    }
 	ret.refreshChan = refreshChan
 	ret.mutex = &sync.Mutex{}
     return ret
@@ -119,8 +121,8 @@ func (buffer *TagBuffer) Items(max int) []*SetItem {
         for k,v := range tmp {
             
             // if smallest seen, keep note of key
-            if v.serial < min {
-                min = v.serial
+            if v.index < min {
+                min = v.index
                 key = k
             } 
             
@@ -153,7 +155,6 @@ func (buffer *TagBuffer) addItem(text []rune) {
     if ok {
         item.count += 1
         r := item.timer.Extend( gfx.Now() )
-//        item.timer.Restart( gfx.Now() )
         if DEBUG_TAGBUFFER {
             if r {
                 log.Debug("%s extended: '%s'",item.timer.Desc(),tag)
@@ -172,11 +173,21 @@ func (buffer *TagBuffer) addItem(text []rune) {
         item = &SetItem{}
         item.tag = tag
         item.count = 1
-        item.serial = buffer.nextSerial
-        buffer.nextSerial += 1
+        if buffer.shuffle {
+
+        } else {
+            item.index = buffer.indices[0]
+            buffer.indices = buffer.indices[1:]
+        }
+        if DEBUG_TAGBUFFER {
+            s := ""
+            for _,r := range(buffer.indices) {
+                s += fmt.Sprintf(" %d",r)
+            }
+            log.Debug("%s used #%d indices:%s",buffer.Desc(),item.index,s)
+        }
         item.timer = gfx.WorldClock().NewTimer(buffer.duration, false, nil, triggerFun)
         buffer.buf[tag] = item
-        buffer.count = len(buffer.buf)
         if DEBUG_TAGBUFFER {
             log.Debug("%s added '%s': %.1f",buffer.Desc(),tag,item.timer.Fader())
         }
@@ -185,13 +196,23 @@ func (buffer *TagBuffer) addItem(text []rune) {
     buffer.ScheduleRefresh()
 }
 
-func (buffer *TagBuffer) deleteItem(idx string) {
+func (buffer *TagBuffer) deleteItem(tag string) {
+    item := buffer.buf[tag]
     buffer.mutex.Lock()
-    delete(buffer.buf,idx)
-    buffer.count = len(buffer.buf)
+    delete(buffer.buf,tag)
 	buffer.mutex.Unlock()
+    buffer.indices = append(buffer.indices, item.index)
+
     if DEBUG_TAGBUFFER {
-        log.Debug("%s item expired '%s'",buffer.Desc(),idx)
+        log.Debug("%s item expired '%s'",buffer.Desc(),tag)
+    }
+
+    if DEBUG_TAGBUFFER {
+        s := ""
+        for _,r := range(buffer.indices) {
+            s += fmt.Sprintf(" %d",r)
+        }
+        log.Debug("%s free #%d indices:%s",buffer.Desc(),item.index,s)
     }
     buffer.ScheduleRefresh()
 }
@@ -237,7 +258,7 @@ func (buffer *TagBuffer) Desc() string {
     if buffer.shuffle {
         s = " ⧢"
     }
-    ret := fmt.Sprintf("tagbuffer[%d/%d %.1f%s]",buffer.count,buffer.slotCount,buffer.duration,s)
+    ret := fmt.Sprintf("tagbuffer[%d/%d %.1f%s]",len(buffer.buf),buffer.slotCount,buffer.duration,s)
     return ret
 }
 
@@ -253,17 +274,20 @@ func (buffer *TagBuffer) Dump() string {
             rem = item.timer.Desc()
 //            rem = fmt.Sprintf("%4.1f %4.1f",item.timer.Fader(),item.timer.Remaining(gfx.Now()))
         }
-        ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.serial,rem,item.count,txt) 
+        ret += fmt.Sprintf("    #%05d %s %5d# %s\n",item.index,rem,item.count,txt) 
     }
     return ret
 }
 
 func (buffer *TagBuffer) SlotCount() int { return buffer.slotCount }
-
+func (buffer *TagBuffer) TagCount() int { return len(buffer.buf) }
 func (buffer *TagBuffer) Duration() float32 { return buffer.duration }
 
 func (buffer *TagBuffer) SetDuration(duration float32) {
 	buffer.duration = duration
+    for _,item := range(buffer.buf) {
+        item.timer.SetDuration(duration)
+    }
 }
 
 func (buffer *TagBuffer) Resize(slotCount int) {
@@ -280,13 +304,19 @@ func (buffer *TagBuffer) Resize(slotCount int) {
     old := buffer.buf
     buffer.slotCount = slotCount
     buffer.buf = make(map[string] *SetItem, slotCount)
+    buffer.indices = make( []uint, buffer.slotCount)
+    for i:=0;i<buffer.slotCount;i++ {
+        buffer.indices[i] = uint(i)
+    }
+
 
     for _,item := range items {
         tag := item.tag
+        item.index = buffer.indices[0]
+        buffer.indices = buffer.indices[1:]
         buffer.buf[tag] = item
         delete(old, tag)
     }
-    buffer.count = len(buffer.buf)
     buffer.mutex.Unlock()    
 
     for _,item := range old {

@@ -62,17 +62,16 @@ void main() {
     float idx = tagIndex/tagMax;
     
     float w = 2.*TAU;
-    float o = PI/2. + PI/2.;
+    float o = PI/2. + PI/4.;
     a = idx * w + o;
     pos.x += rx * cos(a);
     pos.y += ry * sin(a);
         
 
     if (idx >= 0.5 ) {
-        pos.x -= -tagMax/2.;
+        pos.x += tagMax/2.;
     } else {
         pos.x -= tagMax/2.;
-    
     }
 
 

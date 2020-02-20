@@ -3,7 +3,7 @@
 package facade
 
 import (
-//    "fmt"
+    "fmt"
     "strings"
     gfx "../gfx"
     log "../log"
@@ -257,9 +257,9 @@ func (set *Set) autoScale(camera *gfx.Camera) float32 {
 func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
 	if set.checkRefresh() {
-		if DEBUG_SET {
-			log.Debug("%s refresh", set.Desc())
-		}
+//		if DEBUG_SET {
+//			log.Debug("%s refresh", set.Desc())
+//		}
 		set.generateData(font)
 	}
 
@@ -458,7 +458,12 @@ zulu
 }
 
 func (set *Set) Desc() string {
-    return set.Config().Desc()
+    ret := "tags["
+    ret += fmt.Sprintf("%d/%d",len(set.buffer.buf),set.buffer.SlotCount())
+    ret += fmt.Sprintf(" %.1f",set.buffer.Duration())
+    ret += "]"
+    return ret 
+    
 }
 
 func (set *Set) Config() *TagConfig {

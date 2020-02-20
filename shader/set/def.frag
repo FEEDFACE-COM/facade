@@ -31,9 +31,7 @@ void main() {
     
     
     col = texture2DProj(texture, tex);
-//    col = vec4(1.,1.,1.,1);
-
-//    col /= 4.;
+    
     
     float z = 1.;
     if (col.a > 0.0 ) {
@@ -51,22 +49,33 @@ void main() {
     
 //    col.rgb *= col.a;
     
-    if (DEBUG) { 
+//    if (DEBUG) { 
+//        col.rgb = vec3(1.,1.,1.);
+//        if ( tagFader < .125 ) {
+//            col.r = 0.;
+//        } else if (tagFader < .75 ) {
+//        } else {
+//            col.g = 0.;
+//        }
+//        col.a = 1.0;
+//    } 
+
+
+    if (DEBUG) {
         col.rgb = vec3(1.,1.,1.);
-        if ( tagFader < .125 ) {
-            col.r = 0.0;
-            col.b = 0.0;
-        } else if (tagFader < .75 ) {
-            col.r = 0.0;
-        } else {
-            col.g = 0.0;
-            col.b = 0.0;
+        if (tagCount > 5. ) {
+            col.g = 0.;
+        } else if (tagCount > 1. ) {
+            col.r = 0.;
         }
         col.a = 1.0;
-    } 
+    
+        
+        
+    }
 
     if (!gl_FrontFacing) { col.a /= 4.; }
 
-    gl_FragColor = 4. * gl_FragColor + 1. * col;
+    gl_FragColor = col;
     
 }

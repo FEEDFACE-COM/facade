@@ -82,8 +82,8 @@ void main() {
     vTexCoord = tex;
 
     
-    float inner = 3.;
-    float outer = inner + tagWidth * 2.;
+    float inner = 8.;
+    float outer = inner + tagWidth * 1.;
 
     float alpha = (TAU/tagMax) / 2.0;
     float gamma = (TAU/tagMax) * -1. * tagIndex;
