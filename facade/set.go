@@ -29,6 +29,7 @@ type Set struct {
     texItem map[string] *TexItem
         
     wordBuffer *WordBuffer
+    tagBuffer *TagBuffer
 
 	program *gfx.Program
  	object  *gfx.Object
@@ -107,50 +108,50 @@ func (set *Set) generateData(font *gfx.Font) {
 
     for _,item := range bufferItems {
         
-        tag := item.tag
+        text := item.text
 
         if len(set.texItem) >= set.wordBuffer.SlotCount() {
             log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.wordBuffer.SlotCount())
             break
         }
 
-        if old[tag] != nil {   //reuse existing textures
+        if old[text] != nil {   //reuse existing textures
 
-            set.texItem[tag] = old[tag]
-            delete(old, tag)
+            set.texItem[text] = old[text]
+            delete(old, text)
 
         } else {               //create new texture
             
             
-            rgba, err := font.RenderText(tag, false)
+            rgba, err := font.RenderText(text, false)
             if err != nil {
-                log.Error("%s fail render '%s': %s", set.Desc(), tag, err)
+                log.Error("%s fail render '%s': %s", set.Desc(), text, err)
                 continue
             } 
 
-            texture := gfx.NewTexture(tag)
+            texture := gfx.NewTexture(text)
             texture.Init()
             
             err = texture.LoadRGBA(rgba)
             if err != nil {
-                log.Error("%s fail load rgba '%s': %s", set.Desc(), tag, err)
+                log.Error("%s fail load rgba '%s': %s", set.Desc(), text, err)
                 texture.Close()
                 continue
             }
             
             err = texture.TexImage()
             if err != nil {
-                log.Error("%s fail teximage '%s': %s", set.Desc(), tag, err)
+                log.Error("%s fail teximage '%s': %s", set.Desc(), text, err)
                 texture.Close()
                 continue
             }
 
-            set.texItem[tag] = &TexItem{}
-            set.texItem[tag].item = item
-            set.texItem[tag].texture = texture
+            set.texItem[text] = &TexItem{}
+            set.texItem[text].item = item
+            set.texItem[text].texture = texture
             
             if DEBUG_SET {
-                log.Debug("%s prepped %s %.1f",set.Desc(),set.texItem[tag].texture.Desc(),set.texItem[tag].item.timer.Fader())
+                log.Debug("%s prepped %s %.1f",set.Desc(),set.texItem[text].texture.Desc(),set.texItem[text].item.timer.Fader())
             }
             
         }
