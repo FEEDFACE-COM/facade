@@ -16,7 +16,7 @@ const maxWordLength = 32 // found experimentally
 
 
 type Word struct {
-    tag string
+    text string
     count uint
     index uint
     timer *gfx.Timer
