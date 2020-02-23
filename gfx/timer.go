@@ -100,14 +100,14 @@ func (timer *Timer) Tick(now float32) (bool, func()) {
 
 func (timer *Timer) Desc() string {
     run := Now() - timer.start
-	ret := fmt.Sprintf("timer[%.1f/%.1f", run,timer.duration)
+	ret := fmt.Sprintf("t[%.1f/%.1f", run,timer.duration)
 	if timer.repeat {
 		ret += fmt.Sprintf(" #%d", timer.count)
     }
 	if timer.bias == 0.0 {
-    	ret += fmt.Sprintf("     →%4.2f", timer.fader)
+    	ret += fmt.Sprintf(" →%3.1f    ", timer.fader)
     } else {
-        ret += fmt.Sprintf(" %4.2f+%4.2f", timer.bias,(1.-timer.bias)*timer.fader)    
+        ret += fmt.Sprintf(" →%3.1f+%3.1f",(1.-timer.bias)*timer.fader,timer.bias)    
     }
 	if timer.valueFun != nil {
 		ret += fmt.Sprintf(" ↑%4.2f", timer.valueFun(timer.fader))

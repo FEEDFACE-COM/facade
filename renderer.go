@@ -132,8 +132,8 @@ func (renderer *Renderer) Init() error {
 
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
-	renderer.wordBuffer = facade.NewWordBuffer( false, renderer.refreshChan )
-	renderer.tagBuffer = facade.NewWordBuffer( true, renderer.refreshChan )
+	renderer.wordBuffer = facade.NewWordBuffer(renderer.refreshChan )
+	renderer.tagBuffer = facade.NewTagBuffer(renderer.refreshChan )
 
 	renderer.terminal = facade.NewGrid(nil, renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
@@ -226,7 +226,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 
 	if cfg := config.GetWords(); cfg != nil {
     	changed = true
-    	renderer.tags.Configure(cfg, nil, renderer.camera, renderer.font)
+    	renderer.words.Configure(cfg, nil, renderer.camera, renderer.font)
     }
 	
 	if cfg := config.GetTags(); cfg != nil {

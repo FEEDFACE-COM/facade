@@ -131,7 +131,7 @@ func (tester *Tester) Init() error {
 
 	tester.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	tester.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), tester.refreshChan)
-	tester.wordBuffer = facade.NewWordBuffer(false, tester.refreshChan)
+	tester.wordBuffer = facade.NewWordBuffer(tester.refreshChan)
 
 	err = tester.switchFont(facade.FontDefaults.Name)
 	if err != nil {

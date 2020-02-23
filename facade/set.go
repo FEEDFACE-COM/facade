@@ -12,31 +12,22 @@ import (
 )    
 
 
-const DEBUG_SET = true
+const DEBUG_SET = false
 
-
-
-type TexItem struct {
-    texture *gfx.Texture
-    item *Word
-}
 
 
 type Set struct {
 
     vert, frag string
     
-    texItem map[string] *TexItem
+    textures map[string] *gfx.Texture
+    words []Word
         
     wordBuffer *WordBuffer
-    tagBuffer *TagBuffer
 
 	program *gfx.Program
  	object  *gfx.Object
-
-
 	data []float32
-	tags []string
 
 	refreshChan chan bool
     
@@ -89,43 +80,36 @@ func NewSet(buffer *WordBuffer) *Set {
     ret.vert = ShaderDefaults.GetVert()
     ret.frag = ShaderDefaults.GetFrag()
     
-    ret.texItem = make( map[string] *TexItem, ret.wordBuffer.SlotCount())
+    ret.words = []Word{}
+    ret.textures = make( map[string] *gfx.Texture, ret.wordBuffer.SlotCount() )
+
     
     ret.refreshChan = make(chan bool, 1)
     return ret
 }
 
 func (set *Set) generateData(font *gfx.Font) {
-
-
-    old := set.texItem
+    old := set.textures
     
-    set.texItem = make( map[string] *TexItem, set.wordBuffer.SlotCount())
-
-
-    bufferItems := set.wordBuffer.Words(set.wordBuffer.SlotCount())
-
-
-    for _,item := range bufferItems {
+    set.textures = make( map[string] *gfx.Texture, set.wordBuffer.SlotCount())
+    set.words = set.wordBuffer.Words()
         
-        text := item.text
-
-        if len(set.texItem) >= set.wordBuffer.SlotCount() {
-            log.Error("%s stop render %d/%d reached", set.Desc(), len(set.texItem),set.wordBuffer.SlotCount())
-            break
-        }
+    for _,word := range set.words {
+        
+        text := word.text
 
         if old[text] != nil {   //reuse existing textures
 
-            set.texItem[text] = old[text]
-            delete(old, text)
+            set.textures[text] = old[text]
+//            if DEBUG_SET {
+//                log.Debug("%s texture reused: %s",set.Desc(),old[text].Desc())
+//            }
 
         } else {               //create new texture
             
-            
             rgba, err := font.RenderText(text, false)
             if err != nil {
-                log.Error("%s fail render '%s': %s", set.Desc(), text, err)
+                log.Error("%s texture fail render '%s': %s", set.Desc(), text, err)
                 continue
             } 
 
@@ -134,37 +118,36 @@ func (set *Set) generateData(font *gfx.Font) {
             
             err = texture.LoadRGBA(rgba)
             if err != nil {
-                log.Error("%s fail load rgba '%s': %s", set.Desc(), text, err)
+                log.Error("%s texture fail load rgba '%s': %s", set.Desc(), text, err)
                 texture.Close()
                 continue
             }
             
             err = texture.TexImage()
             if err != nil {
-                log.Error("%s fail teximage '%s': %s", set.Desc(), text, err)
+                log.Error("%s texture fail teximage '%s': %s", set.Desc(), text, err)
                 texture.Close()
                 continue
             }
 
-            set.texItem[text] = &TexItem{}
-            set.texItem[text].item = item
-            set.texItem[text].texture = texture
+            set.textures[text] = texture
             
             if DEBUG_SET {
-                log.Debug("%s prepped %s %.1f",set.Desc(),set.texItem[text].texture.Desc(),set.texItem[text].item.timer.Fader())
+                log.Debug("%s texture prepped: %s",set.Desc(),set.textures[text].Desc())
             }
             
         }
     }
     
-    // remove old textures
-    for _,item := range old {
-        texture := item.texture
-        idx := item.item.index
-        if DEBUG_SET {
-            log.Debug("%s drop #%d: %s",set.Desc(),idx,texture.Desc())
+    // remove unused textures
+    for text,texture := range old {
+        _,ok := set.textures[text]
+        if !ok {
+            if DEBUG_SET {
+                log.Debug("%s texture close: %s",set.Desc(),texture.Desc())
+            }
+            texture.Close()
         }
-        texture.Close()
     }
     
     
@@ -172,12 +155,16 @@ func (set *Set) generateData(font *gfx.Font) {
     //setup vertex + bind order arrays
 
     set.data = []float32{}
-    set.tags = []string{}
 
-    idx := 0
-    for tag,item := range set.texItem  {
+//    cnt := 0
+    for _,word := range set.words  {
 
-        texture := item.texture
+        text := word.text
+        texture,ok := set.textures[text]
+        if !ok {
+            log.Debug("%s texture generate miss: %s",set.Desc(),text)
+            continue
+        }
 
         w := float32( texture.Size.Width / texture.Size.Height )
         h := float32( 1. )
@@ -229,17 +216,16 @@ func (set *Set) generateData(font *gfx.Font) {
             -w/2.,  +h/2.,  0.0,       0., 0.,    // A
         }
         set.data = append(set.data, data...)
-        set.tags = append(set.tags, tag)
-//        if DEBUG_SET {
-//            log.Debug("%s append #%d '%s' %s",set.Desc(),idx,tag,texture.Desc())
-//        }
-        idx += 1
+        if DEBUG_SET {
+            log.Debug("%s data generate '%s' %s",set.Desc(),text,texture.Desc())
+        }
+//        cnt += 1
         
     }
     
     set.object.BufferData(len(set.data) * 4, set.data)
 //    if DEBUG_SET {
-//        log.Debug("%s generated %d tags %d float",set.Desc(),len(set.tags),len(set.data))
+//        log.Debug("%s generated %d words (%d floats)",set.Desc(),cnt,len(set.data))
 //    }
     
     
@@ -293,37 +279,37 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     count := int32(1)
 	offset := int32(0)
 	
-	for _,tag := range set.tags {
+	for _,word := range set.words {
 
-        texture := set.texItem[tag].texture
-        item := set.texItem[tag].item
-    	
+        text := word.text
+        texture,ok := set.textures[text]
+        if !ok {
+            log.Debug("%s texture render miss: %s",set.Desc,text)
+            continue
+        }
+
 
         texture.BindTexture()
         texture.Uniform(set.program)
 
         var fader float32
-        fader = item.timer.Fader()
+        fader = word.timer.Fader()
     	set.program.Uniform1fv(WORDFADER, 1, &fader)
     	
     	var index float32;
-    	index = float32(item.index)
+    	index = float32(word.index)
     	set.program.Uniform1fv(WORDINDEX, 1, &index)
 
-        tagCount := float32( item.count )
+        tagCount := float32( word.count )
         set.program.Uniform1fv(WORDCOUNT, 1, &tagCount)
 
-
-//        if DEBUG_SET && verbose {
-//        	log.Debug("%s has hash %08x index #%.0f",tag,crc,index)
-//        }	
 
         var width float32;
         width = float32(texture.Size.Width / texture.Size.Height)        
         set.program.Uniform1fv(WORDWIDTH, 1, &width)
 
         if DEBUG_SET && verbose {
-            log.Debug("%s render #%.0f f%.1f  %s",set.Desc(),index,fader,texture.Desc())
+            log.Debug("%s render #%d f%.1f  %s",set.Desc(),word.index,fader,texture.Desc())
         }
         
         if !debug || debug {
@@ -415,7 +401,7 @@ func (set *Set) Configure(words *WordConfig, tags *TagConfig, camera *gfx.Camera
     }
     
     if config.GetShuffle() {
-        set.wordBuffer.shuffle = config.GetShuffle()
+        set.wordBuffer.SetShuffle( config.GetShuffle() )
     }
 
 	if config.GetSetFill() {
@@ -468,8 +454,9 @@ zulu
 }
 
 func (set *Set) Desc() string {
-    ret := "tags["
-    ret += fmt.Sprintf("%d/%d",len(set.wordBuffer.tags),set.wordBuffer.SlotCount())
+    ret := "set"
+    ret += "["
+    ret += fmt.Sprintf("%d/%d",set.wordBuffer.WordCount(),set.wordBuffer.SlotCount())
     ret += fmt.Sprintf(" %.1f",set.wordBuffer.Duration())
     ret += "]"
     return ret 
