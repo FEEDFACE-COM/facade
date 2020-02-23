@@ -28,7 +28,7 @@ const (
 	DEBUG_SHADER   = false
 	DEBUG_MODE     = true
 	DEBUG_MEMORY   = false
-	DEBUG_BUFFER   = false
+	DEBUG_BUFFER   = true
 	DEBUG_RENDERER = false
 )
 
@@ -151,7 +151,7 @@ func main() {
                 log.Notice("SIGNAL %s",sig)
                 os.Exit(0)
             } else {
-        		log.Notice("signal %s", sig)
+//        		log.Notice("signal %s", sig)
                 select {
                     case pause <- true:
                     default:

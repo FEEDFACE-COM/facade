@@ -46,33 +46,21 @@ void main() {
     
     col.a = col.a * z;
     
+
     
 //    col.rgb *= col.a;
     
-//    if (DEBUG) { 
-//        col.rgb = vec3(1.,1.,1.);
-//        if ( wordFader < .125 ) {
-//            col.r = 0.;
-//        } else if (wordFader < .75 ) {
-//        } else {
-//            col.g = 0.;
-//        }
-//        col.a = 1.0;
-//    } 
-
-
-    if (DEBUG) {
-        col.rgb = vec3(1.,1.,1.);
-        if (wordCount > 5. ) {
-            col.g = 0.;
-        } else if (wordCount > 1. ) {
-            col.r = 0.;
+    if (DEBUG) { 
+        col.rgb = vec3(0.,0.,1.);
+        if ( wordFader > .75 ) {
+            col.g = 1.;
+        } else if (wordFader > .125 ) {
+            col.r = 1.;
+        } else {
         }
         col.a = 1.0;
-    
-        
-        
-    }
+    } 
+
 
     if (!gl_FrontFacing) { col.a /= 4.; }
 

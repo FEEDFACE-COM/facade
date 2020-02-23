@@ -38,6 +38,9 @@ func (config *Config) Desc() string {
 	if lines := config.GetLines(); lines != nil {
 		ret += lines.Desc() + " "
 	}
+	if words := config.GetWords(); words != nil {
+		ret += words.Desc()
+	}
 	if tags := config.GetTags(); tags != nil {
 		ret += tags.Desc()
 	}
@@ -57,14 +60,17 @@ func (config *Config) Desc() string {
 
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
-	if tags := config.GetTags(); tags != nil {
-		tags.AddFlags(flagset)
-	}
 	if terminal := config.GetTerminal(); terminal != nil {
 		terminal.AddFlags(flagset)
 	}
 	if lines := config.GetLines(); lines != nil {
 		lines.AddFlags(flagset)
+	}
+	if words := config.GetWords(); words != nil {
+		words.AddFlags(flagset)
+	}
+	if tags := config.GetTags(); tags != nil {
+		tags.AddFlags(flagset)
 	}
 	if font := config.GetFont(); font != nil {
 		font.AddFlags(flagset)
@@ -93,18 +99,20 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 			config.Terminal = nil
 		} // no flags used
 	}
-
 	if lines := config.GetLines(); lines != nil {
 		if !lines.VisitFlags(flagset) {
 			config.Lines = nil
 		} // no flags used
 	}
-
+	if words := config.GetWords(); words != nil {
+		if !words.VisitFlags(flagset) {
+			config.Words = nil
+		}
+	}
 	if tags := config.GetTags(); tags != nil {
 		if !tags.VisitFlags(flagset) {
 			config.Tags = nil
 		}
-
 	}
 
 	if font := config.GetFont(); font != nil {

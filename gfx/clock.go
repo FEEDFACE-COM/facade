@@ -37,7 +37,7 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 	clock.mux.Unlock()
 
 	if DEBUG_CLOCK {
-		log.Debug("%s add %s", clock.Desc(),timer.Desc())
+		log.Debug("%s add %p:%s", clock.Desc(),timer,timer.Desc())
 	}
 
 	return timer
@@ -45,6 +45,9 @@ func (clock *Clock) NewTimer(duration float32, repeat bool, valueFun func(float3
 }
 
 func (clock *Clock) DeleteTimer(timer *Timer) {
+    if timer == nil {
+        return
+    }
 
 	clock.mux.Lock()
 
@@ -52,13 +55,10 @@ func (clock *Clock) DeleteTimer(timer *Timer) {
 
 	if ok {
 		if DEBUG_CLOCK {
-			log.Debug("%s delete %s", clock.Desc(), tmp.Desc())
+			log.Debug("%s delete %p:%s", clock.Desc(), timer, tmp.Desc())
 		}
 		delete(clock.timers, timer)
-	} else {
-		log.Debug("%s fail delete timer", clock.Desc())
-	}
-
+	} 
 	clock.mux.Unlock()
 }
 
