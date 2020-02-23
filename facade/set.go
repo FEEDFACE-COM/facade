@@ -94,9 +94,14 @@ func (set *Set) generateData(font *gfx.Font) {
     set.textures = make( map[string] *gfx.Texture, set.wordBuffer.SlotCount())
     set.words = set.wordBuffer.Words()
         
+        
+    //generate textures
     for _,word := range set.words {
         
         text := word.text
+        if len(text) <= 0 {
+            continue
+        }
 
         if old[text] != nil {   //reuse existing textures
 
@@ -156,10 +161,13 @@ func (set *Set) generateData(font *gfx.Font) {
 
     set.data = []float32{}
 
-//    cnt := 0
     for _,word := range set.words  {
 
         text := word.text
+        if len(text) <= 0 {
+            continue
+        }
+        
         texture,ok := set.textures[text]
         if !ok {
             log.Debug("%s texture generate miss: %s",set.Desc(),text)
@@ -168,12 +176,6 @@ func (set *Set) generateData(font *gfx.Font) {
 
         w := float32( texture.Size.Width / texture.Size.Height )
         h := float32( 1. )
-
-//        w := texture.Size.Width / 2.
-//        h := texture.Size.Height/ 2.
-//        
-//        w = w/h
-//        h = h/h
 
 /* 
 
@@ -219,7 +221,6 @@ func (set *Set) generateData(font *gfx.Font) {
         if DEBUG_SET {
             log.Debug("%s data generate '%s' %s",set.Desc(),text,texture.Desc())
         }
-//        cnt += 1
         
     }
     
@@ -282,9 +283,14 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	for _,word := range set.words {
 
         text := word.text
+        
+        if len(text) <= 0 {
+            continue
+        }
+        
         texture,ok := set.textures[text]
         if !ok {
-            log.Debug("%s texture render miss: %s",set.Desc,text)
+            log.Debug("%s texture render miss: %s",set.Desc(),text)
             continue
         }
 
