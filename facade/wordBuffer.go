@@ -259,7 +259,9 @@ func (buffer *WordBuffer) deleteWord(word Word) {
         if old != nil {
             gfx.WorldClock().DeleteTimer(old.timer)
         }
-        log.Debug("%s word delete: #%d %s",buffer.Desc(),word.index,word.text)
+        if DEBUG_WORDBUFFER {
+            log.Debug("%s word delete: #%d %s",buffer.Desc(),word.index,word.text)
+        }
     }
     if buffer.tags != nil {
         buffer.mutex.Lock()
@@ -269,7 +271,9 @@ func (buffer *WordBuffer) deleteWord(word Word) {
         if old != nil {
             gfx.WorldClock().DeleteTimer(old.timer)
         }
-        log.Debug("%s tag delete: %s",buffer.Desc(),word.text)
+        if DEBUG_WORDBUFFER {
+            log.Debug("%s tag delete: %s",buffer.Desc(),word.text)
+        }
     }
     buffer.ScheduleRefresh()
 }
@@ -302,7 +306,9 @@ func (buffer *WordBuffer) Clear() {
     	gfx.WorldClock().DeleteTimer(timer)
     }
 
-    log.Debug("%s clear",buffer.Desc())
+    if DEBUG_WORDBUFFER {
+        log.Debug("%s clear",buffer.Desc())
+    }
     buffer.ScheduleRefresh()
 }
 
