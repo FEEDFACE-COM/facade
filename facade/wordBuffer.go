@@ -163,7 +163,7 @@ func (buffer *WordBuffer) addWordWord(text string) {
         if DEBUG_WORDBUFFER {
             log.Debug("%s word add #%d: %s",buffer.Desc(),index,text)
         }
-    } else {
+    } else if DEBUG_WORDBUFFER {
         log.Debug("%s word drop: %s",buffer.Desc(),text)
     }
     buffer.mutex.Unlock()
