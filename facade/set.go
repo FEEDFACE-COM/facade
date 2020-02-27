@@ -39,6 +39,7 @@ const (
     WORDINDEX gfx.UniformName = "wordIndex"
 	WORDCOUNT gfx.UniformName = "wordCount"
 	WORDWIDTH gfx.UniformName = "wordWidth"
+    WORDTIMER gfx.UniformName = "wordTimer"
     WORDFADER gfx.UniformName = "wordFader"
 )
 
@@ -297,6 +298,10 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
         texture.BindTexture()
         texture.Uniform(set.program)
+
+        var timer float32
+        timer = word.timer.Edge(gfx.Now())
+    	set.program.Uniform1fv(WORDTIMER, 1, &timer)
 
         var fader float32
         fader = word.timer.Fader()

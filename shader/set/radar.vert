@@ -82,8 +82,8 @@ void main() {
     vTexCoord = tex;
 
     
-    float inner = 2.;
-    float outer = inner + wordWidth * 1.;
+    float inner = wordMax / 4.;
+    float outer = inner + wordWidth * 2.;
 
     float alpha = (TAU/wordMax) / 2.0;
     float gamma = (TAU/wordMax) * -1. * wordIndex;

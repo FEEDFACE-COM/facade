@@ -39,6 +39,9 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
+    vPosition =    pos;
+    vTexCoord = vec4(texCoord.xy,1.,1.);
+
     bool odd = mod(wordIndex,2.0) == 1.0;
     
     if (odd) {
@@ -48,8 +51,6 @@ void main() {
     }
     pos.y -= (wordIndex - wordMax/2.)/2.;
 
-    vPosition =    pos;
-    vTexCoord = vec4(texCoord.xy,1.,1.);
         
     gl_Position = projection * view * model * pos;
 }

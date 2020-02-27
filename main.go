@@ -28,7 +28,7 @@ const (
 	DEBUG_SHADER   = false
 	DEBUG_MODE     = true
 	DEBUG_MEMORY   = false
-	DEBUG_BUFFER   = true
+	DEBUG_BUFFER   = false
 	DEBUG_RENDERER = false
 )
 

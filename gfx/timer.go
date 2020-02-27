@@ -24,11 +24,44 @@ func (timer *Timer) SetDuration(duration float32) {
     timer.duration = duration
 }
 
+func (timer *Timer) Duration() float32 { return timer.duration }
 func (timer *Timer) Count() uint    { return timer.count }
 func (timer *Timer) Fader() float32 { return timer.fader }
 
+
+func (timer *Timer) Edge(now float32) float32 {
+    
+    // return negative remaining time
+    // or positive elapsed time
+    // whichever is closer to now
+
+    if timer.fader <= 0.5 {
+        return timer.Elapsed(now)
+    } else {
+        return -1. * timer.Remaining(now)
+    }
+}
+
+func (timer *Timer) Elapsed(now float32) float32 {
+    // return 0 <= elapsed <= duration
+    if now <= timer.start {
+        return 0.    
+    } else if now >= timer.start + timer.duration {
+        return timer.duration
+    } else {
+        return now-timer.start
+    }
+}
 func (timer *Timer) Remaining(now float32) float32 { 
-    return timer.duration - (now - timer.start)
+    /// return 0 <= remaining <= duration
+    if now <= timer.start {
+        return timer.duration
+    } else if now >= timer.start + timer.duration {
+        return 0.
+    } else {
+        return timer.duration - (now - timer.start)
+    }
+
 }
 
 func (timer *Timer) Value() float32 {
