@@ -7,20 +7,24 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float charIndex;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
+varying float vCharIndex;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -85,16 +89,31 @@ float H = 32.;
 
 
 vec3 helix(float radius, float gamma, float alpha) {
-    radius *= 8.;
     return vec3( cos(gamma+alpha)*radius, sin(gamma+alpha)*radius, H * (gamma+alpha) );
 }
 
 vec3 helix2(float radius, float gamma, float alpha) {
-    radius *= -8.;
-    return vec3( cos(gamma+alpha)*radius, sin(gamma+alpha)*radius, H * (gamma+alpha) );
+    float phase;
+    phase = PI;    
+    vec3 ret = vec3( cos(gamma+alpha+phase)*radius, sin(gamma+alpha+phase)*radius, H * (gamma+alpha+phase) );
+    ret.z -= 100.;
+    return ret;
 }
 
 
+
+float T() {
+    float X = 16.;
+    float TOTAL =  X * TAU;
+    float ret = (wordIndex/wordCount) * TOTAL;
+    ret -= TOTAL/2.;
+    if (mod(wordIndex,2.)==1.) {
+        ret /= 4.;
+    } else {
+        ret /= 4.;
+    }
+    return ret;
+}
 
 void main() {
 
@@ -105,38 +124,31 @@ void main() {
 
     vTexCoord = tex;
 
-    float X = 8.;
 
-    float TOTAL =  X * TAU;
-    float t = (wordIndex/wordMax) * TOTAL;
+//    float TOTAL =  X * TAU;
+//    float t = (wordIndex/wordMax) * TOTAL;
     
 
     float alpha,gamma;
 
 
-    alpha = 1./4.;
-    gamma = t ;
-    gamma -= TOTAL/2.;
+    alpha = PI/(wordCount/2.);
+    gamma = T();
+//    gamma = t ;
+//    gamma -= TOTAL/2.;
 
 
-    float inner = 4.;
-    float outer = inner + 4. * 4. * X ;
+    float inner = 8.*8.;
+    float outer = inner + 4. ;
 //    outer = 16.;
-    
-    //outer = inner + 4.;
+//    
+//    //outer = inner + 4.;
 
 
     vPosition = pos;
     
     vec3 A,B,C,D;
 
-     A = helix(inner,gamma,+alpha);
-     B = helix(inner,gamma,-alpha);
-     
-
-     
-     C = helix2(inner,gamma,-alpha);
-     D = helix2(inner,gamma,+alpha);
 
      
     float w,n; //wide,narrow
@@ -150,6 +162,34 @@ void main() {
     b = vec4(0.,w,0.,w);
     c = vec4(n,n,0.,n);
     
+
+
+//    if (mod(wordIndex,2.)==1.) {
+//         A = helix(inner,gamma,+alpha);
+//         D = A; D.z += 2.;
+//         B = helix(inner,gamma,-alpha);
+//         C = B; C.z += 2.;
+//    } else {
+//         D = helix2(inner,gamma,+alpha);
+//         A = D; A.z += 2.;
+//         C = helix2(inner,gamma,-alpha);
+//         B = C; B.z += 2.;
+//    }
+    
+    float x = 2.;
+
+         A = helix(inner,gamma,+alpha);
+         B = helix(inner,gamma,-alpha);
+         C = helix2(inner,gamma,-alpha);
+         D = helix2(inner,gamma,+alpha);
+//         A.z += x;
+//         B.z += x;
+//         C.z += x;
+//         D.z += x;
+    
+
+
+
 
     if        ( pos.x < 0. && pos.y > 0. ) {
         pos.xyz = A;
@@ -165,6 +205,19 @@ void main() {
         tex = d;
     }
 
+//    if        ( pos.x < 0. && pos.y > 0. ) {
+//        pos.xyz = A;
+//        tex = a;
+//    } else if ( pos.x < 0. && pos.y < 0. ) {
+//        pos.xyz = B;
+//        tex = b;
+//    } else if ( pos.x > 0. && pos.y < 0. ) {
+//        pos.xyz = C;
+//        tex = c;
+//    } else if ( pos.x > 0. && pos.y > 0. ) {
+//        pos.xyz = D;
+//        tex = d;
+//    }
     
 
 
@@ -177,13 +230,13 @@ void main() {
     V *= rotationMatrix(vec3(0.,1.,0.), PI/2.);
     V *= rotationMatrix(vec3(1.,0.,0.), PI/6.);
     
-//    R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
-//    R *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
+//    V *= rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
+//    V *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
     V *= rotationMatrix(vec3(0.,0.,1.), now);
 //    R *= rotationMatrix(vec3(0.,0.,1.), now/-1.);
-//    V *= scaleMatrix(z);
-
     V *= scaleMatrix(z);
+
+//    V *= scaleMatrix(z);
     
     
         

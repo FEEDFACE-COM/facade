@@ -7,20 +7,24 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float charIndex;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
+varying float vCharIndex;
 
 
 
@@ -45,15 +49,16 @@ void main() {
     pos = vec4(vertex,1);
     tex = vec4(texCoord.xy, 1., 1.);
 
-    pos.y -= wordMax/2.;
-    pos.y += (wordIndex/wordMax) * wordMax;
+    pos.y -= wordCount/2.;
+    pos.y += (wordIndex/wordCount) * wordCount;
     pos.y -= 0.5;
     
-    pos.x += (wordMax/2.) * ratio ;
-    pos.x -= wordFader * ( wordMax * ratio);
+    pos.x += (wordCount/2.) * ratio ;
+    pos.x -= wordFader * ( wordCount * ratio);
     
     vPosition = pos;
     vTexCoord = tex;
+    vCharIndex = charIndex;
     
     gl_Position = projection * view * model * pos;
 }
