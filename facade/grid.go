@@ -322,12 +322,12 @@ func gridVertices(
 
 	return []float32{
 		//vertex            //texcoords        // tile coords     // grid coords
-		-w / 2, h / 2, 0, 0 + ox, 0 + oy, x, y, col, row,
-		-w / 2, -h / 2, 0, 0 + ox, th + oy, x, y, col, row,
-		w / 2, -h / 2, 0, tw + ox, th + oy, x, y, col, row,
-		w / 2, -h / 2, 0, tw + ox, th + oy, x, y, col, row,
-		w / 2, h / 2, 0, tw + ox, 0 + oy, x, y, col, row,
-		-w / 2, h / 2, 0, 0 + ox, 0 + oy, x, y, col, row,
+		-w / 2, +h / 2, 0, 0. + ox, 0. + oy, x, y, col, row,
+		-w / 2, -h / 2, 0, 0. + ox, th + oy, x, y, col, row,
+		+w / 2, -h / 2, 0, tw + ox, th + oy, x, y, col, row,
+		+w / 2, -h / 2, 0, tw + ox, th + oy, x, y, col, row,
+		+w / 2, +h / 2, 0, tw + ox, 0. + oy, x, y, col, row,
+		-w / 2, +h / 2, 0, 0. + ox, 0. + oy, x, y, col, row,
 	}
 
 }
