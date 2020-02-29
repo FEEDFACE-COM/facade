@@ -7,20 +7,24 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float charIndex;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
+varying float vCharIndex;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -82,11 +86,11 @@ void main() {
     vTexCoord = tex;
 
     
-    float inner = wordMax / 4.;
+    float inner = wordCount / 4.;
     float outer = inner + wordWidth * 2.;
 
-    float alpha = (TAU/wordMax) / 2.0;
-    float gamma = (TAU/wordMax) * -1. * wordIndex;
+    float alpha = (TAU/wordCount) / 2.0;
+    float gamma = (TAU/wordCount) * -1. * wordIndex;
 
 
 
@@ -128,12 +132,15 @@ void main() {
 
     vPosition = pos;
     vTexCoord = tex;
+    vCharIndex = charIndex;
+    
 
     mat4 R = mat4(1.0);
     R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
     R *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
     R *= rotationMatrix(vec3(0.,0.,1.), now/-8.);
     pos = R * pos;
+
     
         
     gl_Position = projection * view * model * pos;

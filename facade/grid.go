@@ -302,7 +302,7 @@ func min(a, b int) int {
 	return b
 }
 
-func gridVertices(
+func (grid *Grid) vertices(
 	tileSize gfx.Size, // dimensions of the tile
 	glyphSize gfx.Size, // dimensions of the glyph
 	maxGlyphSize gfx.Size, // max dimension of glyph in font
@@ -321,7 +321,7 @@ func gridVertices(
 	tw := glyphSize.W / (maxGlyphSize.W * float32(gfx.GlyphMapCols))
 
 	return []float32{
-		//vertex            //texcoords        // tile coords     // grid coords
+		//vertex           texcoords         tile  grid
 		-w / 2, +h / 2, 0, 0. + ox, 0. + oy, x, y, col, row,
 		-w / 2, -h / 2, 0, 0. + ox, th + oy, x, y, col, row,
 		+w / 2, -h / 2, 0, tw + ox, th + oy, x, y, col, row,
@@ -377,7 +377,7 @@ func (grid *Grid) generateData(font *gfx.Font) {
 				Y: float32(glyphCoord.Y) / (gfx.GlyphMapRows),
 			}
 
-			grid.data = append(grid.data, gridVertices(tileSize, glyphSize, maxGlyphSize, gridCoord, tilePos, texOffset)...)
+			grid.data = append(grid.data, grid.vertices(tileSize, glyphSize, maxGlyphSize, gridCoord, tilePos, texOffset)...)
 
 		}
 
@@ -428,12 +428,12 @@ func (grid *Grid) renderMap(font *gfx.Font) error {
 
 	rgba, err := font.RenderMap(false)
 	if err != nil {
-		log.Error("fail render font map: %s", err)
+		log.Error("%s fail render font map: %s", grid.Desc(), err)
 		return log.NewError("fail render font map: %s", err)
 	}
 	err = grid.texture.LoadRGBA(rgba)
 	if err != nil {
-		log.Error("fail load font map: %s", err)
+		log.Error("%s fail load font map: %s", grid.Desc(), err)
 		return log.NewError("fail to load font map: %s", err)
 	}
 	grid.texture.TexImage()

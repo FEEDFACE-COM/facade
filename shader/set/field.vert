@@ -7,20 +7,24 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float charIndex;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
+varying float vCharIndex;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -53,13 +57,13 @@ void main() {
 
     float a;
 
-    pos.x *= wordMax/10.;
-    pos.y *= wordMax/10.;
+    pos.x *= wordCount/10.;
+    pos.y *= wordCount/10.;
     
-    float rx = 0.5 * wordMax/2.;
-    float ry = wordMax/2.;
+    float rx = 0.5 * wordCount/2.;
+    float ry = wordCount/2.;
     
-    float idx = wordIndex/wordMax;
+    float idx = wordIndex/wordCount;
     
     float w = 2.*TAU;
     float o = PI/2. + PI/4.;
@@ -69,20 +73,21 @@ void main() {
         
 
     if (idx >= 0.5 ) {
-        pos.x += wordMax/2.;
+        pos.x += wordCount/2.;
     } else {
-        pos.x -= wordMax/2.;
+        pos.x -= wordCount/2.;
     }
 
 
-    pos.z -= wordMax; 
-    pos.z += fader * 1.5 * wordMax;
+    pos.z -= wordCount; 
+    pos.z += fader * 1.5 * wordCount;
 
     mat4 v = view;
 //    v = view * scaleMatrix( 1.  );
 
     vPosition = pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
+    vCharIndex = charIndex;
     
         
     gl_Position = projection * v * model * pos;

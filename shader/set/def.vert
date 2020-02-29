@@ -7,20 +7,24 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float charIndex;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
+varying float vCharIndex;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -41,15 +45,19 @@ void main() {
 
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
+    vCharIndex = charIndex;
 
     bool odd = mod(wordIndex,2.0) == 1.0;
     
     if (odd) {
+//        pos.x += 2.43/2.;
         pos.x += wordWidth/2.;
     } else {
+//        pos.x -= 2.43/2.;
         pos.x -= wordWidth/2.;
     }
-    pos.y -= (wordIndex - wordMax/2.)/2.;
+    pos.y -= (wordIndex - wordCount/2.)/2.;
+    
 
         
     gl_Position = projection * view * model * pos;
