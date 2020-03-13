@@ -21,6 +21,7 @@ uniform float ratio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
+attribute float charOffset;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
@@ -54,6 +55,7 @@ void main() {
     
     vec4 pos;
     pos = vec4(vertex,1);
+    pos.x += charOffset;
 
     float a;
 

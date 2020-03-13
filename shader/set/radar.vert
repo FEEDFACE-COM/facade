@@ -16,11 +16,13 @@ uniform float wordValue;
 
 uniform float charCount;
 
+
 uniform float ratio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
+attribute float charOffset;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
@@ -74,24 +76,108 @@ mat4 rotationMatrix(vec3 axis, float angle)
     0,1________1,1
      B          C
 
+
+
+       A_____D
+       /|   /
+      / |  /
+     /  | /
+    /___|/
+   B     C
+
+  
+
+ 
+                A______D
+                 \     \
+                  \     \
+                   \     \
+                    \     \
+                     \_____\
+                     B      C
+   
+
+
+                    D
+                   /\
+                  /  \
+                A/    \
+                 \     \
+             /\   \  X  \
+            /  \   \     \
+            \   \   \     \
+          /_ \___\   \_____\
+                     B      C
+
+
+
+  
 */
 
+mat4 scaleMatrix(float a) {
+    return mat4(
+         a, 0., 0., 0.,
+        0.,  a, 0., 0.,
+        0., 0., 1., 0.,
+        0., 0., 0., 1.
+    );
+}
+
+
+
+vec2 disk(vec2 pos, float gamma) {
+
+//    vec2 A = vec2( cos(gamma+alpha)*inner, sin(gamma+alpha)*inner);
+//    vec2 B = vec2( cos(gamma-alpha)*inner, sin(gamma-alpha)*inner);
+//    vec2 C = vec2( cos(gamma-alpha)*outer, sin(gamma-alpha)*outer);
+//    vec2 D = vec2( cos(gamma+alpha)*outer, sin(gamma+alpha)*outer);
+
+
+    float angle, radius;
+
+    float x = pos.x + wordWidth/2.;
+    float y = pos.y + 0.5;
+
+    
+
+    vec2 ret = vec2( cos(angle)*radius, sin(angle)*radius );
+    
+    return ret;
+}
+
+
 void main() {
+
+    if (wordIndex != 2. ) {
+//        return;
+    }
+    
+    if (charIndex != 0.) {
+//        return;
+    }
+
 
     vec4 pos = vec4(vertex,1);
     
     vec4 tex; 
     tex.xy = texCoord.xy;
+    tex.w = 1.;
 
     vTexCoord = tex;
 
     
-    float inner = wordCount / 4.;
-    float outer = inner + wordWidth * 2.;
+    float center = wordCount / 8.;
+    
+        
+    float inner = center + (charOffset + wordWidth/2.);
+    float outer = inner + pos.x*2.;
 
     float alpha = (TAU/wordCount) / 2.0;
     float gamma = (TAU/wordCount) * -1. * wordIndex;
 
+    vPosition = pos;
+    vTexCoord = tex;
+    vCharIndex = charIndex;
 
 
     vec2 A = vec2( cos(gamma+alpha)*inner, sin(gamma+alpha)*inner);
@@ -105,12 +191,19 @@ void main() {
     n = D.y - C.y;
     
 
+
+
     vec4 a,b,c,d;
 
-    d = vec4(n,0.,0.,n);
-    a = vec4(0.,0.,0.,w);
-    b = vec4(0.,w,0.,w);
-    c = vec4(n,n,0.,n);
+    a = vec4(tex.x+0.,tex.y+0.,0.,w);
+    b = vec4(tex.x+0.,tex.y+w ,0.,w);
+    c = vec4(tex.x+n ,tex.y+n ,0.,n);
+    d = vec4(tex.x+n ,tex.y+0.,0.,n);
+
+//    a = vec4(0.,0.,0.,w);
+//    b = vec4(0.,w,0.,w);
+//    c = vec4(n,n,0.,n);
+//    d = vec4(n,0.,0.,n);
     
 
     if        ( pos.x < 0. && pos.y > 0. ) {
@@ -126,25 +219,25 @@ void main() {
         pos.xy = D;
         tex = d;
     }
-
     
 
+//    pos.z += + 1. * cos( now + inner);
 
-    vPosition = pos;
-    vTexCoord = tex;
-    vCharIndex = charIndex;
+//    vTexCoord = tex;
     
 
     mat4 R = mat4(1.0);
     R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
     R *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
     R *= rotationMatrix(vec3(0.,0.,1.), now/-8.);
+    R *= scaleMatrix(wordCount/16.);
     pos = R * pos;
 
     
         
     gl_Position = projection * view * model * pos;
 }
+
 
 
 

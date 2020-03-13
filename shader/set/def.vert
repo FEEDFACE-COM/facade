@@ -21,6 +21,7 @@ uniform float ratio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
+attribute float charOffset;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
@@ -42,6 +43,7 @@ void main() {
     float fader = wordFader;
     
     vec4 pos = vec4(vertex,1);
+    pos.x += charOffset;
 
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);

@@ -50,7 +50,8 @@ const (
 
 
 const (
-	CHARINDEX gfx.AttribName = "charIndex"
+    CHAROFFSET gfx.AttribName = "charOffset"
+	CHARINDEX  gfx.AttribName = "charIndex"
 )
 
 func (set *Set) ScheduleRefresh() {
@@ -222,19 +223,20 @@ func (set *Set) vertices(
         h := float32(1.)
 
 
-        dx := offset + w/2.
+//        dx := offset + w/2.
 
         idx := float32(charIndex)
+        off := float32(offset);
+
 
         data := []float32{
         //   x,   y,    z,             tx, ty,   
-           dx -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx,      // A
-           dx -w/2.,  -h/2.,  0.0,    0. + ox, th + oy,  idx,      // B
-           dx +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx,      // C
-
-           dx +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx,      // C
-           dx +w/2.,  +h/2.,  0.0,    tw + ox, 0. + oy,  idx,      // D
-           dx -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx,      // A
+           -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
+           -w/2.,  -h/2.,  0.0,    0. + ox, th + oy,  idx, off,     // B
+           +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
+           +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
+           +w/2.,  +h/2.,  0.0,    tw + ox, 0. + oy,  idx, off,     // D
+           -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
         }
         ret = append(ret, data...)
 
@@ -341,9 +343,10 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
 	
 
-	set.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+1)*4, (0)*4)
-	set.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+1)*4, (0+3)*4)
-	set.program.VertexAttribPointer(    CHARINDEX, 1, (3+2+1)*4, (0+3+2)*4)
+	set.program.VertexAttribPointer(gfx.VERTEX,    3, (3+2+1+1)*4, (0)*4)
+	set.program.VertexAttribPointer(gfx.TEXCOORD,  2, (3+2+1+1)*4, (0+3)*4)
+	set.program.VertexAttribPointer(    CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
+	set.program.VertexAttribPointer(    CHAROFFSET,1, (3+2+1+1)*4, (0+3+2+1)*4)
 
     count := int32(1)
 	offset := int32(0)
@@ -399,7 +402,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
         set.program.Uniform1fv(CHARCOUNT, 1, &charCount)
 
         if DEBUG_SET && verbose {
-            log.Debug("%s render #%d width:%.1f fader:%.1f",set.Desc(),index,width,fader)
+            log.Debug("%s render #%.0f width:%.1f fader:%.1f",set.Desc(),index,width,fader)
         }
                 
         if !debug || debug {
