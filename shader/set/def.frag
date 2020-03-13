@@ -30,7 +30,15 @@ void main() {
     vec4 tex = vTexCoord;
     
     
-    col = texture2DProj(texture, tex);
+    if (0==0) {
+        vec2 TextureSize = vec2(abs(vPosition.x),abs(vPosition.y));
+        tex.xy = vTexCoord.xy + (gl_PointCoord * TextureSize);
+        col = texture2D(texture,tex.xy);
+    
+    } else {
+    
+        col = texture2DProj(texture, tex);
+    }
     
     
     float z = 1.;

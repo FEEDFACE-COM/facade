@@ -21,6 +21,7 @@ uniform float ratio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
+attribute float charOffset;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
@@ -45,14 +46,18 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 void main() {
     vTexCoord.xy = texCoord.xy;
     
-    vec4 pos,tex;
+    vec4 pos;
     pos = vec4(vertex,1);
+    pos.x += charOffset;
+    
+    vec4 tex;
     tex = vec4(texCoord.xy, 1., 1.);
 
     pos.y -= wordCount/2.;
     pos.y += (wordIndex/wordCount) * wordCount;
-    pos.y -= 0.5;
-    
+    pos.y += 0.5;
+
+
     pos.x += (wordCount/2.) * ratio ;
     pos.x -= wordFader * ( wordCount * ratio);
     

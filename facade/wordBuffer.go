@@ -11,9 +11,9 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_WORDBUFFER = false
+const DEBUG_WORDBUFFER = true
 
-const maxWordLength = 32 // found experimentally
+const maxWordLength = 80 // found experimentally
 
 
 type Word struct {

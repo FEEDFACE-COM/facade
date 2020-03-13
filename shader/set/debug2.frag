@@ -64,13 +64,12 @@ void main() {
     }    
     
     if (DEBUG) {
-        return;
         col.a = 1.0;
-        col.rgb = WHITE;
+        col.rgb += color(vPosition,gl_FrontFacing);;
     }
 
     if (!DEBUG) {
-        col.a = 1.0;
+        col.a = 0.5;
         col.rgb += color(vPosition,gl_FrontFacing);
     
     }
@@ -88,11 +87,11 @@ void main() {
     }
     
     if (gl_FrontFacing) {
-        if  (pos.x < 0.) {
-            col.b = 0.;    
-        } else {
-            col.b = 1.;
-        }
+//        if  (pos.x < 0.) {
+//            col.b = 0.;    
+//        } else {
+//            col.b = 1.;
+//        }
     }    
     gl_FragColor = col;
     
