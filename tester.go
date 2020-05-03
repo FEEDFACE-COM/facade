@@ -216,8 +216,8 @@ func (tester *Tester) Configure(config *facade.Config) error {
 			tester.lineBuffer.Drop = lines.GetDrop()
 		}
 
-		if lines.GetSetStop() {
-			tester.lineBuffer.Stop = lines.GetStop()
+		if lines.GetSetSmooth() {
+			tester.lineBuffer.Smooth = lines.GetSmooth()
 		}
 
 	}

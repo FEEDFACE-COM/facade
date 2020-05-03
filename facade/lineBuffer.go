@@ -31,7 +31,7 @@ type LineBuffer struct {
 	speed float32
 	Fixed bool
 	Drop  bool
-	Stop  bool
+	Smooth  bool
 
 	refreshChan chan bool
 
@@ -54,7 +54,7 @@ func NewLineBuffer(rows, offs uint, refreshChan chan bool) *LineBuffer {
 		speed: float32(LineDefaults.Speed),
 		Fixed: LineDefaults.Fixed,
 		Drop:  LineDefaults.Drop,
-		Stop:  LineDefaults.Stop,
+		Smooth:LineDefaults.Smooth,
 	}
 	ret.rows = rows
 	ret.offs = offs
@@ -152,8 +152,8 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
 
 	if !freshLine {
 
-		if buffer.Stop {
-			tmp += " stop"
+		if !buffer.Smooth {
+			tmp += " !smooth"
 		} else {
 			valueFun = math.Identity
 		}
@@ -527,8 +527,8 @@ func (buffer *LineBuffer) Desc() string {
 		ret += fmt.Sprintf("avg%.2f ", buffer.meterBuffer.Average())
 	}
 
-	if buffer.Stop {
-		ret += "stop "
+	if !buffer.Smooth {
+		ret += "!smooth "
 	}
 
 	if !buffer.Drop {
