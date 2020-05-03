@@ -88,7 +88,7 @@ message LineConfig {
     bool SetSpeed    = 5;   double Speed    =  6;
     bool SetFixed    = 7;     bool Fixed    =  8;
     bool SetDrop     = 9;     bool Drop     = 10;
-    bool SetStop     =11;     bool Stop     = 12;
+    bool SetSmooth   =11;     bool Smooth   = 12;
     bool SetBuffer   =13;   uint64 Buffer   = 14;  
 }
 

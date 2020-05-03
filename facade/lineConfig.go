@@ -14,7 +14,7 @@ var LineDefaults LineConfig = LineConfig{
 	Speed:    1.0,
 	Fixed:    false,
 	Drop:     true,
-	Stop:     false,
+	Smooth:   true,
 	Buffer:   8,
 }
 
@@ -36,12 +36,12 @@ func (config *LineConfig) Desc() string {
 	}
 
 	{
-		down, fixed, drop, stop := "", "", "", ""
+		down, fixed, drop, smooth := "", "", "", ""
 		dok := config.GetSetDownward()
 		sok := config.GetSetSpeed()
 		aok := config.GetSetFixed()
 		pok := config.GetSetDrop()
-		mok := config.GetSetStop()
+		mok := config.GetSetSmooth()
 
 		if dok {
 			if config.GetDownward() {
@@ -69,11 +69,11 @@ func (config *LineConfig) Desc() string {
 		}
 
 		if mok {
-			if config.GetStop() {
-				stop = "S"
+			if config.GetSmooth() {
+				smooth = "S"
 			}
-			if !config.GetStop() {
-				stop = ""
+			if !config.GetSmooth() {
+				smooth = ""
 			}
 		}
 
@@ -90,7 +90,7 @@ func (config *LineConfig) Desc() string {
 			ret += drop
 		}
 		if mok {
-			ret += stop
+			ret += smooth
 		}
 		if dok || sok || aok || pok || mok {
 			ret += " "
@@ -113,7 +113,7 @@ func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "line scroll downward?")
 	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "line drop lines?")
-	flagset.BoolVar(&config.Stop, "stop", LineDefaults.Stop, "line single line scroll?")
+	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "line scroll smooth?")
 	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "line scroll speed")
 	flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "line fixed scroll speed?")
 	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "line buffer length")
@@ -134,9 +134,9 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 				config.SetDrop = true
 				ret = true
 			}
-		case "stop":
+		case "smooth":
 			{
-				config.SetStop = true
+				config.SetSmooth = true
 				ret = true
 			}
 		case "speed":

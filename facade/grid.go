@@ -15,7 +15,7 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-const DEBUG_GRID = true
+const DEBUG_GRID = false
 
 type Grid struct {
 	width, height uint
@@ -498,8 +498,8 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 			grid.lineBuffer.Drop = lines.GetDrop()
 		}
 
-		if lines.GetSetStop() {
-			grid.lineBuffer.Stop = lines.GetStop()
+		if lines.GetSetSmooth() {
+			grid.lineBuffer.Smooth = lines.GetSmooth()
 		}
 
 	} else {
