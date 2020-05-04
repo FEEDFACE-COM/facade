@@ -43,7 +43,6 @@ void main() {
     float fader = wordFader;
     
     vec4 pos = vec4(vertex,1);
-    pos.x += charOffset;
 
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
@@ -52,10 +51,8 @@ void main() {
     bool odd = mod(wordIndex,2.0) == 1.0;
     
     if (odd) {
-//        pos.x += 2.43/2.;
         pos.x += wordWidth/2.;
     } else {
-//        pos.x -= 2.43/2.;
         pos.x -= wordWidth/2.;
     }
     pos.y -= (wordIndex - wordCount/2.)/2.;

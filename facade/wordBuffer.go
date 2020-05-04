@@ -11,7 +11,7 @@ import(
     "github.com/pborman/ansi"
 )
 
-const DEBUG_WORDBUFFER = true
+const DEBUG_WORDBUFFER = false
 
 const maxWordLength = 80 // found experimentally
 
