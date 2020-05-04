@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const DEBUG_CLOCK = false
+const DEBUG_CLOCK = true
 
 const ClockRate = 1.0
 const VerboseFrames = 60
@@ -101,18 +101,35 @@ func (clock *Clock) running() float32 {
 
 func (clock *Clock) Tick() {
 
-    triggers := []func(){}
-
     clock.mux.Lock()
+
+    running := clock.running()
+    const HOUR = 60. * 60. 
+    if running > 2. * HOUR {
+        if DEBUG_CLOCK {
+            log.Debug("%s rewind", clock.Desc())
+        }
+        add,err := time.ParseDuration( fmt.Sprintf("%.0fs",HOUR) )
+        if err != nil {
+            log.PANIC("fail to parse duration '%.0fs': %s",HOUR,err)
+        }
+        clock.hours += 1
+        clock.start = clock.start.Add(add)
+    	for _, timer := range clock.timers {
+        	timer.start -= HOUR 
+        }
+        running = clock.running()
+    }
 
     if clock.paused {
         clock.frame += 1
         clock.time = clock.pausetime
     } else {
         clock.frame += 1
-        clock.time = clock.running() - clock.pausetime 
+        clock.time = running - clock.pausetime 
     }	   
 
+    triggers := []func(){}
 	for _, timer := range clock.timers {
 
         keep, fun := (*timer).Tick(clock.time)    
@@ -137,14 +154,22 @@ func (clock *Clock) Paused() bool { return clock.paused }
 func (clock *Clock) Desc() string {
     s := ""
     if clock.paused { s = " PAUSED" }
-	return fmt.Sprintf("clock[#%05d %.2fs%s]", clock.frame, clock.time,s)
+	h := ""
+	if clock.hours > 0 {
+    	h = fmt.Sprintf("%dh ",clock.hours)
+    }
+	return fmt.Sprintf("clock[#%05d %s%.2fs%s]", clock.frame,h,clock.time,s)
 }
 
 func (clock *Clock) Info(prev ClockFrame) string {
     s := ""
     if clock.paused { s = " PAUSED" }
 	fps := float32(clock.frame-prev.Frame) / (clock.time - prev.Time)
-	return fmt.Sprintf("#%05d %.2fs %.2ffps%s", clock.frame, clock.time, fps,s)
+	h := ""
+	if clock.hours > 0 {
+    	h = fmt.Sprintf("%dh ",clock.hours)
+    }
+	return fmt.Sprintf("#%05d %s%.2fs %.2ffps%s", clock.frame,h,clock.time,fps,s)
 }
 
 func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, Time: clock.time} }
@@ -152,6 +177,7 @@ func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, T
 type Clock struct {
 	frame uint
 	time  float32
+	hours uint
 	
 	paused bool
 	pausetime float32
