@@ -55,7 +55,6 @@ void main() {
     
     vec4 pos;
     pos = vec4(vertex,1);
-    pos.x += charOffset;
 
     float a;
 

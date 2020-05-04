@@ -69,6 +69,8 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
+#demo-dns:
+#while true; do doas tcpdump -n -l  -i vlan5 -t  "dst port 53" | awk '{n=split($0,a," "); print a[n]; fflush;}' | sed -u 's/\.(.*)$//' | awk '{n=split($0,a,"."); if (n>=2) {print a[n-1] "."  a[n];} else if (n>=1) { print a[n] }};fflush; ' | fcd; sleep 1; done
 
 demo-lines:
 	@for f in ${SOURCES}; do cat $$f | while read l; do echo $$l; sleep 0.5; done; done

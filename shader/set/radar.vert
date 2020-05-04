@@ -148,16 +148,21 @@ vec2 disk(vec2 pos, float gamma) {
 
 void main() {
 
-    if (wordIndex != 2. ) {
+//    if (wordIndex != 2. ) {
 //        return;
-    }
-    
-    if (charIndex != 0.) {
+//    }
+//    
+//    if (charIndex != 0.) {
 //        return;
-    }
+//    }
 
 
     vec4 pos = vec4(vertex,1);
+    
+    pos.x -= charOffset;
+    
+    
+    float charWidth = abs(pos.x*2.);
     
     vec4 tex; 
     tex.xy = texCoord.xy;
@@ -166,11 +171,10 @@ void main() {
     vTexCoord = tex;
 
     
-    float center = wordCount / 8.;
+    float center = 1. + wordCount / 8. + wordWidth/2.;
     
-        
-    float inner = center + (charOffset + wordWidth/2.);
-    float outer = inner + pos.x*2.;
+    float inner = center + charOffset - charWidth/2.;
+    float outer = inner + charWidth;
 
     float alpha = (TAU/wordCount) / 2.0;
     float gamma = (TAU/wordCount) * -1. * wordIndex;
@@ -221,10 +225,10 @@ void main() {
     }
     
 
-//    pos.z += + 1. * cos( now + inner);
+    pos.z += + 0.25 * cos( now + outer + PI/2.);
+    pos.x += + 0.25 * sin( now + inner);
+    pos.y += + 0.25 * cos( now + inner);
 
-//    vTexCoord = tex;
-    
 
     mat4 R = mat4(1.0);
     R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);

@@ -13,7 +13,7 @@ import (
 )    
 
 
-const DEBUG_SET = true
+const DEBUG_SET = false
 
 
 
@@ -223,6 +223,8 @@ func (set *Set) vertices(
         h := float32(1.)
 
 
+        offset += w/2.
+
 //        dx := offset + w/2.
 
         idx := float32(charIndex)
@@ -231,16 +233,16 @@ func (set *Set) vertices(
 
         data := []float32{
         //   x,   y,    z,             tx, ty,   
-           -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
-           -w/2.,  -h/2.,  0.0,    0. + ox, th + oy,  idx, off,     // B
-           +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
-           +w/2.,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
-           +w/2.,  +h/2.,  0.0,    tw + ox, 0. + oy,  idx, off,     // D
-           -w/2.,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
+           -w/2.+off,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
+           -w/2.+off,  -h/2.,  0.0,    0. + ox, th + oy,  idx, off,     // B
+           +w/2.+off,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
+           +w/2.+off,  -h/2.,  0.0,    tw + ox, th + oy,  idx, off,     // C
+           +w/2.+off,  +h/2.,  0.0,    tw + ox, 0. + oy,  idx, off,     // D
+           -w/2.+off,  +h/2.,  0.0,    0. + ox, 0. + oy,  idx, off,     // A
         }
         ret = append(ret, data...)
 
-        offset += w
+        offset += w/2.
         charIndex += 1
     }
 
