@@ -16,7 +16,7 @@ uniform float wordValue;
 
 uniform float charCount;
 
-uniform float ratio;
+uniform float screenRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;

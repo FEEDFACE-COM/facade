@@ -1,6 +1,6 @@
 
 uniform float debugFlag;
-uniform float ratio;
+uniform float screenRatio;
 
 varying vec2 vTexCoord;
 

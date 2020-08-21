@@ -1,6 +1,6 @@
 
 uniform float debugFlag;
-uniform float ratio;
+uniform float screenRatio;
 
 varying vec2 vTexCoord;
 
@@ -36,10 +36,10 @@ void main() {
 
     vec2 pos = vTexCoord;
 
-    a = mask(vec2(pos.x/ratio,pos.y));
+    a = mask(vec2(pos.x/screenRatio,pos.y));
 
     if (DEBUG) {
-        col.rgb =  vec3(  1. - mask(vec2(pos.x/ratio,pos.y)) );
+        col.rgb =  vec3(  1. - mask(vec2(pos.x/screenRatio,pos.y)) );
     }
     
     

@@ -23,7 +23,8 @@ const (
 	PROJECTION  UniformName = "projection"
 	MODEL       UniformName = "model"
 	VIEW        UniformName = "view"
-	SCREENRATIO UniformName = "ratio"
+	SCREENRATIO UniformName = "screenRatio"
+	FONTRATIO   UniformName = "fontRatio"
 	TEXTURE     UniformName = "texture"
 	CLOCKNOW    UniformName = "now"
 )

@@ -123,6 +123,9 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 	grid.program.Uniform2fv(CURSORPOS, 1, &cursorPos[0])
 
+    grid.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
+    grid.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
+
 	clocknow := float32(gfx.Now())
 	grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
 
