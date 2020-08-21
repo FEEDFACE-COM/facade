@@ -154,22 +154,22 @@ func (clock *Clock) Paused() bool { return clock.paused }
 func (clock *Clock) Desc() string {
     s := ""
     if clock.paused { s = " PAUSED" }
-	h := ""
+	h := fmt.Sprintf("%.2fs",clock.time)
 	if clock.hours > 0 {
-    	h = fmt.Sprintf("%dh ",clock.hours)
+    	h = fmt.Sprintf("%dh %.0fs",clock.hours,clock.time)
     }
-	return fmt.Sprintf("clock[#%05d %s%.2fs%s]", clock.frame,h,clock.time,s)
+	return fmt.Sprintf("clock[#%05d %s%s]", clock.frame,h,s)
 }
 
 func (clock *Clock) Info(prev ClockFrame) string {
     s := ""
     if clock.paused { s = " PAUSED" }
 	fps := float32(clock.frame-prev.Frame) / (clock.time - prev.Time)
-	h := ""
+	h := fmt.Sprintf("%.2fs",clock.time)
 	if clock.hours > 0 {
-    	h = fmt.Sprintf("%dh ",clock.hours)
+    	h = fmt.Sprintf("%dh %.0fs",clock.hours,clock.time)
     }
-	return fmt.Sprintf("#%05d %s%.2fs %.2ffps%s", clock.frame,h,clock.time,fps,s)
+	return fmt.Sprintf("#%05d %s %.2ffps%s", clock.frame,h,fps,s)
 }
 
 func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, Time: clock.time} }

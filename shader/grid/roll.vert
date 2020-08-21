@@ -8,6 +8,8 @@ uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
+uniform float screenRatio;
+uniform float fontRatio;
 uniform float debugFlag;
 
 attribute vec3 vertex;
@@ -81,8 +83,8 @@ void main() {
 
 //
 //
-    float fontRatio = tileSize.x/tileSize.y;
-    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
+//    float fontRatio = tileSize.x/tileSize.y;
+//    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
     float ratio = screenRatio / fontRatio;
 
     float scaleWidth = ratio * 2. / tileCount.x;

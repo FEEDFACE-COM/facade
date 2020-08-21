@@ -330,6 +330,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
     set.program.Uniform1fv(WORDCOUNT, 1, &wordCount)
 
     set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
+    set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
     
 	clocknow := float32(gfx.Now())
 	set.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)

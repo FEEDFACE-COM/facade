@@ -16,7 +16,7 @@ uniform float wordValue;
 
 uniform float charCount;
 
-uniform float ratio;
+uniform float screenRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
@@ -57,8 +57,8 @@ void main() {
     pos.y += 0.5;
 
 
-    pos.x += (wordCount/2.) * ratio ;
-    pos.x -= wordFader * ( wordCount * ratio);
+    pos.x += (wordCount/2.) * screenRatio ;
+    pos.x -= wordFader * ( wordCount * screenRatio);
     
     vPosition = pos;
     vTexCoord = tex;

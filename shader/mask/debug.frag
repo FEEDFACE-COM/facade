@@ -1,6 +1,6 @@
 
 uniform float debugFlag;
-uniform float ratio;
+uniform float screenRatio;
 
 varying vec2 vTexCoord;
 
@@ -10,7 +10,7 @@ float w = 0.002;
 
 bool major(vec2 pos) {
 
-    for (float d = -2.0; d<=2.0; d+=0.5) {
+    for (float d = -2.0; d<=2.0; d+=1.0) {
         if (abs(pos.y - d) - w <= 0.0 ) { return true; }
         if (abs(pos.x - d) - w <= 0.0 ) { return true; }
     }
@@ -39,7 +39,7 @@ void main() {
 
 
     if ( true && major(pos) ) {
-        float gray = 0.9;
+        float gray = 1.0;
         col = gray * vec3(1.,1.,1.);
     } else if ( true && minor(pos) ) {
         float gray = 0.5;

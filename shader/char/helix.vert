@@ -7,24 +7,20 @@ uniform mat4 model;
 uniform float now;
 uniform float debugFlag;
 
-uniform float wordCount;
+uniform float wordMax;
 uniform float wordIndex;
 
 uniform float wordWidth;
 uniform float wordFader;
-uniform float wordValue;
-
-uniform float charCount;
+uniform float wordCount;
 
 uniform float screenRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
-attribute float charIndex;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
-varying float vCharIndex;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -89,23 +85,21 @@ float H = 32.;
 
 
 vec3 helix(float radius, float gamma, float alpha) {
+    radius *= 8.;
     return vec3( cos(gamma+alpha)*radius, sin(gamma+alpha)*radius, H * (gamma+alpha) );
 }
 
 vec3 helix2(float radius, float gamma, float alpha) {
-    float phase;
-    phase = PI;    
-    vec3 ret = vec3( cos(gamma+alpha+phase)*radius, sin(gamma+alpha+phase)*radius, H * (gamma+alpha+phase) );
-    ret.z -= 100.;
-    return ret;
+    radius *= -8.;
+    return vec3( cos(gamma+alpha)*radius, sin(gamma+alpha)*radius, H * (gamma+alpha) );
 }
 
 
 
 float T() {
-    float X = 16.;
+    float X = 8.;
     float TOTAL =  X * TAU;
-    float ret = (wordIndex/wordCount) * TOTAL;
+    float ret = (wordIndex/wordMax) * TOTAL;
     ret -= TOTAL/2.;
     if (mod(wordIndex,2.)==1.) {
         ret /= 4.;
@@ -132,13 +126,13 @@ void main() {
     float alpha,gamma;
 
 
-    alpha = PI/(wordCount/2.);
+    alpha = 1./4.;
     gamma = T();
 //    gamma = t ;
 //    gamma -= TOTAL/2.;
 
 
-    float inner = 8.*8.;
+    float inner = 8.;
     float outer = inner + 4. ;
 //    outer = 16.;
 //    
@@ -164,32 +158,17 @@ void main() {
     
 
 
-//    if (mod(wordIndex,2.)==1.) {
-//         A = helix(inner,gamma,+alpha);
-//         D = A; D.z += 2.;
-//         B = helix(inner,gamma,-alpha);
-//         C = B; C.z += 2.;
-//    } else {
-//         D = helix2(inner,gamma,+alpha);
-//         A = D; A.z += 2.;
-//         C = helix2(inner,gamma,-alpha);
-//         B = C; B.z += 2.;
-//    }
-    
-    float x = 2.;
-
+    if (mod(wordIndex,2.)==1.) {
          A = helix(inner,gamma,+alpha);
+         D = A; D.z += 20.;
          B = helix(inner,gamma,-alpha);
-         C = helix2(inner,gamma,-alpha);
-         D = helix2(inner,gamma,+alpha);
-//         A.z += x;
-//         B.z += x;
-//         C.z += x;
-//         D.z += x;
-    
-
-
-
+         C = B; C.z += 20.;
+    } else {
+         A = helix2(inner,gamma,+alpha);
+         D = A; D.z += 20.;
+         B = helix2(inner,gamma,-alpha);
+         C = B; C.z += 20.;
+    }
 
     if        ( pos.x < 0. && pos.y > 0. ) {
         pos.xyz = A;
@@ -223,20 +202,20 @@ void main() {
 
 
 
-    float z = 1./8.;
+    float z = 1./4.;
 //    z = wordMax / 32.;    
 
     mat4 V = view;
     V *= rotationMatrix(vec3(0.,1.,0.), PI/2.);
     V *= rotationMatrix(vec3(1.,0.,0.), PI/6.);
     
-//    V *= rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
-//    V *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
+//    R = rotationMatrix(vec3(1.,0.,0.), sin(now/2.) * PI/15.);
+//    R *= rotationMatrix(vec3(0.,1.,0.), sin(now/2.) * PI/13.);
     V *= rotationMatrix(vec3(0.,0.,1.), now);
 //    R *= rotationMatrix(vec3(0.,0.,1.), now/-1.);
     V *= scaleMatrix(z);
 
-//    V *= scaleMatrix(z);
+    V *= scaleMatrix(z);
     
     
         
