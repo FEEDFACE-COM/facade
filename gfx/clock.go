@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const DEBUG_CLOCK = true
+const DEBUG_CLOCK = false
 
 const ClockRate = 1.0
 const VerboseFrames = 60
