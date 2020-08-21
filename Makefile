@@ -20,7 +20,7 @@ ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 SHADERS ?= def.vert def.frag 
 SHADERS += color.vert color.frag 
 SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
-SHADERS += grid/bent.vert grid/crawl.vert grid/disk.vert grid/pipe.vert grid/roll.vert grid/wave.vert grid/rowz.vert 
+SHADERS += grid/bent.vert grid/crawl.vert grid/disk.vert grid/pipe.vert grid/roll.vert grid/wave.vert grid/rowz.vert grid/slide.vert
 SHADERS += set/def.vert set/def.frag set/scroll.vert set/field.vert set/debug.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
 #ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
@@ -69,18 +69,14 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
-#demo-dns:
-#while true; do doas tcpdump -n -l  -i vlan5 -t  "dst port 53" | awk '{n=split($0,a," "); print a[n]; fflush;}' | sed -u 's/\.(.*)$//' | awk '{n=split($0,a,"."); if (n>=2) {print a[n-1] "."  a[n];} else if (n>=1) { print a[n] }};fflush; ' | fcd; sleep 1; done
+demo: demo-lines
 
 demo-lines:
 	@for f in ${SOURCES}; do cat $$f | while read l; do echo $$l; sleep 0.5; done; done
 
-
-
 demo-words:
 	@for f in ${SOURCES}; do cat $$f | awk '{n=split($$0,a,"\""); for(i=0;i<=n;i++) { if (n==0) { ; } else if (i%2==0 && i!=0) { print "\"" a[i] "\"";} else { nn=split(a[i],b); for (j=1;j<=nn;j++) {print b[j];}} }}' | while read word; do echo $$word; sleep 0.5; done; done
 	
-
 	
 
 
