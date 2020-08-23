@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	DEBUG_PERIODIC = false
+	DEBUG_PERIODIC = true
 	DEBUG_EVENTS   = false
 	DEBUG_DIAG     = false
-	DEBUG_CLOCK    = false
+	DEBUG_CLOCK    = true
 	DEBUG_CONFIG   = false
 	DEBUG_FONT     = false
 	DEBUG_SHADER   = false

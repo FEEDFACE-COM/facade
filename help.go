@@ -46,11 +46,12 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	}
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help())
+	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
-	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
+	fmt.Fprintf(os.Stderr, "\n")
 
 	switch mode {
 	case facade.Mode_LINES:
@@ -63,6 +64,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
 	}
 
+	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
@@ -127,13 +129,13 @@ func ShowAssets(directory string) {
 func InfoAssets(shaders, fonts []string) string {
 	ret := ""
 
-	ret += fmt.Sprintf("\n%12s= ", "-font")
+	ret += fmt.Sprintf("\n%12s= ", "facade conf MODE -font")
 	for _, font := range fonts {
 		ret += font
 		ret += " "
 	}
 
-	ret += fmt.Sprintf("\n%12s= ", "-mask")
+	ret += fmt.Sprintf("\n%12s= ", "-	mask")
 	for _, shader := range shaders {
 		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
 			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")

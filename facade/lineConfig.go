@@ -184,7 +184,6 @@ func (config *LineConfig) Help() string {
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
-	ret += ShaderDefaults.Help()
 	ret += GridDefaults.Help()
 	tmp := flag.NewFlagSet("line", flag.ExitOnError)
 	config.AddFlags(tmp)
