@@ -64,7 +64,6 @@ func (config *TagConfig) Help() string {
 		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
 	}
 
-	ret += ShaderDefaults.Help()
 	ret += SetDefaults.Help()
 	tmp := flag.NewFlagSet("tag", flag.ExitOnError)
 	config.AddFlags(tmp)
