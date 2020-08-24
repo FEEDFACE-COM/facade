@@ -21,6 +21,8 @@ type Server struct {
 	confPort uint
 	textPort uint
 	timeout  float64
+	
+    transport string
 
 	connStr    string
 	connection *grpc.ClientConn
@@ -30,14 +32,20 @@ type Server struct {
 	queryChan  chan (chan string)
 }
 
-func NewServer(host string, confPort uint, textPort uint, timeout float64) *Server {
-	return &Server{host: host, confPort: confPort, textPort: textPort, timeout: timeout}
+func NewServer(host string, confPort uint, textPort uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Server {
+    ret := Server{host: host, confPort: confPort, textPort: textPort, timeout: timeout, transport: "tcp"}
+    if forceIPv4 {
+        ret.transport = "tcp4" 
+    } else if forceIPv6 {
+        ret.transport = "tcp6"
+    }
+    return &ret
 }
 
 func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 	textListenStr := fmt.Sprintf("%s:%d", server.host, server.textPort)
 	log.Debug("listen for text on %s", textListenStr)
-	textListener, err := net.Listen("tcp", textListenStr)
+	textListener, err := net.Listen(server.transport, textListenStr)
 	if err != nil {
 		log.PANIC("fail listen on %s: %s", textListenStr, err)
 	}
@@ -118,10 +126,12 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
 			return log.NewError("fail to receive: %s", err)
 		}
 		raw := msg.GetRaw()
-		if DEBUG_SERVER_DUMP {
-			log.Debug("recv %d byte raw:\n%s", len(raw), log.Dump(raw, len(raw), 0))
-		} else if DEBUG_SERVER {
-			log.Debug("recv %d byte raw", len(raw))
+		if DEBUG_SERVER {
+    		if DEBUG_SERVER_DUMP {
+                log.Debug("recv %d byte raw:\n%s", len(raw), log.Dump(raw, len(raw), 0))
+            } else  {
+                log.Debug("recv %d byte raw", len(raw))
+            }
 		}
 		tmp = append(rem, raw...)
 		rem, err = facade.ProcessRaw(tmp, server.bufferChan)
@@ -160,12 +170,13 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 			log.Error("text read %s error: %s", textConn.RemoteAddr().String(), err)
 			break
 		}
-		if DEBUG_SERVER_DUMP {
-			log.Debug("recv %d byte:\n%s", n, log.Dump(buf, n, 0))
-		} else if DEBUG_SERVER {
-			log.Debug("recv %d byte", n)
-		}
-
+		if DEBUG_SERVER {
+            if DEBUG_SERVER_DUMP {
+                log.Debug("recv %d byte:\n%s", n, log.Dump(buf, n, 0))
+            } else {
+                log.Debug("recv %d byte", n)
+            }
+        }
 		tmp = append(rem, buf[:n]...)
 		//		log.Debug("PROCESS %d byte:\n%s",len(tmp),log.Dump(tmp,len(tmp),0))
 		rem, err = facade.ProcessRaw(tmp, bufChan)
@@ -192,7 +203,7 @@ func (server *Server) Listen(
 	if DEBUG_SERVER {
 		log.Debug("listen %s", server.connStr)
 	}
-	listener, err := net.Listen("tcp", server.connStr)
+	listener, err := net.Listen(server.transport, server.connStr)
 	if err != nil {
 		log.PANIC("fail to listen %s: %s", server.connStr, err)
 	}
