@@ -63,14 +63,15 @@ const (
 var (
 	textPort       uint    = 0xfcd
 	port           uint    = 0xfcc
-	host           string  = ""
+	receiveHost    string  = ""
+	connectHost    string  = ""
 	connectTimeout float64 = 5.0
 	readTimeout    float64 = 0.0
 	forceIPv4      bool    = false
 	forceIPv6      bool    = false
 )
 
-const DEFAULT_LISTEN_HOST = "[::]"
+const DEFAULT_RECEIVE_HOST = "[::]"
 const DEFAULT_CONNECT_HOST = "localhost"
 
 func main() {
@@ -105,7 +106,7 @@ func main() {
 
 	for _, cmd := range []Command{PIPE, CONF, EXEC, INFO} {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
-		commandFlags[cmd].StringVar(&host, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
+		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
 		commandFlags[cmd].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking");
 		commandFlags[cmd].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking");
@@ -114,7 +115,7 @@ func main() {
 	if commandFlags[RECV] != nil {
 		commandFlags[RECV].UintVar(&port, "port", port, "listen on `port` for messages")
 		commandFlags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		commandFlags[RECV].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		commandFlags[RECV].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
 		commandFlags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 		commandFlags[RECV].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking");
 		commandFlags[RECV].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking");
@@ -123,7 +124,7 @@ func main() {
 	if commandFlags[TEST] != nil {
 		commandFlags[TEST].UintVar(&port, "port", port, "listen on `port` for messages")
 		commandFlags[TEST].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		commandFlags[TEST].StringVar(&host, "host", DEFAULT_LISTEN_HOST, "listen on `host`")
+		commandFlags[TEST].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
 		commandFlags[TEST].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
@@ -328,7 +329,7 @@ func main() {
 
 	case RECV:
 		log.Info(AUTHOR)
-		server = NewServer(host, port, textPort, readTimeout, forceIPv4, forceIPv6)
+		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
 		renderer = NewRenderer(directory)
 		go server.Listen(confs, texts, quers)
 		go server.ListenText(texts)
@@ -342,7 +343,7 @@ func main() {
 		err = renderer.Render(confs,pause)
 
 	case PIPE:
-		client = NewClient(host, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -367,7 +368,7 @@ func main() {
 			os.Exit(-1)
 		}
 		log.Debug("configure %s", config.Desc())
-		client = NewClient(host, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -377,7 +378,7 @@ func main() {
 		}
 
 	case INFO:
-		client = NewClient(host, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -410,7 +411,7 @@ func main() {
 		config.Terminal.Grid.Height = rows
 		config.Terminal.Grid.SetHeight = true
 
-		client = NewClient(host, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
 		executor = NewExecutor(client, uint(cols), uint(rows), path, args)
 
 		if err = client.Dial(); err != nil {
@@ -435,7 +436,7 @@ func main() {
 		scanner = NewScanner()
 		go scanner.ScanText(texts)
 
-		server = NewServer(host, port, textPort, readTimeout, forceIPv4, forceIPv6)
+		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
 		go server.Listen(confs, texts, quers)
 		go server.ListenText(texts)
 
