@@ -47,11 +47,11 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
-	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help())
-	fmt.Fprintf(os.Stderr, "\n")
-	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
-	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
+	fmt.Fprintf(os.Stderr, "\nMode  Flags:\n")
 
 	switch mode {
 	case facade.Mode_LINES:
@@ -64,7 +64,6 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
 	}
 
-	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
 	fmt.Fprintf(os.Stderr, "\n")
 }
 
@@ -129,23 +128,32 @@ func ShowAssets(directory string) {
 func InfoAssets(shaders, fonts []string) string {
 	ret := ""
 
-	ret += fmt.Sprintf("\n%12s= ", "facade conf MODE -font")
-	for _, font := range fonts {
-		ret += font
-		ret += " "
-	}
+    modes := map[facade.Mode]string {
+                facade.Mode_LINES: "grid/",
+                facade.Mode_TERM:  "grid/",
+                facade.Mode_WORDS: "set/",
+                facade.Mode_TAGS:  "set/",
+    }
+             
+	for _, mode := range []facade.Mode{facade.Mode_LINES, facade.Mode_TERM, facade.Mode_WORDS, facade.Mode_TAGS} {
 
-	ret += fmt.Sprintf("\n%12s= ", "-	mask")
-	for _, shader := range shaders {
-		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
-			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
-			ret += " "
-		}
-	}
+        ret += fmt.Sprintf("\nfacade conf %5s -font= ", strings.ToLower(mode.String()))
+        for _, font := range fonts {
+            ret += font
+            ret += " "
+        }
+    
+        ret += fmt.Sprintf("\nfacade conf %5s -mask= ", strings.ToLower(mode.String()))
+        for _, shader := range shaders {
+            if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
+                ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
+                ret += " "
+            }
+        }
 
-	for _, prefix := range []string{"grid/", "set/"} {
+    	prefix := modes[mode]
 		for _, suffix := range []string{".vert", ".frag"} {
-			tmp := strings.TrimSuffix(prefix, "/") + " -" + strings.TrimPrefix(suffix, ".")
+			tmp := fmt.Sprintf("facade conf %5s -%s",strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
 			ret += fmt.Sprintf("\n%12s= ", tmp)
 			for _, shader := range shaders {
 				if strings.HasPrefix(shader, prefix) && strings.HasSuffix(shader, suffix) {
@@ -155,6 +163,7 @@ func InfoAssets(shaders, fonts []string) string {
 
 			}
 		}
+        ret += "\n"
 	}
 
 	ret += "\n"
