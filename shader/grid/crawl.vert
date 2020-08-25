@@ -94,6 +94,9 @@ mat4 pitchMatrix(float angle)
 //    return (y+tileCount.y/2.)/tileCount.y;
 //}
 
+float dy(float y) {
+    return 1. - (  0.25 + 0.5 * ((y+tileCount.y/2.) / tileCount.y ) );
+}
 
 void main() {
     vTexCoord = texCoord;
@@ -103,101 +106,42 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-//    pos.y += scroller;
-//    pos.x += (tileCoord.x * tileSize.x);
-//    pos.y += (tileCoord.y * tileSize.y);
-//
-//    pos.x += ( tileOffset.x * tileSize.x);
-//    pos.y += ( tileOffset.y * tileSize.y);
-    
-//    float w = tileCount.x * tileSize.x;
-//    float h = tileCount.y * tileSize.y;
-    
-    
-    
-//    vec2 A = vec2(-w/2., h/2.);
-//    vec2 B = vec2(-w/2.,-h/2.);
-//    vec2 C = vec2( w/2., h/2.);
-//    vec2 D = vec2( w/2.,-h/2.);
-    
-//    vec2 Ai = vec2(-w/4., h/2.);
-//    vec2 Bi = vec2(-w/2.,-h/2.);
-//    vec2 Ci = vec2( w/2., h/2.);
-//    vec2 Di = vec2( w/4.,-h/2.);
-
-//    float dx,dy;
-//    dx = (tileCoord.x+tileCount.x/2.) / tileCount.x;
-//    dy = (tileCoord.y+tileCount.y/2.) / tileCount.y;
+    float dy0 = dy(tileCoord.y+1.);
+    float dy1 = dy(tileCoord.y);
 
 
-    float w = tileSize.x;
-    float h = tileSize.y;
     
-    float cols = tileCount.x;
-    float rows = tileCount.y;
-
+    float w0 = dy0 * tileSize.x;
+    float w1 = dy1 * tileSize.x;
+    float h  = tileSize.y;
+    
     float x = tileCoord.x;
-    float y = tileCoord.y;    
+    float y = tileCoord.y;
+
+
+    vec2 A = vec2((w0*(x-1.)) , (h * (y   )));
+    vec2 B = vec2((w1*(x-1.)) , (h * (y-1.)));
+    vec2 C = vec2((w1*(x   )) , (h * (y-1.)));
+    vec2 D = vec2((w0*(x   )) , (h * (y   )));
     
-    float dx = 0.;
-    float dy = 0.;
     
-//    pos.x = w * dx(x);
-//    pos.y = h * dy(y);
-        
-//    float H = tileCount.y * tileSize.y;
-//    float alpha = asin(1./ H );
-//    float x = H * cos(alpha);    
-
-    vec2 orig = pos.xy;
-    if (        orig.x < 0.0 && orig.y > 0.0 ) {
-        dx = 0.0;
-        dy = 1.0;
-    } else if ( orig.x < 0.0 && orig.y < 0.0 ) {
-        dx = 0.0;
-        dy = 0.0;
-    } else if ( orig.x > 0.0 && orig.y < 0.0 ) {
-        dx = 1.0;
-        dy = 0.0;
-    } else if ( orig.x > 0.0 && orig.y > 0.0 ) {
-        dx = 1.0;
-        dy = 1.0;
-    }        
-
-    float px = 0.5*((x+dx+cols/2.) / cols) + 0.5;
-    float py = 0.5*((-y+dy+rows/2.) / rows) + 0.5;
-
-
-    float h1 = 1.;
-    float h0 = 2.;
-
-    pos.x = (x+dx) * w * (py*(h0-h1));
-    pos.y = (y+dy) * h ;
-
-
-//    pos = pos*rollMatrix(now);
+   
+    if        ( pos.x < 0. && pos.y > 0. ) {
+        pos.xy = A;
+    } else if ( pos.x < 0. && pos.y < 0. ) {
+        pos.xy = B;
+    } else if ( pos.x > 0. && pos.y < 0. ) {
+        pos.xy = C;
+    } else if ( pos.x > 0. && pos.y > 0. ) {
+        pos.xy = D;
+    }
     
-    float zoom = 1.0;
+    pos.xy = pos.xy + (scroller * (A-B));
+
     float ratio = screenRatio / fontRatio;
-    float zoom_rows = model[0][0];
-    float zoom_cols = ratio * 2. / tileCount.x;
-    
-    zoom = zoom_rows;
-        
-    
-//    float ALPHA;
-//    ALPHA = PI/4.;
-//    ALPHA = PI * 3./8.;
-//    ALPHA = alpha;
-//    mat4 rot;
-//    rot = rollMatrix(alpha);
-    
-
-
-//    pos.y += h/2.;
-//    pos = rot * pos;
-//    pos.y -= tileCount.y/1.;
-    
+    float cols = ratio * 2. / tileCount.x;
+    float rows = model[0][0];
+    float zoom = rows;
     mat4 mdl;
     mdl = mat4(1.0);
     mdl[0][0] = zoom;
