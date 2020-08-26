@@ -89,6 +89,12 @@ void main() {
         pos.xy = C;
     }
 
-    gl_Position = projection * view * model * pos;
+    float zoom = 2. * model[0][0];
+    mat4 mdl = mat4(zoom);
+    mdl[3][3] = 1.0;
+    
+
+    gl_Position = projection * view * mdl * pos;
+
 }
 

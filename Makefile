@@ -72,10 +72,10 @@ build: ${BUILD_PRODUCT}
 demo: demo-lines
 
 demo-lines:
-	@for f in ${SOURCES}; do cat $$f | while read l; do echo $$l; sleep 0.5; done; done
+	@for f in ${SOURCES}; do cat $$f | while read l; do echo $$l; sleep 0.5; done; sleep 2; done
 
 demo-words:
-	@for f in ${SOURCES}; do cat $$f | awk '{n=split($$0,a,"\""); for(i=0;i<=n;i++) { if (n==0) { ; } else if (i%2==0 && i!=0) { print "\"" a[i] "\"";} else { nn=split(a[i],b); for (j=1;j<=nn;j++) {print b[j];}} }}' | while read word; do echo $$word; sleep 0.5; done; done
+	@for f in ${SOURCES}; do cat $$f | awk '{n=split($$0,a,"\""); for(i=0;i<=n;i++) { if (n==0) { ; } else if (i%2==0 && i!=0) { print "\"" a[i] "\"";} else { nn=split(a[i],b); for (j=1;j<=nn;j++) {print b[j];}} }}' | while read word; do echo $$word; sleep 0.5; done; sleep 2; done
 	
 	
 
