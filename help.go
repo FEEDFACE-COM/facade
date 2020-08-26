@@ -51,7 +51,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
-	fmt.Fprintf(os.Stderr, "\nMode  Flags:\n")
+	fmt.Fprintf(os.Stderr, "\nMode Flags:\n")
 
 	switch mode {
 	case facade.Mode_LINES:
