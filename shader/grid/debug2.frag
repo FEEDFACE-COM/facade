@@ -26,32 +26,40 @@ void main() {
         col.a = 1.0;
     } 
 
+    col.rgb = vec3(0.,0.,0.);
+    col.a = 1.;
     
+    if ( vTileCoord.x == 0.0 || vTileCoord.y == 0.0 ) {
+        
+        col.rgb += vec3(1.,1.,1.);
     
-    if ( 
-        vTileCoord.x == 0.0
-     || vTileCoord.y == 0.0
-     || vTileCoord.x+1. >= (tileCount.x/2.)
-     || vTileCoord.y+1. >= (tileCount.y/2.)
-     || vTileCoord.x <= -(tileCount.x/2.)
-     || vTileCoord.y <= -(tileCount.y/2.)
-    ) {
-        col.rgb = vec3(1.,1.,1.);
-        col.a = 1.0;
-     
-    } else if (
-         mod(-abs(vTileCoord.x) , 2.) == 0.0 
-     ^^ mod(-abs(vTileCoord.y) , 2.) == 0.0
+    } 
+    if ( vTileCoord.x + tileCount.x/2. <= .5 ) {
     
-    ) {
-        col.rgb = 0.75 * vec3(1.,1.,1.);
-        col.a = 0.5;
-    } else {
-        col = vec4(0.);
+        col.rgb += vec3(0.,1.,0.);
+    
     }
-         
+    if ( vTileCoord.x + tileCount.x/2. >= tileCount.x-2. ) {
+    
+        col.rgb += vec3(1.,0.,1.);
+    
+    }
+    if ( vTileCoord.y + tileCount.y/2. <= .5 ) {
+    
+        col.rgb += vec3(1.,0.,0.);
 
-
+    }
+    if ( vTileCoord.y + tileCount.y/2. >= tileCount.y-1. ) {
+    
+        col.rgb += vec3(0.,1.,1.);
+    
+    }
+    if ( mod(-abs(vTileCoord.x) , 2.) == 0.0  ^^ mod(-abs(vTileCoord.y) , 2.) == 0.0 ) {
+    
+        col.rgb += 0.5 * vec3(1.,1.,1.);
+    
+    }
+    
     
     if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) {
         col.rgba = 1. - col.rgba;
