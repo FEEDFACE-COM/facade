@@ -8,6 +8,8 @@ uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
+uniform float screenRatio;
+uniform float fontRatio;
 uniform float debugFlag;
 
 attribute vec3 vertex;
@@ -41,8 +43,8 @@ void main() {
     vec4 pos = vec4(vertex,1);
 
 
-    float RADIUS = 10.;
-    float R0 = 4.0;
+    float RADIUS = tileCount.y/2. - 1.;
+    float R0 = 1.0;
     float rad = RADIUS / (tileCount.y + R0); 
 
 
@@ -52,7 +54,7 @@ void main() {
     
 
     float ARC = TAU;
-    float A0 = 2.0;
+    float A0 = 0.0;
   
     float alpha,gamma;
     
@@ -89,9 +91,15 @@ void main() {
         pos.xy = C;
     }
 
-    float zoom = 2. * model[0][0];
-    mat4 mdl = mat4(zoom);
-    mdl[3][3] = 1.0;
+    float ratio = screenRatio / fontRatio;
+    float zoom_cols = ratio * 2. / tileCount.x * 1.5;
+    float zoom_rows = 2./(tileCount.y);
+    float zoom = zoom_rows;
+
+    mat4 mdl;
+    mdl = mat4(1.0);
+    mdl[0][0] = zoom;
+    mdl[1][1] = zoom;
     
 
     gl_Position = projection * view * mdl * pos;
