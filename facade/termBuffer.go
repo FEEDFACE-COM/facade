@@ -434,14 +434,7 @@ func (buffer *TermBuffer) insertCharacter(cnt uint) {
 
 func (buffer *TermBuffer) eraseLine(val uint) {
 	if DEBUG_TERMBUFFER {
-		tmp := ""
-		switch val {
-			case 0:  tmp = "cursor to end"
-			case 1:  tmp = "start to cursor"
-			case 2:  tmp = "start to end"
-			default: tmp = "unsupported"
-		}
-		log.Debug("%s erase line %s", buffer.Desc(), tmp)
+		log.Debug("%s erase line %d", buffer.Desc(), val)
 	}
 	switch val {
 	case 0:
