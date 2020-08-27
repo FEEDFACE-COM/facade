@@ -411,6 +411,15 @@ func (buffer *TermBuffer) deleteCharacter(cnt uint) {
 	}
 }
 
+func (buffer *TermBuffer) eraseCharacter(cnt uint) {
+	if DEBUG_TERMBUFFER {
+		log.Debug("%s erase %d characters", buffer.Desc(), cnt)
+	}
+	for c := uint(buffer.cursor.x); c < buffer.cursor.x + cnt && c <= buffer.max.x; c++ {
+		buffer.buffer[buffer.cursor.y][c] = ' '
+	}
+}
+
 func (buffer *TermBuffer) insertCharacter(cnt uint) {
 	if DEBUG_TERMBUFFER {
 		log.Debug("%s insert %d chars", buffer.Desc(), cnt)
@@ -514,6 +523,11 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 	}
 
 	switch sequence {
+
+	case ansi.Table[ansi.ECH]:
+		var val uint
+		fmt.Sscanf(seq.Params[0], "%d", &val)
+		buffer.eraseCharacter(val)
 
 	case ansi.Table[ansi.ED]:
 		var val uint
