@@ -16,51 +16,49 @@ type Timer struct {
 	duration float32
 	repeat   bool
 
-	bias   float32
+	bias float32
 }
 
-
 func (timer *Timer) SetDuration(duration float32) {
-    timer.duration = duration
+	timer.duration = duration
 }
 
 func (timer *Timer) Duration() float32 { return timer.duration }
-func (timer *Timer) Count() uint    { return timer.count }
-func (timer *Timer) Fader() float32 { return timer.fader }
-
+func (timer *Timer) Count() uint       { return timer.count }
+func (timer *Timer) Fader() float32    { return timer.fader }
 
 func (timer *Timer) Edge(now float32) float32 {
-    
-    // return negative remaining time
-    // or positive elapsed time
-    // whichever is closer to now
 
-    if timer.fader <= 0.5 {
-        return timer.Elapsed(now)
-    } else {
-        return -1. * timer.Remaining(now)
-    }
+	// return negative remaining time
+	// or positive elapsed time
+	// whichever is closer to now
+
+	if timer.fader <= 0.5 {
+		return timer.Elapsed(now)
+	} else {
+		return -1. * timer.Remaining(now)
+	}
 }
 
 func (timer *Timer) Elapsed(now float32) float32 {
-    // return 0 <= elapsed <= duration
-    if now <= timer.start {
-        return 0.    
-    } else if now >= timer.start + timer.duration {
-        return timer.duration
-    } else {
-        return now-timer.start
-    }
+	// return 0 <= elapsed <= duration
+	if now <= timer.start {
+		return 0.
+	} else if now >= timer.start+timer.duration {
+		return timer.duration
+	} else {
+		return now - timer.start
+	}
 }
-func (timer *Timer) Remaining(now float32) float32 { 
-    /// return 0 <= remaining <= duration
-    if now <= timer.start {
-        return timer.duration
-    } else if now >= timer.start + timer.duration {
-        return 0.
-    } else {
-        return timer.duration - (now - timer.start)
-    }
+func (timer *Timer) Remaining(now float32) float32 {
+	/// return 0 <= remaining <= duration
+	if now <= timer.start {
+		return timer.duration
+	} else if now >= timer.start+timer.duration {
+		return 0.
+	} else {
+		return timer.duration - (now - timer.start)
+	}
 
 }
 
@@ -79,38 +77,35 @@ func (timer *Timer) Value() float32 {
 //}
 
 func (timer *Timer) Extend(now float32) bool {
-    
-    
-    const MAX = float32( 0.95 )
-    
-    if timer.fade(now) >= MAX {
-        timer.bias = 0.
-        timer.start = now
-        return false
 
-    } 
+	const MAX = float32(0.95)
 
-    timer.bias = timer.fade(now)
-    timer.start = now
-    
-    return true
-        
+	if timer.fade(now) >= MAX {
+		timer.bias = 0.
+		timer.start = now
+		return false
+
+	}
+
+	timer.bias = timer.fade(now)
+	timer.start = now
+
+	return true
+
 }
-    
-
 
 func (timer *Timer) fade(now float32) float32 {
-    t := now - timer.start
-    d := timer.duration
-    b := timer.bias
+	t := now - timer.start
+	d := timer.duration
+	b := timer.bias
 
-    return b + (1.-b) * (t/d) 
-    
+	return b + (1.-b)*(t/d)
+
 }
 
 func (timer *Timer) Tick(now float32) (bool, func()) {
-    
-    timer.fader = math.Clamp( timer.fade(now) )
+
+	timer.fader = math.Clamp(timer.fade(now))
 
 	//triggered?
 	if now > timer.start+timer.duration {
@@ -132,16 +127,16 @@ func (timer *Timer) Tick(now float32) (bool, func()) {
 }
 
 func (timer *Timer) Desc() string {
-    run := Now() - timer.start
-	ret := fmt.Sprintf("t[%.1f/%.1f", run,timer.duration)
+	run := Now() - timer.start
+	ret := fmt.Sprintf("t[%.1f/%.1f", run, timer.duration)
 	if timer.repeat {
 		ret += fmt.Sprintf(" #%d", timer.count)
-    }
+	}
 	if timer.bias == 0.0 {
-    	ret += fmt.Sprintf(" →%3.1f    ", timer.fader)
-    } else {
-        ret += fmt.Sprintf(" →%3.1f+%3.1f",(1.-timer.bias)*timer.fader,timer.bias)    
-    }
+		ret += fmt.Sprintf(" →%3.1f    ", timer.fader)
+	} else {
+		ret += fmt.Sprintf(" →%3.1f+%3.1f", (1.-timer.bias)*timer.fader, timer.bias)
+	}
 	if timer.valueFun != nil {
 		ret += fmt.Sprintf(" ↑%4.2f", timer.valueFun(timer.fader))
 	}

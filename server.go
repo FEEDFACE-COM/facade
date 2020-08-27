@@ -21,8 +21,8 @@ type Server struct {
 	confPort uint
 	textPort uint
 	timeout  float64
-	
-    transport string
+
+	transport string
 
 	connStr    string
 	connection *grpc.ClientConn
@@ -33,13 +33,13 @@ type Server struct {
 }
 
 func NewServer(host string, confPort uint, textPort uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Server {
-    ret := Server{host: host, confPort: confPort, textPort: textPort, timeout: timeout, transport: "tcp"}
-    if forceIPv4 {
-        ret.transport = "tcp4" 
-    } else if forceIPv6 {
-        ret.transport = "tcp6"
-    }
-    return &ret
+	ret := Server{host: host, confPort: confPort, textPort: textPort, timeout: timeout, transport: "tcp"}
+	if forceIPv4 {
+		ret.transport = "tcp4"
+	} else if forceIPv6 {
+		ret.transport = "tcp6"
+	}
+	return &ret
 }
 
 func (server *Server) ListenText(bufChan chan facade.TextSeq) {
@@ -127,11 +127,11 @@ func (server *Server) Display(stream facade.Facade_DisplayServer) error {
 		}
 		raw := msg.GetRaw()
 		if DEBUG_SERVER {
-    		if DEBUG_SERVER_DUMP {
-                log.Debug("recv %d byte raw:\n%s", len(raw), log.Dump(raw, len(raw), 0))
-            } else  {
-                log.Debug("recv %d byte raw", len(raw))
-            }
+			if DEBUG_SERVER_DUMP {
+				log.Debug("recv %d byte raw:\n%s", len(raw), log.Dump(raw, len(raw), 0))
+			} else {
+				log.Debug("recv %d byte raw", len(raw))
+			}
 		}
 		tmp = append(rem, raw...)
 		rem, err = facade.ProcessRaw(tmp, server.bufferChan)
@@ -171,12 +171,12 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 			break
 		}
 		if DEBUG_SERVER {
-            if DEBUG_SERVER_DUMP {
-                log.Debug("recv %d byte:\n%s", n, log.Dump(buf, n, 0))
-            } else {
-                log.Debug("recv %d byte", n)
-            }
-        }
+			if DEBUG_SERVER_DUMP {
+				log.Debug("recv %d byte:\n%s", n, log.Dump(buf, n, 0))
+			} else {
+				log.Debug("recv %d byte", n)
+			}
+		}
 		tmp = append(rem, buf[:n]...)
 		//		log.Debug("PROCESS %d byte:\n%s",len(tmp),log.Dump(tmp,len(tmp),0))
 		rem, err = facade.ProcessRaw(tmp, bufChan)

@@ -4,14 +4,14 @@ package facade
 
 //
 import (
+	gfx "../gfx"
 	"flag"
 	"strings"
-	gfx "../gfx"
 )
 
 var WordDefaults WordConfig = WordConfig{
 	Shader: nil,
-	Set: nil,
+	Set:    nil,
 }
 
 func (config *WordConfig) Desc() string {
@@ -58,6 +58,6 @@ func (config *WordConfig) Help() string {
 	ret := SetDefaults.Help()
 	tmp := flag.NewFlagSet("word", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

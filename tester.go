@@ -30,7 +30,7 @@ type Tester struct {
 
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
-	wordBuffer  *facade.WordBuffer
+	wordBuffer *facade.WordBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService

@@ -4,8 +4,8 @@ package gfx
 
 import (
 	log "../log"
-    "fmt"
 	"errors"
+	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"image"
 	"image/color"
@@ -32,11 +32,10 @@ func NewTexture(name string) *Texture {
 	return &Texture{Name: name}
 }
 
-
 func (texture *Texture) Desc() string {
-    ret := ""
-    ret += fmt.Sprintf("texture['%s' %.0fx%.0f]",texture.Name,texture.Size.Width,texture.Size.Height)
-    return ret
+	ret := ""
+	ret += fmt.Sprintf("texture['%s' %.0fx%.0f]", texture.Name, texture.Size.Width, texture.Size.Height)
+	return ret
 }
 
 func (texture *Texture) LoadFile(path string) error {
@@ -111,13 +110,13 @@ func (texture *Texture) Close() {
 }
 
 func (texture *Texture) TexImage() error {
-    width := texture.rgba.Rect.Size().X
-    height := texture.rgba.Rect.Size().Y
-    data := texture.rgba.Pix
-    
-    if len(data) <= 0 || len(data) != 4 * width * height {
-        return log.NewError("invalid rgba data: %d byte for %dx%d image",len(data),width,height)
-    }
+	width := texture.rgba.Rect.Size().X
+	height := texture.rgba.Rect.Size().Y
+	data := texture.rgba.Pix
+
+	if len(data) <= 0 || len(data) != 4*width*height {
+		return log.NewError("invalid rgba data: %d byte for %dx%d image", len(data), width, height)
+	}
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture.texture)

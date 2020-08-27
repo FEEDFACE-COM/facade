@@ -144,17 +144,21 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 		switch run {
 
 		case '\n':
-			if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
+			if DEBUG_TERMBUFFER {
+				log.Debug("%s linefeed", buffer.Desc())
+			}
 			buffer.cursor.y += 1
-//			buffer.cursor.x = 1  // ?TWEAK: breaks mtr?
+			//			buffer.cursor.x = 1  // ?TWEAK: breaks mtr?
 			if buffer.shouldScroll() {
-				buffer.cursor.x = 1  // ?TWEAK: fixes mtr?
+				buffer.cursor.x = 1 // ?TWEAK: fixes mtr?
 				buffer.scrollLine()
 				buffer.cursor.y = buffer.max.y
 			}
 
 		case '\t':
-			if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
+			if DEBUG_TERMBUFFER {
+				log.Debug("%s tabulator", buffer.Desc())
+			}
 
 			for c := 0; c < TabWidth; c++ {
 
@@ -184,14 +188,20 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 			//            }
 
 		case '\r':
-			if DEBUG_TERMBUFFER { log.Debug("%s carriage return",buffer.Desc()) }
+			if DEBUG_TERMBUFFER {
+				log.Debug("%s carriage return", buffer.Desc())
+			}
 			buffer.cursor.x = 1
 
 		case '\a':
-			if DEBUG_TERMBUFFER { log.Debug("%s bell.", buffer.Desc()) }
+			if DEBUG_TERMBUFFER {
+				log.Debug("%s bell.", buffer.Desc())
+			}
 
 		case '\b':
-			if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
+			if DEBUG_TERMBUFFER {
+				log.Debug("%s backspace", buffer.Desc())
+			}
 			buffer.cursor.x -= 1
 			if buffer.cursor.x <= 1 {
 				buffer.cursor.x = 1
@@ -415,7 +425,7 @@ func (buffer *TermBuffer) eraseCharacter(cnt uint) {
 	if DEBUG_TERMBUFFER {
 		log.Debug("%s erase %d characters", buffer.Desc(), cnt)
 	}
-	for c := uint(buffer.cursor.x); c < buffer.cursor.x + cnt && c <= buffer.max.x; c++ {
+	for c := uint(buffer.cursor.x); c < buffer.cursor.x+cnt && c <= buffer.max.x; c++ {
 		buffer.buffer[buffer.cursor.y][c] = ' '
 	}
 }

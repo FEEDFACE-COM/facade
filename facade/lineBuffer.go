@@ -27,11 +27,11 @@ type LineBuffer struct {
 	buf  []*Line
 	rem  []rune
 
-	timer *gfx.Timer
-	speed float32
-	Fixed bool
-	Drop  bool
-	Smooth  bool
+	timer  *gfx.Timer
+	speed  float32
+	Fixed  bool
+	Drop   bool
+	Smooth bool
 
 	refreshChan chan bool
 
@@ -51,10 +51,10 @@ func NewLineBuffer(rows, offs uint, refreshChan chan bool) *LineBuffer {
 	}
 	total := rows + offs
 	ret := &LineBuffer{
-		speed: float32(LineDefaults.Speed),
-		Fixed: LineDefaults.Fixed,
-		Drop:  LineDefaults.Drop,
-		Smooth:LineDefaults.Smooth,
+		speed:  float32(LineDefaults.Speed),
+		Fixed:  LineDefaults.Fixed,
+		Drop:   LineDefaults.Drop,
+		Smooth: LineDefaults.Smooth,
 	}
 	ret.rows = rows
 	ret.offs = offs

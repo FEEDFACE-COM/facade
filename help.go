@@ -27,7 +27,7 @@ func ShowHelp(flags flag.FlagSet) {
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
 	str := ""
-	flags.VisitAll( func (f *flag.Flag) { str += gfx.FlagHelp(f) } )
+	flags.VisitAll(func(f *flag.Flag) { str += gfx.FlagHelp(f) })
 	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 
@@ -83,7 +83,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
 	str := ""
-	flags.VisitAll( func (f *flag.Flag) { str += gfx.FlagHelp(f) } )
+	flags.VisitAll(func(f *flag.Flag) { str += gfx.FlagHelp(f) })
 	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 
@@ -118,11 +118,11 @@ func ShowAssets(directory string) {
 func InfoAssets(shaders, fonts []string) string {
 	ret := ""
 
-	modes := map[facade.Mode]string {
-				facade.Mode_LINES: "grid/",
-				facade.Mode_TERM:  "grid/",
-				facade.Mode_WORDS: "set/",
-				facade.Mode_TAGS:  "set/",
+	modes := map[facade.Mode]string{
+		facade.Mode_LINES: "grid/",
+		facade.Mode_TERM:  "grid/",
+		facade.Mode_WORDS: "set/",
+		facade.Mode_TAGS:  "set/",
 	}
 
 	ret += fmt.Sprintf("\nfacade conf <MODE> -font= ")
@@ -138,13 +138,12 @@ func InfoAssets(shaders, fonts []string) string {
 			ret += " "
 		}
 	}
-			 
-	for _, mode := range []facade.Mode{facade.Mode_LINES, facade.Mode_TERM, facade.Mode_WORDS, facade.Mode_TAGS} {
 
+	for _, mode := range []facade.Mode{facade.Mode_LINES, facade.Mode_TERM, facade.Mode_WORDS, facade.Mode_TAGS} {
 
 		prefix := modes[mode]
 		for _, suffix := range []string{".vert", ".frag"} {
-			tmp := fmt.Sprintf("facade conf %5s -%s",strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
+			tmp := fmt.Sprintf("facade conf %5s -%s", strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
 			ret += fmt.Sprintf("\n%12s= ", tmp)
 			for _, shader := range shaders {
 				if strings.HasPrefix(shader, prefix) && strings.HasSuffix(shader, suffix) {

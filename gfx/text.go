@@ -64,5 +64,3 @@ func (text *Text) RenderTexture(font *Font) error {
 	text.Texture.TexImage()
 	return nil
 }
-
-
