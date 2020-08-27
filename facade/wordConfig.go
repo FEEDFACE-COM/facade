@@ -5,8 +5,8 @@ package facade
 //
 import (
 	"flag"
-	"fmt"
 	"strings"
+	gfx "../gfx"
 )
 
 var WordDefaults WordConfig = WordConfig{
@@ -55,23 +55,9 @@ func (config *WordConfig) VisitFlags(flagset *flag.FlagSet) bool {
 }
 
 func (config *WordConfig) Help() string {
-	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
-	ret += SetDefaults.Help()
+	ret := SetDefaults.Help()
 	tmp := flag.NewFlagSet("word", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{} {
-		if flg := tmp.Lookup(s); flg != nil {
-			fun(flg)
-		}
-	}
-	//tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
 }

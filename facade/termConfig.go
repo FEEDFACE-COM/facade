@@ -5,8 +5,8 @@ package facade
 //
 import (
 	"flag"
-	"fmt"
 	"strings"
+	gfx "../gfx"
 )
 
 var TermDefaults TermConfig = TermConfig{}
@@ -54,18 +54,9 @@ func (config *TermConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return ret
 }
 func (config *TermConfig) Help() string {
-	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
-	ret += GridDefaults.Help()
+	ret := GridDefaults.Help()
 	tmp := flag.NewFlagSet("term", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
-}
+}    

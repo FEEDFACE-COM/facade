@@ -5,7 +5,7 @@ package facade
 //
 import (
 	"flag"
-	"fmt"
+	gfx "../gfx"
 	"strings"
 )
 
@@ -64,21 +64,10 @@ func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet) bool {
 
 func (config *ShaderConfig) Help() string {
 	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
-	tmp := flag.NewFlagSet("grid", flag.ExitOnError)
+	tmp := flag.NewFlagSet("shader", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"frag", "vert"} {
-		if flg := tmp.Lookup(s); flg != nil {
-			fun(flg)
-		}
-	}
-	//tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
 }
+
+

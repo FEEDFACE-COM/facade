@@ -7,7 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
-
+    gfx "../gfx"
 	log "../log"
 )
 
@@ -95,21 +95,12 @@ func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
 
 func (config *GridConfig) Help() string {
 	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
 	tmp := flag.NewFlagSet("grid", flag.ExitOnError)
 	config.AddFlags(tmp)
 	for _, s := range []string{"w", "h", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
-			fun(flg)
+			ret += gfx.FlagHelp(flg)
 		}
 	}
-	//tmp.VisitAll(fun)
 	return ret
 }

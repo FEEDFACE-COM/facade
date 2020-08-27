@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	gfx "../gfx"
 )
 
 var LineDefaults LineConfig = LineConfig{
@@ -173,20 +174,11 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 }
 
 func (config *LineConfig) Help() string {
-	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		} else if f.DefValue == "true" {
-			name = f.Name + "=f"
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
-	ret += GridDefaults.Help()
+	ret := GridDefaults.Help()
 	tmp := flag.NewFlagSet("line", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
-}
+}    
+    
+    
