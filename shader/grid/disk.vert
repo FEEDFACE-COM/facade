@@ -91,13 +91,8 @@ void main() {
         pos.xy = C;
     }
 
-    float ratio = screenRatio / fontRatio;
-    float zoom_cols = ratio * 2. / tileCount.x * 1.5;
-    float zoom_rows = 2./(tileCount.y);
-    float zoom = zoom_rows;
-
-    mat4 mdl;
-    mdl = mat4(1.0);
+    float zoom = 2./(tileCount.y);
+    mat4 mdl = mat4(1.0);
     mdl[0][0] = zoom;
     mdl[1][1] = zoom;
     

@@ -8,6 +8,8 @@ uniform vec2 tileOffset;
 
 uniform float now;
 uniform float scroller;
+uniform float screenRatio;
+uniform float fontRatio;
 uniform float debugFlag;
 
 attribute vec3 vertex;
@@ -39,18 +41,16 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    float RADIUS = 3./2. * tileCount.y;
-    float R0 = RADIUS/4. ;
+    float RADIUS = 4./2. * tileCount.y;
+    float R0 = RADIUS/4.;
     float rad = RADIUS / (tileCount.y + R0); 
 
 
-    float delta = 0.0;
-//    delta += now/10.;
-//    delta += ease1(now/2.) - 0.5;
-    
+    float delta = 3.*PI/2.;
+    delta += ease1(now/2.) - 0.5;
 
     float ARC = TAU;
-    float A0 = 0.0;
+    float A0 = 0.;
   
     float alpha,gamma;
     
@@ -61,9 +61,7 @@ void main() {
     gamma += delta;
     gamma += ( ARC / (tileCount.x+A0)) * tileCoord.x;
 
-    float f;
-    f =  ((tileCoord.y+tileCount.y/2.+scroller) / tileCount.x) ;
-//    f =  ((tileCoord.y+tileCount.y/2.) / tileCount.x) ;
+    float f =  ((tileCoord.y+tileCount.y/2.+scroller) / tileCount.x) ;
     float g =  ((tileCoord.y+tileCount.y/2.) / tileCount.x) ;
     
     
@@ -108,8 +106,12 @@ void main() {
         pos.xy = C;
     }
     
-    mat4 mdl = mat4(0.5 * model[0][0]);
-    mdl[3][3] = 1.0;
+    float zoom = 1./(2.*tileCount.y);
+
+    mat4 mdl = mat4(1.0);
+    mdl[0][0] = zoom;
+    mdl[1][1] = zoom;
+    
 
     gl_Position = projection * view * mdl * pos;
 }
