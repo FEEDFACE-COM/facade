@@ -43,7 +43,7 @@ void main() {
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
 
-    float F = 0.75;
+    float F = 0.5;
     float x = pos.x;
     float y = pos.y;
     
