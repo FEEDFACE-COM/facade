@@ -43,7 +43,7 @@ void main() {
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
 
-    float F = 1.;
+    float F = 1. + tileCount.y/8.;
 
     float y  =  vTileCoord.y       / (tileCount.y/2.);
     float yy = (vTileCoord.y + ((scroller)) ) / (tileCount.y/2.);
