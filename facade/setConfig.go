@@ -4,35 +4,35 @@ package facade
 
 //
 import (
+	gfx "../gfx"
 	"flag"
 	"fmt"
 	"strings"
-	gfx "../gfx"
 )
 
 var SetDefaults SetConfig = SetConfig{
 	Duration: 2.0,
-	Shuffle: false,
-	Slot: 8,
+	Shuffle:  false,
+	Slot:     8,
 }
 
 func (config *SetConfig) Desc() string {
 	ret := "set["
 
-    dok := config.GetSetDuration()
-    if dok {
-        ret += fmt.Sprintf("%.1f ",config.GetDuration())    
-    }
+	dok := config.GetSetDuration()
+	if dok {
+		ret += fmt.Sprintf("%.1f ", config.GetDuration())
+	}
 
-    sok := config.GetSetSlot()
-    if sok {
-        ret += fmt.Sprintf("%d ",config.GetSlot())
-    }
-    
-    uok := config.GetShuffle()
-    if uok {
-        ret += "⧢ "
-    }
+	sok := config.GetSetSlot()
+	if sok {
+		ret += fmt.Sprintf("%d ", config.GetSlot())
+	}
+
+	uok := config.GetShuffle()
+	if uok {
+		ret += "⧢ "
+	}
 
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
@@ -51,17 +51,17 @@ func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "life":
-            config.SetDuration = true
-            ret = true
+			config.SetDuration = true
+			ret = true
 		case "slot":
-            config.SetSlot = true
-            ret = true
-        case "shuffle":
-            config.SetShuffle = true
-            ret = true
+			config.SetSlot = true
+			ret = true
+		case "shuffle":
+			config.SetShuffle = true
+			ret = true
 		case "fill":
-            config.SetFill = true
-            ret = true
+			config.SetFill = true
+			ret = true
 		}
 	})
 
@@ -79,4 +79,3 @@ func (config *SetConfig) Help() string {
 	}
 	return ret
 }
-    

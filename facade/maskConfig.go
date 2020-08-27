@@ -1,8 +1,8 @@
 package facade
 
 import (
-	"flag"
 	gfx "../gfx"
+	"flag"
 )
 
 var MaskDefaults MaskConfig = MaskConfig{
@@ -38,6 +38,6 @@ func (config *MaskConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("mask", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

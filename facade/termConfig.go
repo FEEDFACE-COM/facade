@@ -4,9 +4,9 @@ package facade
 
 //
 import (
+	gfx "../gfx"
 	"flag"
 	"strings"
-	gfx "../gfx"
 )
 
 var TermDefaults TermConfig = TermConfig{}
@@ -57,6 +57,6 @@ func (config *TermConfig) Help() string {
 	ret := GridDefaults.Help()
 	tmp := flag.NewFlagSet("term", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
-}    
+}

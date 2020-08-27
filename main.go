@@ -4,15 +4,15 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	//"bufio"
 	//"io"
 	"os"
 	"os/signal"
 	"runtime"
-//	"runtime/debug"
+	//	"runtime/debug"
 
 	facade "./facade"
 	log "./log"
@@ -108,8 +108,8 @@ func main() {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
-		commandFlags[cmd].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking");
-		commandFlags[cmd].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking");
+		commandFlags[cmd].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
+		commandFlags[cmd].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
 	}
 
 	if commandFlags[RECV] != nil {
@@ -117,8 +117,8 @@ func main() {
 		commandFlags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
 		commandFlags[RECV].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
 		commandFlags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
-		commandFlags[RECV].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking");
-		commandFlags[RECV].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking");
+		commandFlags[RECV].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
+		commandFlags[RECV].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
 	}
 
 	if commandFlags[TEST] != nil {
@@ -151,23 +151,22 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	go func() {
-    	last := time.Now()
-        for { 
-    		sig := <-signals
-    		if !debug || ( time.Now().Sub(last) < 250 * time.Millisecond ) {
-                log.Notice("SIGNAL %s",sig)
-                os.Exit(0)
-            } else {
-//        		log.Notice("signal %s", sig)
-                select {
-                    case pause <- true:
-                    default:
-                }
-            }
-            last = time.Now()
-        }
+		last := time.Now()
+		for {
+			sig := <-signals
+			if !debug || (time.Now().Sub(last) < 250*time.Millisecond) {
+				log.Notice("SIGNAL %s", sig)
+				os.Exit(0)
+			} else {
+				//        		log.Notice("signal %s", sig)
+				select {
+				case pause <- true:
+				default:
+				}
+			}
+			last = time.Now()
+		}
 	}()
-
 
 	var client *Client
 	var server *Server
@@ -325,7 +324,7 @@ func main() {
 		}
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
-		err = renderer.Render(nil,pause)
+		err = renderer.Render(nil, pause)
 
 	case RECV:
 		log.Info(AUTHOR)
@@ -340,7 +339,7 @@ func main() {
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 		go renderer.ProcessQueries(quers)
-		err = renderer.Render(confs,pause)
+		err = renderer.Render(confs, pause)
 
 	case PIPE:
 		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)

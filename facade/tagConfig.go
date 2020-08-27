@@ -4,14 +4,14 @@ package facade
 
 //
 import (
+	gfx "../gfx"
 	"flag"
 	"strings"
-	gfx "../gfx"
 )
 
 var TagDefaults TagConfig = TagConfig{
 	Shader: nil,
-	Set: nil,
+	Set:    nil,
 }
 
 func (config *TagConfig) Desc() string {
@@ -58,6 +58,6 @@ func (config *TagConfig) Help() string {
 	ret := SetDefaults.Help()
 	tmp := flag.NewFlagSet("tag", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
-    return ret	
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	return ret
 }

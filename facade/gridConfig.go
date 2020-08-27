@@ -4,11 +4,11 @@ package facade
 
 //
 import (
+	gfx "../gfx"
+	log "../log"
 	"flag"
 	"fmt"
 	"strings"
-    gfx "../gfx"
-	log "../log"
 )
 
 var GridDefaults GridConfig = GridConfig{

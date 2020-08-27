@@ -4,10 +4,10 @@ package facade
 
 //
 import (
+	gfx "../gfx"
 	"flag"
 	"fmt"
 	"strings"
-	gfx "../gfx"
 )
 
 var LineDefaults LineConfig = LineConfig{
@@ -177,8 +177,6 @@ func (config *LineConfig) Help() string {
 	ret := GridDefaults.Help()
 	tmp := flag.NewFlagSet("line", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
-}    
-    
-    
+}

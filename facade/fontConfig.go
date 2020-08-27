@@ -1,8 +1,8 @@
 package facade
 
 import (
-	"flag"
 	gfx "../gfx"
+	"flag"
 )
 
 const DEFAULT_FONT = "RobotoMono"
@@ -38,6 +38,6 @@ func (config *FontConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("font", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

@@ -38,22 +38,19 @@ type Grid struct {
 	refreshChan chan bool
 }
 
-
 const (
-	TILECOUNT   gfx.UniformName = "tileCount"
-	TILESIZE    gfx.UniformName = "tileSize"
-	TILEOFFSET  gfx.UniformName = "tileOffset"
-	CURSORPOS   gfx.UniformName = "cursorPos"
-	SCROLLER    gfx.UniformName = "scroller"
-	DOWNWARD    gfx.UniformName = "downward"
+	TILECOUNT  gfx.UniformName = "tileCount"
+	TILESIZE   gfx.UniformName = "tileSize"
+	TILEOFFSET gfx.UniformName = "tileOffset"
+	CURSORPOS  gfx.UniformName = "cursorPos"
+	SCROLLER   gfx.UniformName = "scroller"
+	DOWNWARD   gfx.UniformName = "downward"
 )
 
 const (
 	TILECOORD gfx.AttribName = "tileCoord"
 	GRIDCOORD gfx.AttribName = "gridCoord"
 )
-
-
 
 func (grid *Grid) ScheduleRefresh() {
 
@@ -123,8 +120,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 	grid.program.Uniform2fv(CURSORPOS, 1, &cursorPos[0])
 
-    grid.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
-    grid.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
+	grid.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
+	grid.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 
 	clocknow := float32(gfx.Now())
 	grid.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
@@ -152,8 +149,8 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 
 	grid.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+2+2)*4, (0)*4)
 	grid.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+2+2)*4, (3)*4)
-	grid.program.VertexAttribPointer(    TILECOORD, 2, (3+2+2+2)*4, (3+2)*4)
-	grid.program.VertexAttribPointer(    GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4)
+	grid.program.VertexAttribPointer(TILECOORD, 2, (3+2+2+2)*4, (3+2)*4)
+	grid.program.VertexAttribPointer(GRIDCOORD, 2, (3+2+2+2)*4, (3+2+2)*4)
 
 	count := int32(grid.width * (grid.height + 1))
 	offset := int32(0)
@@ -472,20 +469,20 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 //}
 
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
-    var shader *ShaderConfig = nil
+	var shader *ShaderConfig = nil
 	var config *GridConfig = nil
 
 	if grid.terminal && terminal != nil {
 
 		log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
-        shader = terminal.GetShader()
-        config = terminal.GetGrid()
+		shader = terminal.GetShader()
+		config = terminal.GetGrid()
 
 	} else if !grid.terminal && lines != nil {
 
 		log.Debug("%s configure %s", grid.Desc(), lines.Desc())
 		shader = lines.GetShader()
-        config = lines.GetGrid()
+		config = lines.GetGrid()
 
 		if lines.GetSetDownward() {
 			grid.downward = lines.GetDownward()
@@ -548,19 +545,19 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 		changed := false
 		vert, frag := grid.vert, grid.frag
 
-        if shader != nil {
-                            
-            if shader.GetSetVert() {
-                changed = true
-                grid.vert = shader.GetVert()
-    		}
-    		
-            if shader.GetSetFrag() {
-                changed = true
-                grid.frag = shader.GetFrag()
-            }
-        }
-            
+		if shader != nil {
+
+			if shader.GetSetVert() {
+				changed = true
+				grid.vert = shader.GetVert()
+			}
+
+			if shader.GetSetFrag() {
+				changed = true
+				grid.frag = shader.GetFrag()
+			}
+		}
+
 		if changed {
 			err := grid.program.Link(grid.vert, grid.frag)
 			//			err := grid.LoadShaders()
@@ -616,8 +613,8 @@ func NewGrid(lineBuffer *LineBuffer, termBuffer *TermBuffer) *Grid {
 
 	ret.buffer = uint(LineDefaults.GetBuffer())
 
-    ret.vert = ShaderDefaults.GetVert()
-    ret.frag = ShaderDefaults.GetFrag()
+	ret.vert = ShaderDefaults.GetVert()
+	ret.frag = ShaderDefaults.GetFrag()
 
 	ret.refreshChan = make(chan bool, 1)
 	ret.lineBuffer = lineBuffer
@@ -644,11 +641,11 @@ func (grid *Grid) Config() *GridConfig {
 }
 
 func (grid *Grid) ShaderConfig() *ShaderConfig {
-    ret := &ShaderConfig{
-        SetVert: true, Vert: grid.vert,
-        SetFrag: true, Frag: grid.frag,
-    }
-    return ret
+	ret := &ShaderConfig{
+		SetVert: true, Vert: grid.vert,
+		SetFrag: true, Frag: grid.frag,
+	}
+	return ret
 }
 
 func (grid *Grid) LineConfig() *LineConfig {
@@ -664,6 +661,3 @@ func (grid *Grid) LineConfig() *LineConfig {
 	}
 	return ret
 }
-
-
-

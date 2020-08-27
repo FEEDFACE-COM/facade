@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
-	"bufio"
 	"os"
 	"time"
 	//    "bytes"
@@ -30,68 +30,65 @@ type Client struct {
 	cancel     context.CancelFunc
 }
 
-
 func lookupHost(hostname string) {
 
-//    add,err := net.ResolveIPAddr("ip",hostname)
+	//    add,err := net.ResolveIPAddr("ip",hostname)
 
-    add,err := net.LookupHost(hostname)
-    if err != nil {
-        log.PANIC("fail to lookup addresses for %s: %s",hostname,err)
-    }
-  
-//    log.Info("host %s network %s string %s",hostname,add.Network(),add.String())
-    
-    for k,v := range(add) {
-        log.Info("host %s #%d %s",hostname,k,v);
-    }
-    
+	add, err := net.LookupHost(hostname)
+	if err != nil {
+		log.PANIC("fail to lookup addresses for %s: %s", hostname, err)
+	}
+
+	//    log.Info("host %s network %s string %s",hostname,add.Network(),add.String())
+
+	for k, v := range add {
+		log.Info("host %s #%d %s", hostname, k, v)
+	}
+
 }
 
 func NewClient(host string, port uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Client {
-    
-    var address string = host
-    
-    // force network protocol by resolving hostname explicitely
-    
-    if forceIPv4 || forceIPv6 {
-        
-        ip := net.ParseIP(host)
-        if forceIPv4 && len(ip) == 4 {
-            log.Debug("use given ipv4 address %s",ip.String())
-            address = ip.String()
-        } else if forceIPv6 && len(ip) == 16 {
-            log.Debug("use given ipv6 address %s",ip.String())
-            address = ip.String()
-        } else {
-            log.Debug("lookup address for %s",host)
-            names,err := net.LookupHost(host)
-            if err != nil {
-                log.PANIC("fail to lookup address for %s: %s",host,err)
-            }
-            for _,name := range(names) {
-                ip := net.ParseIP(name)
-                if forceIPv4 && ip.To4() != nil {
-                    log.Debug("use resolved ipv4 address %s",ip.String())
-                    address = ip.String()
-                    break
-                } else if forceIPv6 && ip.To4() == nil {
-                    log.Debug("use resolved ipv6 address %s",ip.String())
-                    address = ip.String()
-                    break
-                }
-            }
-        }
-        
-        if address == host {
-            log.PANIC("fail to find address for %s",host)    
-        }
-    }
-    
-    
+
+	var address string = host
+
+	// force network protocol by resolving hostname explicitely
+
+	if forceIPv4 || forceIPv6 {
+
+		ip := net.ParseIP(host)
+		if forceIPv4 && len(ip) == 4 {
+			log.Debug("use given ipv4 address %s", ip.String())
+			address = ip.String()
+		} else if forceIPv6 && len(ip) == 16 {
+			log.Debug("use given ipv6 address %s", ip.String())
+			address = ip.String()
+		} else {
+			log.Debug("lookup address for %s", host)
+			names, err := net.LookupHost(host)
+			if err != nil {
+				log.PANIC("fail to lookup address for %s: %s", host, err)
+			}
+			for _, name := range names {
+				ip := net.ParseIP(name)
+				if forceIPv4 && ip.To4() != nil {
+					log.Debug("use resolved ipv4 address %s", ip.String())
+					address = ip.String()
+					break
+				} else if forceIPv6 && ip.To4() == nil {
+					log.Debug("use resolved ipv6 address %s", ip.String())
+					address = ip.String()
+					break
+				}
+			}
+		}
+
+		if address == host {
+			log.PANIC("fail to find address for %s", host)
+		}
+	}
 
 	ret := &Client{host: host, port: port}
-	ret.connStr = net.JoinHostPort(address, fmt.Sprintf("%d",port))
+	ret.connStr = net.JoinHostPort(address, fmt.Sprintf("%d", port))
 	ret.timeout = time.Duration(1000.*timeout) * time.Millisecond
 	return ret
 }
@@ -208,12 +205,12 @@ func (client *Client) SendText(raw []byte) error {
 	rawText := facade.RawText{Raw: raw}
 	ret := client.stream.Send(&rawText)
 	if DEBUG_CLIENT {
-        if DEBUG_CLIENT_DUMP {
-            log.Debug("sent %d byte text:\n%s", len(raw), log.Dump(raw, 0, 0))
-        } else {
-            log.Debug("sent %d byte text", len(raw))
-        }
-    }
+		if DEBUG_CLIENT_DUMP {
+			log.Debug("sent %d byte text:\n%s", len(raw), log.Dump(raw, 0, 0))
+		} else {
+			log.Debug("sent %d byte text", len(raw))
+		}
+	}
 	return ret
 }
 

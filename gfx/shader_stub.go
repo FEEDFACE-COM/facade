@@ -32,9 +32,9 @@ const (
 type AttribName string
 
 const (
-	VERTEX    AttribName = "vertex"
-	COLOR     AttribName = "color"
-	TEXCOORD  AttribName = "texCoord"
+	VERTEX   AttribName = "vertex"
+	COLOR    AttribName = "color"
+	TEXCOORD AttribName = "texCoord"
 )
 
 type ShaderType string

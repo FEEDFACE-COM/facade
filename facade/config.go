@@ -2,8 +2,8 @@
 package facade
 
 import (
-    "flag"
 	gfx "../gfx"
+	"flag"
 	"strings"
 )
 
@@ -139,6 +139,6 @@ func (config *Config) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
+	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }
