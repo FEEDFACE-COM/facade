@@ -50,8 +50,8 @@ void main() {
     float freq = -1./24.;
     pos.y += F * cos( 2. * freq * x * PI + now         );
     pos.x += F * cos( 3. * freq * y * PI + now + PI/2. );
-	
-	pos.z += F * cos( 5. * freq * (x+y) * PI + now + PI/2. );
+    
+    pos.z += F * cos( 5. * freq * (x+y) * PI + now + PI/2. );
 
     gl_Position = projection * view * model * pos;
 }
