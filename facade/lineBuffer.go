@@ -152,10 +152,10 @@ func (buffer *LineBuffer) scrollOnce(freshLine bool) {
 
 	if !freshLine {
 
-		if !buffer.Smooth {
-			tmp += " !smooth"
-		} else {
+		if buffer.Smooth {
 			valueFun = math.Identity
+		} else {
+			tmp += " !smooth"
 		}
 
 		if buffer.Fixed {
