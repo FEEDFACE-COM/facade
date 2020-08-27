@@ -144,10 +144,11 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 		switch run {
 
 		case '\n':
-			//                if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
-			buffer.cursor.x = 1
+			if DEBUG_TERMBUFFER { log.Debug("%s linefeed",buffer.Desc()) }
 			buffer.cursor.y += 1
+//			buffer.cursor.x = 1  // ?TWEAK: breaks mtr?
 			if buffer.shouldScroll() {
+				buffer.cursor.x = 1  // ?TWEAK: fixes mtr?
 				buffer.scrollLine()
 				buffer.cursor.y = buffer.max.y
 			}
