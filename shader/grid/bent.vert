@@ -66,7 +66,7 @@ void main() {
     
 
     float ARC = TAU;
-    float A0 = 2.0;
+    float A0 = 0.0;
   
     float alpha,gamma;
     
