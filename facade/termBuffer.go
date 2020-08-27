@@ -153,7 +153,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 			}
 
 		case '\t':
-			//                if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
+			if DEBUG_TERMBUFFER { log.Debug("%s tabulator",buffer.Desc()) }
 
 			for c := 0; c < TabWidth; c++ {
 
@@ -183,23 +183,21 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 			//            }
 
 		case '\r':
-			//                if DEBUG_TERMBUFFER { log.Debug("%s carriage return",buffer.Desc()) }
+			if DEBUG_TERMBUFFER { log.Debug("%s carriage return",buffer.Desc()) }
 			buffer.cursor.x = 1
 
 		case '\a':
-			if DEBUG_TERMBUFFER {
-				log.Debug("%s bell.", buffer.Desc())
-			}
+			if DEBUG_TERMBUFFER { log.Debug("%s bell.", buffer.Desc()) }
 
 		case '\b':
-			//                if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
+			if DEBUG_TERMBUFFER { log.Debug("%s backspace",buffer.Desc()) }
 			buffer.cursor.x -= 1
 			if buffer.cursor.x <= 1 {
 				buffer.cursor.x = 1
 			}
 
 		default:
-			//                if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
+			//if DEBUG_TERMBUFFER { log.Debug("%s rune %c",buffer.Desc(),run) }
 
 			// ?TWEAK - checking and updating before writing fixes 'man foo' at width 64
 			if buffer.cursor.x > buffer.max.x {
@@ -390,7 +388,7 @@ func (buffer *TermBuffer) cursorRight(val uint) {
 
 func (buffer *TermBuffer) deleteLine(cnt uint) {
 	if DEBUG_TERMBUFFER {
-		log.Debug("%s delete  %d lines", buffer.Desc(), cnt)
+		log.Debug("%s delete %d lines", buffer.Desc(), cnt)
 	}
 	for i := uint(0); i < cnt; i++ {
 		for r := uint(buffer.cursor.y); r < buffer.scroll.bot; r++ {
@@ -402,7 +400,7 @@ func (buffer *TermBuffer) deleteLine(cnt uint) {
 
 func (buffer *TermBuffer) deleteCharacter(cnt uint) {
 	if DEBUG_TERMBUFFER {
-		log.Debug("%s delete  %d chars", buffer.Desc(), cnt)
+		log.Debug("%s delete %d chars", buffer.Desc(), cnt)
 	}
 	for i := uint(0); i < cnt; i++ {
 		for c := uint(buffer.cursor.x); c < buffer.max.x; c++ {
@@ -414,7 +412,7 @@ func (buffer *TermBuffer) deleteCharacter(cnt uint) {
 
 func (buffer *TermBuffer) insertCharacter(cnt uint) {
 	if DEBUG_TERMBUFFER {
-		log.Debug("%s insert  %d chars", buffer.Desc(), cnt)
+		log.Debug("%s insert %d chars", buffer.Desc(), cnt)
 	}
 	for i := uint(0); i < cnt; i++ {
 		for c := uint(buffer.max.x - 1); c > buffer.cursor.x; c-- {
@@ -426,7 +424,14 @@ func (buffer *TermBuffer) insertCharacter(cnt uint) {
 
 func (buffer *TermBuffer) eraseLine(val uint) {
 	if DEBUG_TERMBUFFER {
-		log.Debug("%s erase line %d", buffer.Desc(), val)
+		tmp := ""
+		switch val {
+			case 0:  tmp = "cursor to end"
+			case 1:  tmp = "start to cursor"
+			case 2:  tmp = "start to end"
+			default: tmp = "unsupported"
+		}
+		log.Debug("%s erase line %s", buffer.Desc(), tmp)
 	}
 	switch val {
 	case 0:
