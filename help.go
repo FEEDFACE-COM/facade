@@ -26,14 +26,9 @@ func ShowHelp(flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flags.VisitAll(func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		fmt.Fprintf(os.Stderr, "  -%-24s %-24s\n", name, f.Usage)
-	})
-	fmt.Fprintf(os.Stderr, "\n")
+	str := ""
+	flags.VisitAll( func (f *flag.Flag) { str += gfx.FlagHelp(f) } )
+	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 
 func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
@@ -87,14 +82,9 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	}
 
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
-	flags.VisitAll(func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		fmt.Fprintf(os.Stderr, "  -%-24s %-24s\n", name, f.Usage)
-	})
-	fmt.Fprintf(os.Stderr, "\n")
+	str := ""
+	flags.VisitAll( func (f *flag.Flag) { str += gfx.FlagHelp(f) } )
+	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 
 func ShowCommands() {

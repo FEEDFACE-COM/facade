@@ -2,8 +2,8 @@
 package facade
 
 import (
-	"flag"
-	"fmt"
+    "flag"
+	gfx "../gfx"
 	"strings"
 )
 
@@ -137,16 +137,8 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 
 func (config *Config) Help() string {
 	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
 	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
 }

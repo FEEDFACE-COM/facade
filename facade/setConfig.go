@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	gfx "../gfx"
 )
 
 var SetDefaults SetConfig = SetConfig{
@@ -69,21 +70,13 @@ func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
 
 func (config *SetConfig) Help() string {
 	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
 	tmp := flag.NewFlagSet("set", flag.ExitOnError)
 	config.AddFlags(tmp)
 	for _, s := range []string{"life", "slot", "shuffle", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
-			fun(flg)
+			ret += gfx.FlagHelp(flg)
 		}
 	}
-	//tmp.VisitAll(fun)
 	return ret
 }
+    

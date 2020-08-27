@@ -3,6 +3,7 @@ package facade
 import (
 	"flag"
 	"fmt"
+	gfx "../gfx"
 )
 
 const ENABLE_CAMERA_ISOMETRIC = false
@@ -53,16 +54,8 @@ func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
 
 func (config *CameraConfig) Help() string {
 	ret := ""
-	fun := func(f *flag.Flag) {
-		name := f.Name
-		if f.DefValue != "false" && f.DefValue != "true" {
-			name = f.Name + "=" + f.DefValue
-		}
-		ret += fmt.Sprintf("  -%-24s %-24s\n", name, f.Usage)
-	}
-
 	tmp := flag.NewFlagSet("camera", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(fun)
+	tmp.VisitAll( func (f *flag.Flag) { ret += gfx.FlagHelp(f) } )
 	return ret
 }
