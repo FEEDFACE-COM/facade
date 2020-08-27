@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const ENABLE_CAMERA_ISOMETRIC = false
+
 var CameraDefaults = CameraConfig{
 	Zoom:      1.0,
 	Isometric: false,
@@ -28,7 +30,9 @@ func (config *CameraConfig) Desc() string {
 
 func (config *CameraConfig) AddFlags(flagset *flag.FlagSet) {
 	flagset.Float64Var(&config.Zoom, "zoom", CameraDefaults.Zoom, "camera zoom")
-	flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera isometric?")
+	if ENABLE_CAMERA_ISOMETRIC {
+    	flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera isometric?")
+    }
 }
 
 func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
