@@ -50,14 +50,14 @@ var (
 type Command string
 
 const (
-	READ Command = "read"
-	RECV Command = "recv"
-	PIPE Command = "pipe"
-	EXEC Command = "exec"
-	CONF Command = "conf"
-	INFO Command = "info"
-	HELP Command = "help"
-	TEST Command = "test"
+	READ  Command = "read"
+	SERVE Command = "serve"
+	PIPE  Command = "pipe"
+	EXEC  Command = "exec"
+	CONF  Command = "conf"
+	INFO  Command = "info"
+	HELP  Command = "help"
+	TEST  Command = "test"
 )
 
 var (
@@ -95,7 +95,7 @@ func main() {
 	var commands = []Command{CONF, PIPE, EXEC, INFO, TEST}
 	if RENDERER_AVAILABLE {
 		commands = append(commands, READ)
-		commands = append(commands, RECV)
+		commands = append(commands, SERVE)
 	}
 
 	for _, cmd := range commands {
@@ -112,13 +112,13 @@ func main() {
 		commandFlags[cmd].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
 	}
 
-	if commandFlags[RECV] != nil {
-		commandFlags[RECV].UintVar(&port, "port", port, "listen on `port` for messages")
-		commandFlags[RECV].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		commandFlags[RECV].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
-		commandFlags[RECV].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
-		commandFlags[RECV].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
-		commandFlags[RECV].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
+	if commandFlags[SERVE] != nil {
+		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for messages")
+		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
+		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
+		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
+		commandFlags[SERVE].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
+		commandFlags[SERVE].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
 	}
 
 	if commandFlags[TEST] != nil {
@@ -179,7 +179,7 @@ func main() {
 	cmd := Command(globalFlags.Args()[0])
 
 	switch cmd {
-	case READ, RECV:
+	case READ, SERVE:
 		if !RENDERER_AVAILABLE {
 			ShowHelp(*globalFlags)
 			os.Exit(-2)
@@ -231,7 +231,7 @@ func main() {
 		path = args[0]
 		args = args[1:]
 
-	case READ, RECV, PIPE, CONF, TEST:
+	case READ, SERVE, PIPE, CONF, TEST:
 		args = commandFlags[cmd].Args()
 
 		// parse mode, if given
@@ -326,7 +326,7 @@ func main() {
 		go renderer.ProcessTextSeqs(texts)
 		err = renderer.Render(nil, pause)
 
-	case RECV:
+	case SERVE:
 		log.Info(AUTHOR)
 		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
 		renderer = NewRenderer(directory)

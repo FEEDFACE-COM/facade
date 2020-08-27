@@ -182,9 +182,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 				if err != nil {
 					log.Error("%s fail get font %s: %s", renderer.Desc(), name, err)
 				} else {
-					if DEBUG_RENDERER {
-						log.Debug("%s switch to font %s", renderer.Desc(), name)
-					}
+					log.Debug("%s switch to font %s", renderer.Desc(), name)
 					renderer.font = fnt
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
