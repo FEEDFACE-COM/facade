@@ -13,7 +13,7 @@ import (
 func ShowHelp(flags flag.FlagSet) {
 	cmds := []string{}
 	if RENDERER_AVAILABLE {
-		for _, c := range []Command{READ, RECV} {
+		for _, c := range []Command{READ, SERVE} {
 			cmds = append(cmds, string(c))
 		}
 	}
@@ -91,7 +91,7 @@ func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", READ, "read text from stdin and render")
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", RECV, "receive text from client and render ")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from client and render ")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send configuration to server")
