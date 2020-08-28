@@ -73,15 +73,18 @@ func (buffer *TermBuffer) Fill(fill []string) {
 	// lock lock lock
 
 	rows := uint(len(fill))
+	if DEBUG_TERMBUFFER {
+		log.Debug("%s fill %d lines", buffer.Desc(), rows)
+	}
+
 	for r := uint(0); r < rows && r < buffer.rows; r++ {
 		line := Line(fill[r])
 		cols := uint(len(line))
 		for c := uint(0); c < cols && c < buffer.cols; c++ {
 			buffer.buffer[r+1][c+1] = line[c]
 		}
+		buffer.cursor = pos{1, r + 1}
 	}
-
-	buffer.cursor = pos{1, buffer.max.y}
 
 }
 
@@ -150,7 +153,7 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 			buffer.cursor.y += 1
 			//			buffer.cursor.x = 1  // ?TWEAK: breaks mtr?
 			if buffer.shouldScroll() {
-				buffer.cursor.x = 1 // ?TWEAK: fixes mtr?
+				buffer.cursor.x = 1 // ?TWEAK: fixes mtr, breaks echo;echo;
 				buffer.scrollLine()
 				buffer.cursor.y = buffer.max.y
 			}

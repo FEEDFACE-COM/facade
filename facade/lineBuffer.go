@@ -340,16 +340,16 @@ func (buffer *LineBuffer) Fill(fill []string) {
 
 	// lock lock lock
 
+	rows := uint(len(fill))
+	if DEBUG_LINEBUFFER {
+		log.Debug("%s fill %d lines", buffer.Desc(), rows)
+	}
+
 	// kill timer
 	if buffer.timer != nil {
 		gfx.WorldClock().DeleteTimer(buffer.timer)
 		buffer.timer = nil
 		buffer.dequeueLine(false)
-	}
-
-	rows := uint(len(fill))
-	if DEBUG_LINEBUFFER {
-		log.Debug("%s fill %d lines", buffer.Desc(), rows)
 	}
 
 	r := uint(0)
