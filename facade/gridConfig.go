@@ -90,7 +90,7 @@ func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
 		config.Width = uint64(w)
 
 	}
-	log.Debug("%s autowidth", config.Desc())
+	log.Debug("%s calculated width", config.Desc())
 }
 
 func (config *GridConfig) Help() string {
