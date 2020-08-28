@@ -44,8 +44,7 @@ void main() {
 
     float offset = PI/16.;
     offset = 0.0;
-//    offset = 0.0;
-    float ARC = PI/2.;// - offset;
+    float ARC = PI/2. - offset;
     float RADIUS = tileCount.y/2. * tileSize.y /2. ;
 
 
@@ -53,19 +52,23 @@ void main() {
 
     float delta = 0.0;
     float alpha,beta;
+
+    float x = tileCoord.x-0.5+tileOffset.x;
+    float y = tileCoord.y-1.5+tileOffset.y;
     
 
     alpha = -1. * ARC / (tileCount.y);
     delta = PI/2. - offset + alpha;
-    beta = delta + ( alpha * (scroller+tileCoord.y) ) ;
+    beta = delta + ( alpha * (scroller+y) ) ;
 
 
     float r = RADIUS * 2.;
     
-    vec3 A = vec3( (tileCoord.x+1.)*tileSize.x, cos(alpha+beta)*r, sin(alpha+beta)*r);
-    vec3 B = vec3( (tileCoord.x+1.)*tileSize.x, cos(beta)*r,       sin(beta)*r);
-    vec3 C = vec3( tileCoord.x*tileSize.x,      cos(alpha+beta)*r, sin(alpha+beta)*r);
-    vec3 D = vec3( tileCoord.x*tileSize.x,      cos(beta)*r,       sin(beta)*r);
+    
+    vec3 A = vec3( (x+1.)*tileSize.x, cos(alpha+beta)*r, -tileCount.y/2.+sin(alpha+beta)*r);
+    vec3 B = vec3( (x+1.)*tileSize.x, cos(beta)*r,       -tileCount.y/2.+sin(beta)*r);
+    vec3 C = vec3( (x)*tileSize.x,    cos(alpha+beta)*r, -tileCount.y/2.+sin(alpha+beta)*r);
+    vec3 D = vec3( (x)*tileSize.x,    cos(beta)*r,       -tileCount.y/2.+sin(beta)*r);
     
    
     if ( pos.x > 0. && pos.y > 0. ) {
@@ -78,30 +81,15 @@ void main() {
         pos.xyz = D;
     }
 
-    float zoom = 0.65;
-    
 
-//
-//
-//    float fontRatio = tileSize.x/tileSize.y;
-//    float screenRatio = (tileCount.x*tileSize.x)/((tileCount.y)*tileSize.y);
     float ratio = screenRatio / fontRatio;
-
-    float scaleWidth = ratio * 2. / tileCount.x;
-    float scaleHeight =        2. / tileCount.y;
+    float zoom = ratio * 2. / ( tileCount.x );
     
+    mat4 mdl = mat4(1.0);
+    mdl[0][0] = zoom;
+    mdl[1][1] = zoom;
+    mdl[2][2] = zoom;
 
-
-//    if ( scaleWidth < scaleHeight/2. ) {
-//        zoom = scaleWidth;
-//    } else {            
-//        zoom = scaleHeight;
-//    }
-    zoom *= scaleWidth ;
-
-    pos.xyz *= zoom;
-//    pos.xyz *= model[0][0]  * 0.8;
-
-    gl_Position = projection * view * pos;
+    gl_Position = projection * view * mdl * pos;
 }
 
