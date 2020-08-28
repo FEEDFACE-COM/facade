@@ -1,6 +1,7 @@
 package main
 
 import (
+	facade "./facade"
 	log "./log"
 	"os/exec"
 	"syscall"
@@ -64,7 +65,7 @@ func (executor *Executor) Execute() error {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGWINCH)
 	go executor.ProcessWindowChange(ch)
-	ch <- syscall.SIGWINCH
+	//	ch <- syscall.SIGWINCH
 
 	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
@@ -74,6 +75,8 @@ func (executor *Executor) Execute() error {
 	defer func() {
 		_ = terminal.Restore(int(os.Stdin.Fd()), oldState)
 	}()
+
+	executor.client.SendText([]byte("\033[H\033[2J"))
 
 	go executor.CopyStdinToTTY()
 	executor.ReadTTY()
@@ -112,12 +115,21 @@ func (executor *Executor) ReadTTY() {
 
 func (executor *Executor) ProcessWindowChange(ch chan os.Signal) {
 	for range ch {
-		str := ""
+		var err error
 		rows, cols, err := pty.Getsize(os.Stdin)
-		if err == nil {
-			str = fmt.Sprintf("%dx%d", cols, rows)
+		if err != nil {
+			log.Error("%s fail get size: %s", executor.Desc(), err)
+			continue
 		}
-		log.Debug("window size %s", str)
+		err = pty.Setsize(executor.tty, &pty.Winsize{Rows: uint16(rows), Cols: uint16(cols)})
+		if err != nil {
+			log.Error("%s fail inherit size: %s", executor.Desc(), err)
+			continue
+		}
+		log.Debug("%s window resized %dx%d", executor.Desc(), cols, rows)
+		grid := facade.GridConfig{Width: uint64(cols), SetWidth: true, Height: uint64(rows), SetHeight: true}
+		conf := facade.Config{Terminal: &facade.TermConfig{Grid: &grid}}
+		executor.client.SendConf(&conf)
 	}
 }
 
