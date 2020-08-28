@@ -71,7 +71,7 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 	}
 }
 
-func (server *Server) Query(ctx context.Context, empty *facade.Empty) (*facade.Status, error) {
+func (server *Server) Info(ctx context.Context, empty *facade.Empty) (*facade.Status, error) {
 	if DEBUG_SERVER {
 		log.Debug("received info request")
 	}
@@ -102,7 +102,7 @@ func (server *Server) Query(ctx context.Context, empty *facade.Empty) (*facade.S
 
 }
 
-func (server *Server) Configure(ctx context.Context, config *facade.Config) (*facade.Status, error) {
+func (server *Server) Conf(ctx context.Context, config *facade.Config) (*facade.Status, error) {
 	if DEBUG_SERVER {
 		log.Debug("receive conf %s", config.Desc())
 	}
@@ -111,10 +111,10 @@ func (server *Server) Configure(ctx context.Context, config *facade.Config) (*fa
 	return &facade.Status{Success: true}, nil
 }
 
-func (server *Server) Display(stream facade.Facade_DisplayServer) error {
-	if DEBUG_SERVER {
-		log.Debug("receive text stream")
-	}
+func (server *Server) Pipe(stream facade.Facade_PipeServer) error {
+	//	if DEBUG_SERVER {
+	log.Info("%s receive text stream", server.Desc())
+	//	}
 	var rem []byte = []byte{}
 	var tmp []byte
 	for {
