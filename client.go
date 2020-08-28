@@ -19,8 +19,6 @@ const DEBUG_CLIENT = false
 const DEBUG_CLIENT_DUMP = false
 
 type Client struct {
-	host    string
-	port    uint
 	connStr string
 	timeout time.Duration
 
@@ -30,40 +28,25 @@ type Client struct {
 	cancel     context.CancelFunc
 }
 
-func lookupHost(hostname string) {
-
-	//    add,err := net.ResolveIPAddr("ip",hostname)
-
-	add, err := net.LookupHost(hostname)
-	if err != nil {
-		log.PANIC("fail to lookup addresses for %s: %s", hostname, err)
-	}
-
-	//    log.Info("host %s network %s string %s",hostname,add.Network(),add.String())
-
-	for k, v := range add {
-		log.Info("host %s #%d %s", hostname, k, v)
-	}
-
-}
-
 func NewClient(host string, port uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Client {
+
+	ret := &Client{connStr: ""}
 
 	var address string = host
 
-	// force network protocol by resolving hostname explicitely
-
 	if forceIPv4 || forceIPv6 {
 
+		// force network protocol by resolving hostname explicitly
+
 		ip := net.ParseIP(host)
-		if forceIPv4 && len(ip) == 4 {
-			log.Debug("use given ipv4 address %s", ip.String())
+		if ip.To4() != nil && !forceIPv6 {
+			log.Debug("%s use given ipv4 address %s", ret.Desc(), ip.String())
 			address = ip.String()
-		} else if forceIPv6 && len(ip) == 16 {
-			log.Debug("use given ipv6 address %s", ip.String())
+		} else if ip.To16() != nil && !forceIPv4 {
+			log.Debug("%s use given ipv6 address %s", ret.Desc(), ip.String())
 			address = ip.String()
 		} else {
-			log.Debug("lookup address for %s", host)
+			log.Debug("%s lookup address for %s", ret.Desc(), host)
 			names, err := net.LookupHost(host)
 			if err != nil {
 				log.PANIC("fail to lookup address for %s: %s", host, err)
@@ -71,23 +54,22 @@ func NewClient(host string, port uint, timeout float64, forceIPv4 bool, forceIPv
 			for _, name := range names {
 				ip := net.ParseIP(name)
 				if forceIPv4 && ip.To4() != nil {
-					log.Debug("use resolved ipv4 address %s", ip.String())
+					log.Debug("%s use resolved ipv4 address %s", ret.Desc(), ip.String())
 					address = ip.String()
 					break
 				} else if forceIPv6 && ip.To4() == nil {
-					log.Debug("use resolved ipv6 address %s", ip.String())
+					log.Debug("%s use resolved ipv6 address %s", ret.Desc(), ip.String())
 					address = ip.String()
 					break
 				}
 			}
+			if address == host {
+				log.PANIC("%s fail to find address for %s", ret.Desc(), host)
+			}
 		}
 
-		if address == host {
-			log.PANIC("fail to find address for %s", host)
-		}
 	}
 
-	ret := &Client{host: host, port: port}
 	ret.connStr = net.JoinHostPort(address, fmt.Sprintf("%d", port))
 	ret.timeout = time.Duration(1000.*timeout) * time.Millisecond
 	return ret
@@ -154,7 +136,7 @@ func (client *Client) ScanAndSendText() error {
 	}
 	err = scanner.Err()
 	if err != nil {
-		log.Error("fail to scan: %s", err)
+		log.Error("%s fail to scan: %s", client.Desc(), err)
 	}
 
 	return nil
@@ -171,7 +153,7 @@ func (client *Client) OpenTextStream() error {
 	ctx, client.cancel = context.WithCancel(context.Background())
 	client.stream, err = client.client.Pipe(ctx)
 	if err != nil {
-		return log.NewError("fail to get display stream: %s", err)
+		return log.NewError("fail to get pipe stream: %s", err)
 	}
 	return nil
 }
@@ -190,7 +172,7 @@ func (client *Client) CloseTextStream() error {
 		stat, _ := grpcstatus.FromError(err)
 		return log.NewError("fail to close: %s", stat.Message())
 	} else if !status.GetSuccess() {
-		return log.NewError("display error: %s", status.GetError())
+		return log.NewError("pipe error: %s", status.GetError())
 	}
 
 	return nil
@@ -204,12 +186,10 @@ func (client *Client) SendText(raw []byte) error {
 
 	rawText := facade.RawText{Raw: raw}
 	ret := client.stream.Send(&rawText)
-	if DEBUG_CLIENT {
-		if DEBUG_CLIENT_DUMP {
-			log.Debug("sent %d byte text:\n%s", len(raw), log.Dump(raw, 0, 0))
-		} else {
-			log.Debug("sent %d byte text", len(raw))
-		}
+	if DEBUG_CLIENT_DUMP {
+		log.Debug("%s sent %d byte text:\n%s", client.Desc(), len(raw), log.Dump(raw, 0, 0))
+	} else if DEBUG_CLIENT {
+		log.Debug("%s sent %d byte text", client.Desc(), len(raw))
 	}
 	return ret
 }
@@ -229,9 +209,9 @@ func (client *Client) SendConf(config *facade.Config) error {
 	} else if !status.GetSuccess() {
 		return log.NewError("conf error: %s", status.GetError())
 	}
-	if DEBUG_CLIENT {
-		log.Debug("sent to %s %s", client.connStr, config.Desc())
-	}
+	//	if DEBUG_CLIENT {
+	log.Info("%s sent %s", client.Desc(), config.Desc())
+	//	}
 	return nil
 }
 
@@ -265,7 +245,7 @@ func (client *Client) Dial() error {
 	opts := grpc.WithInsecure()
 
 	if DEBUG_CLIENT {
-		log.Debug("dial %s timeout %.1fs", client.connStr, client.timeout.Seconds())
+		log.Debug("%s dial timeout %.1fs", client.Desc(), client.timeout.Seconds())
 	}
 	client.connection, err = grpc.Dial(client.connStr, opts)
 	if err != nil {
@@ -273,4 +253,12 @@ func (client *Client) Dial() error {
 	}
 	client.client = facade.NewFacadeClient(client.connection)
 	return nil
+}
+
+func (client *Client) Desc() string {
+	ret := "client["
+	ret += client.connStr
+	ret += "]"
+	return ret
+
 }

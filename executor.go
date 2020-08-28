@@ -37,28 +37,28 @@ func (executor *Executor) Execute() error {
 
 	cmd := exec.Command(executor.path, executor.args...)
 
-	log.Debug("start %s", executor.path)
+	log.Debug("%s start", executor.Desc())
 
 	oldSize, err := pty.GetsizeFull(os.Stdin)
 	if err != nil {
-		log.Error("fail pty getsize: %s", err)
+		log.Error("%s fail pty getsize: %s", executor.Desc(), err)
 	}
 
 	var size = &pty.Winsize{Cols: uint16(executor.cols), Rows: uint16(executor.rows)}
 
 	executor.tty, err = pty.StartWithSize(cmd, size)
 	if err != nil {
-		log.Error("fail pty start: %s", err)
+		log.Error("%s fail pty start: %s", executor.Desc(), err)
 		return log.NewError("fail pty start: %s", err)
 	}
 	defer func() {
 		_ = executor.tty.Close()
 	}()
 
-	log.Debug("resize %dx%d", size.Cols, size.Rows)
+	log.Debug("%s resize %dx%d", executor.Desc(), size.Cols, size.Rows)
 	str := fmt.Sprintf("\033[8;%d;%dt", size.Rows, size.Cols)
 	os.Stdout.Write([]byte(str))
-	log.Debug("reset")
+	log.Debug("%s reset", executor.Desc())
 	os.Stdout.Write([]byte("\033[H\033[2J"))
 
 	ch := make(chan os.Signal, 1)
@@ -68,7 +68,7 @@ func (executor *Executor) Execute() error {
 
 	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
-		log.Error("error make raw: %s", err)
+		log.Error("%s error make raw: %s", executor.Desc(), err)
 		return log.NewError("error make raw: %s", err)
 	}
 	defer func() {
@@ -78,11 +78,11 @@ func (executor *Executor) Execute() error {
 	go executor.CopyStdinToTTY()
 	executor.ReadTTY()
 
-	log.Debug("resize %dx%d", oldSize.Cols, oldSize.Rows)
+	log.Debug("%s resize %dx%d", executor.Desc(), oldSize.Cols, oldSize.Rows)
 	str = fmt.Sprintf("\033[8;%d;%dt", oldSize.Rows, oldSize.Cols)
 	os.Stdout.Write([]byte(str))
 
-	log.Debug("done %s", executor.path)
+	log.Debug("%s done", executor.Desc())
 	return nil
 }
 
@@ -96,15 +96,13 @@ func (executor *Executor) ReadTTY() {
 			break
 		}
 		if err != nil {
-			log.Debug("read stdout error: %s", err)
+			log.Debug("%s read stdout error: %s", executor.Desc(), err)
 			break
 		}
-		if DEBUG_EXEC {
-			if DEBUG_EXEC_DUMP {
-				log.Debug("read %d byte tty:\n%s", n, log.Dump(buf, n, 0))
-			} else {
-				log.Debug("read %d byte tty", n)
-			}
+		if DEBUG_EXEC_DUMP {
+			log.Debug("%s read %d byte tty:\n%s", executor.Desc(), n, log.Dump(buf, n, 0))
+		} else if DEBUG_EXEC {
+			log.Debug("%s read %d byte tty", executor.Desc(), n)
 		}
 		os.Stdout.Write(buf[0:n])
 		executor.client.SendText(buf[0:n])
@@ -127,6 +125,13 @@ func (executor *Executor) CopyStdinToTTY() {
 	var err error
 	_, err = io.Copy(executor.tty, os.Stdin)
 	if err != nil {
-		log.Error("copy error: %s", err)
+		log.Error("%s copy error: %s", executor.Desc(), err)
 	}
+}
+
+func (executor *Executor) Desc() string {
+	ret := "executor["
+	ret += executor.path
+	ret += "]"
+	return ret
 }
