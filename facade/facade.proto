@@ -13,9 +13,9 @@ enum Mode {
 
 
 service Facade {
-    rpc Configure(Config) returns (Status) {}
-    rpc Display(stream RawText) returns (Status) {}
-    rpc Query(Empty) returns (Status) {}
+    rpc Conf(Config) returns (Status) {}
+    rpc Pipe(stream RawText) returns (Status) {}
+    rpc Info(Empty) returns (Status) {}
 }
 
 message Empty {}

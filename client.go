@@ -26,7 +26,7 @@ type Client struct {
 
 	connection *grpc.ClientConn
 	client     facade.FacadeClient
-	stream     facade.Facade_DisplayClient
+	stream     facade.Facade_PipeClient
 	cancel     context.CancelFunc
 }
 
@@ -169,7 +169,7 @@ func (client *Client) OpenTextStream() error {
 	}
 
 	ctx, client.cancel = context.WithCancel(context.Background())
-	client.stream, err = client.client.Display(ctx)
+	client.stream, err = client.client.Pipe(ctx)
 	if err != nil {
 		return log.NewError("fail to get display stream: %s", err)
 	}
@@ -222,7 +222,7 @@ func (client *Client) SendConf(config *facade.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
 	defer cancel()
 
-	status, err := client.client.Configure(ctx, config)
+	status, err := client.client.Conf(ctx, config)
 	if err != nil {
 		stat, _ := grpcstatus.FromError(err)
 		return log.NewError("fail to send: %s", stat.Message())
@@ -242,7 +242,7 @@ func (client *Client) QueryInfo() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
 	defer cancel()
 
-	status, err := client.client.Query(ctx, &facade.Empty{})
+	status, err := client.client.Info(ctx, &facade.Empty{})
 	if err != nil {
 		stat, _ := grpcstatus.FromError(err)
 		return "", log.NewError("fail to send: %s", stat.Message())
