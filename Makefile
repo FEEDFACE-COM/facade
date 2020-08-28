@@ -114,8 +114,7 @@ font/VT323.ttf:
 	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
 
 facade/shaderAssets.go: ${ASSET_SHADER}
-	echo ""                                             >|$@
-#	echo "// +build linux,arm"                          >>$@
+	echo "// +build linux,arm"                          >|$@
 	echo "package facade"                               >>$@
 	echo "var ShaderAsset = map[string]string{"         >>$@
 	for src in ${ASSET_SHADER}; do \
@@ -130,8 +129,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
 
 
 facade/fontAssets.go: ${ASSET_FONT}
-	echo ""                                         >|$@
-#	echo "// +build linux,arm"                      >>$@
+	echo "// +build linux,arm"                      >|$@
 	echo "package facade"                           >>$@
 	echo "var FontAsset = map[string]string{"       >>$@
 	for src in ${ASSET_FONT}; do \
