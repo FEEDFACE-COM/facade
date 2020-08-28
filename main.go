@@ -311,6 +311,11 @@ func main() {
 
 	}
 
+	if forceIPv4 && forceIPv6 {
+		ShowHelpCommand(cmd, *commandFlags[cmd])
+		os.Exit(-2)
+	}
+
 	switch cmd {
 
 	case READ:
