@@ -1,4 +1,4 @@
-
+// +build linux,arm
 package facade
 var FontAsset = map[string]string{
 
