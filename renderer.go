@@ -89,7 +89,7 @@ func (renderer *Renderer) checkRefresh() bool {
 
 func (renderer *Renderer) Init() error {
 	var err error
-	log.Info("init renderer[%s]", renderer.directory)
+	log.Info("%s init %s", renderer.Desc(), renderer.directory)
 	if strings.HasPrefix(renderer.directory, "~/") {
 		renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
 	}
@@ -182,7 +182,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 				if err != nil {
 					log.Error("%s fail get font %s: %s", renderer.Desc(), name, err)
 				} else {
-					log.Debug("%s switch to font %s", renderer.Desc(), name)
+					log.Info("%s switch to font %s", renderer.Desc(), name)
 					renderer.font = fnt
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
@@ -534,7 +534,7 @@ func (renderer *Renderer) printDebug() {
 	}
 
 	if DEBUG_CLOCK {
-		log.Info("%s", gfx.WorldClock().Info(renderer.prevFrame))
+		log.Debug("%s", gfx.WorldClock().Info(renderer.prevFrame))
 	}
 
 	if DEBUG_MODE {
@@ -552,7 +552,7 @@ func (renderer *Renderer) printDebug() {
 	}
 
 	if DEBUG_FONT {
-		log.Info("  %s", renderer.fontService.Desc())
+		log.Debug("  %s", renderer.fontService.Desc())
 		if renderer.font != nil {
 			log.Debug("  %s", renderer.font.Desc())
 		}
