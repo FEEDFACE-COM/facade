@@ -182,6 +182,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 //func (grid *Grid) Height() uint { return grid.Height }
 
 func (grid *Grid) fill(name string) []string {
+	ret := []string{}
 
 	switch name {
 
@@ -189,10 +190,7 @@ func (grid *Grid) fill(name string) []string {
 	//also, clear!
 
 	case "title":
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return strings.Split(`
+		ret = strings.Split(`
  _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
 |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
 |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
@@ -200,10 +198,7 @@ func (grid *Grid) fill(name string) []string {
 			"\n")[1:]
 
 	case "title2":
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return strings.Split(`
+		ret = strings.Split(`
  _  _   _  _   _   _
 |_ |_| /  |_| | \ |_
 |  | | \_ | | |_/ |_
@@ -213,10 +208,7 @@ func (grid *Grid) fill(name string) []string {
 			"\n")[1:]
 
 	case "title3":
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return strings.Split(`
+		ret = strings.Split(`
               
 F A C A D E   
               
@@ -227,15 +219,11 @@ F A C A D E
 			"\n")[1:]
 
 	case "title4":
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return []string{
+		ret = []string{
 			"F A C A D E",
 		}
 
 	case "grid":
-		ret := []string{}
 		w, h := int(grid.width), int(grid.height)
 		for r := 0; r < h; r++ {
 			tmp := ""
@@ -254,13 +242,8 @@ F A C A D E
 			}
 			ret = append(ret, tmp)
 		}
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return ret
 
 	case "alpha":
-		ret := []string{}
 		w, h := int(grid.width), int(grid.height)
 		alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
 		s := 0
@@ -269,13 +252,8 @@ F A C A D E
 			ret = append(ret, tmp)
 			s += 1
 		}
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return ret
 
 	case "clear":
-		ret := []string{}
 		w, h := int(grid.width), int(grid.height)
 		for r := 0; r < h; r++ {
 			s := ""
@@ -284,14 +262,13 @@ F A C A D E
 			}
 			ret = append(ret, s)
 		}
-		if DEBUG_GRID {
-			log.Debug("%s fill %s", grid.Desc(), name)
-		}
-		return ret
 
 	}
 
-	return []string{}
+	if len(ret) > 0 {
+		log.Debug("%s fill %s", grid.Desc(), name)
+	}
+	return ret
 
 }
 
