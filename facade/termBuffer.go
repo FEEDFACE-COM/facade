@@ -11,7 +11,7 @@ import (
 const DEBUG_TERMBUFFER = false
 const DEBUG_TERMBUFFER_DUMP = false
 
-/* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) */
+/* An array of rows ( ie arrays of cols ( ie multibyte characters ( ie runes ) ) ) */
 
 type pos struct {
 	x, y uint
@@ -151,9 +151,8 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 				log.Debug("%s linefeed", buffer.Desc())
 			}
 			buffer.cursor.y += 1
-			//			buffer.cursor.x = 1  // ?TWEAK: breaks mtr?
+			buffer.cursor.x = 1 // NEWLINE does CARRIAGE RETURN
 			if buffer.shouldScroll() {
-				buffer.cursor.x = 1 // ?TWEAK: fixes mtr, breaks echo;echo;
 				buffer.scrollLine()
 				buffer.cursor.y = buffer.max.y
 			}
