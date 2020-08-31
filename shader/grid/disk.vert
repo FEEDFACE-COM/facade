@@ -43,8 +43,8 @@ void main() {
     vec4 pos = vec4(vertex,1);
 
 
-    float RADIUS = tileCount.y/2. - 1.;
-    float R0 = 1.0;
+    float RADIUS = tileCount.y/2. ;
+    float R0 = RADIUS/4.;
     float rad = RADIUS / (tileCount.y + R0); 
 
 
@@ -91,7 +91,7 @@ void main() {
         pos.xy = C;
     }
 
-    float zoom = 2./(tileCount.y);
+    float zoom =  7./ (4.*tileCount.y);
     mat4 mdl = mat4(1.0);
     mdl[0][0] = zoom;
     mdl[1][1] = zoom;
