@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
 	"strings"
 	"time"
 
@@ -50,14 +49,11 @@ var (
 type Command string
 
 const (
-	READ  Command = "read"
 	SERVE Command = "serve"
 	PIPE  Command = "pipe"
 	EXEC  Command = "exec"
 	CONF  Command = "conf"
-	INFO  Command = "info"
 	HELP  Command = "help"
-	TEST  Command = "test"
 )
 
 var (
@@ -92,9 +88,8 @@ func main() {
 
 	commandFlags := make(map[Command]*flag.FlagSet)
 
-	var commands = []Command{CONF, PIPE, EXEC, INFO, TEST}
+	var commands = []Command{CONF, PIPE, EXEC }
 	if RENDERER_AVAILABLE {
-		commands = append(commands, READ)
 		commands = append(commands, SERVE)
 	}
 
@@ -104,7 +99,7 @@ func main() {
 		commandFlags[cmd].SetOutput(bufio.NewWriter(nil))
 	}
 
-	for _, cmd := range []Command{PIPE, CONF, EXEC, INFO} {
+	for _, cmd := range []Command{PIPE, CONF, EXEC } {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
@@ -119,13 +114,6 @@ func main() {
 		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 		commandFlags[SERVE].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
 		commandFlags[SERVE].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
-	}
-
-	if commandFlags[TEST] != nil {
-		commandFlags[TEST].UintVar(&port, "port", port, "listen on `port` for messages")
-		commandFlags[TEST].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		commandFlags[TEST].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
-		commandFlags[TEST].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 	}
 
 	{
@@ -170,22 +158,20 @@ func main() {
 
 	var client *Client
 	var server *Server
-	var scanner *Scanner
 	var renderer *Renderer
-	var tester *Tester
 	var executor *Executor
 	var path string
 
 	cmd := Command(globalFlags.Args()[0])
 
 	switch cmd {
-	case READ, SERVE:
+	case SERVE:
 		if !RENDERER_AVAILABLE {
 			ShowHelp(*globalFlags)
 			os.Exit(-2)
 		}
 		fallthrough
-	case PIPE, CONF, EXEC, TEST:
+	case PIPE, CONF, EXEC:
 		commandFlags[cmd].Usage = func() { ShowHelpCommand(cmd, *commandFlags[cmd]) }
 		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
@@ -231,7 +217,7 @@ func main() {
 		path = args[0]
 		args = args[1:]
 
-	case READ, SERVE, PIPE, CONF, TEST:
+	case SERVE, PIPE, CONF:
 		args = commandFlags[cmd].Args()
 
 		// parse mode, if given
@@ -285,21 +271,6 @@ func main() {
 			config.VisitFlags(modeFlags)
 		}
 
-	case INFO:
-		// no args, print local info
-		if len(globalFlags.Args()) <= 1 {
-			ShowVersion()
-			ShowAssets(directory)
-			fmt.Fprintf(os.Stderr, "\n\n")
-			os.Exit(0)
-		} else {
-
-			// query remote host
-			commandFlags[INFO].Usage = func() { ShowHelpCommand(INFO, *commandFlags[INFO]) }
-			commandFlags[INFO].SetOutput(bufio.NewWriter(nil))
-			commandFlags[INFO].Parse(globalFlags.Args()[1:])
-
-		}
 
 	case HELP:
 		ShowHelp(*globalFlags)
@@ -317,19 +288,6 @@ func main() {
 	}
 
 	switch cmd {
-
-	case READ:
-		log.Info(AUTHOR)
-		scanner = NewScanner()
-		renderer = NewRenderer(directory)
-		go scanner.ScanText(texts)
-		runtime.LockOSThread()
-		if err = renderer.Init(); err != nil {
-			log.PANIC("fail to initialize renderer: %s", err)
-		}
-		renderer.Configure(config)
-		go renderer.ProcessTextSeqs(texts)
-		err = renderer.Render(nil, pause)
 
 	case SERVE:
 		log.Info(AUTHOR)
@@ -381,19 +339,6 @@ func main() {
 			log.Error("fail to conf: %s", err)
 		}
 
-	case INFO:
-		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
-		if err = client.Dial(); err != nil {
-			log.Error("fail to dial: %s", err)
-		}
-		defer client.Close()
-		info, err := client.QueryInfo()
-		if err != nil {
-			log.Error("fail to query: %s", err)
-		} else {
-			log.Notice("%s", info)
-		}
-
 	case EXEC:
 
 		var cols, rows = facade.GridDefaults.Width, facade.GridDefaults.Height
@@ -434,24 +379,6 @@ func main() {
 		defer client.CloseTextStream()
 		err = executor.Execute()
 
-	case TEST:
-		log.Info(AUTHOR)
-		tester = NewTester(directory)
-		scanner = NewScanner()
-		go scanner.ScanText(texts)
-
-		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
-		go server.Listen(confs, texts, quers)
-		go server.ListenText(texts)
-
-		runtime.LockOSThread()
-		tester.Init()
-		tester.Configure(config)
-
-		//start processing only after init!
-		go tester.ProcessTextSeqs(texts)
-		go tester.ProcessQueries(quers)
-		err = tester.Test(confs)
 
 	default:
 		log.PANIC("unexpected command %s", cmd)

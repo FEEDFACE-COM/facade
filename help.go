@@ -13,11 +13,9 @@ import (
 func ShowHelp(flags flag.FlagSet) {
 	cmds := []string{}
 	if RENDERER_AVAILABLE {
-		for _, c := range []Command{READ, SERVE} {
-			cmds = append(cmds, string(c))
-		}
+    	   cmds = append(cmds, string(SERVE))
 	}
-	for _, c := range []Command{PIPE, CONF, EXEC, INFO} {
+	for _, c := range []Command{PIPE, CONF, EXEC} {
 		cmds = append(cmds, string(c))
 	}
 
@@ -72,8 +70,6 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	switch cmd {
-	case INFO:
-		fmt.Fprintf(os.Stderr, "  %s %s [flags]\n", BUILD_NAME, cmd)
 	case EXEC:
 		fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)
 	default:
@@ -90,13 +86,11 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", READ, "read text from stdin and render")
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from client and render ")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send configuration to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", INFO, "show available shaders and fonts of server ")
 }
 
 func ShowModes() {
