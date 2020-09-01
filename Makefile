@@ -10,11 +10,11 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-ASSETS  = facade/shaderAssets.go facade/fontAssets.go
+ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 PROTOS  = facade/facade.pb.go
 SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
 
-FONTS ?= RobotoMono.ttf VT323.ttf Menlo.ttc OCRAEXT.TTF MONACO.TTF Adore64.ttf
+FONTS ?= RobotoMono.ttf VT323.ttf SpaceMono.ttf Menlo.ttc OCRAEXT.TTF MONACO.TTF Adore64.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 
 SHADERS ?= def.vert def.frag 
@@ -69,13 +69,9 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
-demo: demo-lines
+demo:
+	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
 
-demo-lines:
-	@for f in ${SOURCES}; do cat $$f | while read l; do echo $$l; sleep 0.5; done; sleep 2; done
-
-demo-words:
-	@for f in ${SOURCES}; do cat $$f | awk '{n=split($$0,a,"\""); for(i=0;i<=n;i++) { if (n==0) { ; } else if (i%2==0 && i!=0) { print "\"" a[i] "\"";} else { nn=split(a[i],b); for (j=1;j<=nn;j++) {print b[j];}} }}' | while read word; do echo $$word; sleep 0.5; done; sleep 2; done
 	
 	
 
@@ -107,11 +103,25 @@ asset: ${ASSETS}
 
 font/RobotoMono.ttf:
 	mkdir -p font
-	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/apache/robotomono/RobotoMono-Regular.ttf
+	curl -o $@ https://github.com/TypeNetwork/RobotoMono/blob/master/fonts/ttf/RobotoMono-Regular.ttf
 
 font/VT323.ttf:
 	mkdir -p font
-	curl -o $@ https://raw.githubusercontent.com/google/fonts/master/ofl/vt323/VT323-Regular.ttf
+	curl -o $@ https://github.com/phoikoi/VT323/blob/master/fonts/ttf/VT323-Regular.ttf
+
+font/SpaceMono.ttf:
+	mkdir -p font
+	curl -o $@ https://github.com/googlefonts/spacemono/blob/master/fonts/SpaceMono-Regular.ttf
+
+
+facade/assets.go: README.md
+	echo ""                  >|$@
+	echo "package facade"    >>$@
+	echo "var readme = \`"   >>$@
+	cat $^ | base64          >>$@
+	echo "\`\n\n"            >>$@
+	go fmt $@
+
 
 facade/shaderAssets.go: ${ASSET_SHADER}
 	echo "// +build linux,arm"                          >|$@
@@ -126,6 +136,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
+	go fmt $@
 
 
 facade/fontAssets.go: ${ASSET_FONT}
@@ -141,6 +152,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
+	go fmt $@
 
 
 
