@@ -3,3 +3,4 @@ fcd-*-*
 .AppleDouble
 .DS_Store
 font/*
+tmp/*
