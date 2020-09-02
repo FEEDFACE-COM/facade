@@ -245,12 +245,11 @@ F A C A D E
 
 	case "alpha":
 		w, h := int(grid.width), int(grid.height)
-		alpha := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`~!@#$^&*()-_=+[{]}|;:',<.>/?"
+		alpha := strings.Repeat(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",w)
 		s := 0
 		for r := 0; r < h; r++ {
-			tmp := alpha[s%len(alpha) : min(s+w, len(alpha)-1)]
-			ret = append(ret, tmp)
-			s += 1
+			ret = append(ret, alpha[s:s+w])
+			s += w
 		}
 
 	case "clear":
