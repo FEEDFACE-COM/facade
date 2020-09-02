@@ -5,7 +5,7 @@ import (
 	"flag"
 )
 
-const DEFAULT_FONT = "RobotoMono"
+const DEFAULT_FONT = "Monaco"
 
 var FontDefaults FontConfig = FontConfig{
 	Name: DEFAULT_FONT,

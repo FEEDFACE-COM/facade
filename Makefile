@@ -10,11 +10,11 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 
 
 
-ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 PROTOS  = facade/facade.pb.go
 SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
+ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 
-FONTS ?= RobotoMono.ttf VT323.ttf SpaceMono.ttf Menlo.ttc OCRAEXT.TTF MONACO.TTF Adore64.ttf
+FONTS ?= Monaco.ttf RobotoMono.ttf SpaceMono.ttf VT323.ttf Adore64.ttf OCRAExt.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
 
 SHADERS ?= def.vert def.frag 
@@ -23,7 +23,6 @@ SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag
 SHADERS += grid/wave.vert grid/roll.vert grid/rows.vert grid/crawl.vert grid/disk.vert grid/drop.vert 
 SHADERS += set/def.vert set/def.frag set/scroll.vert set/field.vert set/debug.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
-#ASSET_SHADER=$(wildcard shader/*.vert shader/*/*.vert shader/*.frag shader/*/*.frag)
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 
 
@@ -43,11 +42,12 @@ default: build
 help:
 	@echo "#Usage"
 	@echo " make build    # build static executable"
-	@echo " make deps     # fetch go dependencies"
+	@echo " make deps     # fetch golang dependencies"
 	@echo " make info     # show build info"
-	@echo " make asset    # build fonts and shaders"
+	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # clean up"
+	@echo " make demo     # try 'make demo | facade pipe lines'"
 	
 
 
@@ -99,20 +99,38 @@ facade/facade.pb.go: facade/facade.proto
 
 
 
-asset: ${ASSETS}
+assets: ${ASSETS}
+
+font/Monaco.ttf:
+	mkdir -p font
+	curl -L -o $@.zip https://www.cufonfonts.com/download/font/monaco
+	unzip -j -o -b $@.zip $$(basename $@) -d font/  && unlink $@.zip
 
 font/RobotoMono.ttf:
 	mkdir -p font
-	curl -o $@ https://github.com/TypeNetwork/RobotoMono/blob/master/fonts/ttf/RobotoMono-Regular.ttf
+	curl -L -o $@ https://raw.githubusercontent.com/TypeNetwork/RobotoMono/master/fonts/ttf/RobotoMono-Regular.ttf
 
 font/VT323.ttf:
 	mkdir -p font
-	curl -o $@ https://github.com/phoikoi/VT323/blob/master/fonts/ttf/VT323-Regular.ttf
+	curl -L -o $@ https://raw.githubusercontent.com/phoikoi/VT323/master/fonts/ttf/VT323-Regular.ttf
 
 font/SpaceMono.ttf:
 	mkdir -p font
-	curl -o $@ https://github.com/googlefonts/spacemono/blob/master/fonts/SpaceMono-Regular.ttf
+	curl -L -o $@ https://raw.githubusercontent.com/googlefonts/spacemono/master/fonts/SpaceMono-Regular.ttf
 
+font/OCRAExt.ttf:
+	mkdir -p font
+	curl -L -o $@ https://www.wfonts.com/download/data/2014/12/31/ocr-a-extended/OCRAEXT.TTF
+	
+font/Adore64.ttf:
+	mkdir -p font
+	curl -L -o $@.zip https://dl.dafont.com/dl/?f=adore64
+	unzip -j -o -b $@.zip $$(basename $@) -d font/  && unlink $@.zip
+
+font/amiga4ever.ttf:
+	mkdir -p font
+	curl -L -o $@.zip https://dl.dafont.com/dl/?f=amiga_forever
+	unzip -j -o -b $@.zip $$(basename $@) -d font/ && unlink $@.zip
 
 facade/assets.go: README.md
 	echo ""                  >|$@
@@ -156,5 +174,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help info build clean fetch asset demo proto
+.PHONY: help build deps info assets proto demo clean
 
