@@ -57,8 +57,11 @@ func NewRenderer(directory string) *Renderer {
 	ret.stateMutex = &sync.Mutex{}
 	ret.refreshChan = make(chan bool, 1)
 	ret.tickChannel = make(chan bool, 1)
-	ret.fontService = gfx.NewFontService(directory+"/font", facade.FontAsset)
-	ret.programService = gfx.NewProgramService(directory+"/shader", facade.ShaderAsset)
+	if strings.HasPrefix(ret.directory, "~/") {
+		ret.directory = os.Getenv("HOME") + ret.directory[1:]
+	}
+	ret.fontService = gfx.NewFontService(ret.directory+"/font", facade.FontAsset)
+	ret.programService = gfx.NewProgramService(ret.directory+"/shader", facade.ShaderAsset)
 	return ret
 }
 
@@ -90,9 +93,6 @@ func (renderer *Renderer) checkRefresh() bool {
 func (renderer *Renderer) Init() error {
 	var err error
 	log.Info("%s init %s", renderer.Desc(), renderer.directory)
-	if strings.HasPrefix(renderer.directory, "~/") {
-		renderer.directory = os.Getenv("HOME") + renderer.directory[1:]
-	}
 
 	err = piglet.CreateContext()
 	if err != nil {
@@ -172,7 +172,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 			name := cfg.GetName()
 			if name != renderer.font.GetName() {
 				changed = true
-				err = renderer.fontService.LoadFont(name)
+				err = renderer.fontService.LoadFont(name) // REM, probably not needed here?
 				if err != nil {
 					log.Error("%s fail load font %s: %s", renderer.Desc(), name, err)
 				}

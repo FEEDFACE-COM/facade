@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var DEFAULT_DIRECTORY = "~/src/gfx/facade"
+var DEFAULT_DIRECTORY = "~/.facade/"
 
 var DEFAULT_MODE Mode = Mode_LINES
 
