@@ -52,11 +52,10 @@ type Renderer struct {
 	tickChannel chan bool
 }
 
-func NewRenderer(directory string) *Renderer {
-	ret := &Renderer{directory: directory}
+func NewRenderer(directory string, tickChannel chan bool) *Renderer {
+	ret := &Renderer{directory: directory, tickChannel: tickChannel}
 	ret.stateMutex = &sync.Mutex{}
 	ret.refreshChan = make(chan bool, 1)
-	ret.tickChannel = make(chan bool, 1)
 	if strings.HasPrefix(ret.directory, "~/") {
 		ret.directory = os.Getenv("HOME") + ret.directory[1:]
 	}
@@ -149,6 +148,16 @@ func (renderer *Renderer) Init() error {
 
 	gfx.WorldClock().Reset()
 	return err
+}
+
+func (renderer *Renderer) Finish() error {
+
+	err := piglet.DestroyContext()
+	if err != nil {
+		return log.NewError("fail to terminate renderer: %s", err)
+	}
+	log.Info("%s finished.", renderer.Desc())
+	return nil
 }
 
 func (renderer *Renderer) Configure(config *facade.Config) error {
@@ -258,24 +267,33 @@ func (renderer *Renderer) tick() {
 
 }
 
-func (renderer *Renderer) tock() {
+func (renderer *Renderer) tock() bool {
+	var tick bool
 
 	// wait for message
-	<-renderer.tickChannel
+	tick = <-renderer.tickChannel
+	if !tick {
+		return false // indicate stop render
+	}
 
 	// clear all messages
 	for {
 		select {
-		case <-renderer.tickChannel:
+		case tick = <-renderer.tickChannel:
+			if !tick {
+				return false // indicate stop render
+			}
+
 		default:
-			return
+			return true // indicate render one frame
 		}
 	}
 
-	// return to render one frame
+	// indicate render one frame
+	return true
 }
 
-func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan bool) error {
+func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 	go renderer.tick()
 
@@ -305,7 +323,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan boo
 		renderer.stateMutex.Lock()
 		piglet.MakeCurrent()
 
-		renderer.ProcessConf(confChan, pauseChan)
+		renderer.ProcessConf(confChan)
 		if renderer.checkRefresh() {
 			//            if DEBUG_RENDERER { log.Debug("%s refresh",renderer.Desc()) }
 			switch renderer.mode {
@@ -367,12 +385,12 @@ func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan boo
 			renderFailed = false
 		} else {
 
-			//HACK: remove gles2 debug output 'glGetError 0x502'
-			os.Stderr.Write([]byte("\b\r"))
-
-			if renderFailed == false { // first failure
-				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
-			}
+			//			//HACK: remove gles2 debug output 'glGetError 0x502'
+			//			os.Stderr.Write([]byte("\b\r"))
+			//
+			//			if renderFailed == false { // first failure
+			//				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
+			//			}
 			renderFailed = true
 		}
 
@@ -380,7 +398,9 @@ func (renderer *Renderer) Render(confChan chan facade.Config, pauseChan chan boo
 			DiagDone()
 		}
 
-		renderer.tock()
+		if !renderer.tock() {
+			break
+		}
 
 	}
 	return nil
@@ -393,14 +413,11 @@ func (renderer *Renderer) TogglePause() {
 	}
 }
 
-func (renderer *Renderer) ProcessConf(confChan chan facade.Config, pauseChan chan bool) {
+func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 	select {
 	case conf := <-confChan:
 		renderer.Configure(&conf)
-
-	case <-pauseChan:
-		renderer.TogglePause()
 
 	default:
 		//nop

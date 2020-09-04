@@ -4,16 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"strings"
-	"time"
 
 	"encoding/base64"
-	"fmt"
-	//"bufio"
-	//"io"
 	"os"
 	"os/signal"
 	"runtime"
-	//	"runtime/debug"
 
 	facade "./facade"
 	log "./log"
@@ -77,7 +72,7 @@ func main() {
 	confs := make(chan facade.Config)
 	texts := make(chan facade.TextSeq)
 	quers := make(chan (chan string))
-	pause := make(chan bool, 10)
+	ticks := make(chan bool, 2)
 
 	log.SetVerbosity(log.NOTICE)
 
@@ -137,22 +132,12 @@ func main() {
 	}
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, os.Interrupt, os.Kill)
 	go func() {
-		last := time.Now()
 		for {
 			sig := <-signals
-			if !debug || (time.Now().Sub(last) < 250*time.Millisecond) {
-				log.Notice("SIGNAL %s", sig)
-				os.Exit(0)
-			} else {
-				//        		log.Notice("signal %s", sig)
-				select {
-				case pause <- true:
-				default:
-				}
-			}
-			last = time.Now()
+			log.Notice("SIGNAL %s", sig)
+			ticks <- false
 		}
 	}()
 
@@ -279,7 +264,7 @@ func main() {
 		if err != nil {
 			log.PANIC("fail to decode readme: %s", err)
 		}
-		fmt.Fprintf(os.Stdout, string(readme))
+		os.Stdout.Write(readme)
 		os.Exit(0)
 
 	case HELP:
@@ -311,7 +296,11 @@ func main() {
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 		go renderer.ProcessQueries(quers)
-		err = renderer.Render(confs, pause)
+		err = renderer.Render(confs)
+		if err != nil {
+			log.Error("fail to render: %s", err)
+		}
+		renderer.Finish()
 
 	case PIPE:
 		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
