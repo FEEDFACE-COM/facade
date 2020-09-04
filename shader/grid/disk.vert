@@ -50,8 +50,8 @@ void main() {
 
     float delta = 0.0;
 //    delta += now/10.;
-    delta += ease1(now/2.) - 0.5;
-    
+    delta += ease1(now/4.) - 0.5;
+
 
     float ARC = TAU;
     float A0 = 0.0;
