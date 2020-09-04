@@ -15,7 +15,7 @@ func ShowHelp(flags flag.FlagSet) {
 	if RENDERER_AVAILABLE {
     	   cmds = append(cmds, string(SERVE))
 	}
-	for _, c := range []Command{PIPE, CONF, EXEC} {
+	for _, c := range []Command{PIPE, CONF, EXEC, README} {
 		cmds = append(cmds, string(c))
 	}
 
@@ -88,9 +88,10 @@ func ShowCommands() {
 	if RENDERER_AVAILABLE {
 		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from client and render ")
 	}
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send configuration to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE,   "read text from stdin and send to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF,   "send configuration to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC,   "execute command and send stdio to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", README, "show documentation")
 }
 
 func ShowModes() {

@@ -133,11 +133,13 @@ font/amiga4ever.ttf:
 	unzip -j -o -b $@.zip $$(basename $@) -d font/ && unlink $@.zip
 
 facade/assets.go: README.md
-	echo ""                  >|$@
-	echo "package facade"    >>$@
-	echo "var readme = \`"   >>$@
-	cat $^ | base64          >>$@
-	echo "\`\n\n"            >>$@
+	echo ""                                 >|$@
+	echo "package facade"                   >>$@
+	echo "var Asset = map[string]string{"   >>$@
+	echo "\n\"README\":\`"                  >>$@
+	cat README.md | base64                  >>$@
+	echo "\`,\n\n"                          >>$@
+	echo "}"                                >>$@
 	go fmt $@
 
 

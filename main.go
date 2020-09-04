@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"encoding/base64"
+	"fmt"
 	//"bufio"
 	//"io"
 	"os"
@@ -49,11 +51,12 @@ var (
 type Command string
 
 const (
-	SERVE Command = "serve"
-	PIPE  Command = "pipe"
-	EXEC  Command = "exec"
-	CONF  Command = "conf"
-	HELP  Command = "help"
+	SERVE  Command = "serve"
+	PIPE   Command = "pipe"
+	EXEC   Command = "exec"
+	CONF   Command = "conf"
+	HELP   Command = "help"
+	README Command = "readme"
 )
 
 var (
@@ -88,7 +91,7 @@ func main() {
 
 	commandFlags := make(map[Command]*flag.FlagSet)
 
-	var commands = []Command{CONF, PIPE, EXEC }
+	var commands = []Command{CONF, PIPE, EXEC}
 	if RENDERER_AVAILABLE {
 		commands = append(commands, SERVE)
 	}
@@ -99,7 +102,7 @@ func main() {
 		commandFlags[cmd].SetOutput(bufio.NewWriter(nil))
 	}
 
-	for _, cmd := range []Command{PIPE, CONF, EXEC } {
+	for _, cmd := range []Command{PIPE, CONF, EXEC} {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
@@ -271,10 +274,16 @@ func main() {
 			config.VisitFlags(modeFlags)
 		}
 
+	case README:
+		readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
+		if err != nil {
+			log.PANIC("fail to decode readme: %s", err)
+		}
+		fmt.Fprintf(os.Stdout, string(readme))
+		os.Exit(0)
 
 	case HELP:
-		ShowHelp(*globalFlags)
-		os.Exit(-2)
+		fallthrough
 
 	default:
 		ShowHelp(*globalFlags)
@@ -378,7 +387,6 @@ func main() {
 		}
 		defer client.CloseTextStream()
 		err = executor.Execute()
-
 
 	default:
 		log.PANIC("unexpected command %s", cmd)

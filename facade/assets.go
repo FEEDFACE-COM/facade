@@ -1,6 +1,8 @@
 package facade
 
-var readme = `
+var Asset = map[string]string{
+
+	"README": `
 CiMgRkFDQURFIGJ5IEZFRURGQUNFLkNPTQoKICAgIApGQUNBREUgCgoKCiMjIEV4YW1wbGVzCgoK
 IyMjIFNldHVwIEFsaWFzCgogICAgCiAgICBhbGlhcyBmY2Q9J25jIC1OIGxvY2FsaG9zdCA0MDQ1
 JyAjIGZvciBsaW51eAogICAgYWxpYXMgZmNkPSduYyBsb2NhbGhvc3QgNDA0NScgICAgIyBmb3Ig
@@ -37,4 +39,5 @@ YWRlIGV4ZWMgdGVybSAtdz02NCAtaD0xNiAvcGF0aC90by9mcm90eiAvcGF0aC90by9oaXRjaGhp
 a2Vyc19ndWlkZS5ibGIKCiAgICAKICAgIAogICAgCiMgY2xlYXIgZGlzcGxheQoKIyAgICBwcmlu
 dGYgJ1wwMzNbODsxNjs2NHQnICMgcmVzaXplIHRlcm1pbmFsCgoKICAgIGNsZWFyIHwgZmNkCiAg
 ICAKCg==
-`
+`,
+}
