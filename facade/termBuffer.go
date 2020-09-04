@@ -151,10 +151,11 @@ func (buffer *TermBuffer) ProcessRunes(runes []rune) {
 				log.Debug("%s linefeed", buffer.Desc())
 			}
 			buffer.cursor.y += 1
-			buffer.cursor.x = 1 // NEWLINE does CARRIAGE RETURN
+			// NEWLINE does no CARRIAGE RETURN
 			if buffer.shouldScroll() {
 				buffer.scrollLine()
 				buffer.cursor.y = buffer.max.y
+				buffer.cursor.x = 1
 			}
 
 		case '\t':
