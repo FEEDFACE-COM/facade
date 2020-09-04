@@ -64,9 +64,10 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	var modes []string
 	modes = append(modes, strings.ToLower(facade.Mode_TERM.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_LINES.String()))
+	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	modes = append(modes, strings.ToLower(facade.Mode_WORDS.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
-
+	*/
 	ShowVersion()
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	switch cmd {
@@ -98,8 +99,10 @@ func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "line scroller")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
+	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "word scroller")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TAGS.String()), "tag cloud")
+	*/
 }
 
 func ShowAssets(directory string) {
@@ -116,8 +119,10 @@ func InfoAssets(shaders, fonts []string) string {
 	modes := map[facade.Mode]string{
 		facade.Mode_LINES: "grid/",
 		facade.Mode_TERM:  "grid/",
+		/*  // TODO: implement Mode_WORDS and Mode_TAGS
 		facade.Mode_WORDS: "set/",
 		facade.Mode_TAGS:  "set/",
+		*/
 	}
 
 	ret += fmt.Sprintf("\nfacade conf <MODE> -font= ")
@@ -134,9 +139,8 @@ func InfoAssets(shaders, fonts []string) string {
 		}
 	}
 
-	for _, mode := range []facade.Mode{facade.Mode_LINES, facade.Mode_TERM, facade.Mode_WORDS, facade.Mode_TAGS} {
+	for mode, prefix := range modes {
 
-		prefix := modes[mode]
 		for _, suffix := range []string{".vert", ".frag"} {
 			tmp := fmt.Sprintf("facade conf %5s -%s", strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
 			ret += fmt.Sprintf("\n%12s= ", tmp)

@@ -39,12 +39,6 @@ const TEXT_BUFFER_SIZE = 1024
 const DEFAULT_RECEIVE_HOST = "[::]"
 const DEFAULT_CONNECT_HOST = "localhost"
 
-const AUTHOR = `
-   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
-  |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
-  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
-`
-
 var (
 	BUILD_NAME     string = "facade"
 	BUILD_VERSION  string = "0.0.0"
@@ -246,24 +240,26 @@ func main() {
 				config.Lines.Shader = &facade.ShaderConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
 
-			case facade.Mode_WORDS.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_WORDS
-				config.Words = &facade.WordConfig{}
-				config.Words.Shader = &facade.ShaderConfig{}
-				config.Words.Set = &facade.SetConfig{}
+				/*  // TODO: implement Mode_WORDS and Mode_TAGS
 
-			case facade.Mode_TAGS.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_TAGS
-				config.Tags = &facade.TagConfig{}
-				config.Tags.Shader = &facade.ShaderConfig{}
-				config.Tags.Set = &facade.SetConfig{}
+				case facade.Mode_WORDS.String():
+					config.SetMode = true
+					config.Mode = facade.Mode_WORDS
+					config.Words = &facade.WordConfig{}
+					config.Words.Shader = &facade.ShaderConfig{}
+					config.Words.Set = &facade.SetConfig{}
 
-			case facade.Mode_DRAFT.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_DRAFT
+				case facade.Mode_TAGS.String():
+					config.SetMode = true
+					config.Mode = facade.Mode_TAGS
+					config.Tags = &facade.TagConfig{}
+					config.Tags.Shader = &facade.ShaderConfig{}
+					config.Tags.Set = &facade.SetConfig{}
 
+				case facade.Mode_DRAFT.String():
+					config.SetMode = true
+					config.Mode = facade.Mode_DRAFT
+				*/
 			default:
 				ShowHelpCommand(cmd, *commandFlags[cmd])
 				os.Exit(-2)
@@ -403,3 +399,9 @@ func main() {
 
 	os.Exit(0)
 }
+
+const AUTHOR = `
+   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
+  |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
+  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
+`
