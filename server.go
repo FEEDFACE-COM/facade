@@ -34,7 +34,7 @@ type Server struct {
 	queryChan  chan (chan string)
 }
 
-func NewServer(host string, confPort uint, textPort uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Server {
+func NewServer(host string, confPort uint, textPort uint, timeout float64, noIPv4 bool, noIPv6 bool) *Server {
 	ret := Server{
 		host:       host,
 		confPort:   confPort,
@@ -43,15 +43,23 @@ func NewServer(host string, confPort uint, textPort uint, timeout float64, force
 		bufferSize: TEXT_BUFFER_SIZE,
 		transport:  "tcp",
 	}
-	if forceIPv4 {
-		ret.transport = "tcp4"
-	} else if forceIPv6 {
+
+	if noIPv4 && noIPv6 {
+		ret.transport = ""
+	} else if noIPv4 {
 		ret.transport = "tcp6"
+	} else if noIPv6 {
+		ret.transport = "tcp4"
 	}
 	return &ret
 }
 
 func (server *Server) ListenText(bufChan chan facade.TextSeq) {
+
+	if server.transport == "" {
+		return
+	}
+
 	textListenStr := fmt.Sprintf("%s:%d", server.host, server.textPort)
 	textListener, err := net.Listen(server.transport, textListenStr)
 	if err != nil {
@@ -204,6 +212,10 @@ func (server *Server) Listen(
 	server.confChan = confChan
 	server.bufferChan = bufferChan
 	server.queryChan = queryChan
+
+	if server.transport == "" {
+		return
+	}
 
 	server.connStr = fmt.Sprintf("%s:%d", server.host, server.confPort)
 

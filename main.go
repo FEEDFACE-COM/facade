@@ -70,8 +70,9 @@ var (
 	connectHost    string  = ""
 	connectTimeout float64 = 5.0
 	readTimeout    float64 = 0.0
-	forceIPv4      bool    = false
-	forceIPv6      bool    = false
+	noIPv4         bool    = false
+	noIPv6         bool    = false
+	noStdin        bool    = false
 )
 
 func main() {
@@ -107,17 +108,18 @@ func main() {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
-		commandFlags[cmd].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
-		commandFlags[cmd].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
+		commandFlags[cmd].BoolVar(&noIPv4, "no4", noIPv4, "disable IPv4 networking")
+		commandFlags[cmd].BoolVar(&noIPv6, "no6", noIPv6, "disable IPv6 networking")
 	}
 
 	if commandFlags[SERVE] != nil {
-		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for messages")
-		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `port` for raw text")
-		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host`")
+		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for config")
+		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `port` for text")
+		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host` for config and text")
 		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
-		commandFlags[SERVE].BoolVar(&forceIPv4, "4", forceIPv4, "force IPv4 networking")
-		commandFlags[SERVE].BoolVar(&forceIPv6, "6", forceIPv6, "force IPv6 networking")
+		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
+		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
+		commandFlags[SERVE].BoolVar(&noStdin, "nostdin", noStdin, "do not read from stdin")
 	}
 
 	{
@@ -293,19 +295,17 @@ func main() {
 
 	}
 
-	if forceIPv4 && forceIPv6 {
-		ShowHelpCommand(cmd, *commandFlags[cmd])
-		os.Exit(-2)
-	}
-
 	switch cmd {
 
 	case SERVE:
 		log.Info(AUTHOR)
-		scanner = NewScanner()
-		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
-		renderer = NewRenderer(directory)
-		go scanner.ScanText(texts)
+
+		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
+		renderer = NewRenderer(directory, ticks)
+		if !noStdin {
+			scanner = NewScanner()
+			go scanner.ScanText(texts)
+		}
 		go server.Listen(confs, texts, quers)
 		go server.ListenText(texts)
 		runtime.LockOSThread()
@@ -318,7 +318,7 @@ func main() {
 		err = renderer.Render(confs, pause)
 
 	case PIPE:
-		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -343,7 +343,7 @@ func main() {
 			os.Exit(-1)
 		}
 		log.Debug("configure %s", config.Desc())
-		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -373,7 +373,7 @@ func main() {
 		config.Terminal.Grid.Height = rows
 		config.Terminal.Grid.SetHeight = true
 
-		client = NewClient(connectHost, port, connectTimeout, forceIPv4, forceIPv6)
+		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		executor = NewExecutor(client, uint(cols), uint(rows), path, args)
 
 		if err = client.Dial(); err != nil {

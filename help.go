@@ -86,11 +86,11 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "render text from network and stdin ")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "render text read from network or stdin")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send configuration to server")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdio to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send config to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdout/stderr to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", README, "show documentation")
 }
 
