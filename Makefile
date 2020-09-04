@@ -80,7 +80,7 @@ deps:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${ASSETS} ${BUILD_NAME}-*-*-*
+	-rm -f ${BUILD_PRODUCT} ${ASSETS} ${BUILD_NAME}-*-*
 
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
