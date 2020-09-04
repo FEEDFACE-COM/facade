@@ -33,7 +33,11 @@ const (
 	DEBUG_RENDERER = false
 )
 
-const FRAME_RATE = 60.0
+const RENDER_FRAME_RATE = 60.0
+const TEXT_BUFFER_SIZE = 1024
+
+const DEFAULT_RECEIVE_HOST = "[::]"
+const DEFAULT_CONNECT_HOST = "localhost"
 
 const AUTHOR = `
    _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
@@ -69,9 +73,6 @@ var (
 	forceIPv4      bool    = false
 	forceIPv6      bool    = false
 )
-
-const DEFAULT_RECEIVE_HOST = "[::]"
-const DEFAULT_CONNECT_HOST = "localhost"
 
 func main() {
 	quiet, verbose, debug := false, false, false
@@ -161,6 +162,7 @@ func main() {
 
 	var client *Client
 	var server *Server
+	var scanner *Scanner
 	var renderer *Renderer
 	var executor *Executor
 	var path string
@@ -300,8 +302,10 @@ func main() {
 
 	case SERVE:
 		log.Info(AUTHOR)
+		scanner = NewScanner()
 		server = NewServer(receiveHost, port, textPort, readTimeout, forceIPv4, forceIPv6)
 		renderer = NewRenderer(directory)
+		go scanner.ScanText(texts)
 		go server.Listen(confs, texts, quers)
 		go server.ListenText(texts)
 		runtime.LockOSThread()

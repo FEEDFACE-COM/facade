@@ -253,7 +253,7 @@ func (renderer *Renderer) tick() {
 
 	for { //forever
 		renderer.tickChannel <- true // wait until can send
-		time.Sleep(time.Duration(int64(time.Second / FRAME_RATE)))
+		time.Sleep(time.Duration(int64(time.Second / RENDER_FRAME_RATE)))
 	}
 
 }

@@ -20,7 +20,9 @@ type Server struct {
 	host     string
 	confPort uint
 	textPort uint
-	timeout  float64
+
+	timeout    float64
+	bufferSize uint
 
 	transport string
 
@@ -33,7 +35,14 @@ type Server struct {
 }
 
 func NewServer(host string, confPort uint, textPort uint, timeout float64, forceIPv4 bool, forceIPv6 bool) *Server {
-	ret := Server{host: host, confPort: confPort, textPort: textPort, timeout: timeout, transport: "tcp"}
+	ret := Server{
+		host:       host,
+		confPort:   confPort,
+		textPort:   textPort,
+		timeout:    timeout,
+		bufferSize: TEXT_BUFFER_SIZE,
+		transport:  "tcp",
+	}
 	if forceIPv4 {
 		ret.transport = "tcp4"
 	} else if forceIPv6 {
@@ -49,7 +58,7 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 		log.PANIC("%s fail listen on %s: %s", server.Desc(), textListenStr, err)
 	}
 	defer func() { /*log.Debug("stop listen text on %s",textListener.Addr().String());*/ textListener.Close() }()
-	log.Info("%s text on %s", server.Desc(), textListener.Addr().String())
+	log.Info("%s listen text on %s", server.Desc(), textListener.Addr().String())
 
 	for {
 		textConn, err := textListener.Accept()
@@ -155,8 +164,7 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 		}
 		textConn.Close()
 	}()
-	const BUFFER_SIZE = 1024
-	var buf []byte = make([]byte, BUFFER_SIZE)
+	var buf []byte = make([]byte, server.bufferSize)
 	var rem []byte = []byte{}
 	var tmp []byte
 	reader := bufio.NewReader(textConn)
@@ -209,21 +217,21 @@ func (server *Server) Listen(
 
 	serv := grpc.NewServer()
 	facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan, queryChan: queryChan})
-	//	if DEBUG_SERVER {
-	log.Info("%s serve on %s", server.Desc(), server.connStr)
-	//	}
+
+	log.Info("%s listen conf on %s", server.Desc(), server.connStr)
+
 	err = serv.Serve(listener)
 	if err != nil {
 		log.PANIC("%s fail to serve: %s", server.Desc(), err)
 	}
 	if DEBUG_SERVER {
-		log.Debug("%s listen done.", server.Desc())
+		log.Debug("%s listen conf done.", server.Desc())
 	}
 }
 
 func (server *Server) Desc() string {
 	ret := "server["
-	ret += server.transport
+	ret += fmt.Sprintf("%s %d", server.transport, server.bufferSize)
 	ret += "]"
 	return ret
 }
