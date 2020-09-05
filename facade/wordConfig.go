@@ -31,7 +31,7 @@ func (config *WordConfig) Desc() string {
 
 func (config *WordConfig) AddFlags(flagset *flag.FlagSet) {
 	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset)
+		config.GetShader().AddFlags(flagset, Mode_WORDS)
 	}
 	if config.GetSet() != nil {
 		config.GetSet().AddFlags(flagset)

@@ -106,7 +106,7 @@ func (config *LineConfig) Desc() string {
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 
 	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset)
+		config.GetShader().AddFlags(flagset, Mode_LINES)
 	}
 	if config.GetGrid() != nil {
 		config.GetGrid().AddFlags(flagset)

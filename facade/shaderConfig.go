@@ -39,10 +39,13 @@ func (config *ShaderConfig) Desc() string {
 	return ret
 }
 
-func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode) {
 
-	flagset.StringVar(&config.Vert, "vert", ShaderDefaults.Vert, "vertex shader")
-	flagset.StringVar(&config.Frag, "frag", ShaderDefaults.Frag, "fragment shader")
+	frags := " (" + availableShaders(prefixForMode(mode), ".frag") + ")"
+	verts := " (" + availableShaders(prefixForMode(mode), ".vert") + ")"
+
+	flagset.StringVar(&config.Vert, "vert", ShaderDefaults.Vert, "vertex shader"+verts)
+	flagset.StringVar(&config.Frag, "frag", ShaderDefaults.Frag, "fragment shader"+frags)
 
 }
 
@@ -62,10 +65,36 @@ func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return config.SetVert || config.SetFrag
 }
 
-func (config *ShaderConfig) Help() string {
+func (config *ShaderConfig) Help(mode Mode) string {
 	ret := ""
 	tmp := flag.NewFlagSet("shader", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp, mode)
 	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
+}
+
+func availableShaders(prefix, suffix string) string {
+	ret := ""
+	for name, _ := range ShaderAsset {
+		if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
+			ret += strings.TrimSuffix(strings.TrimPrefix(name, prefix), suffix)
+			ret += ", "
+		}
+	}
+	ret = strings.TrimSuffix(ret, ", ")
+	return ret
+}
+
+func prefixForMode(mode Mode) string {
+	switch mode {
+	case Mode_LINES:
+		return "grid/"
+	case Mode_TERM:
+		return "grid/"
+	case Mode_TAGS:
+		return "set/"
+	case Mode_WORDS:
+		return "set/"
+	}
+	return ""
 }

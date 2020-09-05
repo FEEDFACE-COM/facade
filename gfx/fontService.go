@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/color"
 	"io/ioutil"
-	"sort"
 	"strings"
 )
 
@@ -146,33 +145,6 @@ func (service *FontService) getFilePathForName(fontName string) (string, error) 
 	return "", log.NewError("no file for font %s", fontName)
 }
 
-func (service *FontService) GetAvailableNames() []string {
-
-	var ret []string
-	for n, _ := range service.asset {
-		ret = append(ret, n)
-	}
-
-	//    files, err := ioutil.ReadDir(service.directory)
-	//    if err != nil {
-	//        return ret
-	//    }
-	//    for _, f := range files {
-	//        for _, ext := range Extensions {
-	//            name := strings.ToLower( f.Name() )
-	//            if strings.HasSuffix( name, ext ) {
-	//                name = strings.TrimSuffix( name, ext )
-	//                if service.asset[name] == "" {
-	//
-	//                    ret = append(ret, name)
-	//
-	//                }
-	//            }
-	//        }
-	//    }
-	sort.Strings(ret)
-	return ret
-}
 
 func (service *FontService) Desc() string {
 	ret := "fontservice["

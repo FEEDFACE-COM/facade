@@ -19,7 +19,8 @@ func ShowHelp(flags flag.FlagSet) {
 		cmds = append(cmds, string(c))
 	}
 
-	ShowVersion()
+	fmt.Fprintf(os.Stderr, InfoAuthor())
+	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
 	ShowCommands()
@@ -30,7 +31,8 @@ func ShowHelp(flags flag.FlagSet) {
 }
 
 func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
-	ShowVersion()
+	fmt.Fprintf(os.Stderr, InfoAuthor())
+	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	if cmd == EXEC {
 		fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)
@@ -42,7 +44,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
-	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help(mode))
 	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
 	fmt.Fprintf(os.Stderr, "\nMode Flags:\n")
 
@@ -68,7 +70,8 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	modes = append(modes, strings.ToLower(facade.Mode_WORDS.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
 	*/
-	ShowVersion()
+	fmt.Fprintf(os.Stderr, InfoAuthor())
+	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	switch cmd {
 	case EXEC:
@@ -105,66 +108,64 @@ func ShowModes() {
 	*/
 }
 
-func ShowAssets(directory string) {
+//func ShowAssets(directory string) {
+//
+//	fontService := gfx.NewFontService(directory+"/font", facade.FontAsset)
+//	programService := gfx.NewProgramService(directory+"/shader", facade.ShaderAsset)
+//
+//	fmt.Fprintf(os.Stderr, InfoAssets(programService.GetAvailableNames(), fontService.GetAvailableNames()))
+//}
 
-	fontService := gfx.NewFontService(directory+"/font", facade.FontAsset)
-	programService := gfx.NewProgramService(directory+"/shader", facade.ShaderAsset)
+//func InfoAssets(shaders, fonts []string) string {
+//	ret := ""
+//
+//	modes := map[facade.Mode]string{
+//		facade.Mode_LINES: "grid/",
+//		facade.Mode_TERM:  "grid/",
+//		/*  // TODO: implement Mode_WORDS and Mode_TAGS
+//		facade.Mode_WORDS: "set/",
+//		facade.Mode_TAGS:  "set/",
+//		*/
+//	}
+//
+//	ret += fmt.Sprintf("\nfacade conf <MODE> -font= ")
+//	for _, font := range fonts {
+//		ret += font
+//		ret += " "
+//	}
+//
+//	ret += fmt.Sprintf("\nfacade conf <MODE> -mask= ")
+//	for _, shader := range shaders {
+//		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
+//			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
+//			ret += " "
+//		}
+//	}
+//
+//	for mode, prefix := range modes {
+//
+//		for _, suffix := range []string{".vert", ".frag"} {
+//			tmp := fmt.Sprintf("facade conf %5s -%s", strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
+//			ret += fmt.Sprintf("\n%12s= ", tmp)
+//			for _, shader := range shaders {
+//				if strings.HasPrefix(shader, prefix) && strings.HasSuffix(shader, suffix) {
+//					ret += strings.TrimSuffix(strings.TrimPrefix(shader, prefix), suffix)
+//					ret += " "
+//				}
+//
+//			}
+//		}
+//	}
+//
+//	ret += "\n"
+//	return ret
+//}
 
-	fmt.Fprintf(os.Stderr, InfoAssets(programService.GetAvailableNames(), fontService.GetAvailableNames()))
-}
-
-func InfoAssets(shaders, fonts []string) string {
-	ret := ""
-
-	modes := map[facade.Mode]string{
-		facade.Mode_LINES: "grid/",
-		facade.Mode_TERM:  "grid/",
-		/*  // TODO: implement Mode_WORDS and Mode_TAGS
-		facade.Mode_WORDS: "set/",
-		facade.Mode_TAGS:  "set/",
-		*/
-	}
-
-	ret += fmt.Sprintf("\nfacade conf <MODE> -font= ")
-	for _, font := range fonts {
-		ret += font
-		ret += " "
-	}
-
-	ret += fmt.Sprintf("\nfacade conf <MODE> -mask= ")
-	for _, shader := range shaders {
-		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
-			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
-			ret += " "
-		}
-	}
-
-	for mode, prefix := range modes {
-
-		for _, suffix := range []string{".vert", ".frag"} {
-			tmp := fmt.Sprintf("facade conf %5s -%s", strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
-			ret += fmt.Sprintf("\n%12s= ", tmp)
-			for _, shader := range shaders {
-				if strings.HasPrefix(shader, prefix) && strings.HasSuffix(shader, suffix) {
-					ret += strings.TrimSuffix(strings.TrimPrefix(shader, prefix), suffix)
-					ret += " "
-				}
-
-			}
-		}
-	}
-
-	ret += "\n"
-	return ret
-}
-
-func ShowVersion() {
-	fmt.Fprintf(os.Stderr, "%s", AUTHOR)
-	fmt.Fprintf(os.Stderr, "%s", InfoVersion())
+func InfoAuthor() string {
+	return fmt.Sprintf("%s\n", AUTHOR)
 }
 
 func InfoVersion() string {
-	ret := ""
-	ret += fmt.Sprintf("\n%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
-	return ret
+	return fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
+
 }

@@ -605,8 +605,8 @@ func (renderer *Renderer) dumpBuffer() {
 func (renderer *Renderer) Info() string {
 	ret := ""
 
+	ret += InfoAuthor()
 	ret += InfoVersion()
-	ret += InfoAssets(renderer.programService.GetAvailableNames(), renderer.fontService.GetAvailableNames())
 	ret += "\n\n"
 
 	ret += gfx.WorldClock().Info(renderer.prevFrame)

@@ -5,8 +5,8 @@ package facade
 import (
 	"fmt"
 	"strings"
-
 	//    "math"
+
 	gfx "../gfx"
 	log "../log"
 
@@ -179,49 +179,50 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 }
 
-//func (grid *Grid) Height() uint { return grid.Height }
+var FillPatterns []string = []string{"title", "grid", "alpha", "clear"}
 
 func (grid *Grid) fill(name string) []string {
 	ret := []string{}
 
 	switch name {
-
-	//todo: cheeck widht, switch different titles
-	//also, clear!
-
 	case "title":
-		ret = strings.Split(`
+
+		if grid.width >= 73 && grid.height >= 3 {
+			ret = strings.Split(`
  _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
 |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
 |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
-`,
-			"\n")[1:]
-
-	case "title2":
-		ret = strings.Split(`
+`, "\n")[1:]
+		} else if grid.width >= 20 && grid.height >= 5 {
+			ret = strings.Split(`
  _  _   _  _   _   _
 |_ |_| /  |_| | \ |_
 |  | | \_ | | |_/ |_
                     
      by FEEDFACE.COM
-`,
-			"\n")[1:]
-
-	case "title3":
-		ret = strings.Split(`
-              
-F A C A D E   
-              
-            by
-  FEEDFACE.COM
-              
-`,
-			"\n")[1:]
-
-	case "title4":
-		ret = []string{
-			"F A C A D E",
+`, "\n")[1:]
+		} else if grid.width >= 13 && grid.height >= 4 {
+			ret = strings.Split(`
+ F A C A D E 
+             
+           by
+ FEEDFACE.COM
+`, "\n")[1:]
+		} else {
+			ret = []string{"F A C A D E"}
 		}
+
+		//        h := float64(grid.height) - float64(len(ret))
+		//        top := int( math.Floor(h/2.) )
+		//        bot := int( math.Ceil(h/2.) )
+		//        for i := 0; i<top; i++ {
+		//            ret = append([]string{"foo",}...,ret)
+		//        }
+		//        for i := 0; i<bot; i++ {
+		//            ret = append(ret,[]string{"bar"}...)
+		//        }
+
+		return ret
 
 	case "grid":
 		w, h := int(grid.width), int(grid.height)
@@ -242,15 +243,17 @@ F A C A D E
 			}
 			ret = append(ret, tmp)
 		}
+		return ret
 
 	case "alpha":
 		w, h := int(grid.width), int(grid.height)
-		alpha := strings.Repeat(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",w)
+		alpha := strings.Repeat(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", w)
 		s := 0
 		for r := 0; r < h; r++ {
 			ret = append(ret, alpha[s:s+w])
 			s += w
 		}
+		return ret
 
 	case "clear":
 		w, h := int(grid.width), int(grid.height)
@@ -261,12 +264,11 @@ F A C A D E
 			}
 			ret = append(ret, s)
 		}
+		return ret
 
 	}
 
-	if len(ret) > 0 {
-		log.Debug("%s fill %s", grid.Desc(), name)
-	}
+	log.Debug("%s no such fill pattern: %s", grid.Desc(), name)
 	return ret
 
 }

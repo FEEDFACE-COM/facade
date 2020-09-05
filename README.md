@@ -2,7 +2,21 @@
 # FACADE by FEEDFACE.COM
 
     
-FACADE 
+FACADE aims to solve the following problem: 
+You have some text on stdout that you really would like to throw on the wall for everyone to see
+
+
+
+## Requirements
+
+* facade server needs to run on a Raspberry Pi 3
+
+
+## Setup
+
+* Run `facade serve` on raspberry pi
+
+
 
 
 

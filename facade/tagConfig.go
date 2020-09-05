@@ -31,7 +31,7 @@ func (config *TagConfig) Desc() string {
 
 func (config *TagConfig) AddFlags(flagset *flag.FlagSet) {
 	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset)
+		config.GetShader().AddFlags(flagset, Mode_TAGS)
 	}
 	if config.GetSet() != nil {
 		config.GetSet().AddFlags(flagset)

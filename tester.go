@@ -423,8 +423,8 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 func (tester *Tester) Info() string {
 	ret := ""
 
+	ret += InfoAuthor()
 	ret += InfoVersion()
-	ret += InfoAssets(tester.programService.GetAvailableNames(), tester.fontService.GetAvailableNames())
 	ret += "\n\n"
 
 	ret += gfx.WorldClock().Info(tester.prevFrame)

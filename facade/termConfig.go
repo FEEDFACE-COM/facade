@@ -26,7 +26,7 @@ func (config *TermConfig) Desc() string {
 
 func (config *TermConfig) AddFlags(flagset *flag.FlagSet) {
 	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset)
+		config.GetShader().AddFlags(flagset, Mode_TERM)
 	}
 
 	if config.GetGrid() != nil {

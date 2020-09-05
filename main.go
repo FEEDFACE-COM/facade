@@ -112,7 +112,7 @@ func main() {
 	}
 
 	{
-		globalFlags.StringVar(&directory, "D", directory, "working directory")
+		globalFlags.StringVar(&directory, "D", directory, "asset directory")
 		globalFlags.BoolVar(&verbose, "v", verbose, "show info messages?")
 		globalFlags.BoolVar(&debug, "d", debug, "show debug messages?")
 		globalFlags.BoolVar(&quiet, "q", quiet, "show warnings only?")

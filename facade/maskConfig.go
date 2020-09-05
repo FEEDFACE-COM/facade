@@ -19,7 +19,8 @@ func (config *MaskConfig) Desc() string {
 }
 
 func (config *MaskConfig) AddFlags(flagset *flag.FlagSet) {
-	flagset.StringVar(&config.Name, "mask", MaskDefaults.Name, "mask shader")
+	masks := " (" + availableShaders("mask/", ".frag") + ")"
+	flagset.StringVar(&config.Name, "mask", MaskDefaults.Name, "overlay mask"+masks)
 }
 
 func (config *MaskConfig) VisitFlags(flagset *flag.FlagSet) bool {
