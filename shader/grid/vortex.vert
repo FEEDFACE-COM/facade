@@ -46,7 +46,7 @@ void main() {
     float rad = RADIUS / (tileCount.y + R0); 
 
 
-    float delta = 3.*PI/2.;
+    float delta = 0.0;
     delta += ease1(now/2.) - 0.5;
 
     float ARC = TAU;
