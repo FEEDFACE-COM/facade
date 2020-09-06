@@ -321,7 +321,6 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		verboseFrame := gfx.WorldClock().VerboseFrame()
 
 		renderer.stateMutex.Lock()
-		piglet.MakeCurrent()
 
 		renderer.ProcessConf(confChan)
 		if renderer.checkRefresh() {
