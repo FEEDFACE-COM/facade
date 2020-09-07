@@ -5,14 +5,13 @@ BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.
 BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
 BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
-
-
-
+BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 
 
 PROTOS  = facade/facade.pb.go
 SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
+EXTRAS  = README.md
 
 FONTS ?= Monaco.ttf RobotoMono.ttf SpaceMono.ttf VT323.ttf Adore64.ttf OCRAExt.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
@@ -47,7 +46,8 @@ help:
 	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # clean up"
-	@echo " make demo     # try 'make demo | facade pipe lines'"
+	@echo " make release  # build platform package"
+	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
 
@@ -58,6 +58,7 @@ info:
 	@echo " platform   ${BUILD_PLATFORM}"
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
+	@echo " package    ${BUILD_PACKAGE}"
 	@echo "\n#Sources"
 	@echo "${SOURCES}"
 	@echo "\n#Assets"
@@ -66,8 +67,12 @@ info:
 	@echo "${ASSET_SHADER}"
 	@echo "\n#Fonts"   
 	@echo "${ASSET_FONT}"   
+	@echo "\n#Extras"
+	@echo "${EXTRAS}"
 	
 build: ${BUILD_PRODUCT}
+
+release: ${BUILD_PACKAGE}
 
 demo:
 	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
@@ -81,6 +86,10 @@ deps:
 	
 clean:
 	-rm -f ${BUILD_PRODUCT} ${ASSETS} ${BUILD_NAME}-*-*
+	-rm -rf release/*-*/
+	
+goclean: clean
+	go clean -x -r 
 
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
@@ -89,7 +98,14 @@ ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${ASSETS} ${PROTOS}
 	go build -o ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_FLAGS} -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
-
+${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
+	@if ${BUILD_RELEASE}; then true; else { echo "REFUSE TO RELEASE UNTAGGED VERSION ${BUILD_VERSION}"; false; }; fi;
+	mkdir -p release/${BUILD_PLATFORM}/
+	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} release/${BUILD_PLATFORM}/${BUILD_NAME}
+	cp -f ${EXTRAS} release/${BUILD_PLATFORM}/
+	cd release/${BUILD_PLATFORM}/ \
+    && tar cfz ../${BUILD_PACKAGE} ${BUILD_NAME} ${EXTRAS} \
+    && cd ..
 
 proto: ${PROTOS}
 
