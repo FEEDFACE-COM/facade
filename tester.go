@@ -356,13 +356,13 @@ func (tester *Tester) InfoMode() string {
 	mode := ""
 	switch tester.mode {
 	case facade.Mode_TERM:
-		mode = "term" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
+		mode = "term " + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_LINES:
-		mode = "line" + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
+		mode = "line " + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_TAGS:
-		mode = "tags" + tester.shaderConfig.Desc()
+		mode = "tags " + tester.shaderConfig.Desc()
 	case facade.Mode_WORDS:
-		mode = "words" + tester.shaderConfig.Desc()
+		mode = "words " + tester.shaderConfig.Desc()
 	}
 	dbg := ""
 	if tester.debug {
@@ -396,7 +396,7 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
 		if tester.image != nil {
 
-			outPath := "./font.png"
+			outPath := fmt.Sprintf("./%s.png",tester.font.GetName())
 			log.Info("render image to %s", outPath)
 			outFile, err := os.Create(outPath)
 			if err != nil {

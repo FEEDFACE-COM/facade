@@ -377,6 +377,17 @@ func main() {
 		defer client.CloseTextStream()
 		err = executor.Execute()
 
+
+/* TODO: remove test mode
+    case TEST:
+        server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
+        go server.Listen(confs, texts, quers)
+        tester := NewTester(directory)
+        tester.Init()
+        tester.Test(confs)	
+*/
+
+
 	default:
 		log.PANIC("unexpected command %s", cmd)
 	}
