@@ -108,59 +108,6 @@ func ShowModes() {
 	*/
 }
 
-//func ShowAssets(directory string) {
-//
-//	fontService := gfx.NewFontService(directory+"/font", facade.FontAsset)
-//	programService := gfx.NewProgramService(directory+"/shader", facade.ShaderAsset)
-//
-//	fmt.Fprintf(os.Stderr, InfoAssets(programService.GetAvailableNames(), fontService.GetAvailableNames()))
-//}
-
-//func InfoAssets(shaders, fonts []string) string {
-//	ret := ""
-//
-//	modes := map[facade.Mode]string{
-//		facade.Mode_LINES: "grid/",
-//		facade.Mode_TERM:  "grid/",
-//		/*  // TODO: implement Mode_WORDS and Mode_TAGS
-//		facade.Mode_WORDS: "set/",
-//		facade.Mode_TAGS:  "set/",
-//		*/
-//	}
-//
-//	ret += fmt.Sprintf("\nfacade conf <MODE> -font= ")
-//	for _, font := range fonts {
-//		ret += font
-//		ret += " "
-//	}
-//
-//	ret += fmt.Sprintf("\nfacade conf <MODE> -mask= ")
-//	for _, shader := range shaders {
-//		if strings.HasPrefix(shader, "mask/") && strings.HasSuffix(shader, "frag") {
-//			ret += strings.TrimSuffix(strings.TrimPrefix(shader, "mask/"), ".frag")
-//			ret += " "
-//		}
-//	}
-//
-//	for mode, prefix := range modes {
-//
-//		for _, suffix := range []string{".vert", ".frag"} {
-//			tmp := fmt.Sprintf("facade conf %5s -%s", strings.ToLower(mode.String()), strings.TrimPrefix(suffix, "."))
-//			ret += fmt.Sprintf("\n%12s= ", tmp)
-//			for _, shader := range shaders {
-//				if strings.HasPrefix(shader, prefix) && strings.HasSuffix(shader, suffix) {
-//					ret += strings.TrimSuffix(strings.TrimPrefix(shader, prefix), suffix)
-//					ret += " "
-//				}
-//
-//			}
-//		}
-//	}
-//
-//	ret += "\n"
-//	return ret
-//}
-
 func InfoAuthor() string {
 	return fmt.Sprintf("%s\n", AUTHOR)
 }
