@@ -2,7 +2,7 @@
 # FACADE by FEEDFACE.COM
 
     
-FACADE aims to solve the following problem: 
+_FACADE_ aims to solve the following problem: 
 You have some text on stdout that you really would like to throw on the wall for everyone to see
 
 
