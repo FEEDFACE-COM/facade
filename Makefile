@@ -14,7 +14,7 @@ ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 EXTRAS  = README.md
 
 FONTS ?= Monaco.ttf RobotoMono.ttf SpaceMono.ttf VT323.ttf Adore64.ttf OCRAExt.ttf
-ASSET_FONT= $(foreach x,$(FONTS),font/$(x) )
+ASSET_FONT= $(foreach x,$(FONTS),font/$(x))
 
 SHADERS ?= def.vert def.frag 
 SHADERS += color.vert color.frag 
@@ -40,12 +40,12 @@ default: build
 
 help:
 	@echo "#Usage"
-	@echo " make build    # build static executable"
-	@echo " make deps     # fetch golang dependencies"
 	@echo " make info     # show build info"
+	@echo " make build    # build static executable"
+	@echo " make get      # fetch golang packages"
 	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
-	@echo " make clean    # clean up"
+	@echo " make clean    # remove binaries and golang objects"
 	@echo " make release  # build platform package"
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
@@ -81,21 +81,19 @@ demo:
 	
 
 
-deps:
+get:
 	go get -v 
 	
 clean:
-	-rm -f ${BUILD_PRODUCT} ${ASSETS} ${BUILD_NAME}-*-*
-	-rm -rf release/*-*/
-	
-goclean: clean
+	-rm -f ${BUILD_PRODUCT} ${ASSETS}
+	-rm -rf release/${BUILD_PLATFORM}/
 	go clean -x -r 
-
+	
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_PRODUCT}
 
-${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${ASSETS} ${PROTOS}
+${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${PROTOS} assets
 	go build -o ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_FLAGS} -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
 ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
@@ -113,9 +111,10 @@ facade/facade.pb.go: facade/facade.proto
 	protoc -I facade $^ --go_out=plugins=grpc:facade
 	
 
+force:
+	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
 
-
-assets: ${ASSETS}
+assets: force ${ASSETS}
 
 font/Monaco.ttf:
 	mkdir -p font
@@ -160,7 +159,7 @@ facade/assets.go: README.md
 
 
 facade/shaderAssets.go: ${ASSET_SHADER}
-	echo "// +build linux,arm"                          >|$@
+	echo ""                                             >|$@
 	echo "package facade"                               >>$@
 	echo "var ShaderAsset = map[string]string{"         >>$@
 	for src in ${ASSET_SHADER}; do \
@@ -168,7 +167,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      cat $$src | base64; \
+      if [ "${BUILD_PLATFORM}" = "linux-arm" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -176,7 +175,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
 
 
 facade/fontAssets.go: ${ASSET_FONT}
-	echo "// +build linux,arm"                      >|$@
+	echo ""                                         >|$@
 	echo "package facade"                           >>$@
 	echo "var FontAsset = map[string]string{"       >>$@
 	for src in ${ASSET_FONT}; do \
@@ -184,7 +183,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      cat $$src | base64; \
+      if [ "${BUILD_PLATFORM}" = "linux-arm" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
@@ -192,5 +191,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build deps info assets proto demo clean
+.PHONY: help build release get info assets proto demo force clean
 

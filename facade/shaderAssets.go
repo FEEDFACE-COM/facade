@@ -1,4 +1,3 @@
-// +build linux,arm
 package facade
 
 var ShaderAsset = map[string]string{

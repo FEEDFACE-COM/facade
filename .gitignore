@@ -1,5 +1,6 @@
-fcd
-fcd-*-*
+facade-*-*-*
+facade-*-*
 .AppleDouble
 .DS_Store
 tmp/*
+release/*
