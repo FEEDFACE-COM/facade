@@ -179,7 +179,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 }
 
-var FillPatterns []string = []string{"title", "grid", "alpha", "clear"}
 
 func (grid *Grid) fill(name string) []string {
 	ret := []string{}

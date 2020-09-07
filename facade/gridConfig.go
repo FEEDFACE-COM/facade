@@ -106,9 +106,12 @@ func (config *GridConfig) Help() string {
 	return ret
 }
 
+var fillPatterns = [...]string{"title", "grid", "alpha", "clear"}
+
+
 func availableFillPatterns() string {
 	ret := ""
-	for _, name := range FillPatterns {
+	for _, name := range fillPatterns {
 		ret += name
 		ret += ", "
 	}
