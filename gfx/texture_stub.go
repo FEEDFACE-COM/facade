@@ -19,4 +19,3 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error { return log.NewError("
 func (texture *Texture) TexImage() error                 { return log.NewError("TEXTURE NOT AVAILABLE") }
 
 func (texture *Texture) Desc() string { return "texture[]" }
-

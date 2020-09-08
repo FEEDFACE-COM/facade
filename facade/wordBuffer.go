@@ -4,10 +4,10 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
+	"github.com/pborman/ansi"
 	"math/rand"
 	"sort"
 	"sync"
-	"github.com/pborman/ansi"
 )
 
 const DEBUG_WORDBUFFER = false

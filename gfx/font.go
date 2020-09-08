@@ -3,13 +3,13 @@ package gfx
 import (
 	"FEEDFACE.COM/facade/log"
 	"fmt"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	xfont "golang.org/x/image/font"
 	"image"
 	"image/color"
 	"image/draw"
 	"strings"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
-	xfont "golang.org/x/image/font"
 )
 
 var fonts = map[string]*Font{}

@@ -5,8 +5,8 @@ package gfx
 import (
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"strings"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
+	"strings"
 )
 
 type Shader struct {

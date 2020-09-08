@@ -6,12 +6,12 @@ import (
 	"FEEDFACE.COM/facade/log"
 	"errors"
 	"fmt"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"image"
 	"image/color"
 	"image/draw"
 	_ "image/png"
 	"os"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 const DEBUG_TEXTURE = false

@@ -7,12 +7,12 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
+	"github.com/FEEDFACE-COM/piglet"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
 	"sync"
 	"time"
-	"github.com/FEEDFACE-COM/piglet"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Renderer struct {

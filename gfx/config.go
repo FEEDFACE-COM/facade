@@ -1,7 +1,6 @@
 package gfx
 
-import (
-)
+import ()
 
 type Config map[string]interface{}
 

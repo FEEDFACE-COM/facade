@@ -5,8 +5,8 @@ import (
 	"FEEDFACE.COM/facade/log"
 	math "FEEDFACE.COM/facade/math32"
 	"fmt"
-	"strings"
 	"github.com/pborman/ansi"
+	"strings"
 )
 
 const DEBUG_LINEBUFFER = false

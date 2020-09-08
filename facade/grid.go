@@ -6,9 +6,9 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"strings"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
+	"strings"
 )
 
 const DEBUG_GRID = false

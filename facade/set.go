@@ -6,10 +6,10 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"strings"
-	"unicode/utf8"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
+	"strings"
+	"unicode/utf8"
 )
 
 const DEBUG_SET = false
