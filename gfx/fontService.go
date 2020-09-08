@@ -72,8 +72,7 @@ func (service *FontService) LoadFont(name string) error {
 
 		if err == nil {
 
-			/*if DEBUG_FONTSERVICE*/
-			{
+			if DEBUG_FONTSERVICE {
 				log.Debug("%s read font %s from %s", service.Desc(), name, path)
 			}
 			data, err = ioutil.ReadFile(path)
@@ -81,7 +80,7 @@ func (service *FontService) LoadFont(name string) error {
 				return log.NewError("fail to read font from %s: %s", path, err)
 			}
 
-		} else { // no file found, try embedded
+		} else { // no file found, try asset
 
 			if DEBUG_FONTSERVICE {
 				log.Debug("%s no file for font %s: %s", service.Desc(), name, err)
@@ -89,15 +88,15 @@ func (service *FontService) LoadFont(name string) error {
 
 			encoded := service.asset[name]
 			if encoded == "" {
-				return log.NewError("no data for embedded font %s", name)
+				return log.NewError("no asset data for font %s", name)
 			}
 
 			if DEBUG_FONTSERVICE {
-				log.Debug("%s decode embedded font %s", service.Desc(), name)
+				log.Debug("%s decode font %s", service.Desc(), name)
 			}
 			data, err = base64.StdEncoding.DecodeString(encoded)
 			if err != nil {
-				return log.NewError("fail to decode embedded font %s: %s", name, err)
+				return log.NewError("fail to decode font %s: %s", name, err)
 			}
 		}
 	}
@@ -113,7 +112,9 @@ func (service *FontService) LoadFont(name string) error {
 	font := NewFont(name, service.scratch)
 	err = font.loadData(data)
 	if err != nil {
-		log.Debug("%s fail load font %s data: %s", service.Desc(), name, err)
+		if DEBUG_FONTSERVICE {
+			log.Debug("%s fail load font %s data: %s", service.Desc(), name, err)
+		}
 		return log.NewError("fail to load font %s data", name)
 	}
 
@@ -144,7 +145,6 @@ func (service *FontService) getFilePathForName(fontName string) (string, error) 
 	}
 	return "", log.NewError("no file for font %s", fontName)
 }
-
 
 func (service *FontService) Desc() string {
 	ret := "fontservice["

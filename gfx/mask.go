@@ -35,7 +35,9 @@ func (mask *Mask) ConfigureName(name string) {
 	if mask.name != name {
 		err := mask.program.Link("def", name)
 		if err != nil {
-			log.Error("fail to load mask shader %s: %s", name, err)
+			if DEBUG_MASK {
+				log.Debug("%s fail to load mask shader %s: %s", mask.Desc(), name, err)
+			}
 			//            err = mask.program.LoadShaders( "def", mask.name )
 		} else {
 			mask.name = name

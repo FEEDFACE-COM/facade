@@ -44,13 +44,19 @@ func NewClient(host string, port uint, timeout float64, noIPv4 bool, noIPv6 bool
 
 		ip := net.ParseIP(host)
 		if ip.To4() != nil && noIPv6 {
-			log.Debug("%s use given ipv4 address %s", ret.Desc(), ip.String())
+			if DEBUG_CLIENT {
+				log.Debug("%s use given ipv4 address %s", ret.Desc(), ip.String())
+			}
 			address = ip.String()
 		} else if ip.To16() != nil && noIPv4 {
-			log.Debug("%s use given ipv6 address %s", ret.Desc(), ip.String())
+			if DEBUG_CLIENT {
+				log.Debug("%s use given ipv6 address %s", ret.Desc(), ip.String())
+			}
 			address = ip.String()
 		} else {
-			log.Debug("%s lookup address for %s", ret.Desc(), host)
+			if DEBUG_CLIENT {
+				log.Debug("%s lookup address for %s", ret.Desc(), host)
+			}
 			names, err := net.LookupHost(host)
 			if err != nil {
 				log.PANIC("fail to lookup address for %s: %s", host, err)
@@ -58,11 +64,15 @@ func NewClient(host string, port uint, timeout float64, noIPv4 bool, noIPv6 bool
 			for _, name := range names {
 				ip := net.ParseIP(name)
 				if ip.To4() != nil && noIPv6 {
-					log.Debug("%s use resolved ipv4 address %s", ret.Desc(), ip.String())
+					if DEBUG_CLIENT {
+						log.Debug("%s use resolved ipv4 address %s", ret.Desc(), ip.String())
+					}
 					address = ip.String()
 					break
 				} else if ip.To4() == nil && noIPv4 {
-					log.Debug("%s use resolved ipv6 address %s", ret.Desc(), ip.String())
+					if DEBUG_CLIENT {
+						log.Debug("%s use resolved ipv6 address %s", ret.Desc(), ip.String())
+					}
 					address = ip.String()
 					break
 				}
@@ -142,7 +152,6 @@ func (client *Client) ScanAndSendText() error {
 	if err != nil {
 		log.Error("%s fail to scan: %s", client.Desc(), err)
 	}
-
 	return nil
 }
 
@@ -213,9 +222,7 @@ func (client *Client) SendConf(config *facade.Config) error {
 	} else if !status.GetSuccess() {
 		return log.NewError("conf error: %s", status.GetError())
 	}
-	//	if DEBUG_CLIENT {
 	log.Info("%s sent %s", client.Desc(), config.Desc())
-	//	}
 	return nil
 }
 

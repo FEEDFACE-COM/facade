@@ -8,10 +8,14 @@ import (
 type Verbosity uint
 
 const (
-	DEBUG   Verbosity = 7
-	INFO    Verbosity = 6
-	NOTICE  Verbosity = 5
-	WARNING Verbosity = 4
+	DEBUG     Verbosity = 7
+	INFO      Verbosity = 6
+	NOTICE    Verbosity = 5
+	WARNING   Verbosity = 4
+	ERROR     Verbosity = 3
+	CRITICAL  Verbosity = 2
+	ALERT     Verbosity = 1
+	EMERGENCY Verbosity = 0
 )
 
 type Logger struct{ verbosity Verbosity }

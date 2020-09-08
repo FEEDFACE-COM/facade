@@ -64,11 +64,11 @@ func (clock *Clock) Toggle() {
 	clock.paused = !clock.paused
 	clock.pausetime = clock.running() - clock.pausetime
 	if DEBUG_CLOCK {
-		s := "unpaused"
+		s := ""
 		if clock.paused {
-			s = "paused"
+			s = " paused"
 		}
-		log.Debug("%s %s", clock.Desc(), s)
+		log.Debug("%s%s", clock.Desc(), s)
 	}
 }
 

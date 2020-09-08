@@ -91,7 +91,7 @@ func (buffer *LineBuffer) GetLine(idx uint) Line {
 	if idx == buffer.rows && buffer.buf[idx] == nil {
 		return Line{}
 	} else if idx > buffer.rows {
-		log.Error("no line %d in %s", idx, buffer.Desc())
+		log.Error("%s no line %d", buffer.Desc(), idx)
 		return Line{}
 	}
 	ret := buffer.buf[idx]
@@ -243,7 +243,7 @@ func (buffer *LineBuffer) queueLine(row Line) {
 
 			if buffer.Drop {
 
-				log.Warning("%s overflow !! line dropped !!", buffer.Desc())
+				log.Warning("%s overflow! line dropped!", buffer.Desc())
 
 			} else {
 

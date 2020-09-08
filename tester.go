@@ -275,7 +275,7 @@ func (tester *Tester) Configure(config *facade.Config) error {
 	if config.GetSetMode() {
 
 		if tester.mode != config.GetMode() {
-			log.Info("switch mode %s", config.GetMode())
+			log.Notice("switch mode %s", config.GetMode())
 			tester.mode = config.GetMode()
 		}
 
@@ -396,8 +396,8 @@ func (tester *Tester) Test(confChan chan facade.Config) error {
 
 		if tester.image != nil {
 
-			outPath := fmt.Sprintf("./%s.png",tester.font.GetName())
-			log.Info("render image to %s", outPath)
+			outPath := fmt.Sprintf("./%s.png", tester.font.GetName())
+			log.Notice("render image to %s", outPath)
 			outFile, err := os.Create(outPath)
 			if err != nil {
 				log.Error("fail to create file %s: %s", outPath, err)
@@ -474,7 +474,7 @@ func (tester *Tester) printDebug() {
 	}
 
 	if DEBUG_CLOCK {
-		log.Info("%s", gfx.WorldClock().Info(tester.prevFrame))
+		log.Notice("%s", gfx.WorldClock().Info(tester.prevFrame))
 	}
 
 	if DEBUG_MODE {
@@ -485,7 +485,7 @@ func (tester *Tester) printDebug() {
 	}
 
 	if DEBUG_FONT {
-		log.Info("  %s", tester.fontService.Desc())
+		log.Notice("  %s", tester.fontService.Desc())
 		if tester.font != nil {
 			log.Debug("  %s", tester.font.Desc())
 		}
@@ -537,7 +537,7 @@ func (tester *Tester) dumpBuffer() {
 //    }
 //
 //    writer.Flush()
-//    log.Info("wrote image to %s",outPath)
+//    log.Notice("wrote image to %s",outPath)
 //
 //}
 
@@ -601,7 +601,7 @@ func (tester *Tester) dumpBuffer() {
 //    }
 //
 //    writer.Flush()
-//    log.Info("wrote image to %s",outPath)
+//    log.Notice("wrote image to %s",outPath)
 //
 //}
 

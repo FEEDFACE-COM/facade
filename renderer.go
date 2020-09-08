@@ -91,7 +91,7 @@ func (renderer *Renderer) checkRefresh() bool {
 
 func (renderer *Renderer) Init() error {
 	var err error
-	log.Info("%s init %s", renderer.Desc(), renderer.directory)
+	log.Notice("%s init %s", renderer.Desc(), renderer.directory)
 
 	err = piglet.CreateContext()
 	if err != nil {
@@ -100,7 +100,7 @@ func (renderer *Renderer) Init() error {
 
 	w, h := piglet.GetDisplaySize()
 	renderer.screen = gfx.Size{float32(w), float32(h)}
-	log.Info("%s got screen %s", renderer.Desc(), renderer.screen.Desc())
+	log.Notice("%s got screen %s", renderer.Desc(), renderer.screen.Desc())
 
 	piglet.MakeCurrent()
 
@@ -109,8 +109,8 @@ func (renderer *Renderer) Init() error {
 		return log.NewError("fail to init GLES: %s", err)
 	}
 
-	log.Debug("%s got renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))
-	log.Debug("%s got version %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
+	log.Info("%s got renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))
+	log.Info("%s got version %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
 
 	renderer.mode = facade.Defaults.Mode
 	renderer.debug = facade.Defaults.Debug
@@ -156,7 +156,7 @@ func (renderer *Renderer) Finish() error {
 	if err != nil {
 		return log.NewError("fail to terminate renderer: %s", err)
 	}
-	log.Info("%s finished.", renderer.Desc())
+	log.Info("%s finished", renderer.Desc())
 	return nil
 }
 
@@ -166,7 +166,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		return log.NewError("renderer config nil")
 	}
 
-	log.Info("%s configure %s", renderer.Desc(), config.Desc())
+	log.Notice("%s configure %s", renderer.Desc(), config.Desc())
 	var err error
 
 	if config.GetSetDebug() {
@@ -181,17 +181,17 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 			name := cfg.GetName()
 			if name != renderer.font.GetName() {
 				changed = true
-				err = renderer.fontService.LoadFont(name) // REM, probably not needed here?
-				if err != nil {
-					log.Error("%s fail load font %s: %s", renderer.Desc(), name, err)
-				}
+				//				err = renderer.fontService.LoadFont(name) // REM, probably not needed here?
+				//				if err != nil {
+				//					log.Error("%s fail load font %s: %s", renderer.Desc(), name, err)
+				//				}
 
 				var fnt *gfx.Font
 				fnt, err = renderer.fontService.GetFont(name)
 				if err != nil {
-					log.Error("%s fail get font %s: %s", renderer.Desc(), name, err)
+					//					log.Error("%s fail get font %s: %s", renderer.Desc(), name, err)
 				} else {
-					log.Info("%s switch to font %s", renderer.Desc(), name)
+					log.Notice("%s switch to font %s", renderer.Desc(), name)
 					renderer.font = fnt
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
@@ -245,14 +245,14 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		changed = true
 		mode := config.GetMode()
 		if renderer.mode != mode {
-			log.Info("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
+			log.Notice("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
 			renderer.mode = mode
 		}
 	}
 
-	if changed && DEBUG_EVENTS {
+	if changed && DEBUG_CHANGES {
 		renderer.printDebug()
-		renderer.prevFrame = gfx.WorldClock().Frame()
+		//		renderer.prevFrame = gfx.WorldClock().Frame()
 	}
 
 	return nil
@@ -308,7 +308,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 	gfx.WorldClock().Tick()
 	renderer.prevFrame = gfx.WorldClock().Frame()
-	log.Info("%s start render", renderer.Desc())
+	log.Notice("%s start render", renderer.Desc())
 
 	renderFailed := false
 	for {
@@ -368,9 +368,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA, gl.ZERO, gl.ONE)
 		renderer.mask.Render(renderer.debug)
 
-		if DEBUG_PERIODIC && verboseFrame {
-			renderer.printDebug()
+		if verboseFrame {
 			renderer.prevFrame = gfx.WorldClock().Frame()
+			if DEBUG_PERIODIC {
+				renderer.printDebug()
+			}
 		}
 
 		piglet.SwapBuffers()
@@ -384,12 +386,15 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderFailed = false
 		} else {
 
-			//			//HACK: remove gles2 debug output 'glGetError 0x502'
-			//			os.Stderr.Write([]byte("\b\r"))
-			//
-			//			if renderFailed == false { // first failure
-			//				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
-			//			}
+			if renderFailed == false { // first failure
+
+				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
+			} else {
+				//HACK: remove gles2 debug output 'glGetError 0x502'
+				str := fmt.Sprintf("\033[1A\033[K")
+				os.Stderr.Write([]byte(str))
+
+			}
 			renderFailed = true
 		}
 
@@ -475,16 +480,7 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.tagBuffer.ProcessRunes(text)
 
 			}
-
 			renderer.ScheduleRefresh()
-
-			if DEBUG_EVENTS {
-				renderer.printDebug()
-				renderer.prevFrame = gfx.WorldClock().Frame()
-				//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-				//                log.Debug( "%s", renderer.grid.DumpBuffer() )
-				//            }
-			}
 
 		}
 		if seq != nil {
@@ -499,13 +495,6 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.tagBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
-			if DEBUG_EVENTS {
-				renderer.printDebug()
-				renderer.prevFrame = gfx.WorldClock().Frame()
-				//            if DEBUG_BUFFER && renderer.mode == facade.Mode_GRID {
-				//                log.Debug( "%s", renderer.grid.DumpBuffer() )
-				//            }
-			}
 		}
 	}
 	return nil
@@ -538,39 +527,39 @@ func (renderer *Renderer) InfoMode() string {
 func (renderer *Renderer) printDebug() {
 
 	if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
-		log.Debug("")
+		log.Info("")
 	}
 
 	if DEBUG_MEMORY {
-		log.Debug("memory usage %s", MemUsage())
+		log.Info("memory usage %s", MemUsage())
 	}
 
 	if DEBUG_DIAG {
-		log.Debug("%s    %s", gfx.WorldClock().Info(renderer.prevFrame), InfoDiag())
+		log.Info("%s    %s", gfx.WorldClock().Info(renderer.prevFrame), InfoDiag())
 	}
 
 	if DEBUG_CLOCK {
-		log.Debug("%s", gfx.WorldClock().Info(renderer.prevFrame))
+		log.Info("%s", gfx.WorldClock().Info(renderer.prevFrame))
 	}
 
 	if DEBUG_MODE {
-		log.Debug("  %s", renderer.InfoMode())
+		log.Info("  %s", renderer.InfoMode())
 		switch renderer.mode {
 		case facade.Mode_LINES:
-			log.Debug("  %s", renderer.lineBuffer.Desc())
+			log.Info("  %s", renderer.lineBuffer.Desc())
 		case facade.Mode_TERM:
-			log.Debug("  %s", renderer.termBuffer.Desc())
+			log.Info("  %s", renderer.termBuffer.Desc())
 		case facade.Mode_WORDS:
-			log.Debug("  %s", renderer.wordBuffer.Desc())
+			log.Info("  %s", renderer.wordBuffer.Desc())
 		case facade.Mode_TAGS:
-			log.Debug("  %s", renderer.tagBuffer.Desc())
+			log.Info("  %s", renderer.tagBuffer.Desc())
 		}
 	}
 
 	if DEBUG_FONT {
-		log.Debug("  %s", renderer.fontService.Desc())
+		log.Info("  %s", renderer.fontService.Desc())
 		if renderer.font != nil {
-			log.Debug("  %s", renderer.font.Desc())
+			log.Info("  %s", renderer.font.Desc())
 		}
 	}
 
@@ -579,7 +568,7 @@ func (renderer *Renderer) printDebug() {
 	}
 
 	if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
-		log.Debug("")
+		log.Info("")
 	}
 
 }

@@ -41,20 +41,22 @@ func (texture *Texture) Desc() string {
 func (texture *Texture) LoadFile(path string) error {
 	imgFile, err := os.Open(path)
 	if err != nil {
-		log.Error("fail open %s: %s", path, err)
+		log.Error("%s fail open %s: %s", texture.Desc(), path, err)
 		return err
 	}
 
 	img, _, err := image.Decode(imgFile)
 	if err != nil {
-		log.Error("fail decode %s: %s", path, err)
+		log.Error("%s fail decode %s: %s", texture.Desc(), path, err)
 		return err
 	}
 
 	rgba := image.NewRGBA(img.Bounds())
 	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
 	err = texture.LoadRGBA(rgba)
-	//    log.Debug("read texture file %s",path)
+	if DEBUG_TEXTURE {
+		log.Debug("read texture file %s", path)
+	}
 	return err
 }
 
@@ -70,7 +72,7 @@ func (texture *Texture) LoadRGBA(rgba *image.RGBA) error {
 	//should copy rgba, not point, into the 'loaded' picture here!
 
 	if texture.rgba.Stride != texture.rgba.Rect.Size().X*4 {
-		log.Error("fail rgba, unsupported stride")
+		log.Error("%s fail load rgba, unsupported stride", texture.Desc())
 		return errors.New("unsupported stride")
 	}
 
@@ -134,7 +136,6 @@ func (texture *Texture) TexImage() error {
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(data))
-	//    log.Debug("+tex #%d",texture.texture)
 	return nil
 }
 

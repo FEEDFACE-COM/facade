@@ -179,7 +179,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 }
 
-
 func (grid *Grid) fill(name string) []string {
 	ret := []string{}
 
@@ -267,7 +266,7 @@ func (grid *Grid) fill(name string) []string {
 
 	}
 
-	log.Debug("%s no such fill pattern: %s", grid.Desc(), name)
+	log.Warning("%s no such fill pattern: %s", grid.Desc(), name)
 	return ret
 
 }
@@ -380,7 +379,7 @@ func getGlyphCoord(run rune) gfx.Coord {
 }
 
 func (grid *Grid) Init(programService *gfx.ProgramService, font *gfx.Font) {
-	log.Debug("%s init", grid.Desc())
+	log.Info("%s init", grid.Desc())
 
 	grid.object = gfx.NewObject("grid")
 	grid.object.Init()
@@ -451,13 +450,17 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 
 	if grid.terminal && terminal != nil {
 
-		log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
+		if DEBUG_GRID {
+			log.Debug("%s configure %s", grid.Desc(), terminal.Desc())
+		}
 		shader = terminal.GetShader()
 		config = terminal.GetGrid()
 
 	} else if !grid.terminal && lines != nil {
 
-		log.Debug("%s configure %s", grid.Desc(), lines.Desc())
+		if DEBUG_GRID {
+			log.Debug("%s configure %s", grid.Desc(), lines.Desc())
+		}
 		shader = lines.GetShader()
 		config = lines.GetGrid()
 
@@ -480,7 +483,7 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 		}
 
 	} else {
-		log.Debug("%s cannot configure", grid.Desc())
+		log.Warning("%s cannot configure", grid.Desc())
 		return
 	}
 

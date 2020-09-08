@@ -1,8 +1,5 @@
-//
-//
 package facade
 
-//
 import (
 	gfx "../gfx"
 	log "../log"
@@ -91,7 +88,7 @@ func (config *GridConfig) autoWidth(cameraRatio float32, fontRatio float32) {
 		config.Width = uint64(w)
 
 	}
-	log.Debug("%s calculated width", config.Desc())
+	log.Info("%s calculated width", config.Desc())
 }
 
 func (config *GridConfig) Help() string {
@@ -107,7 +104,6 @@ func (config *GridConfig) Help() string {
 }
 
 var fillPatterns = [...]string{"title", "grid", "alpha", "clear"}
-
 
 func availableFillPatterns() string {
 	ret := ""

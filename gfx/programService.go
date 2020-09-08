@@ -67,12 +67,12 @@ func (service *ProgramService) GetShader(shaderName string, shaderType ShaderTyp
 
 func watchShaderFile(filePath string, shader *Shader, service *ProgramService) {
 	if DEBUG_PROGRAMSERVICE {
-		log.Debug("watch %s", filePath)
+		log.Debug("%s watch %s", service.Desc(), filePath)
 	}
 	info, err := os.Stat(filePath)
 	if err != nil {
 		if DEBUG_PROGRAMSERVICE {
-			log.Debug("fail stat %s", shader.Desc())
+			log.Debug("%s fail stat %s", service.Desc(), shader.Desc())
 		}
 		return
 	}

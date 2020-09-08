@@ -316,7 +316,7 @@ func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{ w, h in
 			str := font.stringForByte(c)
 			dim, err := ctx.DrawString(str, freetype.Pt(0, 0))
 			if err != nil {
-				log.Error("could not draw glyph 0x%02x for sizing: %s", c, err)
+				log.Error("%s fail draw glyph 0x%02x for sizing: %s", font.Desc(), c, err)
 				continue
 			}
 			size[x][y].W = float32(dim.X.Ceil())

@@ -31,7 +31,7 @@ func (scanner *Scanner) ScanText(bufChan chan facade.TextSeq) {
 
 	var buf []byte = make([]byte, scanner.bufferSize)
 
-	log.Info("%s read text from stdin", scanner.Desc())
+	log.Notice("%s read text from stdin", scanner.Desc())
 
 	for {
 		n, err := scanner.reader.Read(buf)
@@ -61,5 +61,5 @@ func (scanner *Scanner) ScanText(bufChan chan facade.TextSeq) {
 }
 
 func (scanner *Scanner) Desc() string {
-	return fmt.Sprintf("scanner[%d]", scanner.bufferSize)
+	return fmt.Sprintf("scanner[]")
 }

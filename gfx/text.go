@@ -28,7 +28,15 @@ func (text *Text) Close() {
 	}
 }
 
-func (text *Text) Desc() string { return text.Text }
+func (text *Text) Desc() string {
+	ret := "text["
+	ret += text.Text
+	if text.Texture != nil {
+		ret += " " + text.Texture.Desc()
+	}
+	ret += "]"
+	return ret
+}
 
 func NewText(text string) *Text {
 	ret := &Text{Text: text}
@@ -41,7 +49,7 @@ func (text *Text) RenderTexture(font *Font) error {
 
 	if text.Texture != nil {
 		//REM, cleanup old, then rerender!
-		log.Error("TODO: CLEANUP!!")
+		log.Warning("%s texture not cleaned up!!", text.Desc())
 		return nil
 	}
 

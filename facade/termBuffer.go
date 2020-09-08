@@ -128,7 +128,7 @@ func (buffer *TermBuffer) GetLine(idx uint) Line {
 	if idx == buffer.rows {
 		return Line{}
 	} else if idx >= buffer.rows {
-		log.Warning("no line %d in %s", idx, buffer.Desc())
+		log.Error("%s no line %d", buffer.Desc(), idx)
 		return Line{}
 	}
 	return buffer.buffer[idx+1][1:]
@@ -626,9 +626,7 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 		break // no support for color / weight / decorations
 
 	default:
-		//            if DEBUG_TERMBUFFER {
 		log.Warning("%s unhandled sequence %s '%s'", buffer.Desc(), sequence.Name, sequence.Desc)
-		//            }
 
 	}
 

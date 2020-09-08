@@ -1,6 +1,5 @@
 // +build !linux !arm
 
-
 package main
 
 import (
@@ -13,9 +12,9 @@ const RENDERER_AVAILABLE = false
 type Renderer struct{}
 
 func NewRenderer(string, chan bool) *Renderer { return &Renderer{} }
-    
-func (renderer *Renderer) Init() error { 
-    return log.NewError("RENDERER NOT AVAILABLE") 
+
+func (renderer *Renderer) Init() error {
+	return log.NewError("RENDERER NOT AVAILABLE")
 }
 
 func (renderer *Renderer) Configure(config *facade.Config) error {
@@ -36,5 +35,4 @@ func (renderer *Renderer) ProcessQueries(chan (chan string)) error {
 
 func (renderer *Renderer) Finish() error {
 	return log.NewError("RENDERER NOT AVAILABLE")
-}    
-
+}

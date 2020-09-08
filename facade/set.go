@@ -426,7 +426,7 @@ func (set *Set) renderMap(font *gfx.Font) error {
 	}
 	err = set.texture.LoadRGBA(rgba)
 	if err != nil {
-		log.Error("fail load font map: %s", err)
+		log.Error("%s fail load font map: %s", set.Desc(), err)
 		return log.NewError("fail to load font map: %s", err)
 	}
 	set.texture.TexImage()

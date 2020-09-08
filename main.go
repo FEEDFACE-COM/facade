@@ -9,14 +9,15 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 
 	facade "./facade"
 	log "./log"
 )
 
 const (
-	DEBUG_PERIODIC = true
-	DEBUG_EVENTS   = false
+	DEBUG_PERIODIC = false
+	DEBUG_CHANGES  = true
 	DEBUG_DIAG     = false
 	DEBUG_CLOCK    = true
 	DEBUG_CONFIG   = false
@@ -65,7 +66,7 @@ var (
 )
 
 func main() {
-	quiet, verbose, debug := false, false, false
+	quiet, debug := false, false
 	directory := facade.DEFAULT_DIRECTORY
 
 	var err error
@@ -113,9 +114,8 @@ func main() {
 
 	{
 		globalFlags.StringVar(&directory, "D", directory, "asset directory")
-		globalFlags.BoolVar(&verbose, "v", verbose, "show info messages?")
 		globalFlags.BoolVar(&debug, "d", debug, "show debug messages?")
-		globalFlags.BoolVar(&quiet, "q", quiet, "show warnings only?")
+		globalFlags.BoolVar(&quiet, "q", quiet, "show error messages only?")
 	}
 
 	globalFlags.Parse(os.Args[1:])
@@ -124,11 +124,9 @@ func main() {
 		os.Exit(-2)
 	}
 	if debug {
-		log.SetVerbosity(log.DEBUG)
-	} else if verbose {
 		log.SetVerbosity(log.INFO)
 	} else if quiet {
-		log.SetVerbosity(log.WARNING)
+		log.SetVerbosity(log.ERROR)
 	}
 
 	signals := make(chan os.Signal, 1)
@@ -136,7 +134,7 @@ func main() {
 	go func() {
 		for {
 			sig := <-signals
-			log.Notice("SIGNAL %s", sig)
+			log.Notice("%s", sig)
 			ticks <- false
 		}
 	}()
@@ -194,7 +192,6 @@ func main() {
 		config.VisitFlags(modeFlags)
 
 		args = modeFlags.Args()
-		log.Debug("execute %v", args)
 		if len(args) <= 0 {
 			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags)
 			os.Exit(-2)
@@ -279,7 +276,7 @@ func main() {
 	switch cmd {
 
 	case SERVE:
-		log.Info(AUTHOR)
+		log.Notice(AUTHOR)
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
 		renderer = NewRenderer(directory, ticks)
@@ -309,7 +306,7 @@ func main() {
 		}
 		defer client.Close()
 		if config != nil {
-			log.Debug("configure %s", config.Desc())
+			log.Info("configure %s", config.Desc())
 			if client.SendConf(config); err != nil {
 				log.Error("fail to send conf: %s", err)
 			}
@@ -321,13 +318,14 @@ func main() {
 		if err = client.ScanAndSendText(); err != nil {
 			log.Error("fail to scan and send: %s", err)
 		}
+		time.Sleep(time.Duration(int64(time.Second / 10.))) //wait until all text flushed
 
 	case CONF:
 		if config == nil {
 			ShowHelpMode(cmd, facade.Mode_DRAFT, *modeFlags)
 			os.Exit(-1)
 		}
-		log.Debug("configure %s", config.Desc())
+		log.Info("configure %s", config.Desc())
 		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
@@ -366,9 +364,9 @@ func main() {
 		}
 		defer client.Close()
 		if config != nil {
-			log.Debug("configure %s", config.Desc())
+			log.Info("configure %s", config.Desc())
 			if client.SendConf(config); err != nil {
-				log.Error("fail to send conf: %s", err)
+				log.Error("fail to conf: %s", err)
 			}
 		}
 		if err = client.OpenTextStream(); err != nil {
@@ -377,16 +375,14 @@ func main() {
 		defer client.CloseTextStream()
 		err = executor.Execute()
 
-
-/* TODO: remove test mode
-    case TEST:
-        server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
-        go server.Listen(confs, texts, quers)
-        tester := NewTester(directory)
-        tester.Init()
-        tester.Test(confs)	
-*/
-
+		/* TODO: remove test mode
+		   case TEST:
+		       server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
+		       go server.Listen(confs, texts, quers)
+		       tester := NewTester(directory)
+		       tester.Init()
+		       tester.Test(confs)
+		*/
 
 	default:
 		log.PANIC("unexpected command %s", cmd)

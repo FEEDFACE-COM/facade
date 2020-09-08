@@ -107,7 +107,7 @@ func (buffer *WordBuffer) Words() []Word {
 	}
 	buffer.mutex.Unlock()
 	if len(ret) != buffer.WordCount() {
-		log.Debug("mismatch buffer tags: expected %d got %d", buffer.WordCount(), len(ret))
+		log.Warning("mismatch buffer tags: expected %d got %d", buffer.WordCount(), len(ret))
 	}
 	return ret
 }
@@ -169,15 +169,17 @@ func (buffer *WordBuffer) addWordTag(text string) {
 	if ok {
 		word.count += 1
 		r := word.timer.Extend(gfx.Now())
-		if DEBUG_WORDBUFFER {
-			if r {
+		if r {
+			if DEBUG_WORDBUFFER {
 				log.Debug("%s tag extend: %s", word.timer.Desc(), word.text)
 			}
 		}
 
 	} else if len(buffer.tags) >= buffer.slotCount {
 
-		log.Debug("%s tag drop: %s", buffer.Desc(), text)
+		if DEBUG_WORDBUFFER {
+			log.Debug("%s tag drop: %s", buffer.Desc(), text)
+		}
 
 	} else {
 		word = &Word{}

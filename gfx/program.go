@@ -160,7 +160,7 @@ func (program *Program) attachShadersAndLinkProgram() error {
 	gl.GetProgramiv(program.program, gl.LINK_STATUS, &status)
 	if status == gl.FALSE {
 		error, source := program.getLinkError()
-		log.Error("%s%s", error, source)
+		log.Error("%s %s%s", program.Desc(), error, source)
 		ret = log.NewError("fail link: %s", error)
 	} else {
 		if DEBUG_PROGRAMSERVICE {
@@ -209,12 +209,11 @@ func (program *Program) getLinkError() (string, string) {
 		} else {
 			for i, str := range strings.Split(program.vertexShader.Source, "\n") {
 				if i > (lineNumber-5) && (i < lineNumber+5) {
-					source += "\n" + fmt.Sprintf("%4d  ", i) + str
+					source += "\n" + fmt.Sprintf("%4d  ", i+1) + str
 				}
 			}
 		}
 
-		source += fmt.Sprintf("vert %d", lineNumber)
 	} else if shaderType == "fragment" {
 		if lineNumber <= 0 {
 			source += "\n" + program.fragmentShader.Source

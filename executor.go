@@ -14,6 +14,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path"
 )
 
 type Executor struct {
@@ -38,7 +39,7 @@ func (executor *Executor) Execute() error {
 
 	cmd := exec.Command(executor.path, executor.args...)
 
-	log.Debug("%s start", executor.Desc())
+	log.Notice("%s start", executor.Desc())
 
 	oldSize, err := pty.GetsizeFull(os.Stdin)
 	if err != nil {
@@ -56,10 +57,14 @@ func (executor *Executor) Execute() error {
 		_ = executor.tty.Close()
 	}()
 
-	log.Debug("%s resize %dx%d", executor.Desc(), size.Cols, size.Rows)
+	if DEBUG_EXEC {
+		log.Debug("%s resize %dx%d", executor.Desc(), size.Cols, size.Rows)
+	}
 	str := fmt.Sprintf("\033[8;%d;%dt", size.Rows, size.Cols)
 	os.Stdout.Write([]byte(str))
-	log.Debug("%s reset", executor.Desc())
+	if DEBUG_EXEC {
+		log.Debug("%s reset", executor.Desc())
+	}
 	os.Stdout.Write([]byte("\033[H\033[2J"))
 
 	ch := make(chan os.Signal, 1)
@@ -81,11 +86,15 @@ func (executor *Executor) Execute() error {
 	go executor.CopyStdinToTTY()
 	executor.ReadTTY()
 
-	log.Debug("%s resize %dx%d", executor.Desc(), oldSize.Cols, oldSize.Rows)
+	if DEBUG_EXEC {
+		log.Debug("%s resize %dx%d", executor.Desc(), oldSize.Cols, oldSize.Rows)
+	}
 	str = fmt.Sprintf("\033[8;%d;%dt", oldSize.Rows, oldSize.Cols)
 	os.Stdout.Write([]byte(str))
 
-	log.Debug("%s done", executor.Desc())
+	if DEBUG_EXEC {
+		log.Debug("%s done", executor.Desc())
+	}
 	return nil
 }
 
@@ -99,7 +108,7 @@ func (executor *Executor) ReadTTY() {
 			break
 		}
 		if err != nil {
-			log.Debug("%s read stdout error: %s", executor.Desc(), err)
+			log.Error("%s read stdout error: %s", executor.Desc(), err)
 			break
 		}
 		if DEBUG_EXEC_DUMP {
@@ -126,7 +135,7 @@ func (executor *Executor) ProcessWindowChange(ch chan os.Signal) {
 			log.Error("%s fail inherit size: %s", executor.Desc(), err)
 			continue
 		}
-		log.Debug("%s window resized %dx%d", executor.Desc(), cols, rows)
+		log.Info("%s window resized %dx%d", executor.Desc(), cols, rows)
 		grid := facade.GridConfig{Width: uint64(cols), SetWidth: true, Height: uint64(rows), SetHeight: true}
 		conf := facade.Config{Terminal: &facade.TermConfig{Grid: &grid}}
 		executor.client.SendConf(&conf)
@@ -143,7 +152,7 @@ func (executor *Executor) CopyStdinToTTY() {
 
 func (executor *Executor) Desc() string {
 	ret := "executor["
-	ret += executor.path
+	ret += path.Base(executor.path)
 	ret += "]"
 	return ret
 }

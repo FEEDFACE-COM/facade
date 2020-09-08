@@ -85,7 +85,7 @@ func (draft *Draft) Init(camera *gfx.Camera, font *gfx.Font, programService *gfx
 
 		err = draft.program["axis"].Link("color", "color")
 		if err != nil {
-			log.Error("fail linking %s color shaders: %s", "axis", err)
+			log.Error("%s fail linking %s color shaders: %s", "axis", draft.Desc(), err)
 		}
 
 		//        draft.program["axis"] = gfx.NewProgram("axis","axis",programService)
