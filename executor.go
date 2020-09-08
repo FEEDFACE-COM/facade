@@ -39,7 +39,7 @@ func (executor *Executor) Execute() error {
 
 	cmd := exec.Command(executor.path, executor.args...)
 
-	log.Notice("%s start", executor.Desc())
+	log.Info("%s start", executor.Desc())
 
 	oldSize, err := pty.GetsizeFull(os.Stdin)
 	if err != nil {
