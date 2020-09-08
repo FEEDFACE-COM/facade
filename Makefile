@@ -72,7 +72,7 @@ info:
 	
 build: ${BUILD_PRODUCT}
 
-release: ${BUILD_PACKAGE}
+release: clean ${BUILD_PACKAGE}
 
 demo:
 	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
@@ -93,7 +93,7 @@ clean:
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_PRODUCT}
 
-${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${PROTOS} assets
+${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${PROTOS} ${ASSETS}
 	go build -o ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_FLAGS} -gcflags all="${GCFLAGS}" -ldflags "${LDFLAGS}" 
 
 ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
@@ -114,7 +114,7 @@ facade/facade.pb.go: facade/facade.proto
 force:
 	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
 
-assets: force ${ASSETS}
+assets: ${ASSETS}
 
 font/Monaco.ttf:
 	mkdir -p font
