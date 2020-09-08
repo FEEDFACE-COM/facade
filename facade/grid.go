@@ -3,14 +3,10 @@
 package facade
 
 import (
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
 	"strings"
-	//    "math"
-
-	gfx "../gfx"
-	log "../log"
-
-	//    math "../math32"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 )

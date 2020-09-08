@@ -1,7 +1,7 @@
 package main
 
 import (
-	gfx "./gfx"
+	"FEEDFACE.COM/facade/gfx"
 	"fmt"
 	"runtime"
 	"time"

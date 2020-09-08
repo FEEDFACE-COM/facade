@@ -3,10 +3,10 @@
 package gfx
 
 import (
-	log "../log"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"strings"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Shader struct {

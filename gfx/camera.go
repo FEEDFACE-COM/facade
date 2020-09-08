@@ -4,8 +4,6 @@ package gfx
 
 import (
 	"fmt"
-	//    log "../log"
-	//    gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 )
 

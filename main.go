@@ -1,18 +1,16 @@
 package main
 
 import (
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/log"
 	"bufio"
 	"flag"
 	"strings"
-
 	"encoding/base64"
 	"os"
 	"os/signal"
 	"runtime"
 	"time"
-
-	facade "./facade"
-	log "./log"
 )
 
 const (

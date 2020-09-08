@@ -1,10 +1,10 @@
 package facade
 
 import (
+	"FEEDFACE.COM/facade/log"
 	"fmt"
 	//    "os"
 	//    "strings"
-	log "../log"
 	"github.com/pborman/ansi"
 )
 

@@ -3,8 +3,8 @@
 package main
 
 import (
-	facade "./facade"
-	log "./log"
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/log"
 )
 
 const RENDERER_AVAILABLE = false

@@ -1,13 +1,12 @@
 package main
 
 import (
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/gfx"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
-
-	facade "./facade"
-	gfx "./gfx"
 )
 
 func ShowHelp(flags flag.FlagSet) {

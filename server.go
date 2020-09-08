@@ -1,13 +1,12 @@
 package main
 
 import (
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
 	"io"
 	"net"
 	"time"
-	//    "os"
-	facade "./facade"
-	log "./log"
 	"bufio"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

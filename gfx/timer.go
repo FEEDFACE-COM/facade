@@ -1,8 +1,8 @@
 package gfx
 
 import (
-	log "../log"
-	math "../math32"
+	"FEEDFACE.COM/facade/log"
+	math "FEEDFACE.COM/facade/math32"
 	"fmt"
 )
 

@@ -3,15 +3,14 @@
 package main
 
 import (
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	facade "./facade"
-	gfx "./gfx"
-	log "./log"
 	"github.com/FEEDFACE-COM/piglet"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )

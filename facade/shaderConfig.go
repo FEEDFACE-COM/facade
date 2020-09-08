@@ -4,7 +4,7 @@ package facade
 
 //
 import (
-	gfx "../gfx"
+	"FEEDFACE.COM/facade/gfx"
 	"flag"
 	"strings"
 )

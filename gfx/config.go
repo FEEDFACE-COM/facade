@@ -1,7 +1,6 @@
 package gfx
 
 import (
-//	"fmt"
 )
 
 type Config map[string]interface{}

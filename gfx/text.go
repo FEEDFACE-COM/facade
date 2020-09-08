@@ -1,8 +1,8 @@
 package gfx
 
 import (
+	"FEEDFACE.COM/facade/log"
 	//    "image"
-	log "../log"
 )
 
 //type TextTexture interface {

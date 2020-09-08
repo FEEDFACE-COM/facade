@@ -1,12 +1,11 @@
 package facade
 
 import (
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
+	math "FEEDFACE.COM/facade/math32"
 	"fmt"
 	"strings"
-
-	gfx "../gfx"
-	log "../log"
-	math "../math32"
 	"github.com/pborman/ansi"
 )
 

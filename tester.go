@@ -1,6 +1,9 @@
 package main
 
 import (
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
 	"bufio"
 	"fmt"
 	"image"
@@ -9,11 +12,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	facade "./facade"
-	gfx "./gfx"
-	log "./log"
-	//    proto "./facade/proto"
 )
 
 type Tester struct {

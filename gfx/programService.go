@@ -1,7 +1,7 @@
 package gfx
 
 import (
-	log "../log"
+	"FEEDFACE.COM/facade/log"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"

@@ -1,10 +1,10 @@
 package facade
 
 import (
-	log "../log"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"github.com/pborman/ansi"
 	"strings"
+	"github.com/pborman/ansi"
 )
 
 const DEBUG_ANSI = false

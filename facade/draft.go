@@ -3,8 +3,8 @@
 package facade
 
 import (
-	gfx "../gfx"
-	log "../log"
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 )

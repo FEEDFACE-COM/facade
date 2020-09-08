@@ -1,8 +1,8 @@
 package main
 
 import (
-	facade "./facade"
-	log "./log"
+	"FEEDFACE.COM/facade/facade"
+	"FEEDFACE.COM/facade/log"
 	"os/exec"
 	"syscall"
 	//	"bytes"

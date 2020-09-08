@@ -3,11 +3,11 @@
 package gfx
 
 import (
-	log "../log"
+	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"regexp"
 	"strings"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Program struct {

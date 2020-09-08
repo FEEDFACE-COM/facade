@@ -3,9 +3,7 @@
 package gfx
 
 import (
-	//    "strings"
 	"fmt"
-	//    log "../log"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 

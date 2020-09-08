@@ -3,7 +3,7 @@
 package gfx
 
 import (
-	log "../log"
+	"FEEDFACE.COM/facade/log"
 	"image"
 )
 

@@ -1,8 +1,8 @@
 package facade
 
 import (
-	gfx "../gfx"
-	log "../log"
+	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
 	"flag"
 	"fmt"
 	"strings"
