@@ -71,23 +71,25 @@ info:
 	@echo "${EXTRAS}"
 	
 build: ${BUILD_PRODUCT}
+	@echo "Built ${BUILD_PRODUCT}"
 
 release: clean ${BUILD_PACKAGE}
+	@echo "Built ${BUILD_PACKAGE}"
 
 demo:
 	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
 
-	
-	
 
 
 get:
-	go get -v 
-	
+	go get -v -u
+	@echo "Updated"
+
 clean:
 	-rm -f ${BUILD_PRODUCT} ${ASSETS}
 	-rm -rf release/${BUILD_PLATFORM}/
 	go clean -x -r 
+	@echo "Cleaned"
 	
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
@@ -106,15 +108,17 @@ ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
     && cd ..
 
 proto: ${PROTOS}
+	@echo "Built ${PROTOS}"
 
 facade/facade.pb.go: facade/facade.proto
 	protoc -I facade $^ --go_out=plugins=grpc:facade
 	
 
-force:
+touch:
 	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
 
 assets: ${ASSETS}
+	@echo "Built ${ASSETS}"
 
 font/Monaco.ttf:
 	mkdir -p font
@@ -191,5 +195,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build release get info assets proto demo force clean
+.PHONY: help build release get info assets proto demo touch clean
 
