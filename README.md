@@ -2,43 +2,103 @@
 # FACADE by FEEDFACE.COM
 
     
-_FACADE_ aims to solve the following problem: 
-You have some text on stdout that you really would like to throw on the wall for everyone to see
+_FACADE_ is a creative coding tool that allows you to pipe any text on `/dev/stdout` directly onto the wall of your home / office / hackerspace. 
+
+You will need:
+
+* A Raspberry Pi running `facade serve`, and reachable by network
+* A projector connected to the Raspberry Pi via HDMI
+* An alias `alias fcd='nc -N raspberrypi 4045'` in your shell
+
+Then just run `echo FOOBAR | fcd` on any machine that can reach the Raspberry Pi. This will render the word _FOOBAR_ on the projector for everyone to see. By default the text is displayed as a plain console grid, but _FACADE_ includes more interesting styles in the form of vertex shaders that you can create and alter on the fly.
 
 
 
-## Requirements
 
-* facade server needs to run on a Raspberry Pi 3
+## Example Uses
 
+### Informative Uses
+### Collaborative Uses
+
+### Decorative Use
+
+
+
+* **Phrack** - your favorite ezine articles
+
+```
+facade -q serve lines -w=80 -h=25 -vert=roll &
+curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
+| tar xfz /dev/stdin ./14.txt --to-stdout \
+| while read -r line; do echo "$line"; sleep .9; done \
+| fcd
+```
+
+* **.nfo** - 1337 demo scene release notes
+
+```
+facade -q serve lines -w=80 -h=25 -vert=wave -font adore64 & 
+curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
+| while read -r line; do echo "$line"; sleep .9; done \
+| fcd
+```
 
 ## Setup
 
-* Run `facade serve` on raspberry pi
+### Alias `fcd`
+
+
+
+
+### Setup
+
+
+* A **Raspberry Pi** running `facade serve`
+* Ideally, a **Projector** plugged into the HDMI port of the Raspberry Pi
 
 
 
 
 
-## Examples
 
-
-### Setup Alias
+#### Setup Alias
 
     
     alias fcd='nc -N localhost 4045' # for linux
     alias fcd='nc localhost 4045'    # for mac/bsd
 
 
+## Development
+
+
+To build _facade_ from source, clone the repository from github, then build with go. Specify a different output name to prevent filename clashes:
+
+	git clone https://github.com/FEEDFACE-COM/facade.git
+	cd facade
+	go build -o facade-$(whoami)
+	
+To build a _facade_ binary with custom shaders or fonts, use GNU Make:
+
+	git clone https://github.com/FEEDFACE-COM/facade.git
+	cd facade
+	make build
+
+
+## Example Uses
 
 
 
 
 
-## Decorative / Wallpaper
+
+
+
+
+### Decorative / Wallpaper
 
 
 #### Phrack
+
 
     facade conf lines -w=80 -h=25 -vert=roll
     curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
@@ -96,7 +156,7 @@ You have some text on stdout that you really would like to throw on the wall for
 
 #### tcpdump
 
-    facade serve lines -vert drop -down -speed .2 -w 120 -h 8 -mask=mask
+    facade serve lines -vert vortex -down -speed .2 -w 120 -h 8 -mask=mask
     tcpdump -i vlan5 -n -t -l -v dst port 53  | fcd
 
 #### top
@@ -122,11 +182,14 @@ You have some text on stdout that you really would like to throw on the wall for
     
     
     
-# clear display
-
-#    printf '\033[8;16;64t' # resize terminal
-
-
+    reset | fcd
     clear | fcd
     
 
+# TODO
+    daemonize
+    unicode
+    auth/tls
+    
+    
+    
