@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -60,14 +61,14 @@ var (
 	readTimeout    float64 = 0.0
 	noIPv4         bool    = false
 	noIPv6         bool    = false
-	noStdin        bool    = false
+	stdin          bool    = false
 )
 
 func main() {
 	quiet, debug := false, false
 	directory := facade.DEFAULT_DIRECTORY
-
 	var err error
+
 	confs := make(chan facade.Config)
 	texts := make(chan facade.TextSeq)
 	quers := make(chan (chan string))
@@ -107,7 +108,7 @@ func main() {
 		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
 		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
-		commandFlags[SERVE].BoolVar(&noStdin, "nostdin", noStdin, "do not read from stdin")
+		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "read text from stdin")
 	}
 
 	{
@@ -128,11 +129,11 @@ func main() {
 	}
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, os.Kill)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	go func() {
 		for {
 			sig := <-signals
-			log.Notice("%s", sig)
+			log.Notice("signal %s", sig)
 			ticks <- false
 		}
 	}()
@@ -278,7 +279,7 @@ func main() {
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
 		renderer = NewRenderer(directory, ticks)
-		if !noStdin {
+		if stdin {
 			scanner = NewScanner()
 			go scanner.ScanText(texts)
 		}
@@ -306,11 +307,11 @@ func main() {
 		if config != nil {
 			log.Info("configure %s", config.Desc())
 			if client.SendConf(config); err != nil {
-				log.Error("fail to send conf: %s", err)
+				log.PANIC("fail to send conf: %s", err)
 			}
 		}
 		if err = client.OpenTextStream(); err != nil {
-			log.Error("fail to open stream: %s", err)
+			log.PANIC("fail to open stream: %s", err)
 		}
 		defer client.CloseTextStream()
 		if err = client.ScanAndSendText(); err != nil {
@@ -330,7 +331,7 @@ func main() {
 		}
 		defer client.Close()
 		if err = client.SendConf(config); err != nil {
-			log.Error("fail to conf: %s", err)
+			log.PANIC("fail to conf: %s", err)
 		}
 
 	case EXEC:
@@ -364,11 +365,11 @@ func main() {
 		if config != nil {
 			log.Info("configure %s", config.Desc())
 			if client.SendConf(config); err != nil {
-				log.Error("fail to conf: %s", err)
+				log.PANIC("fail to conf: %s", err)
 			}
 		}
 		if err = client.OpenTextStream(); err != nil {
-			log.Error("fail to open stream: %s", err)
+			log.PANIC("fail to open stream: %s", err)
 		}
 		defer client.CloseTextStream()
 		err = executor.Execute()

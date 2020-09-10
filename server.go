@@ -158,7 +158,7 @@ func (server *Server) Pipe(stream facade.Facade_PipeServer) error {
 		tmp = append(rem, raw...)
 		rem, err = facade.ProcessRaw(tmp, server.bufferChan)
 		if err != nil {
-			log.Error("%s error processing raw text: %s", server.Desc(), err)
+			log.Warning("%s fail process raw text: %s", server.Desc(), err)
 		}
 		if err == io.EOF {
 			if DEBUG_SERVER {
