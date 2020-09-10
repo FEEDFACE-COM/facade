@@ -39,57 +39,66 @@ BUILD_FLAGS +=-v
 default: build 
 
 help:
-	@echo "#Usage"
+	@echo "#FACADE Help"
 	@echo " make info     # show build info"
 	@echo " make build    # build static executable"
 	@echo " make get      # fetch golang packages"
 	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
-	@echo " make release  # build platform package"
+	@echo " make package  # build platform package"
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
 
 info: 
-	@echo "#Info"
+	@echo "#FACADE Info"
 	@echo " name       ${BUILD_NAME}"
 	@echo " version    ${BUILD_VERSION}"
 	@echo " platform   ${BUILD_PLATFORM}"
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo " package    ${BUILD_PACKAGE}"
-	@echo "\n#Sources"
+	@echo "\n#FACADE Sources"
 	@echo "${SOURCES}"
-	@echo "\n#Assets"
+	@echo "\n#FACADE Assets"
 	@echo "${ASSETS}"
-	@echo "\n#Shaders"
+	@echo "\n#FACADE Shaders"
 	@echo "${ASSET_SHADER}"
-	@echo "\n#Fonts"   
+	@echo "\n#FACADE Fonts"
 	@echo "${ASSET_FONT}"   
-	@echo "\n#Extras"
+	@echo "\n#FACADE Extras"
 	@echo "${EXTRAS}"
 	
 build: ${BUILD_PRODUCT}
-	@echo "Built ${BUILD_PRODUCT}"
+	@echo "#FACADE built ${BUILD_PRODUCT}"
 
-release: clean ${BUILD_PACKAGE}
-	@echo "Built ${BUILD_PACKAGE}"
+package: clean ${BUILD_PACKAGE}
+	@echo "#FACADE packaged ${BUILD_PACKAGE}"
 
 demo:
 	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
 
-
-
 get:
 	go get -v -u
-	@echo "Updated"
+	@echo "#FACADE got dependencies"
 
 clean:
 	-rm -f ${BUILD_PRODUCT} ${ASSETS}
-	-rm -rf release/${BUILD_PLATFORM}/
+	-rm -rf package/${BUILD_PLATFORM}/
 	go clean -x -r 
-	@echo "Cleaned"
+	@echo "#FACADE cleaned up"
+
+touch:
+	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
+	@echo "#FACADE touched assets"
+
+assets: ${ASSETS}
+	@echo "#FACADE built assets ${ASSETS}"
+
+proto: ${PROTOS}
+	@echo "#FACADE built proto ${PROTOS}"
+
 	
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
@@ -100,54 +109,44 @@ ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${PROTOS} ${ASSETS}
 
 ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
 	@if ${BUILD_RELEASE}; then true; else { echo "REFUSE TO RELEASE UNTAGGED VERSION ${BUILD_VERSION}"; false; }; fi;
-	mkdir -p release/${BUILD_PLATFORM}/
-	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} release/${BUILD_PLATFORM}/${BUILD_NAME}
-	cp -f ${EXTRAS} release/${BUILD_PLATFORM}/
-	cd release/${BUILD_PLATFORM}/ \
+	mkdir -p package/${BUILD_PLATFORM}/
+	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} package/${BUILD_PLATFORM}/${BUILD_NAME}
+	cp -f ${EXTRAS} package/${BUILD_PLATFORM}/
+	cd package/${BUILD_PLATFORM}/ \
     && tar cfz ../${BUILD_PACKAGE} ${BUILD_NAME} ${EXTRAS} \
     && cd ..
 
-proto: ${PROTOS}
-	@echo "Built ${PROTOS}"
-
 facade/facade.pb.go: facade/facade.proto
 	protoc -I facade $^ --go_out=plugins=grpc:facade
-	
-
-touch:
-	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
-
-assets: ${ASSETS}
-	@echo "Built ${ASSETS}"
 
 font/Monaco.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@.zip https://www.cufonfonts.com/download/font/monaco
 	unzip -j -o -b $@.zip $$(basename $@) -d font/  && unlink $@.zip
 
 font/RobotoMono.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@ https://raw.githubusercontent.com/TypeNetwork/RobotoMono/master/fonts/ttf/RobotoMono-Regular.ttf
 
 font/VT323.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@ https://raw.githubusercontent.com/phoikoi/VT323/master/fonts/ttf/VT323-Regular.ttf
 
 font/SpaceMono.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@ https://raw.githubusercontent.com/googlefonts/spacemono/master/fonts/SpaceMono-Regular.ttf
 
 font/OCRAExt.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@ https://www.wfonts.com/download/data/2014/12/31/ocr-a-extended/OCRAEXT.TTF
 	
 font/Adore64.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@.zip https://dl.dafont.com/dl/?f=adore64
 	unzip -j -o -b $@.zip $$(basename $@) -d font/  && unlink $@.zip
 
 font/amiga4ever.ttf:
-	mkdir -p font
+	mkdir -p font/
 	curl -L -o $@.zip https://dl.dafont.com/dl/?f=amiga_forever
 	unzip -j -o -b $@.zip $$(basename $@) -d font/ && unlink $@.zip
 
@@ -195,5 +194,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build release get info assets proto demo touch clean
+.PHONY: help build package get info assets proto demo touch clean
 
