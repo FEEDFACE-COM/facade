@@ -66,9 +66,6 @@ func (service *ProgramService) GetShader(shaderName string, shaderType ShaderTyp
 }
 
 func watchShaderFile(filePath string, shader *Shader, service *ProgramService) {
-	if DEBUG_PROGRAMSERVICE {
-		log.Debug("%s watch %s", service.Desc(), filePath)
-	}
 	info, err := os.Stat(filePath)
 	if err != nil {
 		if DEBUG_PROGRAMSERVICE {
@@ -76,6 +73,9 @@ func watchShaderFile(filePath string, shader *Shader, service *ProgramService) {
 		}
 		return
 	}
+
+	log.Info("%s watch %s", service.Desc(), filePath)
+
 	last := info.ModTime()
 	for {
 
@@ -124,9 +124,8 @@ func (service *ProgramService) CheckRefresh() {
 
 func (service *ProgramService) shaderFileChanged(shader *Shader, filePath string) {
 
-	if DEBUG_PROGRAMSERVICE {
-		log.Debug("%s reread shader %s from %s", service.Desc(), shader.IndexName(), filePath)
-	}
+	log.Notice("%s reload %s", service.Desc(), filePath)
+
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.NewError("fail read shader %s from %s: %s", shader.IndexName(), filePath, err)
