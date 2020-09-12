@@ -113,7 +113,7 @@ FACADE supports custom vertex and fragment shaders:
 	- `mkdir -p ~/.facade/`
     
 2. Download the default shader from the FACADE source repository:
-	- `git archive --remote=https://github.com/FEEDFACE-COM/facade x.y.z | tar x -C ~/.facade/ shader/grid/def.vert`
+	- `git archive --remote=https://github.com/FEEDFACE-COM/facade HEAD | tar x -C ~/.facade/ shader/grid/def.vert`
 
 3. Copy the default shader to a new file _foobar.vert_:
 	- `cp ~/.facade/shader/grid/def.vert ~/.facade/shader/grid/foobar.vert`
