@@ -45,9 +45,7 @@ FACADE client works on
 
 1. Prepare your Raspberry Pi configuration:
     - Use `raspi-config` to set the memory available to the GPU to _256 MB_
-        - `/boot/config.txt` should contain a line `gpu_mem=256`
     - Use `raspi-config` to select the _Legacy non-GL desktop driver_
-        - `/boot/config.txt` should **NOT** contain a line `dtoverlay=vc4-fkms-v3d`
     - Make sure the X Window System is not running
 
 2. Download the latest release package:
@@ -207,23 +205,11 @@ facade exec term -w=64 -h=16 frotz /path/to/hitchhikers_guide.z5
 
 FACADE works very well if you just want to have some stylish text scrolling across your wall:
 
-
-* __Phrack__ - your favourite hacking zine articles
-
-	~~~
-facade -q serve lines -w=80 -h=25 -vert=roll &
-curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
-| tar xfz /dev/stdin ./14.txt --to-stdout \
-| while read -r line; do echo "$line"; sleep .9; done \
-| fcd
-	~~~
-
-
-* __.nfo__ - demo scene release notes with 1337 ascii gfx
+* __man__ - some manpages are quite pretty :)
 
 	~~~
-facade -q serve lines -w=80 -h=25 -vert=wave -font adore64 & 
-curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
+facade -q serve lines -w=50 -h=20 -vert=crawl
+MANWIDTH=50 MANPAGER=cat man git-rebase \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
 	~~~
@@ -239,11 +225,22 @@ curl -L https://tools.ietf.org/rfc/rfc2460.txt \
 	~~~
 
 
-* __man__ - some manpages are pretty too :)
+* __Phrack__ - your favourite hacking zine articles
 
 	~~~
-facade -q serve lines -w=50 -h=20 -vert=crawl
-MANWIDTH=50 MANPAGER=cat man git-rebase \
+facade -q serve lines -w=80 -h=25 -vert=roll &
+curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
+| tar xfz /dev/stdin ./14.txt --to-stdout \
+| while read -r line; do echo "$line"; sleep .9; done \
+| fcd
+	~~~
+
+
+* __.nfo__ - demo scene release notes with 1337 ascii art
+
+	~~~
+facade -q serve lines -w=80 -h=25 -vert=wave -font adore64 & 
+curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
 	~~~
@@ -251,5 +248,5 @@ MANWIDTH=50 MANPAGER=cat man git-rebase \
 
 --
 
-If you enjoy FACADE, tell us at <facade@feedface.com> how you are using it!
+If you enjoy FACADE, tell us how you are using it at <facade@feedface.com>!
 
