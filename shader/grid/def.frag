@@ -25,7 +25,7 @@ void main() {
     } 
 
     if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.a *= (1.-abs(Scroller));
+        col.a *= (1.-abs(scroller));
     }
     
     if ( vGridCoord.y == tileCount.y ) { // newest line

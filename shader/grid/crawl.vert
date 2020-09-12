@@ -22,7 +22,6 @@ attribute vec2 gridCoord;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 varying vec2 vGridCoord;
-varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -34,7 +33,6 @@ void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
     vGridCoord = gridCoord;
-    vScroller = abs(scroller);
     
     
     float w0 = dy(tileCoord.y+1.) * tileSize.x;

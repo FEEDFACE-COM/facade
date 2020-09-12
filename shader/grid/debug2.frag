@@ -11,7 +11,6 @@ uniform vec2 cursorPos;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 varying vec2 vGridCoord;
-varying float vScroller;
 
 bool DEBUG    = debugFlag > 0.0;
 

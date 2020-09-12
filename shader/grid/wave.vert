@@ -21,7 +21,6 @@ varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 varying vec2 vGridCoord;
 
-varying float vScroller;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -31,7 +30,6 @@ float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
-    vScroller = abs(scroller);
     vGridCoord = gridCoord;
     
     vec4 pos = vec4(vertex,1);
