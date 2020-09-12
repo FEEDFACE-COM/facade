@@ -180,41 +180,48 @@ func (grid *Grid) fill(name string) []string {
 
 	switch name {
 	case "title":
+		title := []string{""}
 
-		if grid.width >= 73 && grid.height >= 3 {
-			ret = strings.Split(`
- _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
-|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
-|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
+		if grid.width >= 76 && grid.height >= 5 {
+			title = strings.Split(`
+ _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _     
+|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |V|
+|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ | |
 `, "\n")[1:]
-		} else if grid.width >= 20 && grid.height >= 5 {
-			ret = strings.Split(`
+		} else if grid.width >= 32 && grid.height >= 7 {
+			title = strings.Split(`
  _  _   _  _   _   _
 |_ |_| /  |_| | \ |_
 |  | | \_ | | |_/ |_
                     
      by FEEDFACE.COM
 `, "\n")[1:]
-		} else if grid.width >= 13 && grid.height >= 4 {
-			ret = strings.Split(`
- F A C A D E 
-             
-           by
- FEEDFACE.COM
-`, "\n")[1:]
-		} else {
-			ret = []string{"F A C A D E"}
+		} else if grid.width >= 13 {
+			title = []string{"F A C A D E", ""}
+		} else if grid.width >= 8 {
+			title = []string{"FACADE", ""}
 		}
 
-		//        h := float64(grid.height) - float64(len(ret))
-		//        top := int( math.Floor(h/2.) )
-		//        bot := int( math.Ceil(h/2.) )
-		//        for i := 0; i<top; i++ {
-		//            ret = append([]string{"foo",}...,ret)
-		//        }
-		//        for i := 0; i<bot; i++ {
-		//            ret = append(ret,[]string{"bar"}...)
-		//        }
+		gw, gh := int(grid.width), int(grid.height)
+		tw, th := len(title[0]), len(title)-1
+		dw, dh := ((gw - tw) / 2.), ((gh - th) / 2.)
+
+		if DEBUG_GRID {
+			log.Debug("fit %dx%d title into %dx%d grid, margin %dx%d", tw, th, gw, gh, dw, dh)
+		}
+		for r := 0; r < gh; r++ {
+			tmp := ""
+			tr := r - dh
+			for c := 0; c < gw; c++ {
+				tc := c - dw
+				if tr >= 0 && tr < th && tc >= 0 && tc < tw {
+					tmp += string(title[tr][tc])
+				} else {
+					tmp += " "
+				}
+			}
+			ret = append(ret, tmp)
+		}
 
 		return ret
 
