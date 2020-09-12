@@ -34,7 +34,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	if cmd == EXEC {
-		fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)
+		fmt.Fprintf(os.Stderr, "  %s exec term [flags] /path/to/executable [args]\n", BUILD_NAME)
 	} else {
 		fmt.Fprintf(os.Stderr, "  %s %s %s [flags]\n", BUILD_NAME, cmd, strings.ToLower(mode.String()))
 	}
@@ -74,9 +74,9 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	switch cmd {
 	case EXEC:
-		fmt.Fprintf(os.Stderr, "  %s %s term [flags] /path/to/executable [args]\n", BUILD_NAME, cmd)
+		fmt.Fprintf(os.Stderr, "  %s exec [flags] term /path/to/executable [args]\n", BUILD_NAME)
 	default:
-		fmt.Fprintf(os.Stderr, "  %s %s [flags]  %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
+		fmt.Fprintf(os.Stderr, "  %s %s [flags] %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
 		ShowModes()
 	}
 
@@ -89,7 +89,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "render text read from network or stdin")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "read text from network and render")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send config to server")

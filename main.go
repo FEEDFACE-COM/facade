@@ -103,12 +103,12 @@ func main() {
 
 	if commandFlags[SERVE] != nil {
 		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for config")
-		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `port` for text")
+		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `textport` for text")
 		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host` for config and text")
 		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
 		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
 		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
-		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "read text from stdin")
+		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "also read text from stdin")
 	}
 
 	{
