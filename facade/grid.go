@@ -180,11 +180,11 @@ func (grid *Grid) fill(name string) []string {
 	case "title":
 		title := []string{""}
 
-		if grid.width >= 76 && grid.height >= 16 {
+		if grid.width >= 80 && grid.height >= 16 {
 			title = strings.Split(`
- _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _     
-|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |V|
-|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ | |
+ _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
+|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
+|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
 `, "\n")[1:]
 		} else if grid.width >= 40 && grid.height >= 8 {
 			title = strings.Split(`
@@ -192,7 +192,7 @@ func (grid *Grid) fill(name string) []string {
 |_  |_| /   |_| | \ |_
 |   | | \_  | | |_/ |_
                       
-     by   FEEDFACE.COM
+       by FEEDFACE.COM
 `, "\n")[1:]
 		} else if grid.width >= 13 {
 			title = []string{"F A C A D E", ""}
@@ -436,7 +436,6 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 
 	return float32(1.0)
 }
-
 
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
 	var shader *ShaderConfig = nil
