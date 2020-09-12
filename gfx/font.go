@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+const DEBUG_FONT = false
+
 var fonts = map[string]*Font{}
 
 const GlyphMapCols = 0x20
@@ -218,18 +220,28 @@ func (font *Font) stringForByte(b byte) string {
 	}
 	switch strings.ToLower(font.name) {
 
+	case "monaco":
+		switch b {
+		case 0xA6, 0xAD, 0xB2, 0xB3, 0xB7, 0xB9, 0xBC, 0xBD, 0xBE, 0xD0, 0xD7, 0xDD, 0xDE, 0xF0, 0xFD, 0xFE:
+			if DEBUG_FONT {
+				log.Debug("%s special-case monaco char 0x%02x '%c'", font.Desc(), b, rune(b))
+			}
+			return " "
+		default:
+		}
+
 	case "ocraext":
 		if b == 0xB7 {
-			if DEBUG_FONTSERVICE {
-				log.Debug("%s special-case ocraext char 0x'%02x'", font.Desc(), b)
+			if DEBUG_FONT {
+				log.Debug("%s special-case ocraext char 0x%02x '%c'", font.Desc(), b, rune(b))
 			}
 			return " "
 		}
 
 	case "robotomono":
 		if b == 0xA0 {
-			if DEBUG_FONTSERVICE {
-				log.Debug("%s special-case robotomono char 0x'%02x'", font.Desc(), b)
+			if DEBUG_FONT {
+				log.Debug("%s special-case robotomono char 0x%02x '%c'", font.Desc(), b, rune(b))
 			}
 			return " "
 		}
@@ -322,8 +334,9 @@ func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{ w, h in
 			size[x][y].W = float32(dim.X.Ceil())
 			size[x][y].H = float32(ctx.PointToFixed(rowSpacing * pointSize).Ceil())
 
-			//            log.Debug("%d,%d\t0x%02x <%s> %v ~ %d",x,y,c,str,dim,widths[x][y])
-
+			if DEBUG_FONT {
+				log.Debug("%s glyph '%s' 0x%02x is %.1fx%.1f", font.Desc(), str, c, size[x][y].W, size[x][y].H)
+			}
 			//            scale := fixed.I( 1 )
 			//            idx := font.font.Index( rune(c) )
 			//            hmetric := font.font.HMetric(scale,idx)
@@ -345,7 +358,6 @@ func (font *Font) findSizes() ([GlyphMapCols][GlyphMapRows]Size, struct{ w, h in
 
 		}
 	}
-
 	ctx.SetDst(nil)
 	ctx.SetClip(image.Rect(0, 0, 0, 0))
 	if DEBUG_FONTSERVICE {
