@@ -239,7 +239,7 @@ curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 * __.nfo__ - demo scene release notes with 1337 ascii art
 
 	~~~
-facade -q serve lines -w=80 -h=25 -vert=wave -font adore64 & 
+facade -q serve lines -w=80 -h=25 -vert=wave -mask=mask -font adore64 & 
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
