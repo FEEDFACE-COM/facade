@@ -113,8 +113,8 @@ func main() {
 
 	{
 		globalFlags.StringVar(&directory, "D", directory, "asset directory")
-		globalFlags.BoolVar(&debug, "d", debug, "show debug messages?")
-		globalFlags.BoolVar(&quiet, "q", quiet, "show error messages only?")
+		globalFlags.BoolVar(&debug, "d", debug, "show debug messages")
+		globalFlags.BoolVar(&quiet, "q", quiet, "show error messages only")
 	}
 
 	globalFlags.Parse(os.Args[1:])
@@ -396,7 +396,7 @@ func main() {
 }
 
 const AUTHOR = `
-   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
-  |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
-  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
+   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _       
+  |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |V|  
+  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ | |  
 `
