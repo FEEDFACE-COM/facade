@@ -19,7 +19,6 @@ attribute vec2 gridCoord;
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 varying vec2 vGridCoord;
-varying float vScroller;
 
 
 bool DEBUG = debugFlag > 0.0;
@@ -49,7 +48,6 @@ void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
     vGridCoord = gridCoord;
-    vScroller = abs(scroller);
     
     vec4 pos = vec4(vertex,1);
 
@@ -61,26 +59,22 @@ void main() {
     
     float a;
     a = (tileCoord.x / (0.5*tileCount.x + 2.)) * PI - PI/8.;
-
     a += now/10.;
-    
-    
     a += ease1(now/2.);
 
     pos = rotationMatrix(vec3(1.,0.,0.), PI/2.) * pos;
     pos = rotationMatrix(vec3(0.,0.,1.), -a-PI/2.) * pos;
-    
+
 
     pos.x +=  cos(a) * r;
     pos.y +=  sin(a) * r;
 
-
     pos.z -= tileCoord.y;
-    pos.z -= scroller;
+    pos.z -= abs(scroller);
 
 
     
-    vec3 axis = vec3(-1.,-1.,0.);
+    vec3 axis = vec3(-1.,1.,0.);
     mat4 rot = rotationMatrix(axis, PI/2.);
     pos = rot * pos;
 
