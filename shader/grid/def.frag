@@ -1,19 +1,19 @@
 
-uniform float debugFlag;
-uniform float downward;
-uniform vec2 tileCount;
-uniform sampler2D texture;
-uniform float scroller;
-uniform vec2 cursorPos;
+uniform sampler2D texture;        // font glyph atlas texture
+
+uniform vec2 tileCount;           // grid dimensions, as (columns,rows)
+uniform float scroller;           // scroller amount, from 0.0 to 1.0
+uniform vec2 cursorPos;           // terminal cursor position, in (column,row)
+
+uniform float debugFlag;          // 0.0 unless -D flag given by user
 
 varying vec2 vTexCoord;
 varying vec2 vTileCoord;
 varying vec2 vGridCoord;
-varying float vScroller;
-
-bool DEBUG    = debugFlag > 0.0;
 
 
+
+bool DEBUG = debugFlag > 0.0;
 
 void main() {
     vec4 col;
@@ -25,11 +25,11 @@ void main() {
     } 
 
     if ( vGridCoord.y == 0.0 ) { // oldest line
-        col.a *= (1.-vScroller);
+        col.a *= (1.-abs(Scroller));
     }
     
     if ( vGridCoord.y == tileCount.y ) { // newest line
-        col.a *= vScroller;    
+        col.a *= abs(scroller);
     }
     
     if ( cursorPos.x == vGridCoord.x && cursorPos.y == vGridCoord.y ) { // invert cursor
