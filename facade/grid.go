@@ -432,13 +432,6 @@ func (grid *Grid) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 	return float32(1.0)
 }
 
-//func (grid *Grid) autoWidth(camera *gfx.Camera, font *gfx.Font) {
-//	h := grid.Height
-//	var cfg = make(GridConfig)
-//	cfg.SetHeight(h)
-//	cfg.autoWidth(camera, font)
-//
-//}
 
 func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx.Camera, font *gfx.Font) {
 	var shader *ShaderConfig = nil
@@ -488,7 +481,7 @@ func (grid *Grid) Configure(lines *LineConfig, terminal *TermConfig, camera *gfx
 	// 	grid.renderMap(font)
 	// }
 
-	config.autoWidth(camera.Ratio(), font.Ratio())
+	config.autoSize(camera.Ratio(), font.Ratio())
 
 	{
 		changed := false

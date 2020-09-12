@@ -34,6 +34,8 @@ func Log(x float32) float32 { return float32(math.Log(float64(x))) }
 func Sin(x float32) float32   { return float32(math.Sin(float64(x))) }
 func Cos(x float32) float32   { return float32(math.Cos(float64(x))) }
 func Floor(x float32) float32 { return float32(math.Floor(float64(x))) }
+func Ceil(x float32) float32  { return float32(math.Ceil(float64(x))) }
+func Round(x float32) float32 { return float32(math.Round(float64(x))) }
 
 func Clamp(x float32) float32 {
 	if x < 0.0 {
