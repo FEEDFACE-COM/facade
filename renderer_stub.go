@@ -9,7 +9,7 @@ import (
 
 const RENDERER_AVAILABLE = false
 
-type Renderer struct{}
+type Renderer struct{mode facade.Mode}
 
 func NewRenderer(string, chan bool) *Renderer { return &Renderer{} }
 

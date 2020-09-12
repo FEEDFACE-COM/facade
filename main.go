@@ -62,6 +62,7 @@ var (
 	noIPv4         bool    = false
 	noIPv6         bool    = false
 	stdin          bool    = false
+	noTitle        bool    = false
 )
 
 func main() {
@@ -109,6 +110,7 @@ func main() {
 		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
 		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
 		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "also read text from stdin")
+		commandFlags[SERVE].BoolVar(&noTitle, "T", noTitle, "no title on startup")
 	}
 
 	{
@@ -289,9 +291,27 @@ func main() {
 		if err = renderer.Init(); err != nil {
 			log.PANIC("fail to initialize renderer: %s", err)
 		}
+
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 		go renderer.ProcessQueries(quers)
+
+		if !noTitle {
+			titleConfig := &facade.Config{}
+			if renderer.mode == facade.Mode_TERM {
+				if config.Terminal==nil || !config.Terminal.Grid.GetSetFill() {
+					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
+					titleConfig.Terminal = &facade.TermConfig{Grid: gridConfig}
+				}
+			} else if renderer.mode == facade.Mode_LINES {
+				if config.Lines==nil || !config.Lines.Grid.GetSetFill() {
+					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
+					titleConfig.Lines = &facade.LineConfig{Grid: gridConfig}
+				}
+			}
+			renderer.Configure(titleConfig)
+		}
+
 		err = renderer.Render(confs)
 		if err != nil {
 			log.Error("fail to render: %s", err)
