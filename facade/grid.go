@@ -75,14 +75,12 @@ func (grid *Grid) checkRefresh() bool {
 
 func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
-	// REM maybe also if grid.checkReconfig then grid.S??
-
 	if grid.checkRefresh() {
 		if DEBUG_GRID {
 			log.Debug("%s refresh", grid.Desc())
 		}
 		grid.generateData(font)
-		grid.renderMap(font)
+		grid.renderMap(font) // TODO: should not renderMap anytime anything changed!
 	}
 
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -182,19 +180,19 @@ func (grid *Grid) fill(name string) []string {
 	case "title":
 		title := []string{""}
 
-		if grid.width >= 76 && grid.height >= 5 {
+		if grid.width >= 76 && grid.height >= 16 {
 			title = strings.Split(`
  _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _     
 |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |V|
 |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ | |
 `, "\n")[1:]
-		} else if grid.width >= 32 && grid.height >= 7 {
+		} else if grid.width >= 40 && grid.height >= 8 {
 			title = strings.Split(`
- _  _   _  _   _   _
-|_ |_| /  |_| | \ |_
-|  | | \_ | | |_/ |_
-                    
-     by FEEDFACE.COM
+ _   _   _   _   _   _
+|_  |_| /   |_| | \ |_
+|   | | \_  | | |_/ |_
+                      
+     by   FEEDFACE.COM
 `, "\n")[1:]
 		} else if grid.width >= 13 {
 			title = []string{"F A C A D E", ""}
