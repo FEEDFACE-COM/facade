@@ -18,7 +18,7 @@ The motivation for creating FACADE is twofold:
 
 * We spend a lot of time in various consoles, terminals and shells, but most of the people around us never get to see the text we interact with.
 
-* There is a lot of awesome plain text in the form of, RFCs, .nfo files, text adventures etc that looks even better when taken out of the confines of an xterm window and projected onto a wall.
+* There is a lot of awesome plain text in the form of RFCs, .nfo files, text adventures etc that looks even better when taken out of the confines of an xterm window and projected onto a wall.
 
 
 
