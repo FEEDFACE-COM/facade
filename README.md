@@ -140,21 +140,21 @@ FACADE can show you the live status of your machines, services and networks, eg:
 
 #### `top` - system status
 ~~~
-facade -q serve term -vert=wave -mask=mask &
+facade serve term -vert=wave -mask=mask
 facade exec -host raspberrypi term -h=24 -w=80 top -1   # run on server
 ~~~
 
 
 #### `tcpdump` - live DNS queries
 ~~~
-facade serve lines -w=80 -h=16 -buffer=32 -vert=roll -down
+facade serve lines -w=80 -buffer=32 -vert=roll -down
 sudo tcpdump -i wlan0 -n -t -l dst port 53 | fcd        # run on router
 ~~~
 
 
 #### `access.log` - live web requests
 ~~~
-facade serve lines -w=120 -h=12 -buffer=16  -vert=vortex -mask=mask
+facade serve lines -w=120 -h=12 -buffer=32 -vert=vortex -mask=mask
 tail -f /var/log/nginx/access.log | fcd                 # run on webserver
 ~~~
 
@@ -168,7 +168,7 @@ facade exec term -w=64 -h=16 sudo mtr -m 10 --displaymode 1 8.8.8.8
 
 #### `date` - current date and time
 ~~~
-facade serve -q lines -vert=wave -h=2 -w=10 -mask=mask -down -smooth=f -font=ocraext -zoom=.8 &
+facade -q serve lines -vert=wave -h=2 -w=10 -mask=mask -down -smooth=f -font=ocraext -zoom=.8 &
 while true; do date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; done | fcd
 ~~~
 
@@ -181,15 +181,15 @@ You can use FACADE to look at text output together, ie one person directly inter
 
 #### `bash` - show your team what exactly you are doing in your shell
 ~~~
-facade -q serve term
+facade serve term
 facade exec -host raspberrypi term -w=80 -h=25 bash     # run on workstation
 ~~~
 
 
 #### `frotz` - play text adventures as a group
 ~~~
-facade -q serve term -font=spacemono
-facade exec term -w=64 -h=16 frotz /path/to/hitchhikers_guide.z5
+facade serve term -font=spacemono
+facade exec term -w=64 -h=16 frotz /path/to/hitchhikers_guide.z5 # run on workstation
 ~~~
 
 
@@ -201,7 +201,7 @@ FACADE works very well if you just want to have some stylish text scrolling acro
 
 #### `man` - some manpages are quite pretty :)
 ~~~
-facade -q serve lines -w=50 -h=20 -vert=crawl
+facade -q serve lines -w=50 -vert=crawl &
 MANWIDTH=50 MANPAGER=cat man git-rebase \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
@@ -210,7 +210,7 @@ MANWIDTH=50 MANPAGER=cat man git-rebase \
 
 #### `RFCs` - internetworking specifications in plain text format
 ~~~
-facade -q serve lines -w=72 -h=16 -vert=rows &
+facade -q serve lines -w=72 -vert=rows &
 curl -L https://tools.ietf.org/rfc/rfc2460.txt \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
@@ -219,7 +219,7 @@ curl -L https://tools.ietf.org/rfc/rfc2460.txt \
 
 #### `PHRACK` - your favourite hacking zine articles
 ~~~
-facade -q serve lines -w=80 -h=25 -vert=roll &
+facade -q serve lines -w=80 -vert=roll &
 curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 | tar xfz /dev/stdin ./14.txt --to-stdout \
 | while read -r line; do echo "$line"; sleep .9; done \
@@ -229,7 +229,7 @@ curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 
 #### `.nfo` - demo scene release notes with 1337 ascii art
 ~~~
-facade -q serve lines -w=80 -h=25 -vert=wave -mask=mask -font adore64 & 
+facade -q serve lines -w=80 -vert=wave -mask=mask -font adore64 &
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
 | while read -r line; do echo "$line"; sleep .9; done \
 | fcd
