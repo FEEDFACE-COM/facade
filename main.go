@@ -98,8 +98,8 @@ func main() {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
-		commandFlags[cmd].BoolVar(&noIPv4, "no4", noIPv4, "disable IPv4 networking")
-		commandFlags[cmd].BoolVar(&noIPv6, "no6", noIPv6, "disable IPv6 networking")
+		commandFlags[cmd].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
+		commandFlags[cmd].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
 	}
 
 	if commandFlags[SERVE] != nil {
@@ -110,7 +110,7 @@ func main() {
 		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
 		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
 		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "also read text from stdin")
-		commandFlags[SERVE].BoolVar(&noTitle, "T", noTitle, "no title on startup")
+		commandFlags[SERVE].BoolVar(&noTitle, "notitle", noTitle, "no title on startup")
 	}
 
 	{
