@@ -141,7 +141,7 @@ FACADE can show you the live status of your machines, services and networks, eg:
 #### `top` - system status
 ~~~
 facade serve term -vert=wave -mask=mask
-facade exec -host raspberrypi term -h=24 -w=80 top -1   # run on server
+facade exec -host raspberrypi term -w=80 top -1         # run on server
 ~~~
 
 
@@ -203,8 +203,7 @@ FACADE works very well if you just want to have some stylish text scrolling acro
 ~~~
 facade -q serve lines -w=50 -vert=crawl &
 MANWIDTH=50 MANPAGER=cat man git-rebase \
-| while read -r line; do echo "$line"; sleep .9; done \
-| fcd
+| while read -r line; do echo "$line" | fcd; sleep .9; done
 ~~~
 
 
@@ -212,8 +211,7 @@ MANWIDTH=50 MANPAGER=cat man git-rebase \
 ~~~
 facade -q serve lines -w=72 -vert=rows &
 curl -L https://tools.ietf.org/rfc/rfc2460.txt \
-| while read -r line; do echo "$line"; sleep .9; done \
-| fcd
+| while read -r line; do echo "$line" | fcd sleep .9; done
 ~~~
 
 
@@ -222,8 +220,7 @@ curl -L https://tools.ietf.org/rfc/rfc2460.txt \
 facade -q serve lines -w=80 -vert=roll &
 curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 | tar xfz /dev/stdin ./14.txt --to-stdout \
-| while read -r line; do echo "$line"; sleep .9; done \
-| fcd
+| while read -r line; do echo "$line" | fcd; sleep .9; done
 ~~~
 
 
@@ -231,8 +228,7 @@ curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 ~~~
 facade -q serve lines -w=80 -vert=wave -mask=mask -font adore64 &
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
-| while read -r line; do echo "$line"; sleep .9; done \
-| fcd
+| while read -r line; do echo "$line" | fcd; sleep .9; done
 ~~~
 
 
