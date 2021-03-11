@@ -224,6 +224,15 @@ curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 ~~~
 
 
+#### `pr0n` - nudes older than the <IMG> tag
+~~~
+facade -q serve lines -w=80 -vert=wave -mask=mask &
+curl -L https://www.asciipr0n.com/pr0n/hunky/hunky00.txt \
+| while read -r line; do echo "$line" | fcd; sleep .9; done
+
+~~~
+
+
 #### `.nfo` - demo scene release notes with 1337 ascii art
 ~~~
 facade -q serve lines -w=80 -vert=wave -mask=mask -font adore64 &
