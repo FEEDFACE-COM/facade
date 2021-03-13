@@ -1,4 +1,4 @@
-// +build linux,arm
+// +build darwin,amd64
 
 package gfx
 
@@ -6,7 +6,7 @@ import (
 	"FEEDFACE.COM/facade/log"
 	"errors"
 	"fmt"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
+    gl "github.com/go-gl/gl/v4.1-core/gl"
 	"image"
 	"image/color"
 	"image/draw"

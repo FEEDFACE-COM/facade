@@ -1,4 +1,4 @@
-// +build linux,arm
+// +build darwin,amd64
 
 package facade
 
@@ -6,7 +6,7 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
+    gl "github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 	"unicode/utf8"

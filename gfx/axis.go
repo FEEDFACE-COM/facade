@@ -1,11 +1,11 @@
-// +build linux,arm
+// +build darwin,amd64
 
 package gfx
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
 	//    log "../log"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
+    gl "github.com/go-gl/gl/v4.1-core/gl"
 )
 
 type Axis struct {

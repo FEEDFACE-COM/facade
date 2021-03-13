@@ -1,4 +1,4 @@
-// +build linux,arm
+// +build darwin,amd64
 
 package main
 
@@ -8,7 +8,7 @@ import (
 	"FEEDFACE.COM/facade/log"
 	"fmt"
 	"github.com/FEEDFACE-COM/piglet"
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
+    gl "github.com/go-gl/gl/v4.1-core/gl"
 	"os"
 	"strings"
 	"sync"
@@ -103,7 +103,8 @@ func (renderer *Renderer) Init() error {
 
 	piglet.MakeCurrent()
 
-	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
+    err = gl.Init()
+//	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
 	if err != nil {
 		return log.NewError("fail to init GLES: %s", err)
 	}
@@ -387,7 +388,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 
 			if renderFailed == false { // first failure
 
-				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
+				log.Error("%s render error:", renderer.Desc())
+//				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
 			} else {
 				//HACK: remove gles2 debug output 'glGetError 0x502'
 				str := fmt.Sprintf("\033[1A\033[K")

@@ -66,6 +66,7 @@ var (
 )
 
 func main() {
+	runtime.LockOSThread()
 	quiet, debug := false, false
 	directory := facade.DEFAULT_DIRECTORY
 	var err error
@@ -278,6 +279,7 @@ func main() {
 
 	case SERVE:
 		log.Notice(AUTHOR)
+		runtime.LockOSThread()
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
 		renderer = NewRenderer(directory, ticks)

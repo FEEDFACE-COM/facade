@@ -1,4 +1,4 @@
-// +build linux,arm
+// +build darwin,amd64
 
 package gfx
 

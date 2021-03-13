@@ -1,9 +1,8 @@
-// +build linux,arm
+// +build darwin,arm
 
 package gfx
 
 import (
-//    gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 func QuadVertices(w, h float32) []float32 {
