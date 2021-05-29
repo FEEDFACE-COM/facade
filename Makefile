@@ -84,9 +84,9 @@ get:
 	@echo "#FACADE got dependencies"
 
 clean:
-	-rm -f ${BUILD_PRODUCT} ${ASSETS}
+	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	-rm -rf package/${BUILD_PLATFORM}/
-	go clean -x -r 
+	go clean -r 
 	@echo "#FACADE cleaned up"
 
 touch:
