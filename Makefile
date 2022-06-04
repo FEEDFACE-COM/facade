@@ -1,5 +1,5 @@
 
-BUILD_NAME      = facade
+BUILD_NAME      = facade-m1
 BUILD_VERSION  ?= $(shell git describe --tags)
 BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
 BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
@@ -170,7 +170,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      if [ "${BUILD_PLATFORM}" = "linux-arm" ]; then cat $$src | base64; fi; \
+      if [ "${BUILD_PLATFORM}" = "darwin-arm64" -o "${BUILD_PLATFORM}" = "darwin-amd64" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -186,7 +186,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      if [ "${BUILD_PLATFORM}" = "linux-arm" ]; then cat $$src | base64; fi; \
+      if [ "${BUILD_PLATFORM}" = "darwin-arm64" -o "${BUILD_PLATFORM}" = "darwin-amd64" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@

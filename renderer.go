@@ -1,4 +1,4 @@
-// +build darwin,amd64
+// +build darwin,amd64 darwin,arm64
 
 package main
 
@@ -7,8 +7,8 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"github.com/FEEDFACE-COM/piglet"
-    gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
+	glfw "github.com/go-gl/glfw/v3.3/glfw"
 	"os"
 	"strings"
 	"sync"
@@ -43,6 +43,7 @@ type Renderer struct {
 
 	stateMutex *sync.Mutex
 	directory  string
+	window     *glfw.Window
 
 	refreshChan chan bool
 
@@ -89,28 +90,39 @@ func (renderer *Renderer) checkRefresh() bool {
 }
 
 func (renderer *Renderer) Init() error {
+
+/*
+	go get -u -tags=gles3 github.com/go-gl/glfw/v3.3/glfw
+*/
+
+
 	var err error
 	log.Notice("%s init %s", renderer.Desc(), renderer.directory)
 
-	err = piglet.CreateContext()
+	err = glfw.Init()
 	if err != nil {
 		return log.NewError("fail to initialize renderer: %s", err)
 	}
 
-	w, h := piglet.GetDisplaySize()
+	renderer.window, err = glfw.CreateWindow(640, 480, "FACADE by FEEDFACE.COM", nil, nil)
+	if err != nil {
+		glfw.Terminate()
+		return log.NewError("fail to glfw create window: %s", err)
+	}
+
+	w, h := renderer.window.GetSize()
 	renderer.screen = gfx.Size{float32(w), float32(h)}
 	log.Notice("%s got screen %s", renderer.Desc(), renderer.screen.Desc())
 
-	piglet.MakeCurrent()
+	renderer.window.MakeContextCurrent()
 
-    err = gl.Init()
-//	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
+	err = gl.Init()
 	if err != nil {
 		return log.NewError("fail to init GLES: %s", err)
 	}
 
 	log.Info("%s got renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))
-	log.Info("%s got version %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
+	log.Info("%s got version %s shader %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
 
 	renderer.mode = facade.Defaults.Mode
 	renderer.debug = facade.Defaults.Debug
@@ -151,11 +163,7 @@ func (renderer *Renderer) Init() error {
 }
 
 func (renderer *Renderer) Finish() error {
-
-	err := piglet.DestroyContext()
-	if err != nil {
-		return log.NewError("fail to terminate renderer: %s", err)
-	}
+	glfw.Terminate()
 	log.Info("%s finished", renderer.Desc())
 	return nil
 }
@@ -311,7 +319,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 	log.Notice("%s start render", renderer.Desc())
 
 	renderFailed := false
-	for {
+	for !renderer.window.ShouldClose() {
 		if DEBUG_DIAG {
 			DiagStart()
 		}
@@ -369,13 +377,14 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		renderer.mask.Render(renderer.debug)
 
 		if verboseFrame {
-			renderer.prevFrame = gfx.WorldClock().Frame()
 			if DEBUG_PERIODIC {
 				renderer.printDebug()
 			}
+			renderer.prevFrame = gfx.WorldClock().Frame()
 		}
 
-		piglet.SwapBuffers()
+		renderer.window.SwapBuffers()
+		glfw.PollEvents()
 		renderer.stateMutex.Unlock()
 
 		e := gl.GetError()
@@ -385,16 +394,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			}
 			renderFailed = false
 		} else {
-
 			if renderFailed == false { // first failure
-
-				log.Error("%s render error:", renderer.Desc())
-//				log.Error("%s render error: %s", renderer.Desc(), gl.ErrorString(e))
-			} else {
-				//HACK: remove gles2 debug output 'glGetError 0x502'
-				str := fmt.Sprintf("\033[1A\033[K")
-				os.Stderr.Write([]byte(str))
-
+				log.Error("%s render error: %s", renderer.Desc(),glfw.ErrorCode( e ).String())
 			}
 			renderFailed = true
 		}

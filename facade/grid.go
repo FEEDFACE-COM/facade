@@ -1,4 +1,4 @@
-// +build darwin,amd64
+// +build darwin,arm64 darwin,amd64
 
 package facade
 
@@ -84,7 +84,6 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	}
 
 	gl.ActiveTexture(gl.TEXTURE0)
-
 	grid.program.UseProgram(debug)
 	grid.object.BindBuffer()
 
@@ -389,7 +388,10 @@ func (grid *Grid) Init(programService *gfx.ProgramService, font *gfx.Font) {
 	grid.texture.Init()
 
 	grid.program = programService.GetProgram("grid", "grid/")
-	grid.program.Link(grid.vert, grid.frag)
+	err := grid.program.Link(grid.vert, grid.frag)
+	if err != nil {
+		log.Error("%s fail link program: %s",grid.Desc(),err)
+	}
 
 	grid.renderMap(font)
 

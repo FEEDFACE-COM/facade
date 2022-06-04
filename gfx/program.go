@@ -1,4 +1,4 @@
-// +build darwin,amd64
+// +build darwin,amd64 darwin,arm64
 
 package gfx
 
@@ -117,7 +117,7 @@ func (program *Program) getAndCompileShaders(vertName, fragName string) error {
 	}
 	err = program.vertexShader.CompileShader()
 	if err != nil {
-		return log.NewError("fail compile vert shader: %s", err)
+		return log.NewError("fail compile shader %s.vert: %s", mode+vertName,err)
 	}
 	if DEBUG_PROGRAMSERVICE {
 		log.Debug("%s compiled vert shader %s", program.Desc(), program.vertexShader.Name)

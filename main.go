@@ -126,7 +126,7 @@ func main() {
 		os.Exit(-2)
 	}
 	if debug {
-		log.SetVerbosity(log.INFO)
+		log.SetVerbosity(log.DEBUG)
 	} else if quiet {
 		log.SetVerbosity(log.ERROR)
 	}
