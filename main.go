@@ -59,10 +59,10 @@ var (
 	connectHost    string  = ""
 	connectTimeout float64 = 5.0
 	readTimeout    float64 = 0.0
-	noIPv4         bool    = false
-	noIPv6         bool    = false
+	noIPv4         bool    = true
+	noIPv6         bool    = true
 	stdin          bool    = false
-	noTitle        bool    = false
+	noTitle        bool    = true
 )
 
 func main() {
@@ -301,12 +301,12 @@ func main() {
 		if !noTitle {
 			titleConfig := &facade.Config{}
 			if renderer.mode == facade.Mode_TERM {
-				if config.Terminal==nil || !config.Terminal.Grid.GetSetFill() {
+				if config.Terminal == nil || !config.Terminal.Grid.GetSetFill() {
 					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
 					titleConfig.Terminal = &facade.TermConfig{Grid: gridConfig}
 				}
 			} else if renderer.mode == facade.Mode_LINES {
-				if config.Lines==nil || !config.Lines.Grid.GetSetFill() {
+				if config.Lines == nil || !config.Lines.Grid.GetSetFill() {
 					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
 					titleConfig.Lines = &facade.LineConfig{Grid: gridConfig}
 				}

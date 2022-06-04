@@ -1,5 +1,5 @@
 
-BUILD_NAME      = facade-m1
+BUILD_NAME      = facade-gui
 BUILD_VERSION  ?= $(shell git describe --tags)
 BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
 BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)

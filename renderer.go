@@ -1,3 +1,4 @@
+//go:build (darwin && amd64) || (darwin && arm64)
 // +build darwin,amd64 darwin,arm64
 
 package main
@@ -43,7 +44,11 @@ type Renderer struct {
 
 	stateMutex *sync.Mutex
 	directory  string
-	window     *glfw.Window
+
+	window  *glfw.Window
+	monitor *glfw.Monitor
+	vidmode *glfw.VidMode
+	winpos  *gfx.Frame
 
 	refreshChan chan bool
 
@@ -91,10 +96,12 @@ func (renderer *Renderer) checkRefresh() bool {
 
 func (renderer *Renderer) Init() error {
 
-/*
-	go get -u -tags=gles3 github.com/go-gl/glfw/v3.3/glfw
-*/
+	/*
+		go get -u -tags=gles3 github.com/go-gl/glfw/v3.3/glfw
+	*/
 
+	const WINDOW_WIDTH = 864
+	const WINDOW_HEIGHT = 540
 
 	var err error
 	log.Notice("%s init %s", renderer.Desc(), renderer.directory)
@@ -104,15 +111,33 @@ func (renderer *Renderer) Init() error {
 		return log.NewError("fail to initialize renderer: %s", err)
 	}
 
-	renderer.window, err = glfw.CreateWindow(640, 480, "FACADE by FEEDFACE.COM", nil, nil)
+	renderer.monitor = glfw.GetPrimaryMonitor()
+	renderer.vidmode = renderer.monitor.GetVideoMode()
+	log.Debug("%s mode %dx%d %d fps", renderer.Desc(), renderer.vidmode.Width, renderer.vidmode.Height, renderer.vidmode.RefreshRate)
+	//{
+	//	for _, mode := range renderer.monitor.GetVideoModes() {
+	//		w, h, fps := mode.Width, mode.Height, mode.RefreshRate
+	//		log.Debug("%s mode %dx%d %dfps", renderer.Desc(), w, h, fps)
+	//	}
+	//}
+	renderer.window, err = glfw.CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "FACADE by FEEDFACE.COM", nil, nil)
 	if err != nil {
 		glfw.Terminate()
 		return log.NewError("fail to glfw create window: %s", err)
 	}
 
-	w, h := renderer.window.GetSize()
-	renderer.screen = gfx.Size{float32(w), float32(h)}
-	log.Notice("%s got screen %s", renderer.Desc(), renderer.screen.Desc())
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	renderer.window.SetAspectRatio(WINDOW_WIDTH, WINDOW_HEIGHT)
+	renderer.window.SetSizeLimits(WINDOW_WIDTH/2., WINDOW_WIDTH/2., gl.DONT_CARE, gl.DONT_CARE)
+	renderer.window.SetFramebufferSizeCallback(func(win *glfw.Window, w int, h int) { renderer.FramebufferSizeFun(w, h) })
+	renderer.window.SetKeyCallback(func(win *glfw.Window, k glfw.Key, c int, a glfw.Action, m glfw.ModifierKey) { renderer.KeyFun(k, a, m) })
+	//renderer.window.SetRefreshCallback( func(win *glfw.Window) { renderer.RefreshFun() } )
+
+	w, h := renderer.window.GetFramebufferSize()
+	renderer.screen = gfx.Size{W: float32(w), H: float32(h)}
+	log.Notice("%s screen %s", renderer.Desc(), renderer.screen.Desc())
 
 	renderer.window.MakeContextCurrent()
 
@@ -121,8 +146,8 @@ func (renderer *Renderer) Init() error {
 		return log.NewError("fail to init GLES: %s", err)
 	}
 
-	log.Info("%s got renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))
-	log.Info("%s got version %s shader %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
+	log.Info("%s renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))
+	log.Info("%s version %s shader %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VERSION))), gl.GoStr(gl.GetString((gl.SHADING_LANGUAGE_VERSION))))
 
 	renderer.mode = facade.Defaults.Mode
 	renderer.debug = facade.Defaults.Debug
@@ -159,7 +184,41 @@ func (renderer *Renderer) Init() error {
 	renderer.tags.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
+
 	return err
+}
+
+func (renderer *Renderer) RefreshFun() {
+	log.Debug("%s refresh", renderer.Desc())
+}
+
+func (renderer *Renderer) FramebufferSizeFun(width int, height int) {
+	renderer.screen = gfx.Size{W: float32(width), H: float32(height)}
+	log.Notice("%s resize %s", renderer.Desc(), renderer.screen.Desc())
+}
+
+func (renderer *Renderer) KeyFun(key glfw.Key, action glfw.Action, mod glfw.ModifierKey) {
+
+	if mod == 0x2 && action == 0x1 && key == 0x43 {
+		log.Notice("%s key ctrl-c", renderer.Desc())
+		renderer.window.SetShouldClose(true)
+		return
+	}
+
+	if key == 0x20 && action == 0x1 {
+		log.Notice("%s key space", renderer.Desc())
+		renderer.ToggleFullScreen()
+		return
+	}
+
+	if key == 0x100 && action == 0x1 {
+		log.Notice("%s key escape", renderer.Desc())
+		renderer.window.SetShouldClose(true)
+		return
+	}
+
+	log.Debug("%s key 0x%02x action %d mod %x", renderer.Desc(), key, action, mod)
+
 }
 
 func (renderer *Renderer) Finish() error {
@@ -368,7 +427,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
-		if renderer.debug && gfx.WorldClock().Paused() {
+		if renderer.debug {
 			renderer.axis.Render(renderer.camera, renderer.debug)
 		}
 
@@ -395,7 +454,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderFailed = false
 		} else {
 			if renderFailed == false { // first failure
-				log.Error("%s render error: %s", renderer.Desc(),glfw.ErrorCode( e ).String())
+				log.Error("%s render error: %s", renderer.Desc(), glfw.ErrorCode(e).String())
 			}
 			renderFailed = true
 		}
@@ -416,6 +475,25 @@ func (renderer *Renderer) TogglePause() {
 	gfx.WorldClock().Toggle()
 	if DEBUG_RENDERER {
 		log.Debug("%s toggle pause", renderer.Desc())
+	}
+}
+
+func (renderer *Renderer) ToggleFullScreen() {
+	if renderer.winpos == nil {
+		x, y := renderer.window.GetPos()
+		w, h := renderer.window.GetSize()
+		fps := renderer.vidmode.RefreshRate
+		frame := gfx.Frame{P: gfx.Point{X: float32(x), Y: float32(y)}, S: gfx.Size{W: float32(w), H: float32(h)}}
+		renderer.winpos = &frame
+		renderer.window.SetMonitor(renderer.monitor, 0, 0, w, h, fps)
+		log.Info("%s fullscreen", renderer.Desc())
+	} else {
+		x, y := int(renderer.winpos.P.X), int(renderer.winpos.P.Y)
+		w, h := int(renderer.winpos.S.W), int(renderer.winpos.S.H)
+		fps := renderer.vidmode.RefreshRate
+		renderer.winpos = nil
+		renderer.window.SetMonitor(nil, x, y, w, h, fps)
+		log.Info("%s windowed", renderer.Desc())
 	}
 }
 
@@ -612,6 +690,7 @@ func (renderer *Renderer) Info() string {
 
 func (renderer *Renderer) Desc() string {
 	ret := "renderer["
+	ret += fmt.Sprintf("%dx%d ", int(renderer.screen.W), int(renderer.screen.H))
 	ret += strings.ToLower(renderer.mode.String())
 	if renderer.debug {
 		ret += " DEBUG"

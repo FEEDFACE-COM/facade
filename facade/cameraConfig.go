@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-const ENABLE_CAMERA_ISOMETRIC = false
+const ENABLE_CAMERA_ISOMETRIC = true
 
 var CameraDefaults = CameraConfig{
 	Zoom:      1.0,
