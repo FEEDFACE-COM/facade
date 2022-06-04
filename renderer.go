@@ -113,13 +113,13 @@ func (renderer *Renderer) Init() error {
 
 	renderer.monitor = glfw.GetPrimaryMonitor()
 	renderer.vidmode = renderer.monitor.GetVideoMode()
-	log.Debug("%s mode %dx%d %d fps", renderer.Desc(), renderer.vidmode.Width, renderer.vidmode.Height, renderer.vidmode.RefreshRate)
-	//{
-	//	for _, mode := range renderer.monitor.GetVideoModes() {
-	//		w, h, fps := mode.Width, mode.Height, mode.RefreshRate
-	//		log.Debug("%s mode %dx%d %dfps", renderer.Desc(), w, h, fps)
-	//	}
-	//}
+	log.Debug("%s mode %dx%d @%d fps", renderer.Desc(), renderer.vidmode.Width, renderer.vidmode.Height, renderer.vidmode.RefreshRate)
+//	{
+//		for _, mode := range renderer.monitor.GetVideoModes() {
+//	   	w, h, fps := mode.Width, mode.Height, mode.RefreshRate
+//	   	log.Debug("%s mode %dx%d @%d fps", renderer.Desc(), w, h, fps)
+//	   }
+//	}
 	renderer.window, err = glfw.CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "FACADE by FEEDFACE.COM", nil, nil)
 	if err != nil {
 		glfw.Terminate()
@@ -131,6 +131,7 @@ func (renderer *Renderer) Init() error {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	renderer.window.SetAspectRatio(WINDOW_WIDTH, WINDOW_HEIGHT)
 	renderer.window.SetSizeLimits(WINDOW_WIDTH/2., WINDOW_WIDTH/2., gl.DONT_CARE, gl.DONT_CARE)
+	renderer.window.SetSizeCallback(func(win *glfw.Window, w int, h int) { renderer.SizeFun(w, h) })
 	renderer.window.SetFramebufferSizeCallback(func(win *glfw.Window, w int, h int) { renderer.FramebufferSizeFun(w, h) })
 	renderer.window.SetKeyCallback(func(win *glfw.Window, k glfw.Key, c int, a glfw.Action, m glfw.ModifierKey) { renderer.KeyFun(k, a, m) })
 	//renderer.window.SetRefreshCallback( func(win *glfw.Window) { renderer.RefreshFun() } )
@@ -194,7 +195,11 @@ func (renderer *Renderer) RefreshFun() {
 
 func (renderer *Renderer) FramebufferSizeFun(width int, height int) {
 	renderer.screen = gfx.Size{W: float32(width), H: float32(height)}
-	log.Notice("%s resize %s", renderer.Desc(), renderer.screen.Desc())
+	log.Notice("%s framebuffer size %s", renderer.Desc(), renderer.screen.Desc())
+}
+
+func (renderer *Renderer) SizeFun(width int, height int) {
+	log.Notice("%s size %s", renderer.Desc(), renderer.screen.Desc())
 }
 
 func (renderer *Renderer) KeyFun(key glfw.Key, action glfw.Action, mod glfw.ModifierKey) {
@@ -480,20 +485,21 @@ func (renderer *Renderer) TogglePause() {
 
 func (renderer *Renderer) ToggleFullScreen() {
 	if renderer.winpos == nil {
+    	const SCREEN_WIDTH, SCREEN_HEIGHT = 3840,2160
 		x, y := renderer.window.GetPos()
 		w, h := renderer.window.GetSize()
 		fps := renderer.vidmode.RefreshRate
 		frame := gfx.Frame{P: gfx.Point{X: float32(x), Y: float32(y)}, S: gfx.Size{W: float32(w), H: float32(h)}}
 		renderer.winpos = &frame
-		renderer.window.SetMonitor(renderer.monitor, 0, 0, w, h, fps)
-		log.Info("%s fullscreen", renderer.Desc())
+		log.Info("%s fullscreen %dx%d @%d fps", renderer.Desc(),SCREEN_WIDTH,SCREEN_HEIGHT,fps)
+		renderer.window.SetMonitor(renderer.monitor, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, fps)
 	} else {
 		x, y := int(renderer.winpos.P.X), int(renderer.winpos.P.Y)
 		w, h := int(renderer.winpos.S.W), int(renderer.winpos.S.H)
 		fps := renderer.vidmode.RefreshRate
 		renderer.winpos = nil
+		log.Info("%s window %dx%d @%d fps", renderer.Desc(),w,h,fps)
 		renderer.window.SetMonitor(nil, x, y, w, h, fps)
-		log.Info("%s windowed", renderer.Desc())
 	}
 }
 

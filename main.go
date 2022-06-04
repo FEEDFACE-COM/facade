@@ -59,8 +59,8 @@ var (
 	connectHost    string  = ""
 	connectTimeout float64 = 5.0
 	readTimeout    float64 = 0.0
-	noIPv4         bool    = true
-	noIPv6         bool    = true
+	noIPv4         bool    = false
+	noIPv6         bool    = false
 	stdin          bool    = false
 	noTitle        bool    = true
 )
