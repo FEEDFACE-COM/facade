@@ -32,7 +32,8 @@ void main() {
     
     if (0==0) {
         vec2 TextureSize = vec2(abs(vPosition.x),abs(vPosition.y));
-        tex.xy = vTexCoord.xy + (gl_PointCoord * TextureSize);
+//        tex.xy = vTexCoord.xy + (gl_PointCoord * TextureSize);
+        tex.xy = vTexCoord.xy + (1. * TextureSize);
         col = texture2D(texture,tex.xy);
     
     } else {
