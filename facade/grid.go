@@ -6,7 +6,7 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
+    gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 )
