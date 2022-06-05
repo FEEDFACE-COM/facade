@@ -193,7 +193,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      if echo "${BUILD_FLAGS}" | grep -- "--tags RENDERER"; then cat $$src | base64; fi; \
+      [[ "${BUILD_FLAGS}" =~ "tags RENDERER" ]] && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -210,7 +210,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      if echo "${BUILD_FLAGS}" | grep -- "--tags RENDERER"; then cat $$src | base64; fi; \
+      [[ "${BUILD_FLAGS}" =~ "tags RENDERER" ]] && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
