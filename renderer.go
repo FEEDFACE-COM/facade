@@ -95,7 +95,7 @@ func (renderer *Renderer) Init() error {
 
 	err = piglet.CreateContext()
 	if err != nil {
-		return log.NewError("fail to initialize renderer: %s", err)
+		return log.NewError("fail to create context: %s", err)
 	}
 
 	w, h := piglet.GetDisplaySize()
@@ -104,8 +104,10 @@ func (renderer *Renderer) Init() error {
 
 	piglet.MakeCurrent()
 	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
+	//err = gl.Init()
 	if err != nil {
-		return log.NewError("fail to init GLES: %s", err)
+		log.Error("%s fail to gl init: %s",renderer.Desc(),err)
+		return log.NewError("fail to gl init: %s", err)
 	}
 
 	log.Info("%s renderer %s %s", renderer.Desc(), gl.GoStr(gl.GetString((gl.VENDOR))), gl.GoStr(gl.GetString((gl.RENDERER))))

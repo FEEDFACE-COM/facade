@@ -32,17 +32,18 @@ func CreateContext() error {
 
 	var err error = glfw.Init()
 	if err != nil {
+		log.Debug("fail to glfw init: %s", err)
 		return log.NewError("fail to initialize renderer: %s", err)
 	}
 	monitor = glfw.GetPrimaryMonitor()
 	vidmode = monitor.GetVideoMode()
 	log.Debug("%s mode %dx%d @%d fps", Desc(), vidmode.Width, vidmode.Height, vidmode.RefreshRate)
-	{
-		for _, mode := range monitor.GetVideoModes() {
-			w, h, fps := mode.Width, mode.Height, mode.RefreshRate
-			log.Debug("%s mode %dx%d @%d fps", Desc(), w, h, fps)
-		}
-	}
+	//{
+	//	for _, mode := range monitor.GetVideoModes() {
+	//		w, h, fps := mode.Width, mode.Height, mode.RefreshRate
+	//		log.Debug("%s mode %dx%d @%d fps", Desc(), w, h, fps)
+	//	}
+	//}
 
 	window, err = glfw.CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "FACADE by FEEDFACE.COM", nil, nil)
 	if err != nil {
