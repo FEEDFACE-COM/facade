@@ -1,5 +1,5 @@
 //go:build (linux && arm) || DARWIN_GUI
-// +build linux,arm DARWIN_GUI
+// +build RENDERER
 
 package facade
 

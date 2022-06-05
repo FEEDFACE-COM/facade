@@ -1,5 +1,4 @@
-//go:build (linux && arm) || DARWIN_GUI
-// +build linux,arm DARWIN_GUI
+// +build RENDERER,darwin
 
 package piglet
 
@@ -10,7 +9,6 @@ import (
 	"fmt"
 	gl "github.com/go-gl/gl/v4.1-core/gl"
 	glfw "github.com/go-gl/glfw/v3.3/glfw"
-
 	"unsafe"
 )
 

@@ -35,7 +35,7 @@ LDFLAGS += -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSIO
 
 BUILD_FLAGS ?= 
 BUILD_FLAGS += -v
-#BUILD_FLAGS += -tags DARWIN_GUI
+#BUILD_FLAGS += -tags RENDERER
 
 default: build 
 
@@ -47,19 +47,13 @@ help:
 	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
-	@echo " make dirty    # prep files for building darwin-gui"
 	@echo " make package  # build platform package"
+	@echo " make rig      # prep for building darwin-gui"
+	@echo " make unrig    # prep for building standard"
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
-dirty:
-	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go renderer.go
-	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
-	sed -i '' -e 's/^#BUILD_FLAGS += -tags DARWIN_GUI/BUILD_FLAGS += -tags DARWIN_GUI/' Makefile
-	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
-	@echo "FACADE dirty"
-
-info: 
+info:
 	@echo "#FACADE Info"
 	@echo " name       ${BUILD_NAME}"
 	@echo " version    ${BUILD_VERSION}"
@@ -101,8 +95,6 @@ purge:
 	go clean -r -cache -modcache
 	@echo "#FACADE purged cache"
 
-
-
 touch:
 	touch ${ASSET_SHADER} ${ASSET_FONT} ${EXTRAS}
 	@echo "#FACADE touched assets"
@@ -113,7 +105,20 @@ assets: ${ASSETS}
 proto: ${PROTOS}
 	@echo "#FACADE built proto ${PROTOS}"
 
-	
+rig: touch clean
+	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go renderer.go
+	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
+	sed -i '' -e 's/^#BUILD_FLAGS += -tags RENDERER/BUILD_FLAGS += -tags RENDERER/' Makefile
+	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
+	@echo "FACADE rigged for darwin-gui"
+
+unrig: touch clean
+	sed -i '' -e 's|gl "github.com/go-gl/gl/v4.1-core/gl"|gl "github.com/FEEDFACE-COM/piglet/gles2"|' gfx/*.go renderer.go
+	sed -i '' -e 's|"FEEDFACE.COM/facade/piglet"|"github.com/FEEDFACE-COM/piglet"|'  renderer.go
+	sed -i '' -e 's/BUILD_FLAGS += -tags RENDERER/^#BUILD_FLAGS += -tags RENDERER/' Makefile
+	sed -i '' -e 's/BUILD_NAME      = facade-gui/^BUILD_NAME      = facade/' Makefile
+	@echo "FACADE unrigged"
+
 
 ${BUILD_PRODUCT}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${BUILD_PRODUCT}
@@ -184,7 +189,6 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-#      if [ "${BUILD_PLATFORM}" = "darwin-arm64" -o "${BUILD_PLATFORM}" = "darwin-amd64" ]; then cat $$src | base64; fi; \
       if [ "${BUILD_PLATFORM}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                                >>$@
@@ -193,6 +197,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
 
 
 facade/fontAssets.go: ${ASSET_FONT}
+	echo "fonts: ${BUILD_FLAGS}"
 	echo ""                                         >|$@
 	echo "package facade"                           >>$@
 	echo "var FontAsset = map[string]string{"       >>$@
@@ -201,7 +206,6 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-#      if [ "${BUILD_PLATFORM}" = "darwin-arm64" -o "${BUILD_PLATFORM}" = "darwin-amd64" ]; then cat $$src | base64; fi; \
       if [ "${BUILD_PLATFORM}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                            >>$@
@@ -210,5 +214,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build package get info assets proto demo touch clean
+.PHONY: help build package get info assets proto demo touch clean rig unrig
 
