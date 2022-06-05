@@ -49,12 +49,10 @@ help:
 	@echo " make build    # build static executable"
 	@echo " make get      # fetch golang packages"
 	@echo " make assets   # build fonts and shaders"
-	@echo " make reset    # reset assets"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
 	@echo " make package  # build platform package"
 	@echo " make rig      # prep for building darwin-gui"
-	@echo " make unrig    # prep for building standard"
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
@@ -79,6 +77,10 @@ info:
 	
 build: ${BUILD_PRODUCT}
 	@echo "#FACADE built ${BUILD_PRODUCT}"
+
+remove:
+	rm -f ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
+	@echo "#FACADE removed ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}"
 
 package: clean ${BUILD_PACKAGE}
 	@echo "#FACADE packaged ${BUILD_PACKAGE}"
@@ -223,5 +225,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build package get info assets proto demo touch clean rig unrig reset
+.PHONY: help build package get info assets proto demo touch clean rig unrig reset remove
 
