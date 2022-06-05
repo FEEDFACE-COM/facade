@@ -186,7 +186,7 @@ facade exec -host raspberrypi term -w=80 -h=25 bash     # run on workstation
 ~~~
 
 
-#### `frotz` - play text adventures as a group
+#### `frotz` - play text adventures on your wall
 ~~~
 facade serve term -font=spacemono
 facade exec term -w=64 -h=16 frotz /path/to/hitchhikers_guide.z5 # run on workstation
