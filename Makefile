@@ -41,11 +41,7 @@ ifeq ($(BUILD_PLATFORM), linux-arm)
 endif
 
 
-foo:
-	@echo build flags: "${BUILD_FLAGS}"
-
-
-default: build 
+default: build
 
 help:
 	@echo "#FACADE Help"
@@ -197,7 +193,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      if [ "${BUILD_PLATFORM}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
+      if echo "${BUILD_FLAGS}" | grep -- "--tags RENDERER"; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -214,7 +210,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      if [ "${BUILD_FLAGS}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
+      if echo "${BUILD_FLAGS}" | grep -- "--tags RENDERER"; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
