@@ -34,7 +34,8 @@ LDFLAGS += -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSIO
 
 
 BUILD_FLAGS ?= 
-BUILD_FLAGS +=-v
+BUILD_FLAGS += -v
+#BUILD_FLAGS += -tags DARWIN_GUI
 
 default: build 
 
@@ -50,6 +51,12 @@ help:
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
+dirty:
+	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.2-core/gl"|' gfx/*.go renderer.go
+	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
+	sed -i '' -e 's/^#BUILD_FLAGS += -tags DARWIN_GUI/BUILD_FLAGS += -tags DARWIN_GUI/' Makefile
+	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
+	@echo "FACADE dirty"
 
 info: 
 	@echo "#FACADE Info"
