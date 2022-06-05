@@ -1,11 +1,12 @@
-// +build linux,arm
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package facade
 
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-    gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 

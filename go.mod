@@ -4,6 +4,7 @@ require (
 	cloud.google.com/go/storage v1.11.0 // indirect
 	dmitri.shuralyov.com/gpu/mtl v0.0.0-20191203043605-d42048ed14fd // indirect
 	github.com/BurntSushi/xgb v0.0.0-20200324125942-20f126ea2843 // indirect
+	github.com/FEEDFACE-COM/piglet v1.0.1
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.4.1 // indirect

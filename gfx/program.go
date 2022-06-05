@@ -1,11 +1,12 @@
-// +build darwin,amd64 darwin,arm64
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package gfx
 
 import (
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-    gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
 	"regexp"
 	"strings"
 )
@@ -117,7 +118,7 @@ func (program *Program) getAndCompileShaders(vertName, fragName string) error {
 	}
 	err = program.vertexShader.CompileShader()
 	if err != nil {
-		return log.NewError("fail compile shader %s.vert: %s", mode+vertName,err)
+		return log.NewError("fail compile shader %s.vert: %s", mode+vertName, err)
 	}
 	if DEBUG_PROGRAMSERVICE {
 		log.Debug("%s compiled vert shader %s", program.Desc(), program.vertexShader.Name)

@@ -1,4 +1,5 @@
-// +build darwin,amd64 darwin,arm64
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package gfx
 
@@ -6,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/log"
 	"errors"
 	"fmt"
-    gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
 	"image"
 	"image/color"
 	"image/draw"

@@ -1,5 +1,5 @@
-//go:build (darwin && arm64) || (darwin && amd64)
-// +build darwin,arm64 darwin,amd64
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package piglet
 

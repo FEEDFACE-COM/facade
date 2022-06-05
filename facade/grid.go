@@ -1,4 +1,5 @@
-// +build darwin,arm64 darwin,amd64
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package facade
 
@@ -6,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-    gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 )
@@ -390,7 +391,7 @@ func (grid *Grid) Init(programService *gfx.ProgramService, font *gfx.Font) {
 	grid.program = programService.GetProgram("grid", "grid/")
 	err := grid.program.Link(grid.vert, grid.frag)
 	if err != nil {
-		log.Error("%s fail link program: %s",grid.Desc(),err)
+		log.Error("%s fail link program: %s", grid.Desc(), err)
 	}
 
 	grid.renderMap(font)

@@ -1,5 +1,5 @@
-//go:build (darwin && amd64) || (darwin && arm64)
-// +build darwin,amd64 darwin,arm64
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package main
 
@@ -14,11 +14,13 @@ import (
 	"time"
 )
 
+//import (
+//	"FEEDFACE.COM/facade/piglet"
+//	gl "github.com/go-gl/gl/v4.1-core/gl"
+//}
+
 import (
-	"FEEDFACE.COM/facade/piglet"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
-	//	"github.com/FEEDFACE-COM/piglet"
-	//	gl "github.com/go-gl/gl/v4.1-core/gl"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Renderer struct {

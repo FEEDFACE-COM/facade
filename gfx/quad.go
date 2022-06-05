@@ -1,9 +1,7 @@
-// +build darwin,arm
+//go:build (linux && arm) || DARWIN_GUI
+// +build linux,arm DARWIN_GUI
 
 package gfx
-
-import (
-)
 
 func QuadVertices(w, h float32) []float32 {
 	return []float32{
