@@ -49,6 +49,7 @@ help:
 	@echo " make build    # build static executable"
 	@echo " make get      # fetch golang packages"
 	@echo " make assets   # build fonts and shaders"
+	@echo " make reset    # reset assets"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
 	@echo " make package  # build platform package"
@@ -105,6 +106,10 @@ touch:
 
 assets: ${ASSETS}
 	@echo "#FACADE built assets ${ASSETS}"
+
+reset:
+	git checkout -- ${ASSETS}
+	@echo "#FACADE reset assets ${ASSETS}"
 
 proto: ${PROTOS}
 	@echo "#FACADE built proto ${PROTOS}"
@@ -193,7 +198,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      [[ "${BUILD_FLAGS}" =~ "tags RENDERER" ]] && (cat $$src | base64 ); \
+      echo "${BUILD_FLAGS}" | grep -q -- "tags RENDERER" && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -210,7 +215,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      [[ "${BUILD_FLAGS}" =~ "tags RENDERER" ]] && (cat $$src | base64 ); \
+      echo "${BUILD_FLAGS}" | grep -q -- "tags RENDERER" && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
@@ -218,5 +223,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build package get info assets proto demo touch clean rig unrig
+.PHONY: help build package get info assets proto demo touch clean rig unrig reset
 
