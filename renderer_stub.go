@@ -1,5 +1,4 @@
-//go:build (!linux && !arm) || !DARWIN_GUI
-// +build !linux,!arm !DARWIN_GUI
+// +build !linux,!arm,!DARWIN_GUI
 
 package main
 
