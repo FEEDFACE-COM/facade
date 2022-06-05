@@ -47,12 +47,13 @@ help:
 	@echo " make assets   # build fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
+	@echo " make dirty    # prep files for building darwin-gui"
 	@echo " make package  # build platform package"
 	@echo " make demo     # for 'make demo | facade pipe lines'"
 	
 
 dirty:
-	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.2-core/gl"|' gfx/*.go renderer.go
+	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go renderer.go
 	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
 	sed -i '' -e 's/^#BUILD_FLAGS += -tags DARWIN_GUI/BUILD_FLAGS += -tags DARWIN_GUI/' Makefile
 	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
