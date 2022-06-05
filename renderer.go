@@ -8,12 +8,17 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
-	glfw "github.com/go-gl/glfw/v3.3/glfw"
 	"os"
 	"strings"
 	"sync"
 	"time"
+)
+
+import (
+	"FEEDFACE.COM/facade/piglet"
+	gl "github.com/go-gl/gl/v4.1-core/gl"
+	//	"github.com/FEEDFACE-COM/piglet"
+	//	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
 
 type Renderer struct {
@@ -44,11 +49,6 @@ type Renderer struct {
 
 	stateMutex *sync.Mutex
 	directory  string
-
-	window  *glfw.Window
-	monitor *glfw.Monitor
-	vidmode *glfw.VidMode
-	winpos  *gfx.Frame
 
 	refreshChan chan bool
 
@@ -95,54 +95,20 @@ func (renderer *Renderer) checkRefresh() bool {
 }
 
 func (renderer *Renderer) Init() error {
-
-	/*
-		go get -u -tags=gles3 github.com/go-gl/glfw/v3.3/glfw
-	*/
-
-	const WINDOW_WIDTH = 864
-	const WINDOW_HEIGHT = 540
-
 	var err error
 	log.Notice("%s init %s", renderer.Desc(), renderer.directory)
 
-	err = glfw.Init()
+	err = piglet.CreateContext()
 	if err != nil {
 		return log.NewError("fail to initialize renderer: %s", err)
 	}
 
-	renderer.monitor = glfw.GetPrimaryMonitor()
-	renderer.vidmode = renderer.monitor.GetVideoMode()
-	log.Debug("%s mode %dx%d @%d fps", renderer.Desc(), renderer.vidmode.Width, renderer.vidmode.Height, renderer.vidmode.RefreshRate)
-//	{
-//		for _, mode := range renderer.monitor.GetVideoModes() {
-//	   	w, h, fps := mode.Width, mode.Height, mode.RefreshRate
-//	   	log.Debug("%s mode %dx%d @%d fps", renderer.Desc(), w, h, fps)
-//	   }
-//	}
-	renderer.window, err = glfw.CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "FACADE by FEEDFACE.COM", nil, nil)
-	if err != nil {
-		glfw.Terminate()
-		return log.NewError("fail to glfw create window: %s", err)
-	}
-
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	renderer.window.SetAspectRatio(WINDOW_WIDTH, WINDOW_HEIGHT)
-	renderer.window.SetSizeLimits(WINDOW_WIDTH/2., WINDOW_WIDTH/2., gl.DONT_CARE, gl.DONT_CARE)
-	renderer.window.SetSizeCallback(func(win *glfw.Window, w int, h int) { renderer.SizeFun(w, h) })
-	renderer.window.SetFramebufferSizeCallback(func(win *glfw.Window, w int, h int) { renderer.FramebufferSizeFun(w, h) })
-	renderer.window.SetKeyCallback(func(win *glfw.Window, k glfw.Key, c int, a glfw.Action, m glfw.ModifierKey) { renderer.KeyFun(k, a, m) })
-	//renderer.window.SetRefreshCallback( func(win *glfw.Window) { renderer.RefreshFun() } )
-
-	w, h := renderer.window.GetFramebufferSize()
-	renderer.screen = gfx.Size{W: float32(w), H: float32(h)}
+	w, h := piglet.GetDisplaySize()
+	renderer.screen = gfx.Size{float32(w), float32(h)}
 	log.Notice("%s screen %s", renderer.Desc(), renderer.screen.Desc())
 
-	renderer.window.MakeContextCurrent()
-
-	err = gl.Init()
+	piglet.MakeCurrent()
+	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
 	if err != nil {
 		return log.NewError("fail to init GLES: %s", err)
 	}
@@ -189,45 +155,8 @@ func (renderer *Renderer) Init() error {
 	return err
 }
 
-func (renderer *Renderer) RefreshFun() {
-	log.Debug("%s refresh", renderer.Desc())
-}
-
-func (renderer *Renderer) FramebufferSizeFun(width int, height int) {
-	renderer.screen = gfx.Size{W: float32(width), H: float32(height)}
-	log.Notice("%s framebuffer size %s", renderer.Desc(), renderer.screen.Desc())
-}
-
-func (renderer *Renderer) SizeFun(width int, height int) {
-	log.Notice("%s size %s", renderer.Desc(), renderer.screen.Desc())
-}
-
-func (renderer *Renderer) KeyFun(key glfw.Key, action glfw.Action, mod glfw.ModifierKey) {
-
-	if mod == 0x2 && action == 0x1 && key == 0x43 {
-		log.Notice("%s key ctrl-c", renderer.Desc())
-		renderer.window.SetShouldClose(true)
-		return
-	}
-
-	if key == 0x20 && action == 0x1 {
-		log.Notice("%s key space", renderer.Desc())
-		renderer.ToggleFullScreen()
-		return
-	}
-
-	if key == 0x100 && action == 0x1 {
-		log.Notice("%s key escape", renderer.Desc())
-		renderer.window.SetShouldClose(true)
-		return
-	}
-
-	log.Debug("%s key 0x%02x action %d mod %x", renderer.Desc(), key, action, mod)
-
-}
-
 func (renderer *Renderer) Finish() error {
-	glfw.Terminate()
+	piglet.DestroyContext()
 	log.Info("%s finished", renderer.Desc())
 	return nil
 }
@@ -383,7 +312,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 	log.Notice("%s start render", renderer.Desc())
 
 	renderFailed := false
-	for !renderer.window.ShouldClose() {
+	for piglet.Loop() {
+
 		if DEBUG_DIAG {
 			DiagStart()
 		}
@@ -447,8 +377,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.prevFrame = gfx.WorldClock().Frame()
 		}
 
-		renderer.window.SwapBuffers()
-		glfw.PollEvents()
+		piglet.SwapBuffers()
 		renderer.stateMutex.Unlock()
 
 		e := gl.GetError()
@@ -459,7 +388,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderFailed = false
 		} else {
 			if renderFailed == false { // first failure
-				log.Error("%s render error: %s", renderer.Desc(), glfw.ErrorCode(e).String())
+				log.Error("%s render error: %s", renderer.Desc(), piglet.ErrorString(e))
 			}
 			renderFailed = true
 		}
@@ -480,26 +409,6 @@ func (renderer *Renderer) TogglePause() {
 	gfx.WorldClock().Toggle()
 	if DEBUG_RENDERER {
 		log.Debug("%s toggle pause", renderer.Desc())
-	}
-}
-
-func (renderer *Renderer) ToggleFullScreen() {
-	if renderer.winpos == nil {
-    	const SCREEN_WIDTH, SCREEN_HEIGHT = 3840,2160
-		x, y := renderer.window.GetPos()
-		w, h := renderer.window.GetSize()
-		fps := renderer.vidmode.RefreshRate
-		frame := gfx.Frame{P: gfx.Point{X: float32(x), Y: float32(y)}, S: gfx.Size{W: float32(w), H: float32(h)}}
-		renderer.winpos = &frame
-		log.Info("%s fullscreen %dx%d @%d fps", renderer.Desc(),SCREEN_WIDTH,SCREEN_HEIGHT,fps)
-		renderer.window.SetMonitor(renderer.monitor, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, fps)
-	} else {
-		x, y := int(renderer.winpos.P.X), int(renderer.winpos.P.Y)
-		w, h := int(renderer.winpos.S.W), int(renderer.winpos.S.H)
-		fps := renderer.vidmode.RefreshRate
-		renderer.winpos = nil
-		log.Info("%s window %dx%d @%d fps", renderer.Desc(),w,h,fps)
-		renderer.window.SetMonitor(nil, x, y, w, h, fps)
 	}
 }
 
