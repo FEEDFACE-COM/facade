@@ -34,8 +34,16 @@ LDFLAGS += -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSIO
 
 
 BUILD_FLAGS ?= 
+BUILD_FLAGS +=
 BUILD_FLAGS += -v
-#BUILD_FLAGS += -tags RENDERER
+ifeq ($(BUILD_PLATFORM), linux-arm)
+  BUILD_FLAGS += "--tags RENDERER"
+endif
+
+
+foo:
+	@echo build flags: "${BUILD_FLAGS}"
+
 
 default: build 
 
@@ -108,14 +116,14 @@ proto: ${PROTOS}
 rig: touch clean
 	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go renderer.go
 	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
-	sed -i '' -e 's/^#BUILD_FLAGS += -tags RENDERER/BUILD_FLAGS += -tags RENDERER/' Makefile
+	sed -i '' -e 's/^BUILD_FLAGS +=/BUILD_FLAGS += "--tags RENDERER"/' Makefile
 	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
 	@echo "FACADE rigged for darwin-gui"
 
 unrig: touch clean
 	sed -i '' -e 's|gl "github.com/go-gl/gl/v4.1-core/gl"|gl "github.com/FEEDFACE-COM/piglet/gles2"|' gfx/*.go renderer.go
 	sed -i '' -e 's|"FEEDFACE.COM/facade/piglet"|"github.com/FEEDFACE-COM/piglet"|'  renderer.go
-	sed -i '' -e 's/^BUILD_FLAGS += -tags RENDERER/#BUILD_FLAGS += -tags RENDERER/' Makefile
+	sed -i '' -e 's/^BUILD_FLAGS += "--tags RENDERER"/BUILD_FLAGS +=/' Makefile
 	sed -i '' -e 's/^BUILD_NAME      = facade-gui/BUILD_NAME      = facade/' Makefile
 	@echo "FACADE unrigged"
 
@@ -206,7 +214,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      if [ "${BUILD_PLATFORM}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
+      if [ "${BUILD_FLAGS}" = "linux-arm" -o "${BUILD_PLATFORM}" = "linux-arm64" ]; then cat $$src | base64; fi; \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@
