@@ -8,19 +8,11 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
 	"sync"
 	"time"
-)
-
-//import (
-//	"FEEDFACE.COM/facade/piglet"
-//	gl "github.com/go-gl/gl/v4.1-core/gl"
-//}
-
-import (
-	gl "github.com/FEEDFACE-COM/piglet/gles2"
 )
 
 type Renderer struct {

@@ -4,10 +4,12 @@
 package gfx
 
 import (
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 	//    log "../log"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
+
+
 
 type Axis struct {
 	program *Program

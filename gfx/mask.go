@@ -6,8 +6,8 @@ package gfx
 import (
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	gl "github.com/go-gl/gl/v4.1-core/gl"
-)
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
+
 
 const DEBUG_MASK = false
 
