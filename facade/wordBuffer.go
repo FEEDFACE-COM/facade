@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package facade
@@ -12,7 +13,8 @@ import (
 	"sync"
 )
 
-const DEBUG_WORDBUFFER = false
+const DEBUG_WORDBUFFER = true
+const DEBUG_WORDBUFFER_DUMP = true
 
 const maxWordLength = 80 // found experimentally
 
@@ -236,6 +238,10 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 		buffer.addWordWord(text)
 	}
 
+	if DEBUG_WORDBUFFER_DUMP {
+		log.Debug("%s:\n%s", buffer.Desc(), buffer.Dump())
+	}
+
 	buffer.ScheduleRefresh()
 }
 
@@ -264,6 +270,10 @@ func (buffer *WordBuffer) deleteWord(word Word) {
 			log.Debug("%s tag delete: %s", buffer.Desc(), word.text)
 		}
 	}
+	if DEBUG_WORDBUFFER_DUMP {
+		log.Debug("%s:\n%s", buffer.Desc(), buffer.Dump())
+	}
+
 	buffer.ScheduleRefresh()
 }
 
