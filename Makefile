@@ -120,14 +120,14 @@ rig: touch clean
 	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go facade/*.go renderer.go
 	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
 	sed -i '' -e 's/^#BUILD_FLAGS += --tags RENDERER/BUILD_FLAGS += --tags RENDERER/' Makefile
-	sed -i '' -e 's/^BUILD_NAME      = facade/BUILD_NAME      = facade-gui/' Makefile
+	sed -i '' -e 's/^BUILD_NAME      = facade$$/BUILD_NAME      = facade-gui/' Makefile
 	@echo "FACADE rigged for darwin-gui"
 
 unrig: touch clean
 	sed -i '' -e 's|gl "github.com/go-gl/gl/v4.1-core/gl"|gl "github.com/FEEDFACE-COM/piglet/gles2"|' gfx/*.go facade/*.go renderer.go
 	sed -i '' -e 's|"FEEDFACE.COM/facade/piglet"|"github.com/FEEDFACE-COM/piglet"|'  renderer.go
 	sed -i '' -e 's/^BUILD_FLAGS += --tags RENDERER/#BUILD_FLAGS += --tags RENDERER/' Makefile
-	sed -i '' -e 's/^BUILD_NAME      = facade-gui/BUILD_NAME      = facade/' Makefile
+	sed -i '' -e 's/^BUILD_NAME      = facade-gui$$/BUILD_NAME      = facade/' Makefile
 	@echo "FACADE unrigged"
 
 
