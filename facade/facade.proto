@@ -3,6 +3,9 @@ syntax = "proto3";
 
 package facade;
 
+option go_package = "FEEDFACE.COM/facade/facade";
+
+
 enum Mode {
     TERM    =  0;
     LINES   =  1;
@@ -23,9 +26,9 @@ message Empty {}
 message Status {
     bool Success = 1;
     string Error = 2;
-    
+
     string Info = 3;
-} 
+}
 
 
 message RawText {
@@ -36,8 +39,8 @@ message RawText {
 
 
 message Config {
-    
-    bool SetDebug = 1;  bool Debug = 2;    
+
+    bool SetDebug = 1;  bool Debug = 2;
     bool SetMode  = 3;  Mode Mode  = 4;
 
     FontConfig Font     = 5;
@@ -49,7 +52,7 @@ message Config {
     WordConfig Words    = 15;
     TagConfig  Tags     = 16;
 
-    
+
 
 }
 
@@ -77,19 +80,19 @@ message ShaderConfig {
 
 message TermConfig {
     ShaderConfig Shader = 1;
-    GridConfig Grid     = 2;  
+    GridConfig Grid     = 2;
 }
 
 
 message LineConfig {
     ShaderConfig Shader = 1;
-    GridConfig Grid     = 2;  
+    GridConfig Grid     = 2;
     bool SetDownward = 3;     bool Downward =  4;
     bool SetSpeed    = 5;   double Speed    =  6;
     bool SetFixed    = 7;     bool Fixed    =  8;
     bool SetDrop     = 9;     bool Drop     = 10;
     bool SetSmooth   =11;     bool Smooth   = 12;
-    bool SetBuffer   =13;   uint64 Buffer   = 14;  
+    bool SetBuffer   =13;   uint64 Buffer   = 14;
 }
 
 message GridConfig {
@@ -113,9 +116,10 @@ message TagConfig {
 
 message SetConfig {
     bool SetDuration    =  1;  double Duration  =  2;
-    bool SetSlot        =  3;  uint64 Slot      =  4;
-    bool SetShuffle     =  5;  bool Shuffle     =  6;
-    bool SetFill        =  7;  string Fill      =  8;
+    bool SetWaterMark   =  3;  double Watermark =  4;
+    bool SetSlot        =  5;  uint64 Slot      =  6;
+    bool SetShuffle     =  7;  bool Shuffle     =  8;
+    bool SetFill        =  9;  string Fill      = 10;
 }
 
 

@@ -8,7 +8,7 @@ BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 
 
-PROTOS  = facade/facade.pb.go
+PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
 SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 EXTRAS  = README.md
@@ -146,8 +146,8 @@ ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
     && tar cfz ../${BUILD_PACKAGE} ${BUILD_NAME} ${EXTRAS} \
     && cd ..
 
-facade/facade.pb.go: facade/facade.proto
-	protoc -I facade $^ --go_out=plugins=grpc:facade
+${PROTOS}: facade/facade.proto
+	protoc -I facade --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative,require_unimplemented_servers=false --go_out=facade --go-grpc_out=facade facade/facade.proto
 
 font/Monaco.ttf:
 	mkdir -p font/
