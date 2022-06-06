@@ -48,6 +48,6 @@ func Clamp(x float32) float32 {
 }
 
 func Identity(x float32) float32      { return x }
-func EaseIn(x float32) float32        { return -1.0*Cos(x*PI/2.) + 1.0 } // 1, ease to 0
+func EaseIn(x float32) float32        { return -1.0*Cos(x*PI/2.) + 1.0 } // ease 0 -> fast 1
 func EaseInEaseOut(x float32) float32 { return -0.5*Cos(x*PI) + 0.5 }    // 0, ease to 0.5, ease to 1
-func EaseOut(x float32) float32       { return Cos(x*PI/2. + 3.*PI/2.) } // 0, ease to 1
+func EaseOut(x float32) float32       { return Cos(x*PI/2. + 3.*PI/2.) } // fast 0 -> ease 1
