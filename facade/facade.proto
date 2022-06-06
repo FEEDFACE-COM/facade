@@ -50,7 +50,7 @@ message Config {
     TermConfig Terminal = 13;
     LineConfig Lines    = 14;
     WordConfig Words    = 15;
-    TagConfig  Tags     = 16;
+//    TagConfig  Tags     = 16;
 
 
 
@@ -108,10 +108,10 @@ message WordConfig {
     SetConfig Set       =  2;
 }
 
-message TagConfig {
-    ShaderConfig Shader =  1;
-    SetConfig Set       =  2;
-}
+//message TagConfig {
+//    ShaderConfig Shader =  1;
+//    SetConfig Set       =  2;
+//}
 
 
 message SetConfig {

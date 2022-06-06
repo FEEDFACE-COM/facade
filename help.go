@@ -54,8 +54,8 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "%s", facade.TermDefaults.Help())
 	case facade.Mode_WORDS:
 		fmt.Fprintf(os.Stderr, "%s", facade.WordDefaults.Help())
-	case facade.Mode_TAGS:
-		fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
+	//case facade.Mode_TAGS:
+	//	fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
 	}
 
 	fmt.Fprintf(os.Stderr, "\n")
@@ -65,8 +65,8 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	var modes []string
 	modes = append(modes, strings.ToLower(facade.Mode_TERM.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_LINES.String()))
-	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	modes = append(modes, strings.ToLower(facade.Mode_WORDS.String()))
+	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
 	*/
 	fmt.Fprintf(os.Stderr, InfoAuthor())
@@ -101,8 +101,8 @@ func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "line scroller")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
-	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "word scroller")
+	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TAGS.String()), "tag cloud")
 	*/
 }

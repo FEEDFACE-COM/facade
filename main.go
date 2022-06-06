@@ -224,16 +224,17 @@ func main() {
 				config.Lines.Shader = &facade.ShaderConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
 
+
+			case facade.Mode_WORDS.String():
+				config.SetMode = true
+				config.Mode = facade.Mode_WORDS
+				config.Words = &facade.WordConfig{}
+				config.Words.Shader = &facade.ShaderConfig{}
+				config.Words.Set = &facade.SetConfig{}
+
 				/*  // TODO: implement Mode_WORDS and Mode_TAGS
 
-				case facade.Mode_WORDS.String():
-					config.SetMode = true
-					config.Mode = facade.Mode_WORDS
-					config.Words = &facade.WordConfig{}
-					config.Words.Shader = &facade.ShaderConfig{}
-					config.Words.Set = &facade.SetConfig{}
-
-				case facade.Mode_TAGS.String():
+					case facade.Mode_TAGS.String():
 					config.SetMode = true
 					config.Mode = facade.Mode_TAGS
 					config.Tags = &facade.TagConfig{}

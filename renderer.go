@@ -6,9 +6,9 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
+	"github.com/FEEDFACE-COM/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
-	"github.com/FEEDFACE-COM/piglet"
 	"os"
 	"strings"
 	"sync"
@@ -24,7 +24,7 @@ type Renderer struct {
 	terminal *facade.Grid
 	lines    *facade.Grid
 
-	tags  *facade.Set
+	//tags  *facade.Set
 	words *facade.Set
 
 	font   *gfx.Font
@@ -36,7 +36,7 @@ type Renderer struct {
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
 	wordBuffer *facade.WordBuffer
-	tagBuffer  *facade.WordBuffer
+	//tagBuffer  *facade.WordBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -132,7 +132,7 @@ func (renderer *Renderer) Init() error {
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
 	renderer.wordBuffer = facade.NewWordBuffer(renderer.refreshChan)
-	renderer.tagBuffer = facade.NewTagBuffer(renderer.refreshChan)
+	//renderer.tagBuffer = facade.NewTagBuffer(renderer.refreshChan)
 
 	renderer.terminal = facade.NewGrid(nil, renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
@@ -143,8 +143,8 @@ func (renderer *Renderer) Init() error {
 	renderer.words = facade.NewSet(renderer.wordBuffer)
 	renderer.words.Init(renderer.programService, renderer.font)
 
-	renderer.tags = facade.NewSet(renderer.tagBuffer)
-	renderer.tags.Init(renderer.programService, renderer.font)
+	//renderer.tags = facade.NewSet(renderer.tagBuffer)
+	//renderer.tags.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
 
@@ -193,7 +193,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
 					renderer.lines.ScheduleRefresh()
-					renderer.tags.ScheduleRefresh()
+					//renderer.tags.ScheduleRefresh()
 					renderer.words.ScheduleRefresh()
 
 				}
@@ -230,13 +230,13 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 
 	if cfg := config.GetWords(); cfg != nil {
 		changed = true
-		renderer.words.Configure(cfg, nil, renderer.camera, renderer.font)
+		renderer.words.Configure(cfg, renderer.camera, renderer.font)
 	}
 
-	if cfg := config.GetTags(); cfg != nil {
-		changed = true
-		renderer.tags.Configure(nil, cfg, renderer.camera, renderer.font)
-	}
+	//if cfg := config.GetTags(); cfg != nil {
+	//	changed = true
+	//	renderer.tags.Configure(nil, cfg, renderer.camera, renderer.font)
+	//}
 
 	if config.GetSetMode() {
 		changed = true
@@ -333,8 +333,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			case facade.Mode_WORDS:
 				renderer.words.ScheduleRefresh()
 
-			case facade.Mode_TAGS:
-				renderer.tags.ScheduleRefresh()
+			//case facade.Mode_TAGS:
+			//	renderer.tags.ScheduleRefresh()
 
 			}
 
@@ -354,8 +354,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		case facade.Mode_WORDS:
 			renderer.words.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
-		case facade.Mode_TAGS:
-			renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+		//case facade.Mode_TAGS:
+		//	renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
 		if renderer.debug {
@@ -467,8 +467,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessRunes(text)
 
-			case facade.Mode_TAGS:
-				renderer.tagBuffer.ProcessRunes(text)
+			//case facade.Mode_TAGS:
+			//	renderer.tagBuffer.ProcessRunes(text)
 
 			}
 			renderer.ScheduleRefresh()
@@ -482,8 +482,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.lineBuffer.ProcessSequence(seq)
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessSequence(seq)
-			case facade.Mode_TAGS:
-				renderer.tagBuffer.ProcessSequence(seq)
+			//case facade.Mode_TAGS:
+			//	renderer.tagBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
 		}
@@ -500,8 +500,8 @@ func (renderer *Renderer) InfoMode() string {
 		mode = "lines " + renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
 	case facade.Mode_WORDS:
 		mode = "words " + renderer.words.Desc() + " " + renderer.words.ShaderConfig().Desc()
-	case facade.Mode_TAGS:
-		mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
+	//case facade.Mode_TAGS:
+	//	mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
 	}
 	dbg := ""
 	if renderer.debug {
@@ -542,8 +542,8 @@ func (renderer *Renderer) printDebug() {
 			log.Info("  %s", renderer.termBuffer.Desc())
 		case facade.Mode_WORDS:
 			log.Info("  %s", renderer.wordBuffer.Desc())
-		case facade.Mode_TAGS:
-			log.Info("  %s", renderer.tagBuffer.Desc())
+		//case facade.Mode_TAGS:
+		//	log.Info("  %s", renderer.tagBuffer.Desc())
 		}
 	}
 
@@ -574,8 +574,8 @@ func (renderer *Renderer) dumpBuffer() {
 		os.Stdout.Write([]byte(renderer.lines.DumpBuffer()))
 	} else if renderer.mode == facade.Mode_WORDS {
 		os.Stdout.Write([]byte(renderer.wordBuffer.Dump()))
-	} else if renderer.mode == facade.Mode_TAGS {
-		os.Stdout.Write([]byte(renderer.tagBuffer.Dump()))
+	//} else if renderer.mode == facade.Mode_TAGS {
+	//	os.Stdout.Write([]byte(renderer.tagBuffer.Dump()))
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()
@@ -593,7 +593,7 @@ func (renderer *Renderer) Info() string {
 	ret += "\n  " + renderer.lineBuffer.Desc()
 	ret += "\n  " + renderer.termBuffer.Desc()
 	ret += "\n  " + renderer.wordBuffer.Desc()
-	ret += "\n  " + renderer.tagBuffer.Desc()
+	//ret += "\n  " + renderer.tagBuffer.Desc()
 	ret += "\n\n"
 
 	return ret

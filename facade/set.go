@@ -434,18 +434,18 @@ func (set *Set) renderMap(font *gfx.Font) error {
 	return nil
 }
 
-func (set *Set) Configure(words *WordConfig, tags *TagConfig, camera *gfx.Camera, font *gfx.Font) {
+func (set *Set) Configure(words *WordConfig, /*tags *TagConfig,*/ camera *gfx.Camera, font *gfx.Font) {
 	var shader *ShaderConfig = nil
 	var config *SetConfig = nil
 
-	if tags != nil {
-		log.Debug("%s configure %s", set.Desc(), tags.Desc())
-		shader = tags.GetShader()
-		config = tags.GetSet()
-	} else if words != nil {
+	if words != nil {
 		log.Debug("%s configure %s", set.Desc(), words.Desc())
 		shader = words.GetShader()
 		config = words.GetSet()
+	//} else if tags != nil {
+	//	log.Debug("%s configure %s", set.Desc(), tags.Desc())
+	//	shader = tags.GetShader()
+	//	config = tags.GetSet()
 	} else {
 		log.Debug("%s cannot configure", set.Desc())
 		return
