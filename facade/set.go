@@ -19,8 +19,6 @@ type Set struct {
 
 	wordBuffer *WordBuffer
 
-	aging bool
-
 	texture *gfx.Texture
 	program *gfx.Program
 	object  *gfx.Object
@@ -271,11 +269,6 @@ func (set *Set) vertices(
 
 */
 
-func (set *Set) Aging() bool     { return set.aging }
-
-func (set *Set) SetAging(aging bool) {
-	set.aging = aging
-}
 
 
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
@@ -499,7 +492,7 @@ func (set *Set) Configure(words *WordConfig, /*tags *TagConfig,*/ camera *gfx.Ca
 	}
 
 	if config.GetAging() {
-		set.SetAging(config.GetAging())
+		set.wordBuffer.SetAging(config.GetAging())
 	}
 
 	if config.GetSetFill() {
@@ -550,8 +543,8 @@ func (set *Set) Desc() string {
 	ret := "set"
 	ret += "["
 	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
-	ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
-	ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
+	//ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
+	//ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
 	ret += "]"
 	return ret
 
@@ -563,7 +556,7 @@ func (set *Set) Config() *SetConfig {
 		SetLifetime: true, Lifetime: float64(set.wordBuffer.Lifetime()),
 		SetWatermark: true, Watermark: float64(set.wordBuffer.Watermark()),
 		SetShuffle: true, Shuffle: bool(set.wordBuffer.Shuffle()),
-		SetAging: true, Aging: bool(set.Aging()),
+		SetAging: true, Aging: bool(set.wordBuffer.Aging()),
 	}
 	return ret
 

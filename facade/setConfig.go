@@ -13,7 +13,7 @@ import (
 var SetDefaults SetConfig = SetConfig{
 	Slots:     8,
 	Lifetime: 0.0,
-	Watermark: 0.8,
+	Watermark: 0.5,
 	Shuffle:  false,
 	Aging:    false,
 }

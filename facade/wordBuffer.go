@@ -45,6 +45,7 @@ type WordBuffer struct {
 	lifetime  float32
 	watermark float32
 	shuffle   bool
+	aging     bool
 
 	rem         []rune
 	refreshChan chan bool
@@ -59,6 +60,7 @@ func NewWordBuffer(refreshChan chan bool) *WordBuffer {
 		lifetime:    float32(SetDefaults.Lifetime),
 		watermark:   float32(SetDefaults.Watermark),
 		shuffle:     SetDefaults.Shuffle,
+		aging:       SetDefaults.Aging,
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
@@ -121,6 +123,7 @@ func (buffer *WordBuffer) checkWatermark()  {
 			used += 1.
 		}
 	}
+
 	if used >= allowed {
 
 		var word *Word = nil
@@ -148,7 +151,7 @@ func (buffer *WordBuffer) checkWatermark()  {
 
 			buffer.fadeoutWord(word)
 			if DEBUG_WORDBUFFER {
-				log.Debug("%s watermark exceeded, fading: %s", buffer.Desc(), word.Desc())
+				log.Debug("%s watermark exceeded, fade out: %s", buffer.Desc(), word.Desc())
 			}
 
 		} else {
@@ -235,8 +238,9 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 
 
 func (buffer *WordBuffer) fadedinWord(word *Word) {
-	word.state = WORD_ALIVE
+	gfx.WorldClock().DeleteTimer(word.timer)
 	word.timer = nil
+	word.state = WORD_ALIVE
 	lifetime := buffer.lifetime
 	if lifetime <= 0.0 {
 
@@ -246,39 +250,56 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 		buffer.fadeoutWord(word)
 
 	} else {
+		fun := func(x float32) float32 { return 1. }
+		if buffer.aging {
+			fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
+		}
 		word.timer = gfx.WorldClock().NewTimer(
 			lifetime - 2. * FadeDuration,
 			false,
-			func(x float32) float32 { return math.EaseInEaseOut(x) },
+			fun,
 			func() { buffer.fadeoutWord(word) },
 		)
-		log.Debug("%s word alife: %s",buffer.Desc(),word.Desc())
+		if DEBUG_WORDBUFFER_DUMP {
+			log.Debug("%s word alife: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+		} else if DEBUG_WORDBUFFER {
+			log.Debug("%s word alife: %s", buffer.Desc(), word.Desc())
+		}
 	}
 
 }
 
 func (buffer *WordBuffer) fadeoutWord(word *Word) {
+	var val float32 = 1.
+
+	// get most recent value
+	if word.timer != nil {
+		val = word.timer.Value()
+	}
+
+	gfx.WorldClock().DeleteTimer(word.timer)
 	word.timer = nil
 	word.state = WORD_FADEOUT
 	word.timer = gfx.WorldClock().NewTimer(
 		FadeDuration,
 		false,
-		func(x float32) float32 { return 1.- math.EaseOut(x) },
+		func(x float32) float32 { return val * (1.- math.EaseOut(x)) },
 		func() { buffer.deleteWord(word) },
 	)
-	log.Debug("%s word fade out: %s",buffer.Desc(),word.Desc())
+	if DEBUG_WORDBUFFER_DUMP {
+		log.Debug("%s word fade out: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+	} else if DEBUG_WORDBUFFER {
+		log.Debug("%s word fade out: %s", buffer.Desc(), word.Desc())
+	}
 }
 
 
 func (buffer *WordBuffer) deleteWord(word *Word) {
 	buffer.mutex.Lock()
-	old := buffer.words[word.index]
+	//old := buffer.words[word.index]
 	buffer.words[word.index] = nil
 	buffer.mutex.Unlock()
-	if old != nil {
-		old.timer = nil
-		old.state = WORD_ALIVE
-	}
+	gfx.WorldClock().DeleteTimer( word.timer )
 	if DEBUG_WORDBUFFER_DUMP {
 		log.Debug("%s word delete: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
 	} else if DEBUG_WORDBUFFER {
@@ -314,14 +335,46 @@ func (buffer *WordBuffer) Clear() {
 func (buffer *WordBuffer) Fill(fill []string) {
 
 	buffer.Clear()
+	rows := uint( len(fill) )
 
-	rows := uint(len(fill))
+	//get array of indices
+	slots := []int{}
+	for i := 0; i < buffer.slotCount; i++ {
+		idx := (buffer.nextIndex + i) % buffer.slotCount
+		slots = append(slots, idx)
+	}
 
-	for r := uint(0); r < rows; r++ {
+	if buffer.shuffle {
+		rand.Shuffle(len(slots), func(i, j int) {
+			slots[i], slots[j] = slots[j], slots[i]
+		})
+	}
 
-		buffer.addWord([]rune(fill[r]))
+	for row := 0; uint(row) < rows && row < len(slots); row++ {
+		idx := slots[row]
+		word := &Word{}
+		word.index = uint(idx)
+		word.text = fill[row]
+		word.state = WORD_ALIVE
+		if buffer.lifetime != 0. {
+			fun := func(x float32) float32 { return 1. }
+			if buffer.aging {
+				fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
+			}
+			word.timer = gfx.WorldClock().NewTimer(
+				buffer.lifetime - 1. * FadeDuration,
+				false,
+				fun,
+				func() { buffer.fadeoutWord(word) },
+			)
+		}
+		buffer.words[idx] = word
 
 	}
+
+	//if buffer.watermark != 0.0 {
+	//	buffer.checkWatermark()
+	//}
 
 }
 
@@ -352,8 +405,14 @@ func (buffer *WordBuffer) Desc() string {
 	if buffer.lifetime != 0. {
 		ret += fmt.Sprintf(" %.1fs", buffer.lifetime)
 	}
+	if buffer.shuffle || buffer.aging {
+		ret += " "
+	}
 	if buffer.shuffle {
-		ret += " ⧢"
+		ret += "⧢"
+	}
+	if buffer.aging {
+		ret += "a"
 	}
 	ret += "]"
 	return ret
@@ -407,9 +466,14 @@ func (buffer *WordBuffer) SlotCount() int    { return buffer.slotCount }
 func (buffer *WordBuffer) Lifetime() float32 { return buffer.lifetime }
 func (buffer *WordBuffer) Watermark() float32 { return buffer.watermark }
 func (buffer *WordBuffer) Shuffle() bool     { return buffer.shuffle }
+func (buffer *WordBuffer) Aging() bool     { return buffer.aging }
 
 func (buffer *WordBuffer) SetShuffle(shuffle bool) {
 	buffer.shuffle = shuffle
+}
+
+func (buffer *WordBuffer) SetAging(aging bool) {
+	buffer.aging = aging
 }
 
 func (buffer *WordBuffer) SetLifetime(lifetime float32) {
