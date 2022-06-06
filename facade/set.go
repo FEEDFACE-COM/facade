@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_SET = true
+const DEBUG_SET = false
 
 type Set struct {
 	vert, frag string

@@ -17,7 +17,7 @@ import (
 const DEBUG_WORDBUFFER = true
 const DEBUG_WORDBUFFER_DUMP = true
 
-const maxWordLength = 80 // found experimentally
+const maxWordLength = 64 // found experimentally
 
 const FadeDuration = 0.5;
 
@@ -112,11 +112,64 @@ func (buffer *WordBuffer) Words() []*Word {
 	return ret
 }
 
+func (buffer *WordBuffer) checkWatermark()  {
+	allowed := buffer.watermark * float32(buffer.slotCount)
+	used := float32(0.)
+	for i := 0; i < buffer.slotCount; i++ {
+		idx := (buffer.nextIndex + i) % buffer.slotCount
+		if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
+			used += 1.
+		}
+	}
+	if used >= allowed {
+
+		var word *Word = nil
+
+		//find next alive slot
+		alive := []int{}
+		for i := 0; i < buffer.slotCount; i++ {
+			idx := (buffer.nextIndex + i) % buffer.slotCount
+			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
+				alive = append(alive, idx)
+			}
+		}
+		if len(alive) > 0 {
+			if buffer.shuffle {
+				r := rand.Int31n(int32(len(alive)))
+				index := alive[r]
+				word = buffer.words[index]
+			} else {
+				index := alive[0]
+				word = buffer.words[index]
+			}
+		}
+
+		if word != nil {
+
+			buffer.fadeoutWord(word)
+			if DEBUG_WORDBUFFER {
+				log.Debug("%s watermark exceeded, fading: %s", buffer.Desc(), word.Desc())
+			}
+
+		} else {
+			if DEBUG_WORDBUFFER {
+				log.Debug("%s watermark exceeded, but no fadeout", buffer.Desc())
+			}
+		}
+
+	}
+}
+
+
+
+
 func (buffer *WordBuffer) addWord(raw []rune) {
 	if len(raw) <= 0 {
 		log.Debug("%s not adding empty string", buffer.Desc())
 		return
 	}
+
+
 
 	text := string(raw)
 	if len(text) > maxWordLength {
@@ -124,6 +177,10 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	}
 
 	buffer.mutex.Lock()
+
+	buffer.checkWatermark()
+
+
 	var index int = -1
 
 	//find next empty slot
@@ -171,6 +228,7 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 		log.Debug("%s word add: %s", buffer.Desc(), word.Desc())
 	}
 	buffer.mutex.Unlock()
+
 	buffer.ScheduleRefresh()
 }
 
@@ -191,7 +249,7 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 		word.timer = gfx.WorldClock().NewTimer(
 			lifetime - 2. * FadeDuration,
 			false,
-			func(x float32) float32 { return 1. },
+			func(x float32) float32 { return math.EaseInEaseOut(x) },
 			func() { buffer.fadeoutWord(word) },
 		)
 		log.Debug("%s word alife: %s",buffer.Desc(),word.Desc())
@@ -279,10 +337,23 @@ func (buffer *WordBuffer) Desc() string {
 		}
 		ret += fmt.Sprintf("%d/%d ", c, buffer.slotCount)
 	}
-	ret += fmt.Sprintf("%.1fl ", buffer.lifetime)
-	ret += fmt.Sprintf("%.1fm ", buffer.watermark)
+	{
+		slots := float32(buffer.slotCount)
+		count := float32(0.)
+		for i := 0; i < buffer.slotCount; i++ {
+			idx := (buffer.nextIndex + i) % buffer.slotCount
+			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
+				count += 1.
+			}
+		}
+		used := count / slots
+		ret += fmt.Sprintf("%.1f/%.1f", used, buffer.watermark)
+	}
+	if buffer.lifetime != 0. {
+		ret += fmt.Sprintf(" %.1fs", buffer.lifetime)
+	}
 	if buffer.shuffle {
-		ret += "⧢"
+		ret += " ⧢"
 	}
 	ret += "]"
 	return ret
@@ -290,7 +361,7 @@ func (buffer *WordBuffer) Desc() string {
 
 func (word *Word) Desc() string {
 	ret := ""
-	ret += fmt.Sprintf("#%2d ",word.index)
+	ret += fmt.Sprintf("#%02d ",word.index)
 	if word.timer != nil {
 		ret += word.timer.Desc() + " "
 	}
@@ -299,16 +370,24 @@ func (word *Word) Desc() string {
 }
 
 func (buffer *WordBuffer) Dump() string {
-	ret := ""
-	if buffer.words != nil {
-		for _, word := range buffer.words {
-			if word != nil {
-				ret += fmt.Sprintf("    %2d |  ", word.index)
-				if word.timer != nil {
-					ret += word.timer.Desc()
-				}
-				ret += fmt.Sprintf(" %s\n", word.text)
+	max := 0
+	for _, word := range buffer.words {
+		if word != nil {
+			if len(word.text) > max {
+				max = len(word.text)
 			}
+		}
+	}
+	ret := ""
+	for _, word := range buffer.words {
+		if word != nil {
+			ret += fmt.Sprintf("    %2d |  ", word.index)
+			f := fmt.Sprintf("%d",max+1)
+			ret += fmt.Sprintf("%"+f+"s", word.text)
+			if word.timer != nil {
+				ret += " " + word.timer.Desc()
+			}
+			ret += "\n"
 		}
 	}
 	return strings.TrimRight(ret,"\n")
