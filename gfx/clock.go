@@ -8,6 +8,7 @@ import (
 )
 
 const DEBUG_CLOCK = false
+const DEBUG_CLOCK_DUMP = false
 
 const ClockRate = 1.0
 const VerboseFrames = 60
@@ -171,8 +172,16 @@ func (clock *Clock) Info(prev ClockFrame) string {
 	if clock.hours > 0 {
 		h = fmt.Sprintf("%dh %.0fs", clock.hours, clock.time)
 	}
-	return fmt.Sprintf("#%05d %s %.2ffps%s", clock.frame, h, fps, s)
+	ret := fmt.Sprintf("#%05d %s %.2ffps%s", clock.frame, h, fps, s)
+	if DEBUG_CLOCK_DUMP {
+		for _,timer := range clock.timers {
+			s += "\n  " + timer.Desc()
+		}
+	}
+	return ret
 }
+
+
 
 func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, Time: clock.time} }
 

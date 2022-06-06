@@ -28,48 +28,13 @@ void main() {
     vec4 col;
     vec4 pos = vPosition;
     vec4 tex = vTexCoord;
-    
-    
-    if (0==0) {
-        vec2 TextureSize = vec2(abs(vPosition.x),abs(vPosition.y));
-//        tex.xy = vTexCoord.xy + (gl_PointCoord * TextureSize);
-        tex.xy = vTexCoord.xy + (1. * TextureSize);
-        col = texture2D(texture,tex.xy);
-    
-    } else {
-    
-        col = texture2DProj(texture, tex);
-    }
-    
-    
-    float z = 1.;
-    if (col.a > 0.0 ) {
-        if ( wordFader < .125 ) {
-            z = EaseOut(wordFader * 8.);
-        } else if (wordFader < .75 ) {
-            z = 1.0;
-        } else {
-            z = 1. - EaseOut(3./4. + wordFader * 4.);
-        }
-    }
-    
-    col.a = col.a * z;
-    
 
-    
-//    col.rgb *= col.a;
-    
+    col = texture2DProj(texture, tex);
+    col.a = wordFader;
+
     if (DEBUG) { 
-        col.rgb = vec3(0.,0.,1.);
-        if ( wordFader > .75 ) {
-            col.g = 1.;
-        } else if (wordFader > .125 ) {
-            col.r = 1.;
-        } else {
-        }
-        col.a = 1.0;
-    } 
-
+        col.rgb = vec3(1.,1.,1.);
+    }
 
     if (!gl_FrontFacing) { col.a /= 4.; }
 

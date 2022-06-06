@@ -11,27 +11,39 @@ import (
 )
 
 var SetDefaults SetConfig = SetConfig{
-	Duration: 2.0,
+	Slots:     8,
+	Lifetime: 1.0,
+	Watermark: 0.0,
 	Shuffle:  false,
-	Slot:     8,
+	Aging:    false,
 }
 
 func (config *SetConfig) Desc() string {
 	ret := "set["
 
-	dok := config.GetSetDuration()
-	if dok {
-		ret += fmt.Sprintf("%.1f ", config.GetDuration())
+	sok := config.GetSetSlots()
+	if sok {
+		ret += fmt.Sprintf("#%d ", config.GetSlots())
 	}
 
-	sok := config.GetSetSlot()
-	if sok {
-		ret += fmt.Sprintf("%d ", config.GetSlot())
+	lok := config.GetSetLifetime()
+	if lok {
+		ret += fmt.Sprintf("%.1fl ", config.GetLifetime())
+	}
+
+	wok := config.GetSetWatermark()
+	if wok {
+		ret += fmt.Sprintf("%.1fm ", config.GetWatermark())
 	}
 
 	uok := config.GetShuffle()
 	if uok {
 		ret += "⧢ "
+	}
+
+	aok := config.GetAging()
+	if aok {
+		ret += "a "
 	}
 
 	ret = strings.TrimRight(ret, " ")
@@ -40,24 +52,32 @@ func (config *SetConfig) Desc() string {
 }
 
 func (config *SetConfig) AddFlags(flagset *flag.FlagSet) {
-	flagset.Float64Var(&config.Duration, "life", SetDefaults.Duration, "word lifetime")
-	flagset.Uint64Var(&config.Slot, "slot", SetDefaults.Slot, "word count")
-	flagset.BoolVar(&config.Shuffle, "shuffle", SetDefaults.Shuffle, "word shuffle?")
-	flagset.StringVar(&config.Fill, "fill", SetDefaults.Fill, "word fill pattern")
+	flagset.Float64Var(&config.Lifetime, "life", SetDefaults.Lifetime, "word lifetime")
+	flagset.Float64Var(&config.Watermark, "mark", SetDefaults.Watermark, "clear watermark")
+	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
+	flagset.BoolVar(&config.Shuffle, "shuffle", SetDefaults.Shuffle, "shuffle words?")
+	flagset.BoolVar(&config.Aging, "aging", SetDefaults.Aging, "age words?")
+	flagset.StringVar(&config.Fill, "fill", SetDefaults.Fill, "fill pattern")
 }
 
 func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
-		case "life":
-			config.SetDuration = true
+		case "n":
+			config.SetSlots = true
 			ret = true
-		case "slot":
-			config.SetSlot = true
+		case "life":
+			config.SetLifetime = true
+			ret = true
+		case "mark":
+			config.SetWatermark = true
 			ret = true
 		case "shuffle":
 			config.SetShuffle = true
+			ret = true
+		case "aging":
+			config.SetAging = true
 			ret = true
 		case "fill":
 			config.SetFill = true
@@ -72,7 +92,7 @@ func (config *SetConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("set", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"life", "slot", "shuffle", "fill"} {
+	for _, s := range []string{"n", "life", "mark", "shuffle", "aging", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

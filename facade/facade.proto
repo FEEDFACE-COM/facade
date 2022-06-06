@@ -108,18 +108,14 @@ message WordConfig {
     SetConfig Set       =  2;
 }
 
-//message TagConfig {
-//    ShaderConfig Shader =  1;
-//    SetConfig Set       =  2;
-//}
-
 
 message SetConfig {
-    bool SetDuration    =  1;  double Duration  =  2;
-    bool SetWaterMark   =  3;  double Watermark =  4;
-    bool SetSlot        =  5;  uint64 Slot      =  6;
+    bool SetLifetime    =  1;  double Lifetime  =  2;
+    bool SetWatermark   =  3;  double Watermark =  4;
+    bool SetSlots       =  5;  uint64 Slots     =  6;
     bool SetShuffle     =  7;  bool Shuffle     =  8;
-    bool SetFill        =  9;  string Fill      = 10;
+    bool SetAging       =  9;  bool Aging       = 10;
+    bool SetFill        = 11;  string Fill      = 12;
 }
 
 

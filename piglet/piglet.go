@@ -16,6 +16,8 @@ import (
 	go get -u -tags=gles3 github.com/go-gl/glfw/v3.3/glfw
 */
 
+const DEBUG_PIGLET = false
+
 var monitor *glfw.Monitor
 var window *glfw.Window
 var vidmode *glfw.VidMode
@@ -26,23 +28,28 @@ const MONITOR_WIDTH, MONITOR_HEIGHT = 1728, 1117
 
 // Create a new EGL rendering context
 func CreateContext() error {
-	log.Debug("%s init", Desc())
+	if DEBUG_PIGLET {
+		log.Debug("%s init", Desc())
+	}
 
 	var err error = glfw.Init()
 	if err != nil {
-		log.Debug("fail to glfw init: %s", err)
+		if DEBUG_PIGLET {
+			log.Debug("fail to glfw init: %s", err)
+		}
 		return log.NewError("fail to initialize renderer: %s", err)
 	}
 	monitor = glfw.GetPrimaryMonitor()
 	vidmode = monitor.GetVideoMode()
-	log.Debug("%s mode %dx%d @%d fps", Desc(), vidmode.Width, vidmode.Height, vidmode.RefreshRate)
-	//{
-	//	for _, mode := range monitor.GetVideoModes() {
-	//		w, h, fps := mode.Width, mode.Height, mode.RefreshRate
-	//		log.Debug("%s mode %dx%d @%d fps", Desc(), w, h, fps)
-	//	}
-	//}
-
+	if DEBUG_PIGLET {
+		log.Debug("%s mode %dx%d @%d fps", Desc(), vidmode.Width, vidmode.Height, vidmode.RefreshRate)
+		//{
+		//	for _, mode := range monitor.GetVideoModes() {
+		//		w, h, fps := mode.Width, mode.Height, mode.RefreshRate
+		//		log.Debug("%s mode %dx%d @%d fps", Desc(), w, h, fps)
+		//	}
+		//}
+	}
 	window, err = glfw.CreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "FACADE by FEEDFACE.COM", nil, nil)
 	if err != nil {
 		glfw.Terminate()
@@ -60,6 +67,10 @@ func CreateContext() error {
 	//window.SetRefreshCallback( func(win *glfw.Window) { renderer.RefreshFun() } )
 
 	window.MakeContextCurrent()
+
+    // REM, remove:	
+	window.SetPos(0,0)
+	
 	return nil
 }
 
@@ -101,7 +112,9 @@ func GetProcAddress(name string) unsafe.Pointer {
 
 // Destroy an EGL rendering context
 func DestroyContext() error {
-	log.Debug("%s terminate", Desc())
+	if DEBUG_PIGLET {
+		log.Debug("%s terminate", Desc())
+	}
 	glfw.Terminate()
 	return nil
 }
@@ -148,7 +161,7 @@ func KeyFun(key glfw.Key, action glfw.Action, mod glfw.ModifierKey) {
 		window.SetShouldClose(true)
 		return
 	}
-
-	log.Debug("%s key 0x%02x action %d mod %x", Desc(), key, action, mod)
-
+	if DEBUG_PIGLET {
+		log.Debug("%s key 0x%02x action %d mod %x", Desc(), key, action, mod)
+	}
 }

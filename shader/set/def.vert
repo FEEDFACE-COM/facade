@@ -48,17 +48,50 @@ void main() {
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
 
-    bool odd = mod(wordIndex,2.0) == 1.0;
-    
-    if (odd) {
-        pos.x += wordWidth/2.;
-    } else {
-        pos.x -= wordWidth/2.;
-    }
-    pos.y -= (wordIndex - wordCount/2.)/2.;
-    
+//    float ratio = wordIndex/wordCount;
+//    
+//    float MAX_WORD_LENGTH = 12;
+//    float ratio_width = wordLength / MAX_WORD_LENGTH;
+//
+//    pos.y += wordIndex/2. - wordCount/4.;    
+//    
+//    if (wordIndex >= wordCount/2.) {
+//        pos.x += 3.;
+//    } else {
+//        pos.x -= 3.;
+//    }
+//
+//
+//    if (wordIndex >= wordCount/2.) {
+//        pos.y += wordIndex-wordCount/2.;
+//    }
 
-        
+
+//    pos.z += wordIndex;
+
+
+    float WORD_LENGTH_MAX = 16.0;
+    
+    float rows = 8.0; // standard size
+    float cols = 2.0;
+
+    float row = mod(wordIndex, rows/cols);
+    float col = 0.0;
+    if (wordIndex >= wordCount/2.) {
+        col = 1.0;
+    }
+
+    pos.y += 3.;
+    pos.x += wordWidth/2.;
+    pos.x -= 4. * screenRatio;
+
+
+    pos.x += col * 4. * screenRatio;
+
+    pos.y -= row * (rows/ (wordCount/cols));
+
+
+ 
     gl_Position = projection * view * model * pos;
 }
 

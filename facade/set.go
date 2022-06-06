@@ -12,16 +12,14 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_SET = false
+const DEBUG_SET = true
 
 type Set struct {
 	vert, frag string
 
-	//    textures map[string] *gfx.Texture
-	words  []Word
-	widths []float32
-
 	wordBuffer *WordBuffer
+
+	aging bool
 
 	texture *gfx.Texture
 	program *gfx.Program
@@ -80,20 +78,13 @@ func NewSet(buffer *WordBuffer) *Set {
 	ret.vert = ShaderDefaults.GetVert()
 	ret.frag = ShaderDefaults.GetFrag()
 
-	ret.words = []Word{}
-	ret.widths = []float32{}
-	//    ret.textures = make( map[string] *gfx.Texture, ret.wordBuffer.SlotCount() )
-
 	ret.refreshChan = make(chan bool, 1)
 	return ret
 }
 
 func (set *Set) generateData(font *gfx.Font) {
-	//    old := set.textures
-	//
-	//    set.textures = make( map[string] *gfx.Texture, set.wordBuffer.SlotCount())
-	set.words = set.wordBuffer.Words()
-	set.widths = make([]float32, len(set.words))
+	words := set.wordBuffer.Words()
+
 
 	//    //generate textures
 	//    for _,word := range set.words {
@@ -159,7 +150,7 @@ func (set *Set) generateData(font *gfx.Font) {
 	set.data = []float32{}
 
 	charCount := 0
-	for i, word := range set.words {
+	for _, word := range words {
 
 		width := float32(0.)
 		for _, run := range word.text {
@@ -168,13 +159,13 @@ func (set *Set) generateData(font *gfx.Font) {
 			width += glyphSize.W / glyphSize.H
 			charCount += 1
 		}
-		set.widths[i] = width
-		set.data = append(set.data, set.vertices(word, font, width)...)
+		word.width = width
+		set.data = append(set.data, set.vertices(*word, font, width)...)
 	}
 
 	set.object.BufferData(len(set.data)*4, set.data)
 	if DEBUG_SET {
-		log.Debug("%s generated words:%d chars:%d floats:%d", set.Desc(), len(set.words), charCount, len(set.data))
+		log.Debug("%s generated words:%d chars:%d floats:%d", set.Desc(), len(words), charCount, len(set.data))
 	}
 
 }
@@ -280,6 +271,13 @@ func (set *Set) vertices(
 
 */
 
+func (set *Set) Aging() bool     { return set.aging }
+
+func (set *Set) SetAging(aging bool) {
+	set.aging = aging
+}
+
+
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
 
 	scaleHeight := float32(1.) / float32(set.wordBuffer.SlotCount())
@@ -329,7 +327,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	count := int32(1)
 	offset := int32(0)
 
-	for i, word := range set.words {
+	words := set.wordBuffer.Words()
+
+	for _, word := range words {
 
 		text := word.text
 
@@ -351,12 +351,16 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
 		count = int32(utf8.RuneCountInString(word.text))
 
-		var timer float32
-		timer = word.timer.Edge(gfx.Now())
+		var timer float32 = 1.0
+		if word.timer != nil {
+			timer = word.timer.Edge(gfx.Now())
+		}
 		set.program.Uniform1fv(WORDTIMER, 1, &timer)
 
-		var fader float32
-		fader = word.timer.Fader()
+		var fader float32 = 1.0
+		if word.timer != nil {
+			fader = word.timer.Value()
+		}
 		set.program.Uniform1fv(WORDFADER, 1, &fader)
 
 		var index float32
@@ -367,7 +371,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		set.program.Uniform1fv(WORDVALUE, 1, &wordValue)
 
 		var width float32
-		width = set.widths[i]
+		width = word.width
 		set.program.Uniform1fv(WORDWIDTH, 1, &width)
 
 		var charCount float32
@@ -478,23 +482,29 @@ func (set *Set) Configure(words *WordConfig, /*tags *TagConfig,*/ camera *gfx.Ca
 		}
 	}
 
-	if config.GetSetDuration() {
-		set.wordBuffer.SetDuration(float32(config.GetDuration()))
+	if config.GetSetSlots() {
+		set.wordBuffer.Resize(int(config.GetSlots()))
 	}
 
-	if config.GetSetSlot() {
-		set.wordBuffer.Resize(int(config.GetSlot()))
+	if config.GetSetLifetime() {
+		set.wordBuffer.SetLifetime(float32(config.GetLifetime()))
+	}
+
+	if config.GetSetWatermark() {
+		set.wordBuffer.SetWatermark(float32(config.GetWatermark()))
 	}
 
 	if config.GetShuffle() {
 		set.wordBuffer.SetShuffle(config.GetShuffle())
 	}
 
+	if config.GetAging() {
+		set.SetAging(config.GetAging())
+	}
+
 	if config.GetSetFill() {
 		fillStr := set.fill(config.GetFill())
-		if set.wordBuffer != nil {
-			set.wordBuffer.Fill(fillStr)
-		}
+		set.wordBuffer.Fill(fillStr)
 	}
 
 	set.ScheduleRefresh()
@@ -503,14 +513,14 @@ func (set *Set) Configure(words *WordConfig, /*tags *TagConfig,*/ camera *gfx.Ca
 
 func (set *Set) fill(name string) []string {
 	switch name {
-	case "nato":
+	case "alpha":
 		return strings.Split(`
 alpha
 bravo
 charlie
 delta
 echo
-foxtrott
+foxtrot
 golf
 hotel
 india
@@ -540,7 +550,8 @@ func (set *Set) Desc() string {
 	ret := "set"
 	ret += "["
 	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
-	ret += fmt.Sprintf(" %.1f", set.wordBuffer.Duration())
+	ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
+	ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
 	ret += "]"
 	return ret
 
@@ -548,9 +559,11 @@ func (set *Set) Desc() string {
 
 func (set *Set) Config() *SetConfig {
 	ret := &SetConfig{
-		SetDuration: true, Duration: float64(set.wordBuffer.Duration()),
-		SetSlot: true, Slot: uint64(set.wordBuffer.SlotCount()),
+		SetSlots: true, Slots: uint64(set.wordBuffer.SlotCount()),
+		SetLifetime: true, Lifetime: float64(set.wordBuffer.Lifetime()),
+		SetWatermark: true, Watermark: float64(set.wordBuffer.Watermark()),
 		SetShuffle: true, Shuffle: bool(set.wordBuffer.Shuffle()),
+		SetAging: true, Aging: bool(set.Aging()),
 	}
 	return ret
 

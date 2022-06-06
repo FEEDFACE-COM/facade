@@ -133,7 +133,7 @@ func (timer *Timer) Desc() string {
 		ret += fmt.Sprintf(" #%d", timer.count)
 	}
 	if timer.bias == 0.0 {
-		ret += fmt.Sprintf(" →%3.1f    ", timer.fader)
+		ret += fmt.Sprintf(" →%3.1f", timer.fader)
 	} else {
 		ret += fmt.Sprintf(" →%3.1f+%3.1f", (1.-timer.bias)*timer.fader, timer.bias)
 	}
