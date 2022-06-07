@@ -19,6 +19,7 @@ type Set struct {
 	vert, frag string
 
 	wordBuffer *WordBuffer
+	maxLength float32
 
 	texture *gfx.Texture
 	program *gfx.Program
@@ -30,13 +31,10 @@ type Set struct {
 
 const (
 	WORDCOUNT gfx.UniformName = "wordCount"
+	WORDMAXWD gfx.UniformName = "wordMaxWidth"
 	WORDINDEX gfx.UniformName = "wordIndex"
-	WORDVALUE gfx.UniformName = "wordValue"
 	WORDWIDTH gfx.UniformName = "wordWidth"
-	WORDTIMER gfx.UniformName = "wordTimer"
 	WORDFADER gfx.UniformName = "wordFader"
-
-	CHARCOUNT gfx.UniformName = "charCount"
 )
 
 const (
@@ -295,6 +293,16 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	wordCount := float32(set.wordBuffer.SlotCount())
 	set.program.Uniform1fv(WORDCOUNT, 1, &wordCount)
 
+	wordMaxWidth := float32( set.maxLength );
+	if wordMaxWidth == 0.0 {
+		for _,word := range set.wordBuffer.words {
+			if word != nil && word.width > wordMaxWidth {
+				wordMaxWidth = word.width
+			}
+		}
+	}
+	set.program.Uniform1fv(WORDMAXWD, 1, &wordMaxWidth);
+
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 
@@ -343,12 +351,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
 		count = int32(utf8.RuneCountInString(word.text))
 
-		var timer float32 = 1.0
-		if word.timer != nil {
-			timer = word.timer.Edge(gfx.Now())
-		}
-		set.program.Uniform1fv(WORDTIMER, 1, &timer)
-
 		var fader float32 = 1.0
 		if word.timer != nil {
 			fader = word.timer.Value()
@@ -359,16 +361,10 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		index = float32(word.index)
 		set.program.Uniform1fv(WORDINDEX, 1, &index)
 
-		wordValue := float32(word.count)
-		set.program.Uniform1fv(WORDVALUE, 1, &wordValue)
-
 		var width float32
 		width = word.width
 		set.program.Uniform1fv(WORDWIDTH, 1, &width)
 
-		var charCount float32
-		charCount = float32(count)
-		set.program.Uniform1fv(CHARCOUNT, 1, &charCount)
 
 		if DEBUG_SET && verbose {
 			log.Debug("%s render #%.0f width:%.1f fader:%.1f", set.Desc(), index, width, fader)
@@ -430,6 +426,10 @@ func (set *Set) renderMap(font *gfx.Font) error {
 	return nil
 }
 
+func (set *Set) SetMaxWidth(maxWidth float32) {
+	set.maxLength = maxWidth
+}
+
 func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font) {
 	var shader *ShaderConfig = nil
 	var config *SetConfig = nil
@@ -481,6 +481,10 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 		set.wordBuffer.SetShuffle(config.GetShuffle())
 	}
 
+	if config.GetSetMaxWidth() {
+		set.SetMaxWidth( config.GetMaxWidth() )
+	}
+
 	if config.GetSetAging() {
 		set.wordBuffer.SetAging(config.GetAging())
 	}
@@ -499,12 +503,11 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 func (set *Set) fill(name string) []string {
 	switch name {
 	case "index":
-		WORD_LENGTH_MAX := 8
 		ret := []string{}
 		for i := 0; i < set.wordBuffer.slotCount; i++ {
 			s := ""
-			for j := 0; j < WORD_LENGTH_MAX; j++ {
-				s += fmt.Sprintf("%d", i%10)
+			for j := 0; j < int(set.maxLength); j++ {
+				s += fmt.Sprintf("%1x", i%0x10)
 			}
 			ret = append(ret, s)
 		}
@@ -546,6 +549,7 @@ func (set *Set) Desc() string {
 	ret := "set"
 	ret += "["
 	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
+	ret += fmt.Sprintf(" ≤%.0f",set.maxLength)
 	//ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
 	//ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
 	ret += "]"

@@ -12,6 +12,7 @@ import (
 
 var SetDefaults SetConfig = SetConfig{
 	Slots:     8,
+	MaxWidth:  0,
 	Lifetime:  0.0,
 	Watermark: 0.5,
 	Shuffle:   false,
@@ -26,6 +27,11 @@ func (config *SetConfig) Desc() string {
 		ret += fmt.Sprintf("#%d ", config.GetSlots())
 	}
 
+	mok := config.GetSetMaxWidth()
+	if mok {
+		ret += fmt.Sprintf("≤%d ", config.GetMaxWidth())
+	}
+
 	lok := config.GetSetLifetime()
 	if lok {
 		ret += fmt.Sprintf("%.1fl ", config.GetLifetime())
@@ -38,6 +44,7 @@ func (config *SetConfig) Desc() string {
 
 	uok := config.GetSetShuffle()
 	if uok {
+		ret += " "
 		if config.GetShuffle() {
 			ret += "+"
 		} else {
@@ -48,6 +55,7 @@ func (config *SetConfig) Desc() string {
 
 	aok := config.GetSetAging()
 	if aok {
+		ret += " "
 		if config.GetAging() {
 			ret += "+"
 		} else {
@@ -57,7 +65,7 @@ func (config *SetConfig) Desc() string {
 	}
 
 	if config.GetSetFill() {
-		ret += "f[" + config.GetFill() + "] "
+		ret += " f" + config.GetFill()
 	}
 
 	ret = strings.TrimRight(ret, " ")
@@ -68,6 +76,7 @@ func (config *SetConfig) Desc() string {
 func (config *SetConfig) AddFlags(flagset *flag.FlagSet) {
 	patterns := "alpha,index,clear"
 	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
+	flagset.Uint64Var(&config.MaxWidth, "m", SetDefaults.MaxWidth, "word max length")
 	flagset.Float64Var(&config.Lifetime, "life", SetDefaults.Lifetime, "word lifetime")
 	flagset.Float64Var(&config.Watermark, "mark", SetDefaults.Watermark, "clear watermark")
 	flagset.BoolVar(&config.Shuffle, "shuffle", SetDefaults.Shuffle, "shuffle words?")
@@ -81,6 +90,9 @@ func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		switch flg.Name {
 		case "n":
 			config.SetSlots = true
+			ret = true
+		case "m":
+			config.SetMaxWidth = true
 			ret = true
 		case "life":
 			config.SetLifetime = true
@@ -107,7 +119,7 @@ func (config *SetConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("set", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"n", "life", "mark", "shuffle", "aging", "fill"} {
+	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "aging", "fill"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

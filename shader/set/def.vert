@@ -8,6 +8,7 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
+uniform float wordMaxWidth;
 uniform float wordIndex;
 
 uniform float wordWidth;
@@ -17,6 +18,7 @@ uniform float wordValue;
 uniform float charCount;
 
 uniform float screenRatio;
+uniform float fontRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
@@ -48,49 +50,52 @@ void main() {
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
 
-//    float ratio = wordIndex/wordCount;
-//    
-//    float MAX_WORD_LENGTH = 12;
-//    float ratio_width = wordLength / MAX_WORD_LENGTH;
-//
-//    pos.y += wordIndex/2. - wordCount/4.;    
-//    
-//    if (wordIndex >= wordCount/2.) {
-//        pos.x += 3.;
-//    } else {
-//        pos.x -= 3.;
-//    }
-//
-//
-//    if (wordIndex >= wordCount/2.) {
-//        pos.y += wordIndex-wordCount/2.;
-//    }
 
-
-//    pos.z += wordIndex;
-
-
-    float WORD_LENGTH_MAX = 16.0;
-    
-    float rows = 8.0; // standard size
-    float cols = 2.0;
-
-    float row = mod(wordIndex, rows/cols);
-    float col = 0.0;
-    if (wordIndex >= wordCount/2.) {
-        col = 1.0;
-    }
-
-    pos.y += 3.;
+    pos.y += 0.5;
     pos.x += wordWidth/2.;
-    pos.x -= 4. * screenRatio;
+    
+
+    float rows,cols;
+    float slots = wordCount;
 
 
-    pos.x += col * 4. * screenRatio;
+    float WIDTH_MAX = wordMaxWidth;
+    float SPACER = 0.;
+    float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
+    
+    
 
-    pos.y -= row * (rows/ (wordCount/cols));
+    cols = ceil( log(slots) );
+    rows = ceil(slots/cols);
 
 
+    float col = mod(wordIndex,cols);  
+    float row = (wordIndex-col)/cols;
+    row = rows - row - 1.; // switch top-down
+
+    pos.x += col * (WIDTH_MAX+SPACER) * fontRatio;
+    pos.y += row;
+
+
+    pos.x -= (cols/2.) * (WIDTH_MAX+SPACER) * fontRatio;// * screenRatio;
+    pos.y -= (rows/2.);
+
+
+    float zoom = 1.0;
+    {
+        float zr = 2./rows;
+        float zc = 2./(cols * colWidth) * screenRatio;
+        zoom = min(zr,zc);
+    }
+    pos.x *= zoom;
+    pos.y *= zoom;
+    
+    
+//    pos.x -= screenRatio;
+//    pos.y -= 1.;
+    
+    
+    
  
     gl_Position = projection * view * model * pos;
 }

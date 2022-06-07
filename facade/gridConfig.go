@@ -35,7 +35,7 @@ func (config *GridConfig) Desc() string {
 	}
 
 	if config.GetSetFill() {
-		ret += "f[" + config.GetFill() + "] "
+		ret += "f" + config.GetFill() + " "
 	}
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"

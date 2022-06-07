@@ -113,9 +113,10 @@ message SetConfig {
     bool SetLifetime    =  1;  double Lifetime  =  2;
     bool SetWatermark   =  3;  double Watermark =  4;
     bool SetSlots       =  5;  uint64 Slots     =  6;
-    bool SetShuffle     =  7;  bool Shuffle     =  8;
-    bool SetAging       =  9;  bool Aging       = 10;
-    bool SetFill        = 11;  string Fill      = 12;
+    bool SetMaxWidth    =  7;  uint64 MaxWidth  =  8;
+    bool SetShuffle     =  9;  bool Shuffle     = 10;
+    bool SetAging       = 11;  bool Aging       = 12;
+    bool SetFill        = 13;  string Fill      = 14;
 }
 
 

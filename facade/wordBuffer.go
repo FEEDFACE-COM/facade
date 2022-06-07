@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 const DEBUG_WORDBUFFER = true
@@ -22,7 +23,6 @@ const maxWordLength = 64 // found experimentally
 const FadeDuration = 0.5
 
 type WordState string
-
 const (
 	WORD_FADEIN  WordState = "fadein"
 	WORD_ALIVE   WordState = "alive"
@@ -345,6 +345,7 @@ func (buffer *WordBuffer) Fill(fill []string) {
 		word := &Word{}
 		word.index = uint(idx)
 		word.text = fill[row]
+		word.width = float32( utf8.RuneCountInString( word.text ) )
 		word.state = WORD_ALIVE
 		if buffer.lifetime != 0. {
 			fun := func(x float32) float32 { return 1. }
@@ -496,17 +497,21 @@ func (buffer *WordBuffer) Resize(slotCount int) {
 			old = append(old, w)
 		}
 	}
-	buffer.words = make([]*Word, slotCount)
-	buffer.mutex.Unlock()
 
-	buffer.mutex.Lock()
+	buffer.words = make([]*Word, slotCount)
 	buffer.slotCount = slotCount
 	buffer.nextIndex = buffer.nextIndex % buffer.slotCount
-	buffer.mutex.Unlock()
 
 	for _, word := range old {
+		if word.index < uint(buffer.slotCount) {
+		buffer.words[ word.index ] = word
+	} else{
 		gfx.WorldClock().DeleteTimer(word.timer)
 	}
+	}
+
+	buffer.mutex.Unlock()
+
 
 	if DEBUG_WORDBUFFER {
 		log.Debug("%s resize %d", buffer.Desc(), slotCount)
