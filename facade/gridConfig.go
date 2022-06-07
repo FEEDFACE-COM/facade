@@ -35,7 +35,7 @@ func (config *GridConfig) Desc() string {
 	}
 
 	if config.GetSetFill() {
-		ret += config.GetFill() + " "
+		ret += "f[" + config.GetFill() + "] "
 	}
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
@@ -43,10 +43,10 @@ func (config *GridConfig) Desc() string {
 }
 
 func (config *GridConfig) AddFlags(flagset *flag.FlagSet) {
-	patterns := " (" + availableFillPatterns() + ")"
+	patterns := "title,grid,alpha,clear"
 	flagset.Uint64Var(&config.Width, "w", GridDefaults.Width, "grid width")
 	flagset.Uint64Var(&config.Height, "h", GridDefaults.Height, "grid height")
-	flagset.StringVar(&config.Fill, "fill", GridDefaults.Fill, "grid fill pattern"+patterns)
+	flagset.StringVar(&config.Fill, "fill", GridDefaults.Fill, "fill pattern ("+patterns+")")
 
 }
 
@@ -109,17 +109,5 @@ func (config *GridConfig) Help() string {
 			ret += gfx.FlagHelp(flg)
 		}
 	}
-	return ret
-}
-
-var fillPatterns = [...]string{"title", "grid", "alpha", "clear"}
-
-func availableFillPatterns() string {
-	ret := ""
-	for _, name := range fillPatterns {
-		ret += name
-		ret += ", "
-	}
-	ret = strings.TrimSuffix(ret, ", ")
 	return ret
 }

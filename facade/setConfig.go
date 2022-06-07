@@ -12,10 +12,10 @@ import (
 
 var SetDefaults SetConfig = SetConfig{
 	Slots:     8,
-	Lifetime: 0.0,
+	Lifetime:  0.0,
 	Watermark: 0.5,
-	Shuffle:  false,
-	Aging:    false,
+	Shuffle:   false,
+	Aging:     false,
 }
 
 func (config *SetConfig) Desc() string {
@@ -43,7 +43,7 @@ func (config *SetConfig) Desc() string {
 		} else {
 			ret += "-"
 		}
-			ret += "⧢"
+		ret += "⧢"
 	}
 
 	aok := config.GetSetAging()
@@ -56,18 +56,23 @@ func (config *SetConfig) Desc() string {
 		ret += "a"
 	}
 
+	if config.GetSetFill() {
+		ret += "f[" + config.GetFill() + "] "
+	}
+
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
 func (config *SetConfig) AddFlags(flagset *flag.FlagSet) {
+	patterns := "alpha,index,clear"
+	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
 	flagset.Float64Var(&config.Lifetime, "life", SetDefaults.Lifetime, "word lifetime")
 	flagset.Float64Var(&config.Watermark, "mark", SetDefaults.Watermark, "clear watermark")
-	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
 	flagset.BoolVar(&config.Shuffle, "shuffle", SetDefaults.Shuffle, "shuffle words?")
 	flagset.BoolVar(&config.Aging, "aging", SetDefaults.Aging, "age words?")
-	flagset.StringVar(&config.Fill, "fill", SetDefaults.Fill, "fill pattern")
+	flagset.StringVar(&config.Fill, "fill", SetDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
