@@ -1,3 +1,4 @@
+//go:build RENDERER && darwin
 // +build RENDERER,darwin
 
 package piglet
@@ -57,7 +58,8 @@ func CreateContext() error {
 	}
 
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	window.SetAspectRatio(WINDOW_WIDTH, WINDOW_HEIGHT)
 	window.SetSizeLimits(WINDOW_WIDTH/2., WINDOW_WIDTH/2., gl.DONT_CARE, gl.DONT_CARE)
@@ -68,9 +70,9 @@ func CreateContext() error {
 
 	window.MakeContextCurrent()
 
-    // REM, remove:	
-	window.SetPos(0,0)
-	
+	// REM, remove:
+	window.SetPos(0, 0)
+
 	return nil
 }
 
