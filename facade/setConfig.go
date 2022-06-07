@@ -36,14 +36,24 @@ func (config *SetConfig) Desc() string {
 		ret += fmt.Sprintf("%.1fm ", config.GetWatermark())
 	}
 
-	uok := config.GetShuffle()
+	uok := config.GetSetShuffle()
 	if uok {
-		ret += "⧢ "
+		if config.GetShuffle() {
+			ret += "+"
+		} else {
+			ret += "-"
+		}
+			ret += "⧢"
 	}
 
-	aok := config.GetAging()
+	aok := config.GetSetAging()
 	if aok {
-		ret += "a "
+		if config.GetAging() {
+			ret += "+"
+		} else {
+			ret += "-"
+		}
+		ret += "a"
 	}
 
 	ret = strings.TrimRight(ret, " ")

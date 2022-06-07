@@ -482,7 +482,7 @@ func (buffer *WordBuffer) SetLifetime(lifetime float32) {
 		for _, word := range buffer.words {
 			if word != nil {
 				if word.state == WORD_ALIVE {
-					word.timer.SetDuration(lifetime)
+//					word.timer.SetDuration(lifetime)
 				}
 			}
 		}
