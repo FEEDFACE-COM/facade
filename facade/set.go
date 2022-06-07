@@ -482,7 +482,7 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 	}
 
 	if config.GetSetMaxWidth() {
-		set.SetMaxWidth( config.GetMaxWidth() )
+		set.SetMaxWidth( float32(config.GetMaxWidth()) )
 	}
 
 	if config.GetSetAging() {
