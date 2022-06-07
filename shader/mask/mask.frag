@@ -38,9 +38,9 @@ void main() {
 
     a = mask(vec2(pos.x/screenRatio,pos.y));
 
-    if (DEBUG) {
-        col.rgb =  vec3(  1. - mask(vec2(pos.x/screenRatio,pos.y)) );
-    }
+//    if (DEBUG) {
+//        col.rgb =  vec3(  1. - mask(vec2(pos.x/screenRatio,pos.y)) );
+//    }
     
     
     gl_FragColor = vec4(col.rgb, a);

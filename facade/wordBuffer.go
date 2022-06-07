@@ -16,7 +16,7 @@ import (
 )
 
 const DEBUG_WORDBUFFER = true
-const DEBUG_WORDBUFFER_DUMP = true
+const DEBUG_WORDBUFFER_DUMP = false
 
 const maxWordLength = 64 // found experimentally
 
@@ -31,11 +31,11 @@ const (
 
 type Word struct {
 	text  string
-	count uint
 	index uint
 	width float32
 	state WordState
 	timer *gfx.Timer
+	fader *gfx.Timer
 }
 
 type WordBuffer struct {
@@ -208,13 +208,20 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	word.index = uint(index)
 	word.text = text
 	word.state = WORD_FADEIN
-	word.timer = gfx.WorldClock().NewTimer(
+	word.fader = gfx.WorldClock().NewTimer(
 		FadeDuration,
 		false,
 		func(x float32) float32 { return math.EaseIn(x) },
 		func() { buffer.fadedinWord(word) },
 	)
-
+	if buffer.lifetime > 0.0 {
+		word.timer = gfx.WorldClock().NewTimer(
+			buffer.lifetime,
+			false,
+			func(x float32) float32 { return x },
+			nil,
+		)
+	}
 	buffer.words[index] = word
 	buffer.nextIndex = (index + 1) % buffer.slotCount
 	if DEBUG_WORDBUFFER_DUMP {
@@ -229,8 +236,8 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 }
 
 func (buffer *WordBuffer) fadedinWord(word *Word) {
-	gfx.WorldClock().DeleteTimer(word.timer)
-	word.timer = nil
+	gfx.WorldClock().DeleteTimer(word.fader)
+	word.fader = nil
 	word.state = WORD_ALIVE
 	lifetime := buffer.lifetime
 	if lifetime <= 0.0 {
@@ -240,14 +247,15 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 		buffer.fadeoutWord(word)
 
 	} else {
-		fun := func(x float32) float32 { return 1. }
-		if buffer.aging {
-			fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
-		}
-		word.timer = gfx.WorldClock().NewTimer(
-			lifetime-2.*FadeDuration,
+		//fun := func(x float32) float32 { return 1. }
+		//if buffer.aging {
+		//	fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
+		//}
+
+		word.fader = gfx.WorldClock().NewTimer(
+			lifetime - 2.*FadeDuration,
 			false,
-			fun,
+			func (x float32) float32 { return 1.0; },
 			func() { buffer.fadeoutWord(word) },
 		)
 		if DEBUG_WORDBUFFER_DUMP {
@@ -263,14 +271,14 @@ func (buffer *WordBuffer) fadeoutWord(word *Word) {
 	var val float32 = 1.
 
 	// get most recent value
-	if word.timer != nil {
-		val = word.timer.Value()
+	if word.fader != nil {
+		val = word.fader.Value()
 	}
 
-	gfx.WorldClock().DeleteTimer(word.timer)
-	word.timer = nil
+	gfx.WorldClock().DeleteTimer(word.fader)
+	word.fader = nil
 	word.state = WORD_FADEOUT
-	word.timer = gfx.WorldClock().NewTimer(
+	word.fader = gfx.WorldClock().NewTimer(
 		FadeDuration,
 		false,
 		func(x float32) float32 { return val * (1. - math.EaseIn(x)) },
@@ -289,6 +297,7 @@ func (buffer *WordBuffer) deleteWord(word *Word) {
 	buffer.words[word.index] = nil
 	buffer.checkWatermark()
 	buffer.mutex.Unlock()
+	gfx.WorldClock().DeleteTimer(word.fader)
 	gfx.WorldClock().DeleteTimer(word.timer)
 	if DEBUG_WORDBUFFER_DUMP {
 		log.Debug("%s word delete: %s\n%s", buffer.Desc(), word.Desc(), buffer.Dump())

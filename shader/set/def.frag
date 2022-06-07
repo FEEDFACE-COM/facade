@@ -30,13 +30,14 @@ void main() {
     vec4 tex = vTexCoord;
 
     col = texture2DProj(texture, tex);
-    col.a = wordFader;
+    col.a *= wordFader;
 
     if (DEBUG) { 
         col.rgb = vec3(1.,1.,1.);
     }
 
     if (!gl_FrontFacing) { col.a /= 4.; }
+
 
     gl_FragColor = col;
     

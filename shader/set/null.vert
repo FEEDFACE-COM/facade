@@ -8,7 +8,6 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
-uniform float wordMaxWidth;
 uniform float wordIndex;
 
 uniform float wordWidth;
@@ -18,7 +17,6 @@ uniform float wordValue;
 uniform float charCount;
 
 uniform float screenRatio;
-uniform float fontRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
@@ -42,60 +40,10 @@ float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
 
 
 void main() {
-    float fader = wordFader;
-    
     vec4 pos = vec4(vertex,1);
-
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
-
-
-    pos.y += 0.5;
-    pos.x += wordWidth/2.;
-    
-
-    float rows,cols;
-    float slots = wordCount;
-
-
-    float WIDTH_MAX = wordMaxWidth;
-    float SPACER = 0.;
-    float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
-    
-    
-
-    cols = ceil( log(slots) );
-    rows = ceil(slots/cols);
-
-
-    float col = mod(wordIndex+1.,cols);  
-    float row = (wordIndex-col)/cols;
-//    row = rows - row - 1.; // switch top-down
-
-    pos.x += col * colWidth;
-    pos.y += row;
-
-    pos.x -= (cols/2.) * colWidth;
-    pos.y -= (rows/2.);
-
-
-    float zoom = 1.0;
-    {
-        float zr = 2./rows;
-        float zc = 2./(cols * colWidth) * screenRatio;
-        zoom = min(zr,zc);
-    }
-    pos.x *= zoom;
-    pos.y *= zoom;
-    
-    
-//    pos.x -= screenRatio;
-//    pos.y -= 1.;
-    
-    
-    
- 
     gl_Position = projection * view * model * pos;
 }
 

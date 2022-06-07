@@ -35,6 +35,7 @@ const (
 	WORDINDEX gfx.UniformName = "wordIndex"
 	WORDWIDTH gfx.UniformName = "wordWidth"
 	WORDFADER gfx.UniformName = "wordFader"
+	WORDAGE gfx.UniformName   = "wordAge"
 )
 
 const (
@@ -352,8 +353,8 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		count = int32(utf8.RuneCountInString(word.text))
 
 		var fader float32 = 1.0
-		if word.timer != nil {
-			fader = word.timer.Value()
+		if word.fader != nil {
+			fader = word.fader.Value()
 		}
 		set.program.Uniform1fv(WORDFADER, 1, &fader)
 
@@ -365,6 +366,11 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		width = word.width
 		set.program.Uniform1fv(WORDWIDTH, 1, &width)
 
+		var age float32 = 0.0
+		if word.timer != nil {
+			age = word.timer.Value()
+		}
+		set.program.Uniform1fv(WORDAGE, 1, &age)
 
 		if DEBUG_SET && verbose {
 			log.Debug("%s render #%.0f width:%.1f fader:%.1f", set.Desc(), index, width, fader)
