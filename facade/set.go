@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package facade
@@ -6,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-    gl "github.com/FEEDFACE-COM/piglet/gles2"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 	"unicode/utf8"
@@ -82,7 +83,6 @@ func NewSet(buffer *WordBuffer) *Set {
 
 func (set *Set) generateData(font *gfx.Font) {
 	words := set.wordBuffer.Words()
-
 
 	//    //generate textures
 	//    for _,word := range set.words {
@@ -269,13 +269,12 @@ func (set *Set) vertices(
 
 */
 
-
-
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
-
-	scaleHeight := float32(1.) / float32(set.wordBuffer.SlotCount())
-	return scaleHeight * 2.
-
+	//scaleHeight := float32(1.) / math32.Sqrt( float32(set.wordBuffer.SlotCount() ) )
+	//scaleHeight := float32(1.) / float32(set.wordBuffer.SlotCount())
+	//scaleHeight := float32(1.) / float32(8.)
+	scaleHeight := float32(1.)
+	return scaleHeight //* 2.
 }
 
 func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
@@ -488,7 +487,9 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 
 	if config.GetSetFill() {
 		fillStr := set.fill(config.GetFill())
-		set.wordBuffer.Fill(fillStr)
+		if fillStr != nil {
+			set.wordBuffer.Fill(fillStr)
+		}
 	}
 
 	set.ScheduleRefresh()
@@ -500,9 +501,9 @@ func (set *Set) fill(name string) []string {
 	case "index":
 		WORD_LENGTH_MAX := 8
 		ret := []string{}
-		for i := 0; i<set.wordBuffer.slotCount; i++ {
+		for i := 0; i < set.wordBuffer.slotCount; i++ {
 			s := ""
-			for j := 0; j<WORD_LENGTH_MAX; j++ {
+			for j := 0; j < WORD_LENGTH_MAX; j++ {
 				s += fmt.Sprintf("%d", i%10)
 			}
 			ret = append(ret, s)

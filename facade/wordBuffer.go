@@ -19,9 +19,10 @@ const DEBUG_WORDBUFFER_DUMP = true
 
 const maxWordLength = 64 // found experimentally
 
-const FadeDuration = 0.5;
+const FadeDuration = 0.5
 
 type WordState string
+
 const (
 	WORD_FADEIN  WordState = "fadein"
 	WORD_ALIVE   WordState = "alive"
@@ -51,8 +52,6 @@ type WordBuffer struct {
 	refreshChan chan bool
 	mutex       *sync.Mutex
 }
-
-
 
 func NewWordBuffer(refreshChan chan bool) *WordBuffer {
 	ret := &WordBuffer{
@@ -114,7 +113,7 @@ func (buffer *WordBuffer) Words() []*Word {
 	return ret
 }
 
-func (buffer *WordBuffer) checkWatermark()  {
+func (buffer *WordBuffer) checkWatermark() {
 	allowed := buffer.watermark * float32(buffer.slotCount)
 	used := float32(0.)
 	for i := 0; i < buffer.slotCount; i++ {
@@ -163,16 +162,11 @@ func (buffer *WordBuffer) checkWatermark()  {
 	}
 }
 
-
-
-
 func (buffer *WordBuffer) addWord(raw []rune) {
 	if len(raw) <= 0 {
 		log.Debug("%s not adding empty string", buffer.Desc())
 		return
 	}
-
-
 
 	text := string(raw)
 	if len(text) > maxWordLength {
@@ -182,7 +176,6 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	buffer.mutex.Lock()
 
 	buffer.checkWatermark()
-
 
 	var index int = -1
 
@@ -225,7 +218,7 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	buffer.words[index] = word
 	buffer.nextIndex = (index + 1) % buffer.slotCount
 	if DEBUG_WORDBUFFER_DUMP {
-		log.Debug("%s word add: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+		log.Debug("%s word add: %s\n%s", buffer.Desc(), word.Desc(), buffer.Dump())
 
 	} else if DEBUG_WORDBUFFER {
 		log.Debug("%s word add: %s", buffer.Desc(), word.Desc())
@@ -235,8 +228,6 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	buffer.ScheduleRefresh()
 }
 
-
-
 func (buffer *WordBuffer) fadedinWord(word *Word) {
 	gfx.WorldClock().DeleteTimer(word.timer)
 	word.timer = nil
@@ -244,8 +235,7 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 	lifetime := buffer.lifetime
 	if lifetime <= 0.0 {
 
-
-	} else if lifetime <= 2. * FadeDuration {
+	} else if lifetime <= 2.*FadeDuration {
 
 		buffer.fadeoutWord(word)
 
@@ -255,13 +245,13 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 			fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
 		}
 		word.timer = gfx.WorldClock().NewTimer(
-			lifetime - 2. * FadeDuration,
+			lifetime-2.*FadeDuration,
 			false,
 			fun,
 			func() { buffer.fadeoutWord(word) },
 		)
 		if DEBUG_WORDBUFFER_DUMP {
-			log.Debug("%s word alife: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+			log.Debug("%s word alife: %s\n%s", buffer.Desc(), word.Desc(), buffer.Dump())
 		} else if DEBUG_WORDBUFFER {
 			log.Debug("%s word alife: %s", buffer.Desc(), word.Desc())
 		}
@@ -283,25 +273,25 @@ func (buffer *WordBuffer) fadeoutWord(word *Word) {
 	word.timer = gfx.WorldClock().NewTimer(
 		FadeDuration,
 		false,
-		func(x float32) float32 { return val * (1.- math.EaseOut(x)) },
+		func(x float32) float32 { return val * (1. - math.EaseIn(x)) },
 		func() { buffer.deleteWord(word) },
 	)
 	if DEBUG_WORDBUFFER_DUMP {
-		log.Debug("%s word fade out: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+		log.Debug("%s word fade out: %s\n%s", buffer.Desc(), word.Desc(), buffer.Dump())
 	} else if DEBUG_WORDBUFFER {
 		log.Debug("%s word fade out: %s", buffer.Desc(), word.Desc())
 	}
 }
 
-
 func (buffer *WordBuffer) deleteWord(word *Word) {
 	buffer.mutex.Lock()
 	//old := buffer.words[word.index]
 	buffer.words[word.index] = nil
+	buffer.checkWatermark()
 	buffer.mutex.Unlock()
-	gfx.WorldClock().DeleteTimer( word.timer )
+	gfx.WorldClock().DeleteTimer(word.timer)
 	if DEBUG_WORDBUFFER_DUMP {
-		log.Debug("%s word delete: %s\n%s", buffer.Desc(), word.Desc(),buffer.Dump())
+		log.Debug("%s word delete: %s\n%s", buffer.Desc(), word.Desc(), buffer.Dump())
 	} else if DEBUG_WORDBUFFER {
 		log.Debug("%s word delete: %s", buffer.Desc(), word.Desc())
 	}
@@ -335,7 +325,7 @@ func (buffer *WordBuffer) Clear() {
 func (buffer *WordBuffer) Fill(fill []string) {
 
 	buffer.Clear()
-	rows := uint( len(fill) )
+	rows := uint(len(fill))
 
 	//get array of indices
 	slots := []int{}
@@ -362,7 +352,7 @@ func (buffer *WordBuffer) Fill(fill []string) {
 				fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
 			}
 			word.timer = gfx.WorldClock().NewTimer(
-				buffer.lifetime - 1. * FadeDuration,
+				buffer.lifetime-1.*FadeDuration,
 				false,
 				fun,
 				func() { buffer.fadeoutWord(word) },
@@ -420,7 +410,7 @@ func (buffer *WordBuffer) Desc() string {
 
 func (word *Word) Desc() string {
 	ret := ""
-	ret += fmt.Sprintf("#%02d ",word.index)
+	ret += fmt.Sprintf("#%02d ", word.index)
 	if word.timer != nil {
 		ret += word.timer.Desc() + " "
 	}
@@ -441,7 +431,7 @@ func (buffer *WordBuffer) Dump() string {
 	for _, word := range buffer.words {
 		if word != nil {
 			ret += fmt.Sprintf("    %2d |  ", word.index)
-			f := fmt.Sprintf("%d",max+1)
+			f := fmt.Sprintf("%d", max+1)
 			ret += fmt.Sprintf("%"+f+"s", word.text)
 			if word.timer != nil {
 				ret += " " + word.timer.Desc()
@@ -449,7 +439,7 @@ func (buffer *WordBuffer) Dump() string {
 			ret += "\n"
 		}
 	}
-	return strings.TrimRight(ret,"\n")
+	return strings.TrimRight(ret, "\n")
 }
 
 func (buffer *WordBuffer) WordCount() int {
@@ -462,11 +452,11 @@ func (buffer *WordBuffer) WordCount() int {
 	return r
 }
 
-func (buffer *WordBuffer) SlotCount() int    { return buffer.slotCount }
-func (buffer *WordBuffer) Lifetime() float32 { return buffer.lifetime }
+func (buffer *WordBuffer) SlotCount() int     { return buffer.slotCount }
+func (buffer *WordBuffer) Lifetime() float32  { return buffer.lifetime }
 func (buffer *WordBuffer) Watermark() float32 { return buffer.watermark }
-func (buffer *WordBuffer) Shuffle() bool     { return buffer.shuffle }
-func (buffer *WordBuffer) Aging() bool     { return buffer.aging }
+func (buffer *WordBuffer) Shuffle() bool      { return buffer.shuffle }
+func (buffer *WordBuffer) Aging() bool        { return buffer.aging }
 
 func (buffer *WordBuffer) SetShuffle(shuffle bool) {
 	buffer.shuffle = shuffle
@@ -482,7 +472,7 @@ func (buffer *WordBuffer) SetLifetime(lifetime float32) {
 		for _, word := range buffer.words {
 			if word != nil {
 				if word.state == WORD_ALIVE {
-//					word.timer.SetDuration(lifetime)
+					//					word.timer.SetDuration(lifetime)
 				}
 			}
 		}
@@ -499,7 +489,6 @@ func (buffer *WordBuffer) Resize(slotCount int) {
 	}
 
 	old := []*Word{}
-
 
 	buffer.mutex.Lock()
 	for _, w := range buffer.words {
