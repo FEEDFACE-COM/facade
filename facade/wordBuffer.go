@@ -23,6 +23,7 @@ const maxWordLength = 64 // found experimentally
 const FadeDuration = 0.5
 
 type WordState string
+
 const (
 	WORD_FADEIN  WordState = "fadein"
 	WORD_ALIVE   WordState = "alive"
@@ -101,15 +102,12 @@ func (buffer *WordBuffer) ProcessRunes(runes []rune) {
 func (buffer *WordBuffer) Words() []*Word {
 	ret := []*Word{}
 	buffer.mutex.Lock()
-	for _, w := range buffer.words {
-		if w != nil {
-			ret = append(ret, w)
+	for _, word := range buffer.words {
+		if word != nil {
+			ret = append(ret, word)
 		}
 	}
 	buffer.mutex.Unlock()
-	if len(ret) != buffer.WordCount() {
-		log.Warning("mismatch buffer tags: expected %d got %d", buffer.WordCount(), len(ret))
-	}
 	return ret
 }
 
@@ -253,9 +251,9 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 		//}
 
 		word.fader = gfx.WorldClock().NewTimer(
-			lifetime - 2.*FadeDuration,
+			lifetime-2.*FadeDuration,
 			false,
-			func (x float32) float32 { return 1.0; },
+			func(x float32) float32 { return 1.0 },
 			func() { buffer.fadeoutWord(word) },
 		)
 		if DEBUG_WORDBUFFER_DUMP {
@@ -354,7 +352,7 @@ func (buffer *WordBuffer) Fill(fill []string) {
 		word := &Word{}
 		word.index = uint(idx)
 		word.text = fill[row]
-		word.width = float32( utf8.RuneCountInString( word.text ) )
+		word.width = float32(utf8.RuneCountInString(word.text))
 		word.state = WORD_ALIVE
 		if buffer.lifetime != 0. {
 			fun := func(x float32) float32 { return 1. }
@@ -453,13 +451,13 @@ func (buffer *WordBuffer) Dump() string {
 }
 
 func (buffer *WordBuffer) WordCount() int {
-	r := 0
+	ret := 0
 	for _, w := range buffer.words {
 		if w != nil {
-			r += 1
+			ret += 1
 		}
 	}
-	return r
+	return ret
 }
 
 func (buffer *WordBuffer) SlotCount() int     { return buffer.slotCount }
@@ -513,14 +511,13 @@ func (buffer *WordBuffer) Resize(slotCount int) {
 
 	for _, word := range old {
 		if word.index < uint(buffer.slotCount) {
-		buffer.words[ word.index ] = word
-	} else{
-		gfx.WorldClock().DeleteTimer(word.timer)
-	}
+			buffer.words[word.index] = word
+		} else {
+			gfx.WorldClock().DeleteTimer(word.timer)
+		}
 	}
 
 	buffer.mutex.Unlock()
-
 
 	if DEBUG_WORDBUFFER {
 		log.Debug("%s resize %d", buffer.Desc(), slotCount)

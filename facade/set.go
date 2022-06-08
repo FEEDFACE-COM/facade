@@ -17,9 +17,10 @@ const DEBUG_SET = false
 
 type Set struct {
 	vert, frag string
+	maxLength  float32
 
 	wordBuffer *WordBuffer
-	maxLength float32
+	widestWord float32
 
 	texture *gfx.Texture
 	program *gfx.Program
@@ -31,11 +32,12 @@ type Set struct {
 
 const (
 	WORDCOUNT gfx.UniformName = "wordCount"
-	WORDMAXWD gfx.UniformName = "wordMaxWidth"
+	MAXWIDTH  gfx.UniformName = "maxWidth"
+	//MAXLENGTH gfx.UniformName = "maxLength"
 	WORDINDEX gfx.UniformName = "wordIndex"
 	WORDWIDTH gfx.UniformName = "wordWidth"
 	WORDFADER gfx.UniformName = "wordFader"
-	WORDAGE gfx.UniformName   = "wordAge"
+	WORDAGE   gfx.UniformName = "wordAge"
 )
 
 const (
@@ -81,94 +83,37 @@ func NewSet(buffer *WordBuffer) *Set {
 }
 
 func (set *Set) generateData(font *gfx.Font) {
-	words := set.wordBuffer.Words()
-
-	//    //generate textures
-	//    for _,word := range set.words {
-	//
-	//        text := word.text
-	//        if len(text) <= 0 {
-	//            continue
-	//        }
-	//
-	//        if old[text] != nil {   //reuse existing textures
-	//
-	//            set.textures[text] = old[text]
-	//            if DEBUG_SET {
-	//                log.Debug("%s texture reused: %s",set.Desc(),old[text].Desc())
-	//            }
-	//
-	//        } else {               //create new texture
-	//
-	//            rgba, err := font.RenderText(text, false)
-	//            if err != nil {
-	//                log.Error("%s texture fail render '%s': %s", set.Desc(), text, err)
-	//                continue
-	//            }
-	//
-	//            texture := gfx.NewTexture(text)
-	//            texture.Init()
-	//
-	//            err = texture.LoadRGBA(rgba)
-	//            if err != nil {
-	//                log.Error("%s texture fail load rgba '%s': %s", set.Desc(), text, err)
-	//                texture.Close()
-	//                continue
-	//            }
-	//
-	//            err = texture.TexImage()
-	//            if err != nil {
-	//                log.Error("%s texture fail teximage '%s': %s", set.Desc(), text, err)
-	//                texture.Close()
-	//                continue
-	//            }
-	//
-	//            set.textures[text] = texture
-	//
-	//            if DEBUG_SET {
-	//                log.Debug("%s texture prepped: %s",set.Desc(),set.textures[text].Desc())
-	//            }
-	//
-	//        }
-	//    }
-	//
-	//    // remove unused textures
-	//    for text,texture := range old {
-	//        _,ok := set.textures[text]
-	//        if !ok {
-	//            if DEBUG_SET {
-	//                log.Debug("%s texture close: %s",set.Desc(),texture.Desc())
-	//            }
-	//            texture.Close()
-	//        }
-	//    }
 
 	//setup vertex + bind order arrays
 	set.data = []float32{}
 
 	charCount := 0
+	words := set.wordBuffer.Words()
+	maxWidth := float32(0.)
 	for _, word := range words {
 
-		width := float32(0.)
+		word.width = float32(0.)
 		for _, run := range word.text {
 			glyphCoord := getGlyphCoord(run)
 			glyphSize := font.Size(glyphCoord.X, glyphCoord.Y)
-			width += glyphSize.W / glyphSize.H
+			word.width += glyphSize.W / glyphSize.H
 			charCount += 1
 		}
-		word.width = width
-		set.data = append(set.data, set.vertices(*word, font, width)...)
+		if word.width > maxWidth {
+			maxWidth = word.width
+		}
+		set.data = append(set.data, set.vertices(word.text, font, word.width)...)
 	}
-
+	set.widestWord = maxWidth
 	set.object.BufferData(len(set.data)*4, set.data)
 	if DEBUG_SET {
-		log.Debug("%s generated words:%d chars:%d floats:%d", set.Desc(), len(words), charCount, len(set.data))
+		log.Debug("%s generated words, max width:%d chars:%d floats:%d", set.Desc(), len(words), charCount, len(set.data))
 	}
 
 }
 
 func (set *Set) vertices(
-	word Word,
+	text string,
 	font *gfx.Font,
 	totalWidth float32,
 ) []float32 {
@@ -177,7 +122,7 @@ func (set *Set) vertices(
 
 	charIndex := 0
 	offset := -totalWidth / 2.
-	for _, run := range word.text {
+	for _, run := range text {
 
 		glyphCoord := getGlyphCoord(run)
 		glyphSize := font.Size(glyphCoord.X, glyphCoord.Y)
@@ -202,6 +147,31 @@ func (set *Set) vertices(
 		idx := float32(charIndex)
 		off := float32(offset)
 
+		/*
+
+		     A          D
+		 -w/2,h/2____w/2,h/2
+		     |          |
+		     |          |
+		 -w/2,-h/2___w/2,-h/2
+		     B          C
+
+
+		     A          D
+		    0,0________1,0
+		     |          |
+		     |          |
+		    0,1________1,1
+		     B          C
+
+
+		  A     A_D
+		  |\    \ |
+		  |_\    \|
+		  B C     C
+
+		*/
+
 		data := []float32{
 			//   x,   y,    z,             tx, ty,
 			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, // A
@@ -218,55 +188,11 @@ func (set *Set) vertices(
 	}
 
 	if DEBUG_SET {
-		log.Debug("%s data generate '%s'", set.Desc(), word.text)
+		log.Debug("%s data generate '%s'", set.Desc(), text)
 	}
 
 	return ret
 }
-
-//        text := word.text
-//        if len(text) <= 0 {
-//            continue
-//        }
-
-//        texture,ok := set.textures[text]
-//        if !ok {
-//            log.Debug("%s texture generate miss: %s",set.Desc(),text)
-//            continue
-//        }
-//
-//        w := float32( texture.Size.Width / texture.Size.Height )
-//        h := float32( 1. )
-//
-/*
-
-     A          D
- -w/2,h/2____w/2,h/2
-     |          |
-     |          |
- -w/2,-h/2___w/2,-h/2
-     B          C
-
-
-     A          D
-    0,0________1,0
-     |          |
-     |          |
-    0,1________1,1
-     B          C
-
-
-  A
-  |\
-  |_\
-  B C
-
-  A_D
-  \ |
-   \|
-    C
-
-*/
 
 func (set *Set) autoScale(camera *gfx.Camera) float32 {
 	//scaleHeight := float32(1.) / math32.Sqrt( float32(set.wordBuffer.SlotCount() ) )
@@ -279,13 +205,14 @@ func (set *Set) autoScale(camera *gfx.Camera) float32 {
 func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
 	if set.checkRefresh() {
-		//		if DEBUG_SET {
-		//			log.Debug("%s refresh", set.Desc())
-		//		}
+		if DEBUG_SET {
+			log.Debug("%s refresh", set.Desc())
+		}
 		set.generateData(font)
 		set.renderMap(font)
 	}
 
+	words := set.wordBuffer.Words()
 	gl.ActiveTexture(gl.TEXTURE0)
 
 	set.program.UseProgram(debug)
@@ -293,17 +220,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
 	wordCount := float32(set.wordBuffer.SlotCount())
 	set.program.Uniform1fv(WORDCOUNT, 1, &wordCount)
-
-	wordMaxWidth := float32( set.maxLength );
-	if wordMaxWidth == 0.0 {
-		for _,word := range set.wordBuffer.words {
-			if word != nil && word.width > wordMaxWidth {
-				wordMaxWidth = word.width
-			}
-		}
-	}
-	set.program.Uniform1fv(WORDMAXWD, 1, &wordMaxWidth);
-
+	set.program.Uniform1fv(MAXWIDTH, 1, &set.widestWord)
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 
@@ -311,7 +228,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
 
 	camera.Uniform(set.program)
-
 	scale := float32(1.0)
 	scale = set.autoScale(camera)
 
@@ -319,7 +235,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
 	//	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
 	set.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
-
 	set.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1)*4, (0)*4)
 	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1)*4, (0+3)*4)
 	set.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
@@ -327,8 +242,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
 	count := int32(1)
 	offset := int32(0)
-
-	words := set.wordBuffer.Words()
 
 	for _, word := range words {
 
@@ -339,34 +252,20 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		}
 
 		set.texture.Uniform(set.program)
-
-		//        texture,ok := set.textures[text]
-		//        if !ok {
-		//            log.Debug("%s texture render miss: %s",set.Desc(),text)
-		//            continue
-		//        }
-		//
-		//
-		//        texture.BindTexture()
-		//        texture.Uniform(set.program)
-
 		count = int32(utf8.RuneCountInString(word.text))
 
-		var fader float32 = 1.0
+		index := float32(word.index)
+		set.program.Uniform1fv(WORDINDEX, 1, &index)
+		width := float32(word.width)
+		set.program.Uniform1fv(WORDWIDTH, 1, &word.width)
+
+		fader := float32(1.0)
 		if word.fader != nil {
 			fader = word.fader.Value()
 		}
 		set.program.Uniform1fv(WORDFADER, 1, &fader)
 
-		var index float32
-		index = float32(word.index)
-		set.program.Uniform1fv(WORDINDEX, 1, &index)
-
-		var width float32
-		width = word.width
-		set.program.Uniform1fv(WORDWIDTH, 1, &width)
-
-		var age float32 = 0.0
+		age := float32(0.0)
 		if word.timer != nil {
 			age = word.timer.Value()
 		}
@@ -386,7 +285,11 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		if debug {
 			gl.LineWidth(3.0)
 			gl.BindTexture(gl.TEXTURE_2D, 0)
-			gl.DrawArrays(gl.LINE_STRIP, int32(offset*(2*3)), int32(count*2*3))
+			off := offset
+			for i := 0; i < int(count); i++ {
+				gl.DrawArrays(gl.LINE_STRIP, int32(off*2*3), int32(1*2*3))
+				off += int32(1)
+			}
 		}
 		offset += count
 	}
@@ -488,7 +391,7 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 	}
 
 	if config.GetSetMaxWidth() {
-		set.SetMaxWidth( float32(config.GetMaxWidth()) )
+		set.SetMaxWidth(float32(config.GetMaxWidth()))
 	}
 
 	if config.GetSetAging() {
@@ -554,8 +457,9 @@ zulu
 func (set *Set) Desc() string {
 	ret := "set"
 	ret += "["
-	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
-	ret += fmt.Sprintf(" ≤%.0f",set.maxLength)
+	//	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
+	ret += fmt.Sprintf("%s", set.wordBuffer.Desc())
+	ret += fmt.Sprintf(" ≤%.0f", set.maxLength)
 	//ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
 	//ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
 	ret += "]"

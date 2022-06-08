@@ -160,7 +160,11 @@ func KeyFun(key glfw.Key, action glfw.Action, mod glfw.ModifierKey) {
 
 	if key == 0x100 && action == 0x1 {
 		log.Notice("%s key escape", Desc())
-		window.SetShouldClose(true)
+		if winpos != nil { // is fullscreen
+			ToggleFullScreen()
+		} else { // is windowed
+			window.SetShouldClose(true)
+		}
 		return
 	}
 	if DEBUG_PIGLET {
