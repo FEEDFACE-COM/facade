@@ -126,9 +126,13 @@ func (timer *Timer) Tick(now float32) (bool, func()) {
 	return true, nil // keep untriggered timer
 }
 
-func (timer *Timer) Desc() string {
+func (timer *Timer) Desc(opt ...string) string {
+    title := "t"
+    if len(opt) > 0 {
+        title = opt[0]
+    }
 	run := Now() - timer.start
-	ret := fmt.Sprintf("t[%.1f/%.1f", run, timer.duration)
+	ret := fmt.Sprintf("%s[%.1f/%.1f", title, run, timer.duration)
 	if timer.repeat {
 		ret += fmt.Sprintf(" #%d", timer.count)
 	}
