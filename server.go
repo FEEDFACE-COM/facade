@@ -182,7 +182,9 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 	var rem []byte = []byte{}
 	var tmp []byte
 	reader := bufio.NewReader(textConn)
-	log.Notice("%s receive text from %s", server.Desc(), textConn.RemoteAddr())
+	if DEBUG_SERVER {
+		log.Debug("%s receive text from %s", server.Desc(), textConn.RemoteAddr())
+	}
 	for {
 		n, err := reader.Read(buf)
 		if err == io.EOF {
