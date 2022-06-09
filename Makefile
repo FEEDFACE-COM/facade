@@ -20,7 +20,7 @@ SHADERS ?= def.vert def.frag
 SHADERS += color.vert color.frag 
 SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
 SHADERS += grid/wave.vert grid/roll.vert grid/rows.vert grid/crawl.vert grid/disk.vert grid/vortex.vert 
-SHADERS += set/def.vert set/def.frag set/scroll.vert set/field.vert set/debug.frag
+SHADERS += set/def.vert set/def.frag set/flower.vert set/debug.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 
