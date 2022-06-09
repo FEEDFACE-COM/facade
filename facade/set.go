@@ -173,7 +173,7 @@ func (set *Set) vertices(
 		*/
 
 		data := []float32{
-			//   x,   y,    z,             tx, ty,
+			//            x,       y,   z,      tx,      ty,
 			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, // A
 			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, // B
 			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, // C
@@ -203,6 +203,7 @@ func (set *Set) autoScale(camera *gfx.Camera) float32 {
 }
 
 func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
+	set.wordBuffer.mutex.Lock()
 
 	if set.checkRefresh() {
 		if DEBUG_SET {
@@ -218,14 +219,11 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-	wordCount := float32(set.wordBuffer.SlotCount())
-	set.program.Uniform1fv(WORDCOUNT, 1, &wordCount)
-	set.program.Uniform1fv(MAXWIDTH, 1, &set.widestWord)
+	set.program.Uniform1f(WORDCOUNT, float32(set.wordBuffer.SlotCount()))
+	set.program.Uniform1f(MAXWIDTH, float32(set.widestWord))
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
-
-	clocknow := float32(gfx.Now())
-	set.program.Uniform1fv(gfx.CLOCKNOW, 1, &clocknow)
+	set.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
 
 	camera.Uniform(set.program)
 	scale := float32(1.0)
@@ -254,25 +252,23 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		set.texture.Uniform(set.program)
 		count = int32(utf8.RuneCountInString(word.text))
 
-		index := float32(word.index)
-		set.program.Uniform1fv(WORDINDEX, 1, &index)
-		width := float32(word.width)
-		set.program.Uniform1fv(WORDWIDTH, 1, &word.width)
+		set.program.Uniform1f(WORDINDEX, float32(word.index))
+		set.program.Uniform1f(WORDWIDTH, word.width)
 
 		fader := float32(1.0)
 		if word.fader != nil {
 			fader = word.fader.Value()
 		}
-		set.program.Uniform1fv(WORDFADER, 1, &fader)
+		set.program.Uniform1f(WORDFADER, fader)
 
 		age := float32(0.0)
 		if word.timer != nil {
 			age = word.timer.Value()
 		}
-		set.program.Uniform1fv(WORDAGE, 1, &age)
+		set.program.Uniform1f(WORDAGE, age)
 
 		if DEBUG_SET && verbose {
-			log.Debug("%s render #%.0f width:%.1f fader:%.1f", set.Desc(), index, width, fader)
+			log.Debug("%s render #%.0f width:%.1f fader:%.1f", set.Desc(), word.index, word.width, fader)
 		}
 
 		if !debug || debug {
@@ -293,7 +289,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		}
 		offset += count
 	}
-
+	set.wordBuffer.mutex.Unlock()
 }
 
 func (set *Set) Init(programService *gfx.ProgramService, font *gfx.Font) {
@@ -455,16 +451,7 @@ zulu
 }
 
 func (set *Set) Desc() string {
-	ret := "set"
-	ret += "["
-	//	ret += fmt.Sprintf("%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
-	ret += fmt.Sprintf("%s", set.wordBuffer.Desc())
-	ret += fmt.Sprintf(" ≤%.0f", set.maxLength)
-	//ret += fmt.Sprintf(" %.1fl ", set.wordBuffer.Lifetime())
-	//ret += fmt.Sprintf(" %.1fm ", set.wordBuffer.Watermark())
-	ret += "]"
-	return ret
-
+	return set.Config().Desc()
 }
 
 func (set *Set) Config() *SetConfig {

@@ -101,13 +101,11 @@ func (buffer *WordBuffer) ProcessRunes(runes []rune) {
 
 func (buffer *WordBuffer) Words() []*Word {
 	ret := []*Word{}
-	buffer.mutex.Lock()
 	for _, word := range buffer.words {
 		if word != nil {
 			ret = append(ret, word)
 		}
 	}
-	buffer.mutex.Unlock()
 	return ret
 }
 
@@ -427,15 +425,21 @@ func (word *Word) Desc() string {
 }
 
 func (buffer *WordBuffer) Dump() string {
-    ret := ""
-    max := 32
-    min := func(a,b int) int { if a <= b { return a } else { return b } }
-    
+	ret := ""
+	max := 32
+	min := func(a, b int) int {
+		if a <= b {
+			return a
+		} else {
+			return b
+		}
+	}
+
 	for idx, word := range buffer.words {
 		if word != nil {
-            ret += fmt.Sprintf("  %-2d |",idx)
+			ret += fmt.Sprintf("  %-2d |", idx)
 			ret += fmt.Sprintf(" #%-2d", word.index)
-			ret += fmt.Sprintf(" [%.*s]", max, word.text[:min(max,len(word.text))])
+			ret += fmt.Sprintf(" [%.*s]", max, word.text[:min(max, len(word.text))])
 			if word.timer != nil {
 				ret += " " + word.timer.Desc()
 			}
@@ -444,8 +448,8 @@ func (buffer *WordBuffer) Dump() string {
 			}
 			ret += "\n"
 		} else {
-            ret += fmt.Sprintf("  %-2d |\n",idx)
-        }
+			ret += fmt.Sprintf("  %-2d |\n", idx)
+		}
 	}
 	return strings.TrimRight(ret, "\n")
 }
