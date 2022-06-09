@@ -427,25 +427,25 @@ func (word *Word) Desc() string {
 }
 
 func (buffer *WordBuffer) Dump() string {
-	max := 0
-	for _, word := range buffer.words {
+    ret := ""
+    max := 32
+    min := func(a,b int) int { if a <= b { return a } else { return b } }
+    
+	for idx, word := range buffer.words {
 		if word != nil {
-			if len(word.text) > max {
-				max = len(word.text)
-			}
-		}
-	}
-	ret := ""
-	for _, word := range buffer.words {
-		if word != nil {
-			ret += fmt.Sprintf("    %2d |  ", word.index)
-			f := fmt.Sprintf("%d", max+1)
-			ret += fmt.Sprintf("%"+f+"s", word.text)
+            ret += fmt.Sprintf("  %-2d |",idx)
+			ret += fmt.Sprintf(" #%-2d", word.index)
+			ret += fmt.Sprintf(" [%.*s]", max, word.text[:min(max,len(word.text))])
 			if word.timer != nil {
 				ret += " " + word.timer.Desc()
 			}
+			if word.fader != nil {
+				ret += " " + word.fader.Desc("f")
+			}
 			ret += "\n"
-		}
+		} else {
+            ret += fmt.Sprintf("  %-2d |\n",idx)
+        }
 	}
 	return strings.TrimRight(ret, "\n")
 }
@@ -514,12 +514,15 @@ func (buffer *WordBuffer) Resize(slotCount int) {
 			buffer.words[word.index] = word
 		} else {
 			gfx.WorldClock().DeleteTimer(word.timer)
+			gfx.WorldClock().DeleteTimer(word.fader)
 		}
 	}
 
 	buffer.mutex.Unlock()
 
-	if DEBUG_WORDBUFFER {
+	if DEBUG_WORDBUFFER_DUMP {
+		log.Debug("%s resize %d:\n%s", buffer.Desc(), slotCount, buffer.Dump())
+	} else if DEBUG_WORDBUFFER {
 		log.Debug("%s resize %d", buffer.Desc(), slotCount)
 	}
 
