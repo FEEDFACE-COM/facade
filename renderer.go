@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package main
@@ -6,8 +7,8 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"github.com/FEEDFACE-COM/piglet"
 	"fmt"
+	"github.com/FEEDFACE-COM/piglet"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
@@ -105,7 +106,7 @@ func (renderer *Renderer) Init() error {
 	err = gl.InitWithProcAddrFunc(piglet.GetProcAddress)
 	//err = gl.Init()
 	if err != nil {
-		log.Error("%s fail to gl init: %s",renderer.Desc(),err)
+		log.Error("%s fail to gl init: %s", renderer.Desc(), err)
 		return log.NewError("fail to gl init: %s", err)
 	}
 
@@ -333,8 +334,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			case facade.Mode_WORDS:
 				renderer.words.ScheduleRefresh()
 
-			//case facade.Mode_TAGS:
-			//	renderer.tags.ScheduleRefresh()
+				//case facade.Mode_TAGS:
+				//	renderer.tags.ScheduleRefresh()
 
 			}
 
@@ -354,8 +355,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		case facade.Mode_WORDS:
 			renderer.words.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
-		//case facade.Mode_TAGS:
-		//	renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+			//case facade.Mode_TAGS:
+			//	renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
 		if renderer.debug {
@@ -460,16 +461,10 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 			switch renderer.mode {
 			case facade.Mode_TERM:
 				renderer.termBuffer.ProcessRunes(text)
-
 			case facade.Mode_LINES:
 				renderer.lineBuffer.ProcessRunes(text)
-
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessRunes(text)
-
-			//case facade.Mode_TAGS:
-			//	renderer.tagBuffer.ProcessRunes(text)
-
 			}
 			renderer.ScheduleRefresh()
 
@@ -482,8 +477,6 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.lineBuffer.ProcessSequence(seq)
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessSequence(seq)
-			//case facade.Mode_TAGS:
-			//	renderer.tagBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
 		}
@@ -500,8 +493,8 @@ func (renderer *Renderer) InfoMode() string {
 		mode = "lines " + renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
 	case facade.Mode_WORDS:
 		mode = "words " + renderer.words.Desc() + " " + renderer.words.ShaderConfig().Desc()
-	//case facade.Mode_TAGS:
-	//	mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
+		//case facade.Mode_TAGS:
+		//	mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
 	}
 	dbg := ""
 	if renderer.debug {
@@ -542,8 +535,8 @@ func (renderer *Renderer) printDebug() {
 			log.Info("  %s", renderer.termBuffer.Desc())
 		case facade.Mode_WORDS:
 			log.Info("  %s", renderer.wordBuffer.Desc())
-		//case facade.Mode_TAGS:
-		//	log.Info("  %s", renderer.tagBuffer.Desc())
+			//case facade.Mode_TAGS:
+			//	log.Info("  %s", renderer.tagBuffer.Desc())
 		}
 	}
 
@@ -574,8 +567,8 @@ func (renderer *Renderer) dumpBuffer() {
 		os.Stdout.Write([]byte(renderer.lines.DumpBuffer()))
 	} else if renderer.mode == facade.Mode_WORDS {
 		os.Stdout.Write([]byte(renderer.wordBuffer.Dump()))
-	//} else if renderer.mode == facade.Mode_TAGS {
-	//	os.Stdout.Write([]byte(renderer.tagBuffer.Dump()))
+		//} else if renderer.mode == facade.Mode_TAGS {
+		//	os.Stdout.Write([]byte(renderer.tagBuffer.Dump()))
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()
