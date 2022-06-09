@@ -331,10 +331,6 @@ func (set *Set) renderMap(font *gfx.Font) error {
 	return nil
 }
 
-func (set *Set) SetMaxWidth(maxWidth float32) {
-	set.maxLength = maxWidth
-}
-
 func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font) {
 	var shader *ShaderConfig = nil
 	var config *SetConfig = nil
@@ -386,8 +382,8 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 		set.wordBuffer.SetShuffle(config.GetShuffle())
 	}
 
-	if config.GetSetMaxWidth() {
-		set.SetMaxWidth(float32(config.GetMaxWidth()))
+	if config.GetSetMaxLength() {
+		set.maxLength = float32(config.GetMaxLength())
 	}
 
 	if config.GetSetAging() {
@@ -451,12 +447,33 @@ zulu
 }
 
 func (set *Set) Desc() string {
-	return set.Config().Desc()
+	ret := "set["
+	ret += fmt.Sprintf("#%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
+	ret += fmt.Sprintf("≤%.0f", set.maxLength)
+	if set.wordBuffer.Lifetime() > 0.0 {
+		ret += fmt.Sprintf(" l%.1f", set.wordBuffer.Lifetime())
+	}
+	if set.wordBuffer.Watermark() > 0.0 {
+		ret += fmt.Sprintf(" m%0.1f", set.wordBuffer.Watermark())
+	}
+	if set.wordBuffer.shuffle || set.wordBuffer.aging {
+		ret += " "
+		if set.wordBuffer.shuffle {
+			ret += "⧢"
+		}
+		if set.wordBuffer.aging {
+			ret += "å"
+		}
+	}
+	ret = strings.TrimRight(ret, " ")
+	ret += "]"
+	return ret
 }
 
 func (set *Set) Config() *SetConfig {
 	ret := &SetConfig{
 		SetSlots: true, Slots: uint64(set.wordBuffer.SlotCount()),
+		SetMaxLength: true, MaxLength: uint64(set.maxLength),
 		SetLifetime: true, Lifetime: float64(set.wordBuffer.Lifetime()),
 		SetWatermark: true, Watermark: float64(set.wordBuffer.Watermark()),
 		SetShuffle: true, Shuffle: bool(set.wordBuffer.Shuffle()),

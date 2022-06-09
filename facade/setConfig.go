@@ -12,7 +12,7 @@ import (
 
 var SetDefaults SetConfig = SetConfig{
 	Slots:     8,
-	MaxWidth:  0,
+	MaxLength: 0,
 	Lifetime:  0.0,
 	Watermark: 0.5,
 	Shuffle:   false,
@@ -24,13 +24,14 @@ func (config *SetConfig) Desc() string {
 
 	sok := config.GetSetSlots()
 	if sok {
-		ret += fmt.Sprintf("#%d ", config.GetSlots())
+		ret += fmt.Sprintf("#%d", config.GetSlots())
 	}
 
-	mok := config.GetSetMaxWidth()
+	mok := config.GetSetMaxLength()
 	if mok {
-		ret += fmt.Sprintf("≤%d ", config.GetMaxWidth())
+		ret += fmt.Sprintf("≤%d", config.GetMaxLength())
 	}
+	ret += " "
 
 	lok := config.GetSetLifetime()
 	if lok {
@@ -39,7 +40,7 @@ func (config *SetConfig) Desc() string {
 
 	wok := config.GetSetWatermark()
 	if wok {
-		ret += fmt.Sprintf("%.1fm ", config.GetWatermark())
+		ret += fmt.Sprintf("%0.1fm ", config.GetWatermark())
 	}
 
 	uok := config.GetSetShuffle()
@@ -76,9 +77,9 @@ func (config *SetConfig) Desc() string {
 func (config *SetConfig) AddFlags(flagset *flag.FlagSet) {
 	patterns := "alpha,index,clear"
 	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
-	flagset.Uint64Var(&config.MaxWidth, "m", SetDefaults.MaxWidth, "word max length")
+	flagset.Uint64Var(&config.MaxLength, "m", SetDefaults.MaxLength, "word max length")
 	flagset.Float64Var(&config.Lifetime, "life", SetDefaults.Lifetime, "word lifetime")
-	flagset.Float64Var(&config.Watermark, "mark", SetDefaults.Watermark, "clear watermark")
+	flagset.Float64Var(&config.Watermark, "mark", SetDefaults.Watermark, "buffer clear mark")
 	flagset.BoolVar(&config.Shuffle, "shuffle", SetDefaults.Shuffle, "shuffle words?")
 	flagset.BoolVar(&config.Aging, "aging", SetDefaults.Aging, "age words?")
 	flagset.StringVar(&config.Fill, "fill", SetDefaults.Fill, "fill pattern ("+patterns+")")
@@ -92,7 +93,7 @@ func (config *SetConfig) VisitFlags(flagset *flag.FlagSet) bool {
 			config.SetSlots = true
 			ret = true
 		case "m":
-			config.SetMaxWidth = true
+			config.SetMaxLength = true
 			ret = true
 		case "life":
 			config.SetLifetime = true

@@ -110,49 +110,52 @@ func (buffer *WordBuffer) Words() []*Word {
 }
 
 func (buffer *WordBuffer) checkWatermark() {
-	allowed := buffer.watermark * float32(buffer.slotCount)
-	used := float32(0.)
+	allowed := int(math.Floor(buffer.watermark * float32(buffer.slotCount)))
+	alive := []int{}
+
 	for i := 0; i < buffer.slotCount; i++ {
 		idx := (buffer.nextIndex + i) % buffer.slotCount
 		if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
-			used += 1.
+			alive = append(alive, idx)
 		}
 	}
+	used := len(alive)
 
-	if used >= allowed {
+	if used > allowed {
 
 		var word *Word = nil
 
-		//find next alive slot
-		alive := []int{}
-		for i := 0; i < buffer.slotCount; i++ {
-			idx := (buffer.nextIndex + i) % buffer.slotCount
-			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
-				alive = append(alive, idx)
+		for i := 0; i < used-allowed; i++ {
+
+			u := len(alive)
+
+			if u <= 0 {
+				if DEBUG_WORDBUFFER {
+					log.Debug("%s high water mark, no free slots", buffer.Desc())
+				}
+				break
 			}
-		}
-		if len(alive) > 0 {
+
 			if buffer.shuffle {
-				r := rand.Int31n(int32(len(alive)))
-				index := alive[r]
-				word = buffer.words[index]
-			} else {
-				index := alive[0]
-				word = buffer.words[index]
+				r := int(rand.Int31n(int32(u)))
+				tmp := alive[0]
+				alive[0] = alive[r]
+				alive[r] = tmp
 			}
-		}
+			index := alive[0]
+			alive = alive[1:] // remove first entry
 
-		if word != nil {
+			word = buffer.words[index]
+			if word != nil {
 
-			buffer.fadeoutWord(word)
-			if DEBUG_WORDBUFFER {
-				log.Debug("%s watermark exceeded, fade out: %s", buffer.Desc(), word.Desc())
+				buffer.fadeoutWord(word)
+
+				if DEBUG_WORDBUFFER {
+					log.Debug("%s high water mark, fade out: %s", buffer.Desc(), word.Desc())
+				}
+
 			}
 
-		} else {
-			if DEBUG_WORDBUFFER {
-				log.Debug("%s watermark exceeded, but no fadeout", buffer.Desc())
-			}
 		}
 
 	}
@@ -160,7 +163,7 @@ func (buffer *WordBuffer) checkWatermark() {
 
 func (buffer *WordBuffer) addWord(raw []rune) {
 	if len(raw) <= 0 {
-		log.Debug("%s not adding empty string", buffer.Desc())
+		//log.Debug("%s not adding empty string", buffer.Desc())
 		return
 	}
 
@@ -170,7 +173,6 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 	}
 
 	buffer.mutex.Lock()
-
 	buffer.checkWatermark()
 
 	var index int = -1
@@ -236,18 +238,19 @@ func (buffer *WordBuffer) fadedinWord(word *Word) {
 	word.fader = nil
 	word.state = WORD_ALIVE
 	lifetime := buffer.lifetime
-	if lifetime <= 0.0 {
+	if buffer.watermark <= 0. {
+
+		buffer.fadeoutWord(word)
+
+	} else if lifetime <= 0.0 {
+
+		// nop
 
 	} else if lifetime <= 2.*FadeDuration {
 
 		buffer.fadeoutWord(word)
 
 	} else {
-		//fun := func(x float32) float32 { return 1. }
-		//if buffer.aging {
-		//	fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
-		//}
-
 		word.fader = gfx.WorldClock().NewTimer(
 			lifetime-2.*FadeDuration,
 			false,
@@ -291,7 +294,7 @@ func (buffer *WordBuffer) deleteWord(word *Word) {
 	buffer.mutex.Lock()
 	//old := buffer.words[word.index]
 	buffer.words[word.index] = nil
-	buffer.checkWatermark()
+	//buffer.checkWatermark()
 	buffer.mutex.Unlock()
 	gfx.WorldClock().DeleteTimer(word.fader)
 	gfx.WorldClock().DeleteTimer(word.timer)
@@ -368,9 +371,9 @@ func (buffer *WordBuffer) Fill(fill []string) {
 
 	}
 
-	//if buffer.watermark != 0.0 {
-	//	buffer.checkWatermark()
-	//}
+	if buffer.watermark != 0.0 {
+		buffer.checkWatermark()
+	}
 
 }
 
