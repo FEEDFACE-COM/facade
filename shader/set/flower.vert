@@ -10,8 +10,8 @@ uniform float debugFlag;
 uniform float wordCount;
 uniform float wordMaxWidth;
 
-uniform float wordIndex;
-uniform float wordWidth;
+//uniform float wordIndex;
+//uniform float wordWidth;
 uniform float wordFader;
 uniform float wordValue;
 
@@ -22,6 +22,8 @@ uniform float fontRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
+attribute float wordIndex;
+attribute float wordWidth;
 attribute float charIndex;
 attribute float charOffset;
 
@@ -99,7 +101,7 @@ vec3 wave(vec3 v) {
 vec3 curve(vec3 v,float x) {
     float run = 0.0;
     run = 4.*now/1.;
-    v.z += 4.*x + .25 * -cos(x*PI);
+    v.z += x + .25 * -cos(x*PI);
     v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
     return v;   
 }
@@ -122,9 +124,11 @@ void main() {
 
     float phi = 0.0;
     if (! DEBUG_FREEZE ) {
-        phi += -now/4.;
-        phi += .5 * sin( Ease( now ) );
-        phi += .25 * cos( Ease(now) );
+        
+        
+        
+        phi += -now/TAU;
+          phi += (PI/(2.*wordCount)) * -cos( PI * Ease(now) );
     }
 
     float ARC = TAU;
@@ -142,8 +146,8 @@ void main() {
     if (! DEBUG_FREEZE ) {
         rho = now/5.;
     }
-    pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
-    pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
+//    pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
+//    pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
 
 
     gl_Position = projection * view * model * pos;

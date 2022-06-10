@@ -34,13 +34,15 @@ const (
 	WORDCOUNT gfx.UniformName = "wordCount"
 	MAXWIDTH  gfx.UniformName = "maxWidth"
 	//MAXLENGTH gfx.UniformName = "maxLength"
-	WORDINDEX gfx.UniformName = "wordIndex"
-	WORDWIDTH gfx.UniformName = "wordWidth"
+	//WORDINDEX gfx.UniformName = "wordIndex"
+	//WORDWIDTH gfx.UniformName = "wordWidth"
 	WORDFADER gfx.UniformName = "wordFader"
 	WORDAGE   gfx.UniformName = "wordAge"
 )
 
 const (
+	WORDINDEX gfx.AttribName = "wordIndex"
+	WORDWIDTH gfx.AttribName = "wordWidth"
 	CHAROFFSET gfx.AttribName = "charOffset"
 	CHARINDEX  gfx.AttribName = "charIndex"
 )
@@ -102,7 +104,7 @@ func (set *Set) generateData(font *gfx.Font) {
 		if word.width > maxWidth {
 			maxWidth = word.width
 		}
-		set.data = append(set.data, set.vertices(word.text, font, word.width)...)
+		set.data = append(set.data, set.vertices(word.text, float32(word.index), word.width, font)...)
 	}
 	set.widestWord = maxWidth
 	set.object.BufferData(len(set.data)*4, set.data)
@@ -114,14 +116,16 @@ func (set *Set) generateData(font *gfx.Font) {
 
 func (set *Set) vertices(
 	text string,
+	wordIndex float32,
+	wordWidth float32,
 	font *gfx.Font,
-	totalWidth float32,
 ) []float32 {
 
 	var ret = []float32{}
 
+
 	charIndex := 0
-	offset := -totalWidth / 2.
+	offset := -wordWidth / 2.
 	for _, run := range text {
 
 		glyphCoord := getGlyphCoord(run)
@@ -173,13 +177,13 @@ func (set *Set) vertices(
 		*/
 
 		data := []float32{
-			//            x,       y,   z,      tx,      ty,
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, // A
-			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, // B
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, // C
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, // C
-			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, off, // D
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, // A
+			//        x,       y,   z,      tx,      ty,
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, // A
+			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, wordIndex, wordWidth, // B
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, // C
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, // C
+			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, off, wordIndex, wordWidth, // D
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, // A
 		}
 		ret = append(ret, data...)
 
@@ -233,10 +237,12 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
 	//	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
 	set.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
-	set.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1)*4, (0)*4)
-	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1)*4, (0+3)*4)
-	set.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
-	set.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1)*4, (0+3+2+1)*4)
+	set.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1+1+1)*4, (0)*4)
+	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1+1+1)*4, (0+3)*4)
+	set.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1+1+1)*4, (0+3+2)*4)
+	set.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1+1+1)*4, (0+3+2+1)*4)
+	set.program.VertexAttribPointer(WORDINDEX, 1, (3+2+1+1+1+1)*4, (0+3+2+1+1)*4)
+	set.program.VertexAttribPointer(WORDWIDTH, 1, (3+2+1+1+1+1)*4, (0+3+2+1+1+1)*4)
 
 	count := int32(1)
 	offset := int32(0)
@@ -252,8 +258,8 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		set.texture.Uniform(set.program)
 		count = int32(utf8.RuneCountInString(word.text))
 
-		set.program.Uniform1f(WORDINDEX, float32(word.index))
-		set.program.Uniform1f(WORDWIDTH, word.width)
+		//set.program.Uniform1f(WORDINDEX, float32(word.index))
+		//set.program.Uniform1f(WORDWIDTH, word.width)
 
 		fader := float32(1.0)
 		if word.fader != nil {
