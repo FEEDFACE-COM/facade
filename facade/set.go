@@ -18,32 +18,32 @@ const DEBUG_SET = true
 const HARD_MAX_LENGTH = 80.0
 
 type Set struct {
-	vert, frag string
-	maxLength  float32
-
+	maxLength  uint
 	wordBuffer *WordBuffer
+
+	maxWord Word
 
 	texture *gfx.Texture
 	program *gfx.Program
 	object  *gfx.Object
 	data    []float32
 
+	vert, frag  string
 	refreshChan chan bool
 }
 
 const (
-	WORDCOUNT gfx.UniformName = "wordCount"
-	MAXWIDTH  gfx.UniformName = "maxWidth"
-	//MAXLENGTH gfx.UniformName = "maxLength"
-	//WORDINDEX gfx.UniformName = "wordIndex"
-	//WORDWIDTH gfx.UniformName = "wordWidth"
-	WORDFADER gfx.UniformName = "wordFader"
-	WORDAGE   gfx.UniformName = "wordAge"
+	WORDCOUNT     gfx.UniformName = "wordCount"
+	WORDMAXWIDTH  gfx.UniformName = "wordMaxWidth"
+	WORDMAXLENGTH gfx.UniformName = "wordMaxLength"
+	WORDFADER     gfx.UniformName = "wordFader"
+	WORDAGE       gfx.UniformName = "wordAge"
 )
 
 const (
-	WORDINDEX gfx.AttribName = "wordIndex"
-	WORDWIDTH gfx.AttribName = "wordWidth"
+	WORDINDEX  gfx.AttribName = "wordIndex"
+	WORDWIDTH  gfx.AttribName = "wordWidth"
+	WORDLENGTH gfx.AttribName = "wordLength"
 	CHAROFFSET gfx.AttribName = "charOffset"
 	CHARINDEX  gfx.AttribName = "charIndex"
 )
@@ -76,6 +76,7 @@ func (set *Set) checkRefresh() bool {
 func NewSet(buffer *WordBuffer) *Set {
 	ret := &Set{
 		wordBuffer: buffer,
+		maxWord:    Word{},
 	}
 
 	ret.vert = ShaderDefaults.GetVert()
@@ -90,26 +91,41 @@ func (set *Set) generateData(font *gfx.Font) {
 	//setup vertex + bind order arrays
 	set.data = []float32{}
 
-	charCount := 0
 	words := set.wordBuffer.Words()
 	maxWidth := float32(0.)
+	maxLength := uint(0)
+	charCount := 0
 	for _, word := range words {
 
 		word.width = float32(0.)
+		word.length = 0
 		for _, run := range word.text {
 			glyphCoord := getGlyphCoord(run)
 			glyphSize := font.Size(glyphCoord.X, glyphCoord.Y)
 			word.width += glyphSize.W / glyphSize.H
+			word.length += 1
 			charCount += 1
 		}
 		if word.width > maxWidth {
 			maxWidth = word.width
+			maxLength = word.length
 		}
-		set.data = append(set.data, set.vertices(word.text, float32(word.index), word.width, font)...)
+		if word.length > maxLength {
+			maxLength = word.length
+			maxWidth = word.width
+		}
+		set.data = append(set.data, set.vertices(word.text, float32(word.index), float32(word.length), float32(word.width), font)...)
 	}
+
+	if set.maxLength == 0 { // actually counted max values
+		set.maxWord = Word{length: maxLength, width: maxWidth}
+	} else { // config max length and font ratio
+		set.maxWord = Word{length: set.maxLength, width: float32(set.maxLength) * font.Ratio()}
+	}
+
 	set.object.BufferData(len(set.data)*4, set.data)
 	if DEBUG_SET {
-		log.Debug("%s generate %d words %d chars %d floats, maxwidth %.1f", set.Desc(), len(words), charCount, len(set.data), maxWidth)
+		log.Debug("%s generate words:%d chars:%d floats:%d, max length:%d width:%.1f", set.Desc(), len(words), charCount, len(set.data), maxLength, maxWidth)
 	}
 
 }
@@ -117,12 +133,12 @@ func (set *Set) generateData(font *gfx.Font) {
 func (set *Set) vertices(
 	text string,
 	wordIndex float32,
+	wordLength float32,
 	wordWidth float32,
 	font *gfx.Font,
 ) []float32 {
 
 	var ret = []float32{}
-
 
 	charIndex := 0
 	offset := -wordWidth / 2.
@@ -178,12 +194,12 @@ func (set *Set) vertices(
 
 		data := []float32{
 			//        x,       y,   z,      tx,      ty,
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, // A
-			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, wordIndex, wordWidth, // B
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, // C
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, // C
-			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, off, wordIndex, wordWidth, // D
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, // A
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // A
+			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // B
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // C
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // C
+			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // D
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // A
 		}
 		ret = append(ret, data...)
 
@@ -224,11 +240,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.object.BindBuffer()
 
 	set.program.Uniform1f(WORDCOUNT, float32(set.wordBuffer.SlotCount()))
-	maxLength := float32(8.0)
-	if set.maxLength > 0 {
-		maxLength = set.maxLength;
-	}
-	set.program.Uniform1f(MAXWIDTH, float32(maxLength))
+
+	set.program.Uniform1f(WORDMAXWIDTH, float32(set.maxWord.length))
+	set.program.Uniform1f(WORDMAXWIDTH, set.maxWord.width)
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 	set.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
@@ -241,12 +255,13 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
 	//	model = model.Mul4( mgl32.Translate3D(0.0,trans,0.0) )
 	set.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
-	set.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1+1+1)*4, (0)*4)
-	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1+1+1)*4, (0+3)*4)
-	set.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1+1+1)*4, (0+3+2)*4)
-	set.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1+1+1)*4, (0+3+2+1)*4)
-	set.program.VertexAttribPointer(WORDINDEX, 1, (3+2+1+1+1+1)*4, (0+3+2+1+1)*4)
-	set.program.VertexAttribPointer(WORDWIDTH, 1, (3+2+1+1+1+1)*4, (0+3+2+1+1+1)*4)
+	set.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1+1+1+1)*4, (0)*4)
+	set.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1+1+1+1)*4, (0+3)*4)
+	set.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1+1+1+1)*4, (0+3+2)*4)
+	set.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1+1+1+1)*4, (0+3+2+1)*4)
+	set.program.VertexAttribPointer(WORDINDEX, 1, (3+2+1+1+1+1+1)*4, (0+3+2+1+1)*4)
+	set.program.VertexAttribPointer(WORDWIDTH, 1, (3+2+1+1+1+1+1)*4, (0+3+2+1+1+1)*4)
+	set.program.VertexAttribPointer(WORDLENGTH, 1, (3+2+1+1+1+1+1)*4, (0+3+2+1+1+1+1)*4)
 
 	count := int32(1)
 	offset := int32(0)
@@ -292,9 +307,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		}
 		offset += count
 	}
-    if DEBUG_SET && verbose {
-        //log.Debug("%s render %d words", set.Desc(), len(words) )
-    }
+	if DEBUG_SET && verbose {
+		//log.Debug("%s render %d words", set.Desc(), len(words) )
+	}
 	set.wordBuffer.mutex.Unlock()
 }
 
@@ -389,7 +404,7 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 	}
 
 	if config.GetSetMaxLength() {
-		set.maxLength = float32(config.GetMaxLength())
+		set.maxLength = uint(config.GetMaxLength())
 	}
 
 	if config.GetSetAging() {
@@ -409,21 +424,21 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 
 func (set *Set) fill(name string) []string {
 	switch name {
-    case "title":
-        ret := []string{"FACADE"}
-        if set.maxLength >= 11. {
-            ret = []string{"F A C A D E"}
-        }
-        if set.maxLength >= 15. {
-            ret = append(ret,"by FEEDFACE.COM")
-        }
-        return ret
-        
+	case "title":
+		ret := []string{"FACADE"}
+		if set.maxLength >= 11. {
+			ret = []string{"F A C A D E"}
+		}
+		if set.maxLength >= 15. {
+			ret = append(ret, "by FEEDFACE.COM")
+		}
+		return ret
+
 	case "index":
-        maxLength := 8
-        if set.maxLength >= 1.0 {
-            maxLength = int(set.maxLength)
-        }
+		maxLength := 8
+		if set.maxLength >= 1.0 {
+			maxLength = int(set.maxLength)
+		}
 		ret := []string{}
 		for i := 0; i < set.wordBuffer.slotCount; i++ {
 			s := ""
@@ -462,8 +477,8 @@ xray
 yankee
 zulu
 `, "\n")[1:]
-    default:
-        log.Error("no such wordbuffer fill pattern: '%s'",name)
+	default:
+		log.Error("no such wordbuffer fill pattern: '%s'", name)
 	}
 	return []string{}
 }

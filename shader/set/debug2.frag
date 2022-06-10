@@ -3,15 +3,19 @@ uniform float now;
 uniform float debugFlag;
 uniform sampler2D texture;
 
-uniform float wordMax;
+uniform float wordCount;
 uniform float wordMaxWidth;
 uniform float wordFader;
+uniform float wordWidth;
 uniform float wordIndex;
-uniform float wordCount;
+uniform float wordValue;
+
+uniform float charCount;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
-
+varying float vCharIndex;
+varying vec4 vCoord;
 
 
 bool DEBUG    = debugFlag > 0.0;
@@ -28,71 +32,42 @@ float EaseInEaseOut(float x) { return -0.5 * cos( x * PI ) + 0.5; }
 float EaseOut(float x) { return        cos(x*PI/2. + 3.*PI/2. );        }
 float EaseIn(float x) {  return  -1. * cos(x*PI/2.            ) + 1.  ; }
 
-
-vec3 color(vec4 pos, bool front) {
-    vec3 ret;
-    vec3 one = MAGENTA;
-    vec3 two = GREEN;
-    if (mod(wordIndex,2.)==1.) {
-        one = CYAN;
-        two = RED;
-    }
-    
-    if (front) {
-        return one;
-    }
-    return two;        
-}
-
-bool check() {
-    float CHECK = 16.;
-    if (wordIndex == CHECK || wordIndex+1. == CHECK ) {
-        return true;
-    }
-    return false; 
-}
-
 void main() {
     vec4 col;
     vec4 pos = vPosition;
     vec4 tex = vTexCoord;
 
+    vec2 grid = vCoord.xy;
+    vec2 word = vCoord.zw;
 
-    if (mod(wordIndex,2.)==1.) {
+    col.a = 0.5 * wordFader;
 
+    col.rgb = vec3(0.);
 
-    }    
+    if (word.x <= 0.0) {
+        col.r = 1.0;
+    } else if (word.x <= 1.0) { 
+        col.rb = vec2(1.0);
+    } else if (word.x <= 2.0) { 
+        col.rgb = vec3(1.);
+    } else if (word.x <= 3.0) { 
+        col.gb = vec2(1.0);
+    } else if (word.x <= 4.0) { 
+        col.b = 1.0;
+    } else {
+        col.rgb = vec3(1.);
+    }
+
+    
+
     
     if (DEBUG) {
+        col.rgb = vec3(1.,1.,1.);
         col.a = 1.0;
-        col.rgb += color(vPosition,gl_FrontFacing);;
-    }
-
-    if (!DEBUG) {
-        col.a = 0.5;
-        col.rgb += color(vPosition,gl_FrontFacing);
-    
     }
     
-
     
-    if (check()) {
-        col.rgb = WHITE;
-    }
-        
     
-    if (!check() && !gl_FrontFacing) {
-        col.rgb = WHITE;
-        col.a = 0.5;
-    }
-    
-    if (gl_FrontFacing) {
-//        if  (pos.x < 0.) {
-//            col.b = 0.;    
-//        } else {
-//            col.b = 1.;
-//        }
-    }    
     gl_FragColor = col;
     
 }

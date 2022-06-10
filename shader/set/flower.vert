@@ -8,24 +8,22 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
-uniform float maxWidth;
+uniform float wordMaxWidth;
+uniform float wordMaxLength;
 
-//uniform float wordIndex;
-//uniform float wordWidth;
 uniform float wordFader;
 uniform float wordValue;
-
-uniform float charCount;
 
 uniform float screenRatio;
 uniform float fontRatio;
 
 attribute vec3 vertex;
 attribute vec2 texCoord;
-attribute float wordIndex;
-attribute float wordWidth;
 attribute float charIndex;
 attribute float charOffset;
+attribute float wordIndex;
+attribute float wordLength;
+attribute float wordWidth;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
@@ -105,7 +103,7 @@ vec3 zoom(vec3 v) {
     float r = 3.;
     float MAX_WIDTH = 8.;
     float zoom = 1./8.;
-    zoom = 1./ (r+log(maxWidth));
+    zoom = 1./ (r+log(wordMaxWidth));
     v.xyz *= zoom;
     return v;
 }
@@ -140,9 +138,9 @@ void main() {
 
     float phi = 0.0;
     if (! DEBUG_FREEZE ) {
-        
-        
-        
+
+
+
         phi += -now/TAU;
           phi += (PI/(2.*wordCount)) * -cos( PI * Ease(now) );
     }
@@ -151,7 +149,9 @@ void main() {
     float sector = ARC / wordCount;
     float gamma = wordIndex * sector;
 
-    float XXX = pos.x / maxWidth;
+
+
+    float XXX = pos.x / wordMaxWidth;
     float radius1 = 3.;
     
     pos.xyz = rotate(gamma+phi,pos.xyz);

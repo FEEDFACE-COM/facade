@@ -35,6 +35,9 @@ func sendBytes(raw []byte, bufChan chan TextSeq) {
 	var item = TextSeq{}
 	str := string(raw)
 	item.Text = []rune(str)
+
+	// VERIFY CORRECT UTF-8 HERE //
+
 	bufChan <- item
 }
 

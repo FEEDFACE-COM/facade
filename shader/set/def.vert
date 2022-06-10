@@ -8,12 +8,11 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
-uniform float maxWidth;
+uniform float wordMaxWidth;
+uniform float wordMaxLength;
 
 uniform float wordFader;
 uniform float wordValue;
-
-uniform float charCount;
 
 uniform float screenRatio;
 uniform float fontRatio;
@@ -23,6 +22,7 @@ attribute vec2 texCoord;
 attribute float charIndex;
 attribute float charOffset;
 attribute float wordIndex;
+attribute float wordLength;
 attribute float wordWidth;
 
 varying vec4 vTexCoord;
@@ -30,6 +30,7 @@ varying vec4 vPosition;
 varying float vCharIndex;
 varying float vWordIndex;
 varying float vWordWidth;
+varying vec4 vCoord;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -64,12 +65,15 @@ void main() {
     float row,col;
 
 
-    float WIDTH_MAX = 8.;
-    if (maxWidth > 0.0) {
-        WIDTH_MAX = maxWidth;
-    }
+//    float WIDTH_MAX = 8.;
+//    float SPACER = 1.;
+//    if (wordMaxWidth > 0.0) {
+//        WIDTH_MAX = wordMaxWidth;
+//    }
+//    float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
+
     float SPACER = 1.;
-    float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
+    float colWidth = (wordMaxWidth+SPACER)*fontRatio;
     
     
 
@@ -86,9 +90,10 @@ void main() {
     } 
 
 
+
     rows = ceil( wordCount / cols );
 
-    float wordRatio = WIDTH_MAX / 1.;
+    float wordRatio = wordMaxWidth / 1.;
     float ratio = wordRatio / screenRatio ;
     //ratio = screenRatio / wordRatio;
     //ratio = 1.;
@@ -127,7 +132,7 @@ void main() {
 //    pos.y -= 1.;
     
     
-    
+    vCoord = vec4(cols,rows,col,row);
  
     gl_Position = projection * view * model * pos;
 }

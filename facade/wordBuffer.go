@@ -31,12 +31,13 @@ const (
 )
 
 type Word struct {
-	text  string
-	index uint
-	width float32
-	state WordState
-	timer *gfx.Timer
-	fader *gfx.Timer
+	text   string
+	index  uint
+	length uint
+	width  float32
+	state  WordState
+	timer  *gfx.Timer
+	fader  *gfx.Timer
 }
 
 type WordBuffer struct {
@@ -371,9 +372,9 @@ func (buffer *WordBuffer) Fill(fill []string) {
 
 	}
 
-    if DEBUG_WORDBUFFER {
-        log.Debug("%s filled %d words",buffer.Desc(),buffer.slotCount)
-    }
+	if DEBUG_WORDBUFFER {
+		log.Debug("%s filled %d words", buffer.Desc(), buffer.slotCount)
+	}
 
 	if buffer.watermark != 0.0 {
 		buffer.checkWatermark()
