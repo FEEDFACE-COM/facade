@@ -30,9 +30,13 @@ attribute float charOffset;
 varying vec4 vTexCoord;
 varying vec4 vPosition;
 varying float vCharIndex;
+varying float vWordIndex;
+varying float vWordWidth;
+
 
 bool DEBUG = debugFlag > 0.0;
 bool DEBUG_FREEZE = false;
+bool DEBUG_TOP = false;
 
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
@@ -100,9 +104,11 @@ vec3 wave(vec3 v) {
 
 vec3 curve(vec3 v,float x) {
     float run = 0.0;
-    run = 4.*now/1.;
-    v.z += x + .25 * -cos(x*PI);
-    v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
+    if (!DEBUG_TOP) {
+        run = 4.*now/1.;
+    }
+    v.z += log(x+1.) + .25 * -cos(x*PI);
+    //v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
     return v;   
 }
 
@@ -117,6 +123,8 @@ void main() {
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
+    vWordIndex = wordIndex;
+    vWordWidth = wordWidth;
     
 
     pos.y += .5;
@@ -146,9 +154,10 @@ void main() {
     if (! DEBUG_FREEZE ) {
         rho = now/5.;
     }
-//    pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
-//    pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
-
+    if (! DEBUG_TOP ) {
+        pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
+        pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
+    }
 
     gl_Position = projection * view * model * pos;
 }

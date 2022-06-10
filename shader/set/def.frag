@@ -6,7 +6,6 @@ uniform sampler2D texture;
 uniform float wordMax;
 uniform float wordMaxWidth;
 uniform float wordFader;
-uniform float wordIndex;
 uniform float wordCount;
 
 varying vec4 vPosition;

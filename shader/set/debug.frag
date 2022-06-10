@@ -6,8 +6,6 @@ uniform sampler2D texture;
 uniform float wordCount;
 uniform float wordMaxWidth;
 uniform float wordFader;
-uniform float wordWidth;
-uniform float wordIndex;
 uniform float wordValue;
 
 uniform float charCount;
@@ -15,6 +13,9 @@ uniform float charCount;
 varying vec4 vPosition;
 varying vec4 vTexCoord;
 varying float vCharIndex;
+
+varying float vWordIndex;
+varying float vWordWidth;
 
 
 bool DEBUG    = debugFlag > 0.0;
@@ -38,18 +39,18 @@ void main() {
 
     col.a = 0.5 * wordFader;
 
-    if ( mod(wordIndex,2.)==1.0 && mod(vCharIndex,2.)==1.0 ) {
+    if ( mod(vWordIndex,2.)==1.0 && mod(vCharIndex,2.)==1.0 ) {
         col.rgb = vec3(0.8,0.8,0.8);
-    } else if ( mod(wordIndex,2.)!=1.0 && mod(vCharIndex,2.)!=1.0 ) {
+    } else if ( mod(vWordIndex,2.)!=1.0 && mod(vCharIndex,2.)!=1.0 ) {
         col.rgb = vec3(0.8,0.8,0.8);
     } else {
         col.rgb = vec3(0.4,0.4,0.4);
     }
     
-    if ( mod(wordIndex,2.)==1.0 && vCharIndex == 0.0) {
+    if ( mod(vWordIndex+1.,2.)==1.0 && vCharIndex == 0.0) {
         col.r = 1.;
     }
-    if ( mod(wordIndex,2.)==0.0 && vCharIndex == 0.0) {
+    if ( mod(vWordIndex,2.)==0.0 && vCharIndex == 0.0) {
         col.b = 1.;
     }
     
