@@ -64,19 +64,14 @@ void main() {
     float row,col;
 
 
-    float WIDTH_MAX = maxWidth;
-    WIDTH_MAX = 8.;
-    float SPACER = 0.;
+    float WIDTH_MAX = 8.;
+    if (maxWidth > 0.0) {
+        WIDTH_MAX = maxWidth;
+    }
+    float SPACER = 1.;
     float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
     
     
-/*
-    cols = ceil( log(slots) );
-    rows = ceil(slots/cols);
-    col = mod(wordIndex+1.,cols);  
-    row = (wordIndex-col)/cols;
-//    row = rows - row - 1.; // switch top-down
-*/
 
     if (wordCount == 1.0) {
         cols = 1.;
@@ -107,6 +102,7 @@ void main() {
     }
 
     row = mod(wordIndex+1., rows) -1.;
+    row = rows - row - 1.; // switch top-down
     col = floor((wordIndex+1.) / rows);
 
     pos.x += col * colWidth;
