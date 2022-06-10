@@ -75,7 +75,7 @@ func (config *SetConfig) Desc() string {
 }
 
 func (config *SetConfig) AddFlags(flagset *flag.FlagSet) {
-	patterns := "alpha,index,clear"
+	patterns := "title,index,alpha,clear"
 	flagset.Uint64Var(&config.Slots, "n", SetDefaults.Slots, "word count")
 	flagset.Uint64Var(&config.MaxLength, "m", SetDefaults.MaxLength, "word max length")
 	flagset.Float64Var(&config.Lifetime, "life", SetDefaults.Lifetime, "word lifetime")

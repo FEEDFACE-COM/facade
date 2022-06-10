@@ -13,7 +13,9 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_SET = false
+const DEBUG_SET = true
+
+const HARD_MAX_LENGTH = 80.0
 
 type Set struct {
 	vert, frag string
@@ -107,7 +109,7 @@ func (set *Set) generateData(font *gfx.Font) {
 	}
 	set.object.BufferData(len(set.data)*4, set.data)
 	if DEBUG_SET {
-		log.Debug("%s generated words, max width:%d chars:%d floats:%d", set.Desc(), len(words), charCount, len(set.data))
+		log.Debug("%s generate %d words %d chars %d floats, maxwidth %.1f", set.Desc(), len(words), charCount, len(set.data), maxWidth)
 	}
 
 }
@@ -190,7 +192,7 @@ func (set *Set) vertices(
 	}
 
 	if DEBUG_SET {
-		log.Debug("%s data generate '%s'", set.Desc(), text)
+		//log.Debug("%s data generate '%s'", set.Desc(), text)
 	}
 
 	return ret
@@ -260,9 +262,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		set.texture.Uniform(set.program)
 		count = int32(utf8.RuneCountInString(word.text))
 
-		//set.program.Uniform1f(WORDINDEX, float32(word.index))
-		//set.program.Uniform1f(WORDWIDTH, word.width)
-
 		fader := float32(1.0)
 		if word.fader != nil {
 			fader = word.fader.Value()
@@ -274,10 +273,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 			age = word.timer.Value()
 		}
 		set.program.Uniform1f(WORDAGE, age)
-
-		if DEBUG_SET && verbose {
-			log.Debug("%s render #%.0f width:%.1f fader:%.1f", set.Desc(), word.index, word.width, fader)
-		}
 
 		if !debug || debug {
 			set.program.SetDebug(false)
@@ -297,6 +292,9 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		}
 		offset += count
 	}
+    if DEBUG_SET && verbose {
+        //log.Debug("%s render %d words", set.Desc(), len(words) )
+    }
 	set.wordBuffer.mutex.Unlock()
 }
 
@@ -411,11 +409,25 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 
 func (set *Set) fill(name string) []string {
 	switch name {
+    case "title":
+        ret := []string{"FACADE"}
+        if set.maxLength >= 11. {
+            ret = []string{"F A C A D E"}
+        }
+        if set.maxLength >= 15. {
+            ret = append(ret,"by FEEDFACE.COM")
+        }
+        return ret
+        
 	case "index":
+        maxLength := 8
+        if set.maxLength >= 1.0 {
+            maxLength = int(set.maxLength)
+        }
 		ret := []string{}
 		for i := 0; i < set.wordBuffer.slotCount; i++ {
 			s := ""
-			for j := 0; j < int(set.maxLength); j++ {
+			for j := 0; j < maxLength; j++ {
 				s += fmt.Sprintf("%1x", i%0x10)
 			}
 			ret = append(ret, s)
@@ -450,6 +462,8 @@ xray
 yankee
 zulu
 `, "\n")[1:]
+    default:
+        log.Error("no such wordbuffer fill pattern: '%s'",name)
 	}
 	return []string{}
 }

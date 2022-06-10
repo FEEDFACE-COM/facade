@@ -15,7 +15,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDBUFFER = false
+const DEBUG_WORDBUFFER = true
 const DEBUG_WORDBUFFER_DUMP = false
 
 const maxWordLength = 64 // found experimentally
@@ -370,6 +370,10 @@ func (buffer *WordBuffer) Fill(fill []string) {
 		buffer.words[idx] = word
 
 	}
+
+    if DEBUG_WORDBUFFER {
+        log.Debug("%s filled %d words",buffer.Desc(),buffer.slotCount)
+    }
 
 	if buffer.watermark != 0.0 {
 		buffer.checkWatermark()
