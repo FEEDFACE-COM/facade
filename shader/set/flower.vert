@@ -151,7 +151,7 @@ void main() {
     float sector = ARC / wordCount;
     float gamma = wordIndex * sector;
 
-    float XXX = pos.x / wordWidth;
+    float XXX = pos.x / maxWidth;
     float radius1 = 3.;
     
     pos.xyz = rotate(gamma+phi,pos.xyz);
