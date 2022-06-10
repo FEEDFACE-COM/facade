@@ -30,7 +30,6 @@ varying vec4 vPosition;
 varying float vCharIndex;
 varying float vWordIndex;
 varying float vWordWidth;
-varying vec4 vCoord;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -64,18 +63,12 @@ void main() {
     float slots = wordCount;
     float row,col;
 
-
-//    float WIDTH_MAX = 8.;
-//    float SPACER = 1.;
-//    if (wordMaxWidth > 0.0) {
-//        WIDTH_MAX = wordMaxWidth;
-//    }
-//    float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
-
     float SPACER = 1.;
-    float colWidth = (wordMaxWidth+SPACER)*fontRatio;
+    float colWidth = (wordMaxLength+SPACER)*fontRatio;
     
     
+    colWidth = wordMaxWidth;
+    colWidth += SPACER * fontRatio;
 
     if (wordCount == 1.0) {
         cols = 1.;
@@ -83,7 +76,7 @@ void main() {
         cols = 2.;
     } else if (wordCount <= 24.) {
         cols = 3.;
-    } else if (wordCount <= 64.) {
+    } else if (wordCount <= 48.) {
         cols = 4.;
     } else {
         cols = floor( sqrt(wordCount) / 1.6);
@@ -94,17 +87,11 @@ void main() {
     rows = ceil( wordCount / cols );
 
     float wordRatio = wordMaxWidth / 1.;
-    float ratio = wordRatio / screenRatio ;
-    //ratio = screenRatio / wordRatio;
-    //ratio = 1.;
+    float ratio = wordRatio / screenRatio;
 
     float a = sqrt( wordCount );
     float b = floor(a/ratio);
 
-
-    if (wordIndex == floor(a) ) {
-        //pos.z += 10.;
-    }
 
     row = mod(wordIndex+1., rows) -1.;
     row = rows - row - 1.; // switch top-down
@@ -116,6 +103,13 @@ void main() {
     pos.x -= (cols/2.) * colWidth;
     pos.y -= rows/2.;
 
+//    //DEBUG
+//    if (wordIndex == floor(0)) { // 2
+//        pos.z+=100.;
+//    }
+//    if (wordIndex == floor(1)) { // 0
+//       pos.z+=100.;
+//    }
 
 
     float zoom = 1.0;
@@ -128,12 +122,6 @@ void main() {
     pos.y *= zoom;
     
     
-//    pos.x -= screenRatio;
-//    pos.y -= 1.;
-    
-    
-    vCoord = vec4(cols,rows,col,row);
- 
     gl_Position = projection * view * model * pos;
 }
 

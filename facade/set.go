@@ -241,7 +241,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 
 	set.program.Uniform1f(WORDCOUNT, float32(set.wordBuffer.SlotCount()))
 
-	set.program.Uniform1f(WORDMAXWIDTH, float32(set.maxWord.length))
+	set.program.Uniform1f(WORDMAXLENGTH, float32(set.maxWord.length))
 	set.program.Uniform1f(WORDMAXWIDTH, set.maxWord.width)
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
@@ -486,7 +486,7 @@ zulu
 func (set *Set) Desc() string {
 	ret := "set["
 	ret += fmt.Sprintf("#%d/%d", set.wordBuffer.WordCount(), set.wordBuffer.SlotCount())
-	ret += fmt.Sprintf("≤%.0f", set.maxLength)
+	ret += fmt.Sprintf("≤%d", set.maxLength)
 	if set.wordBuffer.Lifetime() > 0.0 {
 		ret += fmt.Sprintf(" l%.1f", set.wordBuffer.Lifetime())
 	}
