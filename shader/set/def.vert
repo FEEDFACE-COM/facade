@@ -8,10 +8,8 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
-uniform float wordMaxWidth;
-uniform float wordIndex;
+uniform float maxWidth;
 
-uniform float wordWidth;
 uniform float wordFader;
 uniform float wordValue;
 
@@ -24,10 +22,14 @@ attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
 attribute float charOffset;
+attribute float wordIndex;
+attribute float wordWidth;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;
 varying float vCharIndex;
+varying float vWordIndex;
+varying float vWordWidth;
 
 bool DEBUG = debugFlag > 0.0;
 
@@ -49,6 +51,8 @@ void main() {
     vPosition =    pos;
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
+    vWordIndex = wordIndex;
+    vWordWidth = wordWidth;
 
 
     pos.y += 0.5;
@@ -57,27 +61,60 @@ void main() {
 
     float rows,cols;
     float slots = wordCount;
+    float row,col;
 
 
-    float WIDTH_MAX = wordMaxWidth;
+    float WIDTH_MAX = maxWidth;
+    WIDTH_MAX = 8.;
     float SPACER = 0.;
     float colWidth = (WIDTH_MAX+SPACER)*fontRatio;
     
     
-
+/*
     cols = ceil( log(slots) );
     rows = ceil(slots/cols);
-
-
-    float col = mod(wordIndex+1.,cols);  
-    float row = (wordIndex-col)/cols;
+    col = mod(wordIndex+1.,cols);  
+    row = (wordIndex-col)/cols;
 //    row = rows - row - 1.; // switch top-down
+*/
+
+    if (wordCount == 1.0) {
+        cols = 1.;
+    } else if (wordCount <= 8.0) {
+        cols = 2.;
+    } else if (wordCount <= 24.) {
+        cols = 3.;
+    } else if (wordCount <= 64.) {
+        cols = 4.;
+    } else {
+        cols = floor( sqrt(wordCount) / 1.6);
+    } 
+
+
+    rows = ceil( wordCount / cols );
+
+    float wordRatio = WIDTH_MAX / 1.;
+    float ratio = wordRatio / screenRatio ;
+    //ratio = screenRatio / wordRatio;
+    //ratio = 1.;
+
+    float a = sqrt( wordCount );
+    float b = floor(a/ratio);
+
+
+    if (wordIndex == floor(a) ) {
+        //pos.z += 10.;
+    }
+
+    row = mod(wordIndex+1., rows) -1.;
+    col = floor((wordIndex+1.) / rows);
 
     pos.x += col * colWidth;
     pos.y += row;
 
     pos.x -= (cols/2.) * colWidth;
-    pos.y -= (rows/2.);
+    pos.y -= rows/2.;
+
 
 
     float zoom = 1.0;

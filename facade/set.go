@@ -20,7 +20,6 @@ type Set struct {
 	maxLength  float32
 
 	wordBuffer *WordBuffer
-	widestWord float32
 
 	texture *gfx.Texture
 	program *gfx.Program
@@ -106,7 +105,6 @@ func (set *Set) generateData(font *gfx.Font) {
 		}
 		set.data = append(set.data, set.vertices(word.text, float32(word.index), word.width, font)...)
 	}
-	set.widestWord = maxWidth
 	set.object.BufferData(len(set.data)*4, set.data)
 	if DEBUG_SET {
 		log.Debug("%s generated words, max width:%d chars:%d floats:%d", set.Desc(), len(words), charCount, len(set.data))
@@ -224,7 +222,11 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	set.object.BindBuffer()
 
 	set.program.Uniform1f(WORDCOUNT, float32(set.wordBuffer.SlotCount()))
-	set.program.Uniform1f(MAXWIDTH, float32(set.widestWord))
+	maxLength := float32(8.0)
+	if set.maxLength > 0 {
+		maxLength = set.maxLength;
+	}
+	set.program.Uniform1f(MAXWIDTH, float32(maxLength))
 	set.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	set.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 	set.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))

@@ -8,7 +8,7 @@ uniform float now;
 uniform float debugFlag;
 
 uniform float wordCount;
-uniform float wordMaxWidth;
+uniform float maxWidth;
 
 //uniform float wordIndex;
 //uniform float wordWidth;
@@ -88,8 +88,7 @@ vec3 rotate(float w, vec3 v) {
     return rotz(w)*v;
 }
 
-vec3 translate(float w, vec3 v) {
-    float r = 3.0;
+vec3 translate(float w, float r, vec3 v) {
     v.x += cos(w)*r;
     v.y += sin(w)*r;
     return v;
@@ -102,13 +101,22 @@ vec3 wave(vec3 v) {
     return v;
 }
 
+vec3 zoom(vec3 v) {
+    float r = 3.;
+    float MAX_WIDTH = 8.;
+    float zoom = 1./8.;
+    zoom = 1./ (r+log(maxWidth));
+    v.xyz *= zoom;
+    return v;
+}
+
 vec3 curve(vec3 v,float x) {
     float run = 0.0;
     if (!DEBUG_TOP) {
-        run = 4.*now/1.;
+        run = 4.*now/2.;
     }
     v.z += log(x+1.) + .25 * -cos(x*PI);
-    //v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
+    v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
     return v;   
 }
 
@@ -144,10 +152,12 @@ void main() {
     float gamma = wordIndex * sector;
 
     float XXX = pos.x / wordWidth;
+    float radius1 = 3.;
     
     pos.xyz = rotate(gamma+phi,pos.xyz);
     pos.xyz = curve(pos.xyz,XXX);
-    pos.xyz = translate(gamma+phi,pos.xyz);
+    pos.xyz = translate(gamma+phi,radius1,pos.xyz);
+    pos.xyz = zoom(pos.xyz);
     
 
     float rho = 0.0;
@@ -159,7 +169,9 @@ void main() {
         pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
     }
 
+
     gl_Position = projection * view * model * pos;
 }
+
 
 
