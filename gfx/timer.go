@@ -27,18 +27,18 @@ func (timer *Timer) Duration() float32 { return timer.duration }
 func (timer *Timer) Count() uint       { return timer.count }
 func (timer *Timer) Fader() float32    { return timer.fader }
 
-func (timer *Timer) Edge(now float32) float32 {
-
-	// return negative remaining time
-	// or positive elapsed time
-	// whichever is closer to now
-
-	if timer.fader <= 0.5 {
-		return timer.Elapsed(now)
-	} else {
-		return -1. * timer.Remaining(now)
-	}
-}
+//func (timer *Timer) Edge(now float32) float32 {
+//
+//	// return negative remaining time
+//	// or positive elapsed time
+//	// whichever is closer to now
+//
+//	if timer.fader <= 0.5 {
+//		return timer.Elapsed(now)
+//	} else {
+//		return -1. * timer.Remaining(now)
+//	}
+//}
 
 func (timer *Timer) Elapsed(now float32) float32 {
 	// return 0 <= elapsed <= duration
@@ -75,6 +75,7 @@ func (timer *Timer) Value() float32 {
 //    timer.amp = 1.
 //    timer.bias = 0.
 //}
+
 
 func (timer *Timer) Extend(now float32) bool {
 
