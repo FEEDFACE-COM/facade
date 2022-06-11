@@ -17,7 +17,7 @@ type TextSeq struct {
 	Seq  *ansi.S
 }
 
-const TabWidth = 8
+const TabWidth = 4
 
 func (item *TextSeq) Desc() string {
 	ret := ""
