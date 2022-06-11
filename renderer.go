@@ -386,7 +386,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		} else {
 			if renderFailed == false { // first failure
 				log.Error("%s render error: %s", renderer.Desc(), piglet.ErrorString(e))
-			}
+			} else if RENDERER_FIXUP_RASPI {
+                //HACK: remove gles2 debug output 'glGetError 0x502'
+                str := fmt.Sprintf("\033[1A\033[K")
+                os.Stderr.Write([]byte(str))
+            }
 			renderFailed = true
 		}
 
@@ -604,3 +608,4 @@ func (renderer *Renderer) Desc() string {
 }
 
 const RENDERER_AVAILABLE = true
+
