@@ -86,7 +86,7 @@ package: clean ${BUILD_PACKAGE}
 	@echo "#FACADE packaged ${BUILD_PACKAGE}"
 
 demo:
-	@for f in ${SOURCES}; do cat $$f | while read -r line; do echo "$$line"; sleep 0.5; done; sleep 2; done
+	@for f in ${SOURCES}; do IFS=$(echo); echo "## $$f ##"; echo; cat $$f | while read -r line; do /bin/echo "$$line"; sleep 0.5; done; echo; echo; sleep 2; done
 
 get:
 	go get -v -u
