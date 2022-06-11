@@ -71,97 +71,48 @@ float len(vec3 v) {
 }
 
 
-//
-//vec3 rotate(float w, vec3 v) {
-//    return rotz(w)*v;
-//}
-//
-//vec3 translate(float w, float r, vec3 v) {
-//    v.x += cos(w)*r;
-//    v.y += sin(w)*r;
-//    return v;
-//}
-//
-//vec3 wave(vec3 v) {
-//    float run = 0.0;
-//    run = 4.*now/1.;
-//    v.z += .25 * sin(run + v.x + 1.);
-//    return v;
-//}
-//
-//vec3 zoom(vec3 v) {
-//    float r = 3.;
-//    float MAX_WIDTH = 8.;
-//    float zoom = 1./8.;
-//    zoom = 1./ (r+log(wordMaxWidth));
-//    v.xyz *= zoom;
-//    return v;
-//}
-//
-//vec3 curve(vec3 v,float x) {
-//    float run = 0.0;
-//    if (!DEBUG_TOP) {
-//        run = 4.*now/2.;
-//    }
-//    v.z += log(x+1.) + .25 * -cos(x*PI);
+
+vec3 rotate(float w, vec3 v) {
+    return rotz(w)*v;
+}
+
+vec3 translate(float w, float r, vec3 v) {
+    v.x += cos(w)*r;
+    v.y += sin(w)*r;
+    return v;
+}
+
+vec3 wave(vec3 v) {
+    float run = 0.0;
+    run = 4.*now/1.;
+    v.z += .25 * sin(run + v.x + 1.);
+    return v;
+}
+
+vec3 zoom(vec3 v) {
+    float r = 3.;
+    float MAX_WIDTH = 8.;
+    float zoom = 1./8.;
+    zoom = 1./ (r+log(tileCount.x));
+    v.xyz *= zoom;
+    return v;
+}
+
+vec3 curve(vec3 v,float x) {
+    float run = 0.0;
+    if (!DEBUG_TOP) {
+        run = 4.*now/2.;
+    }
+    v.z += log(x+1.) + .25 * -cos(x*PI);
 //    v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
-//    return v;   
-//}
-//
-//
-//
-//
-//void pain() {
-//    float fader = wordFader;
-//    
-//    vec4 pos = vec4(vertex,1);
-//
-//    vPosition =    pos;
-//    vTexCoord = vec4(texCoord.xy,1.,1.);
-//    vCharIndex = charIndex;
-//    vWordIndex = wordIndex;
-//    vWordWidth = wordWidth;
-//    
-//
-//    pos.y += .5;
-//    pos.x += wordWidth/2.;
-//
-//    float phi = 0.0;
-//    if (! DEBUG_FREEZE ) {
-//
-//
-//
-//        phi += -now/TAU;
-//          phi += (PI/(2.*wordCount)) * -cos( PI * Ease(now) );
-//    }
-//
-//    float ARC = TAU;
-//    float sector = ARC / wordCount;
-//    float gamma = wordIndex * sector;
-//
-//
-//
-//    float XXX = pos.x / wordMaxWidth;
-//    float radius1 = 3.;
-//    
-//    pos.xyz = rotate(gamma+phi,pos.xyz);
-//    pos.xyz = curve(pos.xyz,XXX);
-//    pos.xyz = translate(gamma+phi,radius1,pos.xyz);
-//    pos.xyz = zoom(pos.xyz);
-//    
-//
-//    float rho = 0.0;
-//    if (! DEBUG_FREEZE ) {
-//        rho = now/5.;
-//    }
-//    if (! DEBUG_TOP ) {
-//        pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
-//        pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
-//    }
-//
-//
-//    gl_Position = projection * view * model * pos;
-//}
+    return v;   
+}
+
+
+
+
+
+
 
 
 void main() {
@@ -171,27 +122,57 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    pos.y += (scroller * tileSize.y);
+    DEBUG_FREEZE = true;
+    DEBUG_TOP = true;
+
+
+//    pos.y += .5;
+//    pos.x += wordWidth/2.;
+
+    float phi = 0.0;
+    if (! DEBUG_FREEZE ) {
+        phi += -now/TAU;
+        phi += (PI/(2.*tileCount.y)) * -cos( PI * Ease(now) );
+    }
+
+
+
+    float ARC = TAU;
+    float sector = ARC / (tileCount.y+4.);
+    float gamma = (tileCount.y-gridCoord.y) * sector;
+
+
+
+    float XXX = gridCoord.x / tileCount.x;
+    float radius1 = 24.;
+
+//    pos.y -= (scroller * tileSize.y);
+
+
+
     pos.x += (tileCoord.x * tileSize.x);
-    pos.y += (tileCoord.y * tileSize.y);
+    pos.x += (tileOffset.x * tileSize.x);
 
-    pos.x += ( tileOffset.x * tileSize.x);
-    pos.y += ( tileOffset.y * tileSize.y);
 
-    pos.z += pos.y;
+    phi += scroller * sector;
+    
+    pos.xyz = rotate(gamma+phi,pos.xyz);
+    pos.xyz = curve(pos.xyz,XXX);
+    pos.xyz = translate(gamma+phi,radius1,pos.xyz);
+//    pos.xyz = zoom(pos.xyz);
+
 
     float rho = 0.0;
     if (! DEBUG_FREEZE ) {
         rho = now/5.;
     }
-
     if (! DEBUG_TOP ) {
         pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
         pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
     }
 
+
     gl_Position = projection * view * model * pos;
 }
-
 
 
