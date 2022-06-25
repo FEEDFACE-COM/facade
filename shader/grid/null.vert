@@ -31,6 +31,11 @@ void main() {
     vGridCoord = gridCoord;
     
     vec4 pos = vec4(vertex,1);
+    pos.x += tileCoord.x * tileSize.x;
+    pos.y += tileCoord.y * tileSize.y;
+
+
+
     gl_Position = projection * view * model * pos;
 }
 

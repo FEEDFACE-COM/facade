@@ -115,14 +115,15 @@ vec3 scale(vec3 v) {
 vec3 shape(vec3 v) {
     float s = gridCoord.x / tileCount.x;
     v.xy *= 1.+8.*s;
-    v.x += log(1.+2.*s) * gridCoord.x;
+    v.x += log(1.+3.*s) * gridCoord.x;
     v.x += (tileCoord.x * tileSize.x);
     return v;    
 }
 
 mat4 zoom(float radius) {
     float s = 1.0;
-    s = 2./ ((tileCount.x * tileSize.x)+2.*radius);
+    float x = log(tileCount.x) ;
+    s = 2./ ((tileCount.x * tileSize.x * x)+2.*radius);
     s *= screenRatio;
     mat4 ret = scale(s);
     return ret;
@@ -137,21 +138,9 @@ void main() {
     mat4 mdl = ident();
     vec4 pos = vec4(vertex,1);
 
-    DEBUG_FREEZE = true;
-    DEBUG_TOP = true;
 
-
-//    pos.y += .5;
-//    pos.x += wordWidth/2.;
 
     float phi = 0.0;
-    if (! DEBUG_FREEZE ) {
-        phi += -now/TAU;
-        phi += (PI/(2.*tileCount.y)) * -cos( PI * Ease(now) );
-    }
-
-
-
     float ARC = TAU;
     float sector = ARC / (tileCount.y+4.);
     float gamma = (tileCount.y-gridCoord.y) * sector;
@@ -161,32 +150,13 @@ void main() {
     float XXX = gridCoord.x / tileCount.x;
     float radius1 = 24.;
 
-    phi += scroller * sector;
-
-
-//    pos.y -= (scroller * tileSize.y);
-
-
-
-//    pos.x += (tileOffset.x * tileSize.x);
-
-
+    phi += abs(scroller) * sector;
 
 
     pos.xyz = shape(pos.xyz);
 
     pos.xyz = rotate(gamma+phi,pos.xyz);
     pos.xyz = translate(gamma+phi,radius1,pos.xyz);
-
-
-    float rho = 0.0;
-    if (! DEBUG_FREEZE ) {
-        rho = now/5.;
-    }
-    if (! DEBUG_TOP ) {
-        pos.xyz = roty( -PI/8. + Ease(rho)*PI/8.) * pos.xyz;
-        pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
-    }
 
     mdl = zoom(radius1);
     gl_Position = projection * view  * mdl * pos;
