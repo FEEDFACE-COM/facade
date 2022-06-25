@@ -2,6 +2,8 @@ uniform mat4 model;               // model transformation
 uniform mat4 view;                // view transformation
 uniform mat4 projection;          // projection transformation
 
+uniform float screenRatio;
+
 uniform vec2 tileSize;            // size of largest glyph in font, as (width,height)
 uniform vec2 tileCount;           // grid dimensions, as (columns,rows)
 uniform vec2 tileOffset;          // grid center offset from (0,0), as (columns,rows)
@@ -39,6 +41,9 @@ float Ease(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w));}
 mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
 mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
+
+mat4 ident() {return mat4(1.,0.0,0.0,0.0,0.0,1.,0.0,0.0,0.0,0.0,1.,0.0,0.0,0.0,0.0,1.0);}
+mat4 scale(float s) {return mat4(s,0.0,0.0,0.0,0.0,s,0.0,0.0,0.0,0.0,s,0.0,0.0,0.0,0.0,1.0);}
 
 
 /*************************************/
@@ -89,29 +94,39 @@ vec3 wave(vec3 v) {
     return v;
 }
 
-vec3 zoom(vec3 v) {
-    float r = 3.;
-    float MAX_WIDTH = 8.;
-    float zoom = 1./8.;
-    zoom = 1./ (r+log(tileCount.x));
-    v.xyz *= zoom;
+
+vec3 scale(vec3 v) {
+    float s = 2. * gridCoord.x / tileCount.x;
+
+    if (mod(gridCoord.x,2.) == 1.0) {
+//        return v;
+    }
+
+    float t = log(s+0.);
+    t = s;
+    
+    v.x *= (1.+t);
+    v.y *= (1.+t);
+    
     return v;
 }
 
-vec3 curve(vec3 v,float x) {
-    float run = 0.0;
-    if (!DEBUG_TOP) {
-        run = 4.*now/2.;
-    }
-    v.z += log(x+1.) + .25 * -cos(x*PI);
-//    v.z += .25 * sin(run + x*PI + 2.*PI*(wordIndex/wordCount));
-    return v;   
+
+vec3 shape(vec3 v) {
+    float s = gridCoord.x / tileCount.x;
+    v.xy *= 1.+8.*s;
+    v.x += log(1.+2.*s) * gridCoord.x;
+    v.x += (tileCoord.x * tileSize.x);
+    return v;    
 }
 
-
-
-
-
+mat4 zoom(float radius) {
+    float s = 1.0;
+    s = 2./ ((tileCount.x * tileSize.x)+2.*radius);
+    s *= screenRatio;
+    mat4 ret = scale(s);
+    return ret;
+}
 
 
 
@@ -119,7 +134,7 @@ void main() {
     vTexCoord = texCoord;
     vTileCoord = tileCoord;
     vGridCoord = gridCoord;
-    
+    mat4 mdl = ident();
     vec4 pos = vec4(vertex,1);
 
     DEBUG_FREEZE = true;
@@ -146,20 +161,22 @@ void main() {
     float XXX = gridCoord.x / tileCount.x;
     float radius1 = 24.;
 
+    phi += scroller * sector;
+
+
 //    pos.y -= (scroller * tileSize.y);
 
 
 
-    pos.x += (tileCoord.x * tileSize.x);
-    pos.x += (tileOffset.x * tileSize.x);
+//    pos.x += (tileOffset.x * tileSize.x);
 
 
-    phi += scroller * sector;
-    
+
+
+    pos.xyz = shape(pos.xyz);
+
     pos.xyz = rotate(gamma+phi,pos.xyz);
-    pos.xyz = curve(pos.xyz,XXX);
     pos.xyz = translate(gamma+phi,radius1,pos.xyz);
-//    pos.xyz = zoom(pos.xyz);
 
 
     float rho = 0.0;
@@ -171,8 +188,8 @@ void main() {
         pos.xyz = rotx( -PI/4. + Ease(rho+PI/3.)*-PI/8.) * pos.xyz;
     }
 
-
-    gl_Position = projection * view * model * pos;
+    mdl = zoom(radius1);
+    gl_Position = projection * view  * mdl * pos;
 }
 
 
