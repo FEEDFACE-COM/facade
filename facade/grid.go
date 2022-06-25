@@ -228,13 +228,13 @@ func (grid *Grid) fill(name string) []string {
 			tmp := ""
 			for c := 0; c < w; c++ {
 				d := "."
-				if c%5 == 0 {
+				if c%10 == 0 {
 					d = fmt.Sprintf("%d", r%10)
 				}
 				if r%5 == 0 {
 					d = fmt.Sprintf("%d", c%10)
 				}
-				if c%5 == 0 && r%5 == 0 {
+				if c%10 == 0 && r%5 == 0 {
 					d = "#"
 				}
 				tmp += fmt.Sprintf("%s", d)
