@@ -9,8 +9,8 @@ BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 
 
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
-SOURCES = $(filter-out ${ASSETS} , $(wildcard */*.go *.go ) )
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
+SOURCES = $(filter-out ${PROTOS} , $(filter-out ${ASSETS} , $(wildcard */*.go *.go ) ) )
 EXTRAS  = README.md
 
 FONTS ?= Monaco.ttf RobotoMono.ttf SpaceMono.ttf VT323.ttf Adore64.ttf OCRAExt.ttf
@@ -66,6 +66,8 @@ info:
 	@echo " package    ${BUILD_PACKAGE}"
 	@echo "\n#FACADE Sources"
 	@echo "${SOURCES}"
+	@echo "\n#FACADE Protos"
+	@echo "${PROTOS}"
 	@echo "\n#FACADE Assets"
 	@echo "${ASSETS}"
 	@echo "\n#FACADE Shaders"
