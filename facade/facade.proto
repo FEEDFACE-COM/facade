@@ -11,7 +11,6 @@ enum Mode {
     LINES   =  1;
     WORDS   =  2;
     CHARS   =  3;
-    DRAFT   = 16;
 }
 
 

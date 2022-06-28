@@ -336,18 +336,16 @@ func main() {
 		time.Sleep(time.Duration(int64(time.Second / 10.))) //wait until all text flushed
 
 	case CONF:
-		if config == nil {
-			ShowHelpMode(cmd, facade.Mode_DRAFT, *modeFlags)
-			os.Exit(-1)
-		}
-		log.Info("configure %s", config.Desc())
 		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
 		defer client.Close()
-		if err = client.SendConf(config); err != nil {
-			log.PANIC("fail to conf: %s", err)
+		if config != nil {
+			log.Info("configure %s", config.Desc())
+			if err = client.SendConf(config); err != nil {
+				log.PANIC("fail to conf: %s", err)
+			}
 		}
 
 	case EXEC:
