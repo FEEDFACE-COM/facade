@@ -224,7 +224,6 @@ func main() {
 				config.Lines.Shader = &facade.ShaderConfig{}
 				config.Lines.Grid = &facade.GridConfig{}
 
-
 			case facade.Mode_WORDS.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_WORDS
@@ -232,19 +231,13 @@ func main() {
 				config.Words.Shader = &facade.ShaderConfig{}
 				config.Words.Set = &facade.SetConfig{}
 
-				/*  // TODO: implement Mode_WORDS and Mode_TAGS
+			case facade.Mode_CHARS.String():
+				config.SetMode = true
+				config.Mode = facade.Mode_CHARS
+				config.Chars = &facade.CharConfig{}
+				config.Chars.Shader = &facade.ShaderConfig{}
+				config.Chars.Scroll = &facade.ScrollConfig{}
 
-					case facade.Mode_TAGS.String():
-					config.SetMode = true
-					config.Mode = facade.Mode_TAGS
-					config.Tags = &facade.TagConfig{}
-					config.Tags.Shader = &facade.ShaderConfig{}
-					config.Tags.Set = &facade.SetConfig{}
-
-				case facade.Mode_DRAFT.String():
-					config.SetMode = true
-					config.Mode = facade.Mode_DRAFT
-				*/
 			default:
 				ShowHelpCommand(cmd, *commandFlags[cmd])
 				os.Exit(-2)

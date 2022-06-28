@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_SET = true
+const DEBUG_SET = false
 
 const HARD_MAX_LENGTH = 80.0
 
@@ -234,12 +234,15 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	}
 
 	words := set.wordBuffer.Words()
+	wordCount := float32(set.wordBuffer.SlotCount())
+	set.wordBuffer.mutex.Unlock()
+
 	gl.ActiveTexture(gl.TEXTURE0)
 
 	set.program.UseProgram(debug)
 	set.object.BindBuffer()
 
-	set.program.Uniform1f(WORDCOUNT, float32(set.wordBuffer.SlotCount()))
+	set.program.Uniform1f(WORDCOUNT, wordCount)
 
 	set.program.Uniform1f(WORDMAXLENGTH, float32(set.maxWord.length))
 	set.program.Uniform1f(WORDMAXWIDTH, set.maxWord.width)
@@ -310,7 +313,6 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 	if DEBUG_SET && verbose {
 		//log.Debug("%s render %d words", set.Desc(), len(words) )
 	}
-	set.wordBuffer.mutex.Unlock()
 }
 
 func (set *Set) Init(programService *gfx.ProgramService, font *gfx.Font) {

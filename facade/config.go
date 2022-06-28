@@ -41,9 +41,9 @@ func (config *Config) Desc() string {
 	if words := config.GetWords(); words != nil {
 		ret += words.Desc()
 	}
-	//if tags := config.GetTags(); tags != nil {
-	//	ret += tags.Desc()
-	//}
+	if chars := config.GetChars(); chars != nil {
+		ret += chars.Desc()
+	}
 
 	if config.GetSetDebug() {
 		if config.GetDebug() {
@@ -69,9 +69,9 @@ func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	if words := config.GetWords(); words != nil {
 		words.AddFlags(flagset)
 	}
-	//if tags := config.GetTags(); tags != nil {
-	//	tags.AddFlags(flagset)
-	//}
+	if chars := config.GetChars(); chars != nil {
+		chars.AddFlags(flagset)
+	}
 	if font := config.GetFont(); font != nil {
 		font.AddFlags(flagset)
 	}
@@ -109,11 +109,11 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 			config.Words = nil
 		}
 	}
-	//if tags := config.GetTags(); tags != nil {
-	//	if !tags.VisitFlags(flagset) {
-	//		config.Tags = nil
-	//	}
-	//}
+	if chars := config.GetChars(); chars != nil {
+		if !chars.VisitFlags(flagset) {
+			config.Chars = nil
+		}
+	}
 
 	if font := config.GetFont(); font != nil {
 		if !font.VisitFlags(flagset) {

@@ -91,10 +91,10 @@ func prefixForMode(mode Mode) string {
 		return "grid/"
 	case Mode_TERM:
 		return "grid/"
-	case Mode_TAGS:
-		return "set/"
 	case Mode_WORDS:
 		return "set/"
+	case Mode_CHARS:
+		return "scroll/"
 	}
 	return ""
 }

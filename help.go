@@ -54,8 +54,8 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 		fmt.Fprintf(os.Stderr, "%s", facade.TermDefaults.Help())
 	case facade.Mode_WORDS:
 		fmt.Fprintf(os.Stderr, "%s", facade.WordDefaults.Help())
-	//case facade.Mode_TAGS:
-	//	fmt.Fprintf(os.Stderr, "%s", facade.TagDefaults.Help())
+	case facade.Mode_CHARS:
+		fmt.Fprintf(os.Stderr, "%s", facade.CharDefaults.Help())
 	}
 
 	fmt.Fprintf(os.Stderr, "\n")
@@ -69,6 +69,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
 	*/
+	modes = append(modes, strings.ToLower(facade.Mode_CHARS.String()))
 	fmt.Fprintf(os.Stderr, InfoAuthor())
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
@@ -105,6 +106,7 @@ func ShowModes() {
 	/*  // TODO: implement Mode_WORDS and Mode_TAGS
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TAGS.String()), "tag cloud")
 	*/
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "char scroller")
 }
 
 func InfoAuthor() string {

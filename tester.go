@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package main
@@ -359,10 +360,10 @@ func (tester *Tester) InfoMode() string {
 		mode = "term " + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
 	case facade.Mode_LINES:
 		mode = "line " + tester.shaderConfig.Desc() + " " + tester.gridConfig.Desc()
-	case facade.Mode_TAGS:
-		mode = "tags " + tester.shaderConfig.Desc()
 	case facade.Mode_WORDS:
 		mode = "words " + tester.shaderConfig.Desc()
+	case facade.Mode_CHARS:
+		mode = "chars " + tester.shaderConfig.Desc()
 	}
 	dbg := ""
 	if tester.debug {
@@ -509,10 +510,9 @@ func (tester *Tester) dumpBuffer() {
 		os.Stdout.Write([]byte(tester.termBuffer.Dump()))
 	} else if tester.mode == facade.Mode_LINES {
 		os.Stdout.Write([]byte(tester.lineBuffer.Dump(uint(tester.gridConfig.GetWidth()))))
-	} else if tester.mode == facade.Mode_TAGS {
-		os.Stdout.Write([]byte(tester.wordBuffer.Dump()))
 	} else if tester.mode == facade.Mode_WORDS {
 		os.Stdout.Write([]byte(tester.wordBuffer.Dump()))
+	} else if tester.mode == facade.Mode_CHARS {
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()

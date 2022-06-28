@@ -24,9 +24,8 @@ type Renderer struct {
 
 	terminal *facade.Grid
 	lines    *facade.Grid
-
-	//tags  *facade.Set
-	words *facade.Set
+	words    *facade.Set
+	chars    *facade.Scroll
 
 	font   *gfx.Font
 	camera *gfx.Camera
@@ -37,7 +36,7 @@ type Renderer struct {
 	lineBuffer *facade.LineBuffer
 	termBuffer *facade.TermBuffer
 	wordBuffer *facade.WordBuffer
-	//tagBuffer  *facade.WordBuffer
+	charBuffer *facade.CharBuffer
 
 	fontService    *gfx.FontService
 	programService *gfx.ProgramService
@@ -133,7 +132,7 @@ func (renderer *Renderer) Init() error {
 	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
 	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
 	renderer.wordBuffer = facade.NewWordBuffer(renderer.refreshChan)
-	//renderer.tagBuffer = facade.NewTagBuffer(renderer.refreshChan)
+	renderer.charBuffer = facade.NewCharBuffer(renderer.refreshChan)
 
 	renderer.terminal = facade.NewGrid(nil, renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
@@ -144,8 +143,8 @@ func (renderer *Renderer) Init() error {
 	renderer.words = facade.NewSet(renderer.wordBuffer)
 	renderer.words.Init(renderer.programService, renderer.font)
 
-	//renderer.tags = facade.NewSet(renderer.tagBuffer)
-	//renderer.tags.Init(renderer.programService, renderer.font)
+	renderer.chars = facade.NewScroll(renderer.charBuffer)
+	renderer.chars.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()
 
@@ -194,9 +193,8 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 					renderer.ScheduleRefresh()
 					renderer.terminal.ScheduleRefresh()
 					renderer.lines.ScheduleRefresh()
-					//renderer.tags.ScheduleRefresh()
 					renderer.words.ScheduleRefresh()
-
+					renderer.chars.ScheduleRefresh()
 				}
 			}
 		}
@@ -234,10 +232,10 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		renderer.words.Configure(cfg, renderer.camera, renderer.font)
 	}
 
-	//if cfg := config.GetTags(); cfg != nil {
-	//	changed = true
-	//	renderer.tags.Configure(nil, cfg, renderer.camera, renderer.font)
-	//}
+	if cfg := config.GetChars(); cfg != nil {
+		changed = true
+		renderer.chars.Configure(cfg, renderer.camera, renderer.font)
+	}
 
 	if config.GetSetMode() {
 		changed = true
@@ -334,8 +332,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			case facade.Mode_WORDS:
 				renderer.words.ScheduleRefresh()
 
-				//case facade.Mode_TAGS:
-				//	renderer.tags.ScheduleRefresh()
+			case facade.Mode_CHARS:
+				renderer.chars.ScheduleRefresh()
 
 			}
 
@@ -355,8 +353,8 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			renderer.lines.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		case facade.Mode_WORDS:
 			renderer.words.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
-			//case facade.Mode_TAGS:
-			//	renderer.tags.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
+		case facade.Mode_CHARS:
+			renderer.chars.Render(renderer.camera, renderer.font, renderer.debug, verboseFrame)
 		}
 
 		if renderer.debug {
@@ -387,10 +385,10 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			if renderFailed == false { // first failure
 				log.Error("%s render error: %s", renderer.Desc(), piglet.ErrorString(e))
 			} else if RENDERER_FIXUP_RASPI {
-                //HACK: remove gles2 debug output 'glGetError 0x502'
-                str := fmt.Sprintf("\033[1A\033[K")
-                os.Stderr.Write([]byte(str))
-            }
+				//HACK: remove gles2 debug output 'glGetError 0x502'
+				str := fmt.Sprintf("\033[1A\033[K")
+				os.Stderr.Write([]byte(str))
+			}
 			renderFailed = true
 		}
 
@@ -469,6 +467,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.lineBuffer.ProcessRunes(text)
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessRunes(text)
+			case facade.Mode_CHARS:
+				renderer.charBuffer.ProcessRunes(text)
 			}
 			renderer.ScheduleRefresh()
 
@@ -481,6 +481,8 @@ func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 				renderer.lineBuffer.ProcessSequence(seq)
 			case facade.Mode_WORDS:
 				renderer.wordBuffer.ProcessSequence(seq)
+			case facade.Mode_CHARS:
+				renderer.charBuffer.ProcessSequence(seq)
 			}
 			renderer.ScheduleRefresh()
 		}
@@ -497,8 +499,8 @@ func (renderer *Renderer) InfoMode() string {
 		mode = "lines " + renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
 	case facade.Mode_WORDS:
 		mode = "words " + renderer.words.Desc() + " " + renderer.words.ShaderConfig().Desc()
-		//case facade.Mode_TAGS:
-		//	mode = "tags " + renderer.tags.Desc() + " " + renderer.tags.ShaderConfig().Desc()
+	case facade.Mode_CHARS:
+		mode = "chars " + renderer.chars.Desc() + " " + renderer.chars.ShaderConfig().Desc()
 	}
 	dbg := ""
 	if renderer.debug {
@@ -539,8 +541,8 @@ func (renderer *Renderer) printDebug() {
 			log.Info("  %s", renderer.termBuffer.Desc())
 		case facade.Mode_WORDS:
 			log.Info("  %s", renderer.wordBuffer.Desc())
-			//case facade.Mode_TAGS:
-			//	log.Info("  %s", renderer.tagBuffer.Desc())
+		case facade.Mode_CHARS:
+			log.Info("  %s", renderer.charBuffer.Desc())
 		}
 	}
 
@@ -571,8 +573,8 @@ func (renderer *Renderer) dumpBuffer() {
 		os.Stdout.Write([]byte(renderer.lines.DumpBuffer()))
 	} else if renderer.mode == facade.Mode_WORDS {
 		os.Stdout.Write([]byte(renderer.wordBuffer.Dump()))
-		//} else if renderer.mode == facade.Mode_TAGS {
-		//	os.Stdout.Write([]byte(renderer.tagBuffer.Dump()))
+	} else if renderer.mode == facade.Mode_CHARS {
+		os.Stdout.Write([]byte(renderer.charBuffer.Dump()))
 	}
 	os.Stdout.Write([]byte("\n"))
 	os.Stdout.Sync()
@@ -590,7 +592,7 @@ func (renderer *Renderer) Info() string {
 	ret += "\n  " + renderer.lineBuffer.Desc()
 	ret += "\n  " + renderer.termBuffer.Desc()
 	ret += "\n  " + renderer.wordBuffer.Desc()
-	//ret += "\n  " + renderer.tagBuffer.Desc()
+	ret += "\n  " + renderer.charBuffer.Desc()
 	ret += "\n\n"
 
 	return ret
@@ -608,4 +610,3 @@ func (renderer *Renderer) Desc() string {
 }
 
 const RENDERER_AVAILABLE = true
-

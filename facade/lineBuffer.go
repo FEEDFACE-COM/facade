@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package facade
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"github.com/pborman/ansi"
 	"strings"
+	"sync"
 )
 
 const DEBUG_LINEBUFFER = false
@@ -35,6 +37,7 @@ type LineBuffer struct {
 	Smooth bool
 
 	refreshChan chan bool
+	mutex       *sync.Mutex
 
 	//metering
 	mark           Mark
