@@ -9,7 +9,7 @@ BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 
 
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
-SOURCES = $(filter-out ${ASSETS} , $(wildcard *.go */*.go) )
+SOURCES = $(filter-out ${ASSETS} , $(wildcard */*.go *.go ) )
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 EXTRAS  = README.md
 
@@ -86,7 +86,7 @@ package: clean ${BUILD_PACKAGE}
 	@echo "#FACADE packaged ${BUILD_PACKAGE}"
 
 demo:
-	@for f in ${SOURCES}; do IFS=$(echo); echo "## $$f ##"; echo; cat $$f | while read -r line; do /bin/echo "$$line"; sleep 0.5; done; echo; echo; sleep 2; done
+	@for f in ${SOURCES}; do IFS=$(echo); echo "## $$f ##"; echo; cat $$f | while read -r line; do /bin/echo "$$line"; sleep 1; done; echo; echo; sleep 4; done
 
 get:
 	go get -v -u
