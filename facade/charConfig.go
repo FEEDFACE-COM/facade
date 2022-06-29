@@ -3,23 +3,34 @@ package facade
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"flag"
+	"fmt"
+
 	//	"fmt"
 	"strings"
 )
 
 var CharDefaults = CharConfig{
-	Shader: nil,
-	Scroll: nil,
+	Repeat:    true,
+	CharCount: 32,
 }
 
 func (config *CharConfig) Desc() string {
 	ret := "chars["
-	if shader := config.GetShader(); shader != nil {
-		ret += shader.Desc() + " "
+
+	if config.GetSetCharCount() {
+		ret += fmt.Sprintf("#%d ", config.GetCharCount())
 	}
 
-	if scroll := config.GetScroll(); scroll != nil {
-		ret += scroll.Desc() + " "
+	rok := config.GetSetRepeat()
+	if rok {
+		if !config.GetRepeat() {
+			ret += "!"
+		}
+		ret += "⟳ "
+	}
+
+	if config.GetSetFill() {
+		ret += "f:" + config.GetFill() + " "
 	}
 
 	ret = strings.TrimRight(ret, " ")
@@ -28,34 +39,39 @@ func (config *CharConfig) Desc() string {
 }
 
 func (config *CharConfig) AddFlags(flagset *flag.FlagSet) {
-	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset, Mode_CHARS)
-	}
-	if config.GetScroll() != nil {
-		config.GetScroll().AddFlags(flagset)
-	}
+	patterns := "title,index,alpha,clear"
+	flagset.Uint64Var(&config.CharCount, "c", CharDefaults.CharCount, "char count")
+	flagset.BoolVar(&config.Repeat, "repeat", CharDefaults.Repeat, "repeat last?")
+	flagset.StringVar(&config.Fill, "fill", CharDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
-	if shader := config.GetShader(); shader != nil {
-		if shader.VisitFlags(flagset) {
+	flagset.Visit(func(flg *flag.Flag) {
+		switch flg.Name {
+		case "repeat":
+			config.SetRepeat = true
+			ret = true
+		case "c":
+			config.SetCharCount = true
+			ret = true
+		case "fill":
+			config.SetFill = true
 			ret = true
 		}
-	}
-	if scroll := config.GetScroll(); scroll != nil {
-		if scroll.VisitFlags(flagset) {
-			ret = true
-		}
-	}
+	})
 
 	return ret
 }
 
 func (config *CharConfig) Help() string {
-	ret := ScrollDefaults.Help()
+	ret := ""
 	tmp := flag.NewFlagSet("char", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	for _, s := range []string{"repeat", "c", "fill"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
 }

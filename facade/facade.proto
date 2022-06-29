@@ -116,13 +116,8 @@ message WordConfig {
 
 
 message CharConfig {
-    ShaderConfig Shader =  1;
-    ScrollConfig Scroll =  2;
-}
-
-message ScrollConfig {
-    bool SetRepeat      =  1; bool Repeat       =  2;
-    bool SetCharCount   =  3; uint64 CharCount  =  4;
+    bool SetCharCount   =  1; uint64 CharCount  =  2;
+    bool SetRepeat      =  3; bool Repeat       =  4;
     bool SetFill        =  5; string Fill       =  6;
 }
 

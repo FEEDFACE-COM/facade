@@ -234,8 +234,6 @@ func main() {
 				config.SetMode = true
 				config.Mode = facade.Mode_CHARS
 				config.Chars = &facade.CharConfig{}
-				config.Chars.Shader = &facade.ShaderConfig{}
-				config.Chars.Scroll = &facade.ScrollConfig{}
 
 			default:
 				ShowHelpCommand(cmd, *commandFlags[cmd])

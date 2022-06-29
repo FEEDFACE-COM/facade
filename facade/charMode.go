@@ -15,7 +15,7 @@ import (
 
 const DEBUG_SCROLL = true
 
-type Scroll struct {
+type CharMode struct {
 	charBuffer *CharBuffer
 	charCount  uint
 
@@ -37,20 +37,20 @@ const (
 	CHARINDEX  gfx.AttribName = "charIndex"
 )
 
-func (scroll *Scroll) ScheduleRefresh() {
+func (mode *CharMode) ScheduleRefresh() {
 
 	select {
-	case scroll.refreshChan <- true:
+	case mode.refreshChan <- true:
 	default:
 	}
 
 }
 
-func (scroll *Scroll) checkRefresh() bool {
+func (mode *CharMode) checkRefresh() bool {
 	ret := false
 	for { //read all messages from channel
 		select {
-		case refresh := <-scroll.refreshChan:
+		case refresh := <-mode.refreshChan:
 			if refresh {
 				ret = true
 			}
@@ -62,8 +62,8 @@ func (scroll *Scroll) checkRefresh() bool {
 	return ret
 }
 
-func NewScroll(buffer *CharBuffer) *Scroll {
-	ret := &Scroll{
+func NewScroll(buffer *CharBuffer) *CharMode {
+	ret := &CharMode{
 		charBuffer: buffer,
 	}
 
@@ -74,10 +74,10 @@ func NewScroll(buffer *CharBuffer) *Scroll {
 	return ret
 }
 
-func (scroll *Scroll) generateData(font *gfx.Font) {
-	scroll.data = []float32{}
+func (mode *CharMode) generateData(font *gfx.Font) {
+	mode.data = []float32{}
 
-	line := scroll.charBuffer.GetLine()
+	line := mode.charBuffer.GetLine()
 
 	index := float32(0.)
 	offset := float32(0.)
@@ -86,18 +86,18 @@ func (scroll *Scroll) generateData(font *gfx.Font) {
 	w := float32(0.)
 	for _, run := range line {
 
-		data, w = scroll.vertices(run, index, offset, font)
-		scroll.data = append(scroll.data, data...)
+		data, w = mode.vertices(run, index, offset, font)
+		mode.data = append(mode.data, data...)
 		index += 1.
 		offset += w
 	}
 
 	if DEBUG_SCROLL {
-		log.Debug("%s generate %1.0f chars, wide:%.2f verts:%d floats:%d", scroll.Desc(), index, offset, len(scroll.data)/len(data), len(scroll.data))
+		log.Debug("%s generate %1.0f chars, wide:%.2f verts:%d floats:%d", mode.Desc(), index, offset, len(mode.data)/len(data), len(mode.data))
 	}
 }
 
-func (scroll *Scroll) vertices(
+func (mode *CharMode) vertices(
 	run rune,
 	index float32,
 	offset float32,
@@ -160,68 +160,68 @@ func (scroll *Scroll) vertices(
 
 }
 
-func (chars *Scroll) autoScale(camera *gfx.Camera) float32 {
+func (mode *CharMode) autoScale(camera *gfx.Camera) float32 {
 
 	return 1.
 
 }
 
-func (scroll *Scroll) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
+func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) {
 
-	scroll.charBuffer.mutex.Lock()
+	mode.charBuffer.mutex.Lock()
 
-	if scroll.checkRefresh() {
+	if mode.checkRefresh() {
 		if DEBUG_SCROLL {
-			log.Debug("%s refresh", scroll.Desc())
+			log.Debug("%s refresh", mode.Desc())
 		}
-		scroll.generateData(font)
-		scroll.renderMap(font)
+		mode.generateData(font)
+		mode.renderMap(font)
 	}
 
-	//line := scroll.charBuffer.GetLine()
-	charCount := scroll.charBuffer.charCount
-	scroll.charBuffer.mutex.Unlock()
+	//line := mode.charBuffer.GetLine()
+	charCount := mode.charBuffer.charCount
+	mode.charBuffer.mutex.Unlock()
 
 	gl.ActiveTexture(gl.TEXTURE0)
 
-	scroll.program.UseProgram(debug)
-	scroll.object.BindBuffer()
+	mode.program.UseProgram(debug)
+	mode.object.BindBuffer()
 
 	// FIXME: verify nothing missing
-	scroll.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
-	scroll.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
-	scroll.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
-	scroll.program.Uniform1f(CHARCOUNT, float32(charCount))
+	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
+	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
+	mode.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
+	mode.program.Uniform1f(CHARCOUNT, float32(charCount))
 
-	camera.Uniform(scroll.program)
+	camera.Uniform(mode.program)
 	scale := float32(1.0)
-	scale = scroll.autoScale(camera)
+	scale = mode.autoScale(camera)
 
 	model := mgl32.Ident4()
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
-	scroll.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
+	mode.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
 
-	scroll.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1)*4, (0)*4)
-	scroll.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1)*4, (0+3)*4)
-	scroll.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
-	scroll.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1)*4, (0+3+2+1)*4)
+	mode.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1)*4, (0)*4)
+	mode.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1)*4, (0+3)*4)
+	mode.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
+	mode.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1)*4, (0+3+2+1)*4)
 
 	count := int32(charCount)
 	offset := 0
 
 	if DEBUG_SCROLL && verbose {
-		log.Debug("%s render chars:%d verts:%d  ", scroll.Desc(), count, count*(2*3))
+		log.Debug("%s render chars:%d verts:%d  ", mode.Desc(), count, count*(2*3))
 	}
 
 	if !debug {
-		scroll.program.SetDebug(false)
-		scroll.texture.BindTexture()
+		mode.program.SetDebug(false)
+		mode.texture.BindTexture()
 		//gl.DrawArrays(gl.TRIANGLES, int32(offset*2*3), (count)*(2*3))
-		scroll.program.SetDebug(debug)
+		mode.program.SetDebug(debug)
 	}
 
 	if debug {
-		scroll.program.SetDebug(true)
+		mode.program.SetDebug(true)
 		gl.LineWidth(3.0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 		off := offset
@@ -235,101 +235,103 @@ func (scroll *Scroll) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 
 }
 
-func (scroll *Scroll) Init(programService *gfx.ProgramService, font *gfx.Font) {
-	log.Debug("%s init", scroll.Desc())
+func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
+	log.Debug("%s init", mode.Desc())
 
-	scroll.object = gfx.NewObject("scroll")
-	scroll.object.Init()
+	mode.object = gfx.NewObject("chars")
+	mode.object.Init()
 
-	scroll.texture = gfx.NewTexture("scroll")
-	scroll.texture.Init()
+	mode.texture = gfx.NewTexture("chars")
+	mode.texture.Init()
 
-	scroll.program = programService.GetProgram("scroll", "scroll/")
-	scroll.program.Link(scroll.vert, scroll.frag)
+	mode.program = programService.GetProgram("chars", "chars/")
+	mode.program.Link(mode.vert, mode.frag)
 
-	scroll.renderMap(font)
+	mode.renderMap(font)
 
-	scroll.ScheduleRefresh()
+	mode.ScheduleRefresh()
 
 }
 
-func (scroll *Scroll) renderMap(font *gfx.Font) error {
+func (mode *CharMode) renderMap(font *gfx.Font) error {
 
 	if DEBUG_SCROLL {
-		log.Debug("%s render texture map %s", scroll.Desc(), font.Desc())
+		log.Debug("%s render texture map %s", mode.Desc(), font.Desc())
 	}
 
 	rgba, err := font.RenderMap(false)
 	if err != nil {
-		log.Error("%s fail render font map: %s", scroll.Desc(), err)
+		log.Error("%s fail render font map: %s", mode.Desc(), err)
 		return log.NewError("fail render font map: %s", err)
 	}
-	err = scroll.texture.LoadRGBA(rgba)
+	err = mode.texture.LoadRGBA(rgba)
 	if err != nil {
-		log.Error("%s fail load font map: %s", scroll.Desc(), err)
+		log.Error("%s fail load font map: %s", mode.Desc(), err)
 		return log.NewError("fail to load font map: %s", err)
 	}
-	scroll.texture.TexImage()
+	mode.texture.TexImage()
 
 	return nil
 }
 
-func (scroll *Scroll) Configure(chars *CharConfig, camera *gfx.Camera, font *gfx.Font) {
-	var shader *ShaderConfig = nil
-	var config *ScrollConfig = nil
+func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, camera *gfx.Camera, font *gfx.Font) {
+	s := ""
+	if shader != nil {
+		s = " " + shader.Desc()
+	}
+	log.Debug("%s configure %s%s", mode.Desc(), config.Desc(), s)
 
-	log.Debug("%s configure", scroll.Desc())
-	shader = chars.GetShader()
-	config = chars.GetScroll()
-
-	{
+	if shader != nil {
 		changed := false
-		vert, frag := scroll.vert, scroll.frag
+		vert, frag := mode.vert, mode.frag
 
 		if shader != nil {
 
 			if shader.GetSetVert() {
 				changed = true
-				scroll.vert = shader.GetVert()
+				mode.vert = shader.GetVert()
 			}
 
 			if shader.GetSetFrag() {
 				changed = true
-				scroll.frag = shader.GetFrag()
+				mode.frag = shader.GetFrag()
 			}
 		}
 
 		if changed {
-			err := scroll.program.Link(scroll.vert, scroll.frag)
+			err := mode.program.Link(mode.vert, mode.frag)
 			if err != nil {
-				scroll.vert = vert
-				scroll.frag = frag
+				mode.vert = vert
+				mode.frag = frag
 			}
 		}
+		mode.ScheduleRefresh()
 	}
 
-	if config.GetSetCharCount() {
-		scroll.charBuffer.Resize(uint(config.GetCharCount()))
-	}
+	if config != nil {
 
-	if config.GetSetFill() {
-		fillStr := scroll.fill(config.GetFill())
-		if fillStr != "" {
-			scroll.charBuffer.Fill(fillStr)
+		if config.GetSetCharCount() {
+			mode.charBuffer.Resize(uint(config.GetCharCount()))
 		}
-	}
 
-	scroll.ScheduleRefresh()
+		if config.GetSetFill() {
+			fillStr := mode.fill(config.GetFill())
+			if fillStr != "" {
+				mode.charBuffer.Fill(fillStr)
+			}
+		}
+		mode.ScheduleRefresh()
+	}
 
 }
 
-func (scroll *Scroll) fill(name string) string {
+func (mode *CharMode) fill(name string) string {
 	switch name {
 	case "title":
 		return "FACADE"
 	case "index":
 		ret := ""
-		for i := 0; uint(i) < scroll.charBuffer.charCount; i++ {
+		for i := 0; uint(i) < mode.charBuffer.charCount; i++ {
 			if i%10 == 0 {
 				ret += "#"
 			} else {
@@ -366,7 +368,7 @@ func (scroll *Scroll) fill(name string) string {
 			"omega",
 		}
 		l := uint(0)
-		for i := 0; l < scroll.charBuffer.charCount && i < len(alpha); i++ {
+		for i := 0; l < mode.charBuffer.charCount && i < len(alpha); i++ {
 			ret += alpha[i] + " "
 		}
 		return ret
@@ -378,27 +380,27 @@ func (scroll *Scroll) fill(name string) string {
 
 }
 
-func (scroll *Scroll) Desc() string {
-	ret := "scroll["
-	ret += scroll.charBuffer.Desc()
+func (mode *CharMode) Desc() string {
+	ret := "chars["
+	ret += mode.charBuffer.Desc()
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
-func (scroll *Scroll) Config() *ScrollConfig {
-	ret := &ScrollConfig{
-		SetRepeat: true, Repeat: bool(scroll.charBuffer.Repeat()),
-		SetCharCount: true, CharCount: uint64(scroll.charBuffer.CharCount()),
+func (mode *CharMode) Config() *CharConfig {
+	ret := &CharConfig{
+		SetRepeat: true, Repeat: bool(mode.charBuffer.Repeat()),
+		SetCharCount: true, CharCount: uint64(mode.charBuffer.CharCount()),
 	}
 	return ret
 
 }
 
-func (scroll *Scroll) ShaderConfig() *ShaderConfig {
+func (mode *CharMode) ShaderConfig() *ShaderConfig {
 	ret := &ShaderConfig{
-		SetVert: true, Vert: scroll.vert,
-		SetFrag: true, Frag: scroll.frag,
+		SetVert: true, Vert: mode.vert,
+		SetFrag: true, Frag: mode.frag,
 	}
 	return ret
 }

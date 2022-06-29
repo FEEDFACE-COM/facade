@@ -25,7 +25,7 @@ type Renderer struct {
 	terminal *facade.Grid
 	lines    *facade.Grid
 	words    *facade.WordMode
-	chars    *facade.Scroll
+	chars    *facade.CharMode
 
 	font   *gfx.Font
 	camera *gfx.Camera
@@ -242,7 +242,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	case facade.Mode_WORDS:
 		renderer.words.Configure(config.GetWords(), config.GetShader(), renderer.camera, renderer.font)
 	case facade.Mode_CHARS:
-		renderer.chars.Configure(config.GetChars(), renderer.camera, renderer.font)
+		renderer.chars.Configure(config.GetChars(), config.GetShader(), renderer.camera, renderer.font)
 	}
 
 	if changed && DEBUG_CHANGES {

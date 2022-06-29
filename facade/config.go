@@ -17,7 +17,7 @@ var Defaults = Config{
 }
 
 func (config *Config) Desc() string {
-	ret := "facade["
+	ret := "cfg["
 	if config.GetSetMode() {
 		ret += strings.ToUpper(config.GetMode().String()) + " "
 	}
@@ -65,9 +65,11 @@ func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	var shader *ShaderConfig = config.GetShader()
 	if terminal := config.GetTerminal(); terminal != nil {
 		terminal.AddFlags(flagset)
+		shader.AddFlags(flagset, Mode_TERM)
 	}
 	if lines := config.GetLines(); lines != nil {
 		lines.AddFlags(flagset)
+		shader.AddFlags(flagset, Mode_LINES)
 	}
 	if words := config.GetWords(); words != nil {
 		words.AddFlags(flagset)
@@ -75,6 +77,7 @@ func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	}
 	if chars := config.GetChars(); chars != nil {
 		chars.AddFlags(flagset)
+		shader.AddFlags(flagset, Mode_CHARS)
 	}
 	if font := config.GetFont(); font != nil {
 		font.AddFlags(flagset)

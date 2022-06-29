@@ -456,7 +456,7 @@ func (buffer *WordBuffer) Dump() string {
 			}
 			ret += "\n"
 		} else {
-			ret += fmt.Sprintf("  %-2d |\n", idx)
+			ret += fmt.Sprintf("%-2d |\n", idx)
 		}
 	}
 	return strings.TrimRight(ret, "\n")

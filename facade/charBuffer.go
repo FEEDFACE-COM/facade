@@ -27,7 +27,7 @@ type CharBuffer struct {
 func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 
 	ret := &CharBuffer{
-		charCount:   uint(ScrollDefaults.CharCount),
+		charCount:   uint(CharDefaults.CharCount),
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}

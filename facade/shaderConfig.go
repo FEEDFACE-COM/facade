@@ -94,7 +94,7 @@ func prefixForMode(mode Mode) string {
 	case Mode_WORDS:
 		return "words/"
 	case Mode_CHARS:
-		return "scroll/"
+		return "chars/"
 	}
 	return ""
 }
