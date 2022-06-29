@@ -19,7 +19,7 @@ var Defaults = Config{
 func (config *Config) Desc() string {
 	ret := "config["
 	if config.GetSetMode() {
-		ret += strings.ToLower(config.GetMode().String()) + " "
+		ret += strings.ToUpper(config.GetMode().String()) + " "
 	}
 
 	if font := config.GetFont(); font != nil {

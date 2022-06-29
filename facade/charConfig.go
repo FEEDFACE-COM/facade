@@ -1,15 +1,13 @@
-
-
 package facade
 
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"flag"
-//	"fmt"
+	//	"fmt"
 	"strings"
 )
-    
-var CharDefaults CharConfig = CharConfig{
+
+var CharDefaults = CharConfig{
 	Shader: nil,
 	Scroll: nil,
 }
@@ -24,7 +22,6 @@ func (config *CharConfig) Desc() string {
 		ret += scroll.Desc() + " "
 	}
 
-
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
@@ -38,7 +35,6 @@ func (config *CharConfig) AddFlags(flagset *flag.FlagSet) {
 		config.GetScroll().AddFlags(flagset)
 	}
 }
-
 
 func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
@@ -57,7 +53,7 @@ func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 }
 
 func (config *CharConfig) Help() string {
-	ret := ""
+	ret := ScrollDefaults.Help()
 	tmp := flag.NewFlagSet("char", flag.ExitOnError)
 	config.AddFlags(tmp)
 	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })

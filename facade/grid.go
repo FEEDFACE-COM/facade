@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package facade
@@ -6,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-    gl "github.com/FEEDFACE-COM/piglet/gles2"
+	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"github.com/go-gl/mathgl/mgl32"
 	"strings"
 )
@@ -148,7 +149,7 @@ func (grid *Grid) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool
 	count := int32(grid.width * (grid.height + 1))
 	offset := int32(0)
 
-	if !debug || debug {
+	if !debug {
 		grid.program.SetDebug(false)
 		grid.texture.BindTexture()
 		gl.DrawArrays(gl.TRIANGLES, int32(offset*2*3), (count)*(2*3))

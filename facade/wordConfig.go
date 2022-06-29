@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var WordDefaults WordConfig = WordConfig{
+var WordDefaults = WordConfig{
 	Shader: nil,
 	Set:    nil,
 }

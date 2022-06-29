@@ -125,7 +125,8 @@ message CharConfig {
 
 message ScrollConfig {
     bool SetRepeat      =  1; bool Repeat       =  2;
-    bool SetFill        =  3; string Fill       =  4;
+    bool SetCharCount   =  3; uint64 CharCount  =  4;
+    bool SetFill        =  5; string Fill       =  6;
 }
 
 

@@ -44,8 +44,6 @@ const (
 	WORDINDEX  gfx.AttribName = "wordIndex"
 	WORDWIDTH  gfx.AttribName = "wordWidth"
 	WORDLENGTH gfx.AttribName = "wordLength"
-	CHAROFFSET gfx.AttribName = "charOffset"
-	CHARINDEX  gfx.AttribName = "charIndex"
 )
 
 func (set *Set) ScheduleRefresh() {
@@ -91,7 +89,7 @@ func (set *Set) generateData(font *gfx.Font) {
 	//setup vertex + bind order arrays
 	set.data = []float32{}
 
-	words := set.wordBuffer.Words()
+	words := set.wordBuffer.GetWords()
 	maxWidth := float32(0.)
 	maxLength := uint(0)
 	charCount := 0
@@ -233,7 +231,7 @@ func (set *Set) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose bool) 
 		set.renderMap(font)
 	}
 
-	words := set.wordBuffer.Words()
+	words := set.wordBuffer.GetWords()
 	wordCount := float32(set.wordBuffer.SlotCount())
 	set.wordBuffer.mutex.Unlock()
 
@@ -381,7 +379,6 @@ func (set *Set) Configure(words *WordConfig, camera *gfx.Camera, font *gfx.Font)
 
 		if changed {
 			err := set.program.Link(set.vert, set.frag)
-			//			err := set.LoadShaders()
 			if err != nil {
 				set.vert = vert
 				set.frag = frag

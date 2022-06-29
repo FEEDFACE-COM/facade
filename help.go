@@ -34,7 +34,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	if cmd == EXEC {
-		fmt.Fprintf(os.Stderr, "  %s exec term [flags] /path/to/executable [args]\n", BUILD_NAME)
+		fmt.Fprintf(os.Stderr, "  %s exec [flags] /path/to/executable [args]\n", BUILD_NAME)
 	} else {
 		fmt.Fprintf(os.Stderr, "  %s %s %s [flags]\n", BUILD_NAME, cmd, strings.ToLower(mode.String()))
 	}

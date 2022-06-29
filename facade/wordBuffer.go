@@ -100,7 +100,7 @@ func (buffer *WordBuffer) ProcessRunes(runes []rune) {
 	buffer.rem = tmp
 }
 
-func (buffer *WordBuffer) Words() []*Word {
+func (buffer *WordBuffer) GetWords() []*Word {
 	ret := []*Word{}
 	for _, word := range buffer.words {
 		if word != nil {
