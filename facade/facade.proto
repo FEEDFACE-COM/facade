@@ -45,6 +45,7 @@ message Config {
     FontConfig Font     = 5;
     CameraConfig Camera = 6;
     MaskConfig Mask     = 7;
+    ShaderConfig Shader = 8;
 
     TermConfig Terminal = 13;
     LineConfig Lines    = 14;
@@ -103,18 +104,14 @@ message GridConfig {
 
 
 message WordConfig {
-    ShaderConfig Shader =  1;
-    SetConfig Set       =  2;
-}
-
-message SetConfig {
     bool SetLifetime    =  1;  double Lifetime  =  2;
     bool SetWatermark   =  3;  double Watermark =  4;
     bool SetSlots       =  5;  uint64 Slots     =  6;
     bool SetMaxLength   =  7;  uint64 MaxLength =  8;
-    bool SetShuffle     =  9;  bool Shuffle     = 10;
-    bool SetAging       = 11;  bool Aging       = 12;
+    bool SetShuffle     =  9;  bool   Shuffle   = 10;
+    bool SetAging       = 11;  bool   Aging     = 12;
     bool SetFill        = 13;  string Fill      = 14;
+
 }
 
 

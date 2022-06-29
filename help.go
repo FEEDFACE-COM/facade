@@ -43,9 +43,10 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
-	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help(mode))
 	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
-	fmt.Fprintf(os.Stderr, "\nMode Flags:\n")
+	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help(mode))
+	fmt.Fprintf(os.Stderr, "\n")
 
 	switch mode {
 	case facade.Mode_LINES:
@@ -66,21 +67,17 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 	modes = append(modes, strings.ToLower(facade.Mode_TERM.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_LINES.String()))
 	modes = append(modes, strings.ToLower(facade.Mode_WORDS.String()))
-	/*  // TODO: implement Mode_WORDS and Mode_TAGS
-	modes = append(modes, strings.ToLower(facade.Mode_TAGS.String()))
-	*/
 	modes = append(modes, strings.ToLower(facade.Mode_CHARS.String()))
 	fmt.Fprintf(os.Stderr, InfoAuthor())
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	switch cmd {
 	case EXEC:
-		fmt.Fprintf(os.Stderr, "  %s exec [flags] term /path/to/executable [args]\n", BUILD_NAME)
+		fmt.Fprintf(os.Stderr, "  %s exec [flags] /path/to/executable [args]\n", BUILD_NAME)
 	default:
 		fmt.Fprintf(os.Stderr, "  %s %s [flags] %s\n", BUILD_NAME, cmd, strings.Join(modes, " | "))
 		ShowModes()
 	}
-
 	fmt.Fprintf(os.Stderr, "\nFlags:\n")
 	str := ""
 	flags.VisitAll(func(f *flag.Flag) { str += gfx.FlagHelp(f) })
@@ -100,13 +97,10 @@ func ShowCommands() {
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "line scroller")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "text terminal")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "word scroller")
-	/*  // TODO: implement Mode_WORDS and Mode_TAGS
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TAGS.String()), "tag cloud")
-	*/
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "char scroller")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "scrolling words")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling characters")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
 }
 
 func InfoAuthor() string {

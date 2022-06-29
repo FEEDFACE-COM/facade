@@ -166,6 +166,7 @@ func main() {
 	config.Font = &facade.FontConfig{}
 	config.Camera = &facade.CameraConfig{}
 	config.Mask = &facade.MaskConfig{}
+	config.Shader = &facade.ShaderConfig{}
 
 	var args []string
 	var modeFlags *flag.FlagSet
@@ -228,8 +229,6 @@ func main() {
 				config.SetMode = true
 				config.Mode = facade.Mode_WORDS
 				config.Words = &facade.WordConfig{}
-				config.Words.Shader = &facade.ShaderConfig{}
-				config.Words.Set = &facade.SetConfig{}
 
 			case facade.Mode_CHARS.String():
 				config.SetMode = true
@@ -243,13 +242,14 @@ func main() {
 				os.Exit(-2)
 
 			}
-
 			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
 			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags) }
 			modeFlags.SetOutput(bufio.NewWriter(nil))
 			config.AddFlags(modeFlags)
 			modeFlags.Parse(args[1:])
 			config.VisitFlags(modeFlags)
+		} else {
+			config = nil
 		}
 
 	case README:

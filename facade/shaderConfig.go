@@ -15,7 +15,7 @@ var ShaderDefaults ShaderConfig = ShaderConfig{
 }
 
 func (config *ShaderConfig) Desc() string {
-	ret := ""
+	ret := "shader["
 
 	{
 		vok := config.GetSetVert()
@@ -35,7 +35,7 @@ func (config *ShaderConfig) Desc() string {
 	}
 
 	ret = strings.TrimRight(ret, " ")
-	ret += ""
+	ret += "]"
 	return ret
 }
 
@@ -92,7 +92,7 @@ func prefixForMode(mode Mode) string {
 	case Mode_TERM:
 		return "grid/"
 	case Mode_WORDS:
-		return "set/"
+		return "words/"
 	case Mode_CHARS:
 		return "scroll/"
 	}

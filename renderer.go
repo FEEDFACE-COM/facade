@@ -24,7 +24,7 @@ type Renderer struct {
 
 	terminal *facade.Grid
 	lines    *facade.Grid
-	words    *facade.Set
+	words    *facade.WordMode
 	chars    *facade.Scroll
 
 	font   *gfx.Font
@@ -140,7 +140,7 @@ func (renderer *Renderer) Init() error {
 	renderer.lines = facade.NewGrid(renderer.lineBuffer, nil)
 	renderer.lines.Init(renderer.programService, renderer.font)
 
-	renderer.words = facade.NewSet(renderer.wordBuffer)
+	renderer.words = facade.NewWordMode(renderer.wordBuffer)
 	renderer.words.Init(renderer.programService, renderer.font)
 
 	renderer.chars = facade.NewScroll(renderer.charBuffer)
@@ -170,6 +170,15 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		renderer.debug = config.GetDebug()
 	} else {
 		renderer.debug = false
+	}
+
+	if config.GetSetMode() {
+		changed = true
+		mode := config.GetMode()
+		if renderer.mode != mode {
+			log.Notice("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
+			renderer.mode = mode
+		}
 	}
 
 	if cfg := config.GetFont(); cfg != nil {
@@ -217,38 +226,27 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		}
 	}
 
-	if cfg := config.GetLines(); cfg != nil {
+	if cfg := config.GetShader(); cfg != nil {
 		changed = true
-		renderer.lines.Configure(cfg, nil, renderer.camera, renderer.font)
 	}
 
-	if cfg := config.GetTerminal(); cfg != nil {
+	if config.GetLines() != nil || config.GetTerminal() != nil || config.GetWords() != nil || config.GetChars() != nil {
 		changed = true
-		renderer.terminal.Configure(nil, cfg, renderer.camera, renderer.font)
 	}
 
-	if cfg := config.GetWords(); cfg != nil {
-		changed = true
-		renderer.words.Configure(cfg, renderer.camera, renderer.font)
-	}
-
-	if cfg := config.GetChars(); cfg != nil {
-		changed = true
-		renderer.chars.Configure(cfg, renderer.camera, renderer.font)
-	}
-
-	if config.GetSetMode() {
-		changed = true
-		mode := config.GetMode()
-		if renderer.mode != mode {
-			log.Notice("%s switch to mode %s", renderer.Desc(), strings.ToLower(mode.String()))
-			renderer.mode = mode
-		}
+	switch renderer.mode {
+	case facade.Mode_LINES:
+		renderer.lines.Configure(config.GetLines(), nil, renderer.camera, renderer.font)
+	case facade.Mode_TERM:
+		renderer.terminal.Configure(nil, config.GetTerminal(), renderer.camera, renderer.font)
+	case facade.Mode_WORDS:
+		renderer.words.Configure(config.GetWords(), config.GetShader(), renderer.camera, renderer.font)
+	case facade.Mode_CHARS:
+		renderer.chars.Configure(config.GetChars(), renderer.camera, renderer.font)
 	}
 
 	if changed && DEBUG_CHANGES {
 		renderer.printDebug()
-		//		renderer.prevFrame = gfx.WorldClock().Frame()
 	}
 
 	return nil

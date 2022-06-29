@@ -15,8 +15,8 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDBUFFER = false
-const DEBUG_WORDBUFFER_DUMP = false
+const DEBUG_WORDBUFFER = true
+const DEBUG_WORDBUFFER_DUMP = true
 
 const maxWordLength = 64 // found experimentally
 
@@ -57,11 +57,11 @@ type WordBuffer struct {
 
 func NewWordBuffer(refreshChan chan bool) *WordBuffer {
 	ret := &WordBuffer{
-		slotCount:   int(SetDefaults.Slots),
-		lifetime:    float32(SetDefaults.Lifetime),
-		watermark:   float32(SetDefaults.Watermark),
-		shuffle:     SetDefaults.Shuffle,
-		aging:       SetDefaults.Aging,
+		slotCount:   int(WordDefaults.Slots),
+		lifetime:    float32(WordDefaults.Lifetime),
+		watermark:   float32(WordDefaults.Watermark),
+		shuffle:     WordDefaults.Shuffle,
+		aging:       WordDefaults.Aging,
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
@@ -404,7 +404,7 @@ func (buffer *WordBuffer) Desc() string {
 			}
 		}
 		used := count / slots
-		ret += fmt.Sprintf("%.1f/%.1f", used, buffer.watermark)
+		ret += fmt.Sprintf("%0.1f:%0.1f", used, buffer.watermark)
 	}
 	if buffer.lifetime != 0. {
 		ret += fmt.Sprintf(" %.1fs", buffer.lifetime)
@@ -445,7 +445,7 @@ func (buffer *WordBuffer) Dump() string {
 
 	for idx, word := range buffer.words {
 		if word != nil {
-			ret += fmt.Sprintf("  %-2d |", idx)
+			ret += fmt.Sprintf("%-2d |", idx)
 			ret += fmt.Sprintf(" #%-2d", word.index)
 			ret += fmt.Sprintf(" [%.*s]", max, word.text[:min(max, len(word.text))])
 			if word.timer != nil {

@@ -17,7 +17,7 @@ var Defaults = Config{
 }
 
 func (config *Config) Desc() string {
-	ret := "config["
+	ret := "facade["
 	if config.GetSetMode() {
 		ret += strings.ToUpper(config.GetMode().String()) + " "
 	}
@@ -31,7 +31,9 @@ func (config *Config) Desc() string {
 	if mask := config.GetMask(); mask != nil {
 		ret += mask.Desc() + " "
 	}
-
+	if shader := config.GetShader(); shader != nil {
+		ret += shader.Desc() + " "
+	}
 	if terminal := config.GetTerminal(); terminal != nil {
 		ret += terminal.Desc() + " "
 	}
@@ -60,6 +62,7 @@ func (config *Config) Desc() string {
 
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
+	var shader *ShaderConfig = config.GetShader()
 	if terminal := config.GetTerminal(); terminal != nil {
 		terminal.AddFlags(flagset)
 	}
@@ -68,6 +71,7 @@ func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	}
 	if words := config.GetWords(); words != nil {
 		words.AddFlags(flagset)
+		shader.AddFlags(flagset, Mode_WORDS)
 	}
 	if chars := config.GetChars(); chars != nil {
 		chars.AddFlags(flagset)
@@ -130,6 +134,12 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 	if mask := config.GetMask(); mask != nil {
 		if !mask.VisitFlags(flagset) {
 			config.Mask = nil
+		} // no flags used
+	}
+
+	if shader := config.GetShader(); shader != nil {
+		if !shader.VisitFlags(flagset) {
+			config.Shader = nil
 		} // no flags used
 	}
 

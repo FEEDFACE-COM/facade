@@ -6,22 +6,48 @@ package facade
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"flag"
+	"fmt"
 	"strings"
 )
 
 var WordDefaults = WordConfig{
-	Shader: nil,
-	Set:    nil,
+	Slots:     8,
+	MaxLength: 0,
+	Lifetime:  0.0,
+	Watermark: 0.5,
+	Shuffle:   false,
+	Aging:     false,
 }
 
 func (config *WordConfig) Desc() string {
 	ret := "words["
-	if shader := config.GetShader(); shader != nil {
-		ret += shader.Desc() + " "
-	}
 
-	if set := config.GetSet(); set != nil {
-		ret += set.Desc() + " "
+	if config.GetSetSlots() {
+		ret += fmt.Sprintf("#%d ", config.GetSlots())
+	}
+	if config.GetSetMaxLength() {
+		ret += fmt.Sprintf("≤%d", config.GetMaxLength())
+	}
+	if config.GetSetLifetime() {
+		ret += fmt.Sprintf("%.1fl ", config.GetLifetime())
+	}
+	if config.GetSetWatermark() {
+		ret += fmt.Sprintf("%0.1fm ", config.GetWatermark())
+	}
+	if config.GetSetShuffle() {
+		if !config.GetShuffle() {
+			ret += "!"
+		}
+		ret += "⧢ "
+	}
+	if config.GetSetAging() {
+		if !config.GetAging() {
+			ret += "!"
+		}
+		ret += "å "
+	}
+	if config.GetSetFill() {
+		ret += "f:" + config.GetFill() + " "
 	}
 
 	ret = strings.TrimRight(ret, " ")
@@ -30,34 +56,54 @@ func (config *WordConfig) Desc() string {
 }
 
 func (config *WordConfig) AddFlags(flagset *flag.FlagSet) {
-	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset, Mode_WORDS)
-	}
-	if config.GetSet() != nil {
-		config.GetSet().AddFlags(flagset)
-	}
+	patterns := "title,index,alpha,clear"
+	flagset.Uint64Var(&config.Slots, "n", WordDefaults.Slots, "word count")
+	flagset.Uint64Var(&config.MaxLength, "m", WordDefaults.MaxLength, "word max length")
+	flagset.Float64Var(&config.Lifetime, "life", WordDefaults.Lifetime, "word lifetime")
+	flagset.Float64Var(&config.Watermark, "mark", WordDefaults.Watermark, "buffer clear mark")
+	flagset.BoolVar(&config.Shuffle, "shuffle", WordDefaults.Shuffle, "shuffle words?")
+	flagset.BoolVar(&config.Aging, "aging", WordDefaults.Aging, "age words?")
+	flagset.StringVar(&config.Fill, "fill", WordDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *WordConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
-	if shader := config.GetShader(); shader != nil {
-		if shader.VisitFlags(flagset) {
+	flagset.Visit(func(flg *flag.Flag) {
+		switch flg.Name {
+		case "n":
+			config.SetSlots = true
+			ret = true
+		case "m":
+			config.SetMaxLength = true
+			ret = true
+		case "life":
+			config.SetLifetime = true
+			ret = true
+		case "mark":
+			config.SetWatermark = true
+			ret = true
+		case "shuffle":
+			config.SetShuffle = true
+			ret = true
+		case "aging":
+			config.SetAging = true
+			ret = true
+		case "fill":
+			config.SetFill = true
 			ret = true
 		}
-	}
-	if set := config.GetSet(); set != nil {
-		if set.VisitFlags(flagset) {
-			ret = true
-		}
-	}
-
+	})
 	return ret
 }
 
 func (config *WordConfig) Help() string {
-	ret := SetDefaults.Help()
-	tmp := flag.NewFlagSet("word", flag.ExitOnError)
+	ret := ""
+	tmp := flag.NewFlagSet("words", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "aging", "fill"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
 }
