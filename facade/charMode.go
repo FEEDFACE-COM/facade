@@ -13,7 +13,7 @@ import (
 	//    "fmt"
 )
 
-const DEBUG_SCROLL = true
+const DEBUG_CHARMODE = true
 
 type CharMode struct {
 	charBuffer *CharBuffer
@@ -92,7 +92,7 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 		offset += w
 	}
 
-	if DEBUG_SCROLL {
+	if DEBUG_CHARMODE {
 		log.Debug("%s generate %1.0f chars, wide:%.2f verts:%d floats:%d", mode.Desc(), index, offset, len(mode.data)/len(data), len(mode.data))
 	}
 }
@@ -171,7 +171,7 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	mode.charBuffer.mutex.Lock()
 
 	if mode.checkRefresh() {
-		if DEBUG_SCROLL {
+		if DEBUG_CHARMODE {
 			log.Debug("%s refresh", mode.Desc())
 		}
 		mode.generateData(font)
@@ -209,7 +209,7 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	count := int32(charCount)
 	offset := 0
 
-	if DEBUG_SCROLL && verbose {
+	if DEBUG_CHARMODE && verbose {
 		log.Debug("%s render chars:%d verts:%d  ", mode.Desc(), count, count*(2*3))
 	}
 
@@ -255,7 +255,7 @@ func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
 
 func (mode *CharMode) renderMap(font *gfx.Font) error {
 
-	if DEBUG_SCROLL {
+	if DEBUG_CHARMODE {
 		log.Debug("%s render texture map %s", mode.Desc(), font.Desc())
 	}
 

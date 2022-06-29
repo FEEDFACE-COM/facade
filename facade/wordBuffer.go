@@ -15,8 +15,8 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDBUFFER = true
-const DEBUG_WORDBUFFER_DUMP = true
+const DEBUG_WORDBUFFER = false
+const DEBUG_WORDBUFFER_DUMP = false
 
 const maxWordLength = 64 // found experimentally
 

@@ -23,7 +23,7 @@ func ShowHelp(flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
 	ShowCommands()
-	fmt.Fprintf(os.Stderr, "\nFlags:\n")
+	fmt.Fprintf(os.Stderr, "\nCommand Flags:\n")
 	str := ""
 	flags.VisitAll(func(f *flag.Flag) { str += gfx.FlagHelp(f) })
 	fmt.Fprintf(os.Stderr, "%s\n", str)

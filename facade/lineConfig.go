@@ -5,30 +5,45 @@ package facade
 //
 import (
 	"FEEDFACE.COM/facade/gfx"
+	"FEEDFACE.COM/facade/log"
+	"FEEDFACE.COM/facade/math32"
 	"flag"
 	"fmt"
 	"strings"
 )
 
 var LineDefaults LineConfig = LineConfig{
+	Width:    32,
+	Height:   8,
 	Downward: false,
 	Speed:    1.0,
 	Fixed:    false,
 	Drop:     true,
 	Smooth:   true,
 	Buffer:   8,
+	Fill:     "",
 }
 
 func (config *LineConfig) Desc() string {
 	ret := "line["
 
-	if shader := config.GetShader(); shader != nil {
-		ret += shader.Desc() + " "
+	{
+		wok := config.GetSetWidth()
+		hok := config.GetSetHeight()
+		if wok {
+			ret += fmt.Sprintf("%d", config.GetWidth())
+		}
+		if wok || hok {
+			ret += "x"
+		}
+		if hok {
+			ret += fmt.Sprintf("%d", config.GetHeight())
+		}
+		if wok || hok {
+			ret += " "
+		}
 	}
 
-	if grid := config.GetGrid(); grid != nil {
-		ret += " " + grid.Desc() + " "
-	}
 	{
 		bok := config.GetSetBuffer()
 		if bok {
@@ -37,64 +52,42 @@ func (config *LineConfig) Desc() string {
 	}
 
 	{
-		down, fixed, drop, smooth := "", "", "", ""
-		dok := config.GetSetDownward()
-		sok := config.GetSetSpeed()
-		aok := config.GetSetFixed()
-		pok := config.GetSetDrop()
-		mok := config.GetSetSmooth()
-
-		if dok {
+		if config.GetSetDownward() {
 			if config.GetDownward() {
-				down = "↓"
-			}
-			if !config.GetDownward() {
-				down = "↑"
+				ret += "↓ "
+			} else {
+				ret += "↑ "
 			}
 		}
-		if aok {
-			if config.GetFixed() {
-				fixed = "F"
-			}
+		if config.GetSetFixed() {
 			if !config.GetFixed() {
-				fixed = ""
+				ret += "!"
 			}
+			ret += "ƒ "
 		}
-		if pok {
-			if config.GetDrop() {
-				drop = ""
-			}
+
+		if config.GetSetDrop() {
 			if !config.GetDrop() {
-				drop = "ṕ"
+				ret += "!"
 			}
+			ret += "ṕ "
 		}
 
-		if mok {
-			if config.GetSmooth() {
-				smooth = "S"
-			}
+		if config.GetSetSmooth() {
 			if !config.GetSmooth() {
-				smooth = ""
+				ret += "!"
 			}
+			ret += "ß "
 		}
 
-		if dok {
-			ret += down
+		if config.GetSetSpeed() {
+			ret += fmt.Sprintf("s%.1f ", config.GetSpeed())
 		}
-		if sok {
-			ret += fmt.Sprintf("%.1f", config.GetSpeed())
-		}
-		if aok {
-			ret += fixed
-		}
-		if pok {
-			ret += drop
-		}
-		if mok {
-			ret += smooth
-		}
-		if dok || sok || aok || pok || mok {
-			ret += " "
+	}
+
+	{
+		if config.GetSetFill() {
+			ret += "f:" + config.GetFill() + " "
 		}
 	}
 
@@ -104,27 +97,37 @@ func (config *LineConfig) Desc() string {
 }
 
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
-
-	if config.GetShader() != nil {
-		config.GetShader().AddFlags(flagset, Mode_LINES)
-	}
-	if config.GetGrid() != nil {
-		config.GetGrid().AddFlags(flagset)
-	}
-
-	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "line scroll downward?")
-	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "line drop lines?")
-	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "line scroll smooth?")
-	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "line scroll speed")
-	flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "line fixed scroll speed?")
-	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "line buffer length")
-
+	patterns := "title,grid,alpha,clear"
+	flagset.Uint64Var(&config.Width, "w", LineDefaults.Width, "line width")
+	flagset.Uint64Var(&config.Height, "h", LineDefaults.Height, "line count / height")
+	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
+	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
+	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "scroll smooth?")
+	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
+	flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "fixed scroll speed?")
+	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
+	flagset.StringVar(&config.Fill, "fill", LineDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
+		case "w":
+			{
+				config.SetWidth = true
+				ret = true
+			}
+		case "h":
+			{
+				config.SetHeight = true
+				ret = true
+			}
+		case "fill":
+			{
+				config.SetFill = true
+				ret = true
+			}
 		case "down":
 			{
 				config.SetDownward = true
@@ -158,25 +161,46 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		}
 	})
 
-	if shader := config.GetShader(); shader != nil {
-		if shader.VisitFlags(flagset) {
-			ret = true
-		}
-	}
-
-	if grid := config.GetGrid(); grid != nil {
-		if grid.VisitFlags(flagset) {
-			ret = true
-		}
-	}
 	return ret
 
 }
 
 func (config *LineConfig) Help() string {
-	ret := GridDefaults.Help()
-	tmp := flag.NewFlagSet("line", flag.ExitOnError)
+	ret := ""
+	tmp := flag.NewFlagSet("lines", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	for _, s := range []string{"w", "h", "down", "drop", "smooth", "speed", "fixed", "buffer", "fill"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
+}
+
+func (config *LineConfig) autoSize(cameraRatio float32, fontRatio float32) {
+
+	if config.GetSetHeight() && !config.GetSetWidth() {
+
+		height := config.GetHeight()
+		w := math32.Round((cameraRatio / fontRatio) * float32(height))
+		if height == 1 { //special case
+			w = 6.
+		}
+
+		log.Info("%s calculated %.0f width", config.Desc(), w)
+		config.SetWidth = true
+		config.Width = uint64(w)
+
+	} else if config.GetSetWidth() && !config.GetSetHeight() {
+
+		width := config.GetWidth()
+		h := math32.Round(float32(width) / (cameraRatio / fontRatio))
+		if width <= 6 { //special case
+			h = 1.
+		}
+
+		log.Info("%s calculated %.0f height", config.Desc(), h)
+		config.SetHeight = true
+		config.Height = uint64(h)
+	}
 }

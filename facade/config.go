@@ -34,8 +34,8 @@ func (config *Config) Desc() string {
 	if shader := config.GetShader(); shader != nil {
 		ret += shader.Desc() + " "
 	}
-	if terminal := config.GetTerminal(); terminal != nil {
-		ret += terminal.Desc() + " "
+	if term := config.GetTerm(); term != nil {
+		ret += term.Desc() + " "
 	}
 	if lines := config.GetLines(); lines != nil {
 		ret += lines.Desc() + " "
@@ -63,8 +63,8 @@ func (config *Config) Desc() string {
 func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
 	var shader *ShaderConfig = config.GetShader()
-	if terminal := config.GetTerminal(); terminal != nil {
-		terminal.AddFlags(flagset)
+	if term := config.GetTerm(); term != nil {
+		term.AddFlags(flagset)
 		shader.AddFlags(flagset, Mode_TERM)
 	}
 	if lines := config.GetLines(); lines != nil {
@@ -101,9 +101,9 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 		}
 	})
 
-	if terminal := config.GetTerminal(); terminal != nil {
-		if !terminal.VisitFlags(flagset) {
-			config.Terminal = nil
+	if term := config.GetTerm(); term != nil {
+		if !term.VisitFlags(flagset) {
+			config.Term = nil
 		} // no flags used
 	}
 	if lines := config.GetLines(); lines != nil {
@@ -119,7 +119,7 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 	if chars := config.GetChars(); chars != nil {
 		if !chars.VisitFlags(flagset) {
 			config.Chars = nil
-		}
+		} // no flags used
 	}
 
 	if font := config.GetFont(); font != nil {

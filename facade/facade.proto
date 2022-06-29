@@ -47,7 +47,7 @@ message Config {
     MaskConfig Mask     = 7;
     ShaderConfig Shader = 8;
 
-    TermConfig Terminal = 13;
+    TermConfig Term     = 13;
     LineConfig Lines    = 14;
     WordConfig Words    = 15;
     CharConfig Chars    = 16;
@@ -67,7 +67,6 @@ message CameraConfig {
     bool SetIsometric  = 3;   bool Isometric = 4;
 }
 
-
 message MaskConfig {
     bool SetName = 1;  string Name = 2;
 }
@@ -79,27 +78,24 @@ message ShaderConfig {
 
 
 message TermConfig {
-    ShaderConfig Shader = 1;
-    GridConfig Grid     = 2;
-}
-
-
-message LineConfig {
-    ShaderConfig Shader = 1;
-    GridConfig Grid     = 2;
-    bool SetDownward = 3;     bool Downward =  4;
-    bool SetSpeed    = 5;   double Speed    =  6;
-    bool SetFixed    = 7;     bool Fixed    =  8;
-    bool SetDrop     = 9;     bool Drop     = 10;
-    bool SetSmooth   =11;     bool Smooth   = 12;
-    bool SetBuffer   =13;   uint64 Buffer   = 14;
-}
-
-message GridConfig {
     bool SetWidth    = 1;   uint64 Width   = 2;
     bool SetHeight   = 3;   uint64 Height  = 4;
     bool SetFill     = 5;   string Fill    = 6;
 }
+
+
+message LineConfig {
+    bool SetWidth    = 1;   uint64 Width     = 2;
+    bool SetHeight   = 3;   uint64 Height    = 4;
+    bool SetFill     = 5;   string Fill      = 6;
+    bool SetDownward = 7;     bool Downward =  8;
+    bool SetSpeed    = 9;   double Speed    = 10;
+    bool SetFixed    =11;     bool Fixed    = 12;
+    bool SetDrop     =13;     bool Drop     = 14;
+    bool SetSmooth   =15;     bool Smooth   = 16;
+    bool SetBuffer   =17;   uint64 Buffer   = 18;
+}
+
 
 
 

@@ -18,8 +18,8 @@ ASSET_FONT= $(foreach x,$(FONTS),font/$(x))
 
 SHADERS ?= def.vert def.frag 
 SHADERS += color.vert color.frag 
-SHADERS += grid/def.vert grid/def.frag grid/debug.frag grid/debug2.frag 
-SHADERS += grid/wave.vert grid/roll.vert grid/rows.vert grid/crawl.vert grid/disk.vert grid/vortex.vert 
+SHADERS += lines/def.vert lines/def.frag lines/debug.frag lines/debug2.frag
+SHADERS += lines/wave.vert lines/roll.vert lines/rows.vert lines/crawl.vert lines/disk.vert lines/vortex.vert
 SHADERS += words/def.vert words/def.frag words/flower.vert words/debug.frag
 SHADERS += chars/def.vert chars/def.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 

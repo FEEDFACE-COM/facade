@@ -136,8 +136,8 @@ func (executor *Executor) ProcessWindowChange(ch chan os.Signal) {
 			continue
 		}
 		log.Info("%s window resized %dx%d", executor.Desc(), cols, rows)
-		grid := facade.GridConfig{Width: uint64(cols), SetWidth: true, Height: uint64(rows), SetHeight: true}
-		conf := facade.Config{Terminal: &facade.TermConfig{Grid: &grid}}
+		term := facade.TermConfig{Width: uint64(cols), SetWidth: true, Height: uint64(rows), SetHeight: true}
+		conf := facade.Config{Term: &term}
 		executor.client.SendConf(&conf)
 	}
 }

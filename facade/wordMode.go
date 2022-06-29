@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDMODE = true
+const DEBUG_WORDMODE = false
 
 const HARD_MAX_LENGTH = 80.0
 

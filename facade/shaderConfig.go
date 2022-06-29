@@ -88,9 +88,9 @@ func availableShaders(prefix, suffix string) string {
 func prefixForMode(mode Mode) string {
 	switch mode {
 	case Mode_LINES:
-		return "grid/"
+		return "lines/"
 	case Mode_TERM:
-		return "grid/"
+		return "lines/"
 	case Mode_WORDS:
 		return "words/"
 	case Mode_CHARS:

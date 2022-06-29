@@ -177,9 +177,7 @@ func main() {
 
 		config.SetMode = true
 		config.Mode = facade.Mode_TERM
-		config.Terminal = &facade.TermConfig{}
-		config.Terminal.Shader = &facade.ShaderConfig{}
-		config.Terminal.Grid = &facade.GridConfig{}
+		config.Term = &facade.TermConfig{}
 
 		args = commandFlags[cmd].Args()
 		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
@@ -214,16 +212,12 @@ func main() {
 			case facade.Mode_TERM.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_TERM
-				config.Terminal = &facade.TermConfig{}
-				config.Terminal.Shader = &facade.ShaderConfig{}
-				config.Terminal.Grid = &facade.GridConfig{}
+				config.Term = &facade.TermConfig{}
 
 			case facade.Mode_LINES.String():
 				config.SetMode = true
 				config.Mode = facade.Mode_LINES
 				config.Lines = &facade.LineConfig{}
-				config.Lines.Shader = &facade.ShaderConfig{}
-				config.Lines.Grid = &facade.GridConfig{}
 
 			case facade.Mode_WORDS.String():
 				config.SetMode = true
@@ -290,21 +284,21 @@ func main() {
 		go renderer.ProcessTextSeqs(texts)
 		go renderer.ProcessQueries(quers)
 
-		if !noTitle {
-			titleConfig := &facade.Config{}
-			if renderer.mode == facade.Mode_TERM {
-				if config.Terminal == nil || !config.Terminal.Grid.GetSetFill() {
-					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
-					titleConfig.Terminal = &facade.TermConfig{Grid: gridConfig}
-				}
-			} else if renderer.mode == facade.Mode_LINES {
-				if config.Lines == nil || !config.Lines.Grid.GetSetFill() {
-					gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
-					titleConfig.Lines = &facade.LineConfig{Grid: gridConfig}
-				}
-			}
-			renderer.Configure(titleConfig)
-		}
+		//if !noTitle {
+		//	titleConfig := &facade.Config{}
+		//	if renderer.mode == facade.Mode_TERM {
+		//		if config.Terminal == nil || !config.Terminal.Grid.GetSetFill() {
+		//			gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
+		//			titleConfig.Terminal = &facade.TermConfig{Grid: gridConfig}
+		//		}
+		//	} else if renderer.mode == facade.Mode_LINES {
+		//		if config.Lines == nil || !config.Lines.Grid.GetSetFill() {
+		//			gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
+		//			titleConfig.Lines = &facade.LineConfig{Grid: gridConfig}
+		//		}
+		//	}
+		//	renderer.Configure(titleConfig)
+		//}
 
 		err = renderer.Render(confs)
 		if err != nil {
@@ -348,24 +342,23 @@ func main() {
 
 	case EXEC:
 
-		var cols, rows = facade.GridDefaults.Width, facade.GridDefaults.Height
-		if config.GetTerminal() == nil {
-			config.Terminal = &facade.TermConfig{}
-			config.Terminal.Grid = &facade.GridConfig{}
+		var cols, rows = facade.TermDefaults.Width, facade.TermDefaults.Height
+		if config.GetTerm() == nil {
+			config.Term = &facade.TermConfig{}
 		}
 
-		if config.GetTerminal().GetGrid().GetSetWidth() {
-			cols = config.GetTerminal().GetGrid().GetWidth()
+		if config.GetTerm().GetSetWidth() {
+			cols = config.GetTerm().GetWidth()
 		}
-		if config.GetTerminal().GetGrid().GetSetHeight() {
-			rows = config.GetTerminal().GetGrid().GetHeight()
+		if config.GetTerm().GetSetHeight() {
+			rows = config.GetTerm().GetHeight()
 		}
 
-		config.Terminal.Grid.Width = cols
-		config.Terminal.Grid.SetWidth = true
+		config.Term.Width = cols
+		config.Term.SetWidth = true
 
-		config.Terminal.Grid.Height = rows
-		config.Terminal.Grid.SetHeight = true
+		config.Term.Height = rows
+		config.Term.SetHeight = true
 
 		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
 		executor = NewExecutor(client, uint(cols), uint(rows), path, args)

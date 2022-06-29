@@ -22,8 +22,8 @@ type Renderer struct {
 	mode  facade.Mode
 	debug bool
 
-	terminal *facade.Grid
-	lines    *facade.Grid
+	terminal *facade.LineMode
+	lines    *facade.LineMode
 	words    *facade.WordMode
 	chars    *facade.CharMode
 
@@ -129,15 +129,15 @@ func (renderer *Renderer) Init() error {
 	renderer.mask = gfx.NewMask(facade.MaskDefaults.Name, renderer.screen)
 	renderer.mask.Init(renderer.programService)
 
-	renderer.termBuffer = facade.NewTermBuffer(uint(facade.GridDefaults.Width), uint(facade.GridDefaults.Height))
-	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.GridDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
+	renderer.termBuffer = facade.NewTermBuffer(uint(facade.TermDefaults.Width), uint(facade.TermDefaults.Height))
+	renderer.lineBuffer = facade.NewLineBuffer(uint(facade.TermDefaults.Height), uint(facade.LineDefaults.Buffer), renderer.refreshChan)
 	renderer.wordBuffer = facade.NewWordBuffer(renderer.refreshChan)
 	renderer.charBuffer = facade.NewCharBuffer(renderer.refreshChan)
 
-	renderer.terminal = facade.NewGrid(nil, renderer.termBuffer)
+	renderer.terminal = facade.NewLineMode(nil, renderer.termBuffer)
 	renderer.terminal.Init(renderer.programService, renderer.font)
 
-	renderer.lines = facade.NewGrid(renderer.lineBuffer, nil)
+	renderer.lines = facade.NewLineMode(renderer.lineBuffer, nil)
 	renderer.lines.Init(renderer.programService, renderer.font)
 
 	renderer.words = facade.NewWordMode(renderer.wordBuffer)
@@ -230,15 +230,15 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		changed = true
 	}
 
-	if config.GetLines() != nil || config.GetTerminal() != nil || config.GetWords() != nil || config.GetChars() != nil {
+	if config.GetLines() != nil || config.GetTerm() != nil || config.GetWords() != nil || config.GetChars() != nil {
 		changed = true
 	}
 
 	switch renderer.mode {
 	case facade.Mode_LINES:
-		renderer.lines.Configure(config.GetLines(), nil, renderer.camera, renderer.font)
+		renderer.lines.Configure(config.GetLines(), nil, config.GetShader(), renderer.camera, renderer.font)
 	case facade.Mode_TERM:
-		renderer.terminal.Configure(nil, config.GetTerminal(), renderer.camera, renderer.font)
+		renderer.terminal.Configure(nil, config.GetTerm(), config.GetShader(), renderer.camera, renderer.font)
 	case facade.Mode_WORDS:
 		renderer.words.Configure(config.GetWords(), config.GetShader(), renderer.camera, renderer.font)
 	case facade.Mode_CHARS:
@@ -492,13 +492,13 @@ func (renderer *Renderer) InfoMode() string {
 	mode := ""
 	switch renderer.mode {
 	case facade.Mode_TERM:
-		mode = "term " + renderer.terminal.Desc() + " " + renderer.terminal.ShaderConfig().Desc()
+		mode = renderer.terminal.Desc() + " " + renderer.terminal.ShaderConfig().Desc()
 	case facade.Mode_LINES:
-		mode = "lines " + renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
+		mode = renderer.lines.Desc() + " " + renderer.lines.ShaderConfig().Desc()
 	case facade.Mode_WORDS:
-		mode = "words " + renderer.words.Desc() + " " + renderer.words.ShaderConfig().Desc()
+		mode = renderer.words.Desc() + " " + renderer.words.ShaderConfig().Desc()
 	case facade.Mode_CHARS:
-		mode = "chars " + renderer.chars.Desc() + " " + renderer.chars.ShaderConfig().Desc()
+		mode = renderer.chars.Desc() + " " + renderer.chars.ShaderConfig().Desc()
 	}
 	dbg := ""
 	if renderer.debug {
