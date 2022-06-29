@@ -187,9 +187,9 @@ func (config *LineConfig) autoSize(cameraRatio float32, fontRatio float32) {
 			w = 6.
 		}
 
-		log.Info("%s calculated %.0f width", config.Desc(), w)
 		config.SetWidth = true
 		config.Width = uint64(w)
+		log.Info("%s calculated %.0f width", config.Desc(), w)
 
 	} else if config.GetSetWidth() && !config.GetSetHeight() {
 
@@ -199,8 +199,8 @@ func (config *LineConfig) autoSize(cameraRatio float32, fontRatio float32) {
 			h = 1.
 		}
 
-		log.Info("%s calculated %.0f height", config.Desc(), h)
 		config.SetHeight = true
 		config.Height = uint64(h)
+		log.Info("%s calculated %.0f height", config.Desc(), h)
 	}
 }

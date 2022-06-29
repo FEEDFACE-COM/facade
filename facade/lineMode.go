@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const DEBUG_LINEMODE = false
+const DEBUG_LINEMODE = true
 
 type LineMode struct {
 	width, height uint
@@ -445,11 +445,11 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 	}
 
 	if term != nil && mode.termBuffer != nil {
+		term.autoSize(camera.Ratio(), font.Ratio())
 		if DEBUG_LINEMODE {
 			log.Debug("%s configure %s%s", mode.Desc(), term.Desc(), s)
 		}
 		changed := false
-		term.autoSize(camera.Ratio(), font.Ratio())
 
 		if term.GetSetWidth() && term.GetWidth() != 0 && uint(term.GetWidth()) != mode.width {
 			mode.width = uint(term.GetWidth())
@@ -473,13 +473,13 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 	}
 
 	if lines != nil && mode.lineBuffer != nil {
+		lines.autoSize(camera.Ratio(), font.Ratio())
 		if DEBUG_LINEMODE {
 			log.Debug("%s configure %s%s", mode.Desc(), lines.Desc(), s)
 		}
 		changed := false
-		lines.autoSize(camera.Ratio(), font.Ratio())
 
-		if lines.GetSetWidth() && term.GetWidth() != 0 && uint(lines.GetWidth()) != mode.width {
+		if lines.GetSetWidth() && lines.GetWidth() != 0 && uint(lines.GetWidth()) != mode.width {
 			mode.width = uint(lines.GetWidth())
 			changed = true
 		}
