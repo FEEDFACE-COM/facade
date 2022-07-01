@@ -13,7 +13,7 @@ import (
 	//    "fmt"
 )
 
-const DEBUG_CHARMODE = true
+const DEBUG_CHARMODE = false
 
 type CharMode struct {
 	charBuffer *CharBuffer

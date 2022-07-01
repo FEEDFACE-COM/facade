@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const DEBUG_LINEMODE = true
+const DEBUG_LINEMODE = false
 
 type LineMode struct {
 	width, height uint
