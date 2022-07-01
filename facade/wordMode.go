@@ -277,6 +277,9 @@ func (mode *WordMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 
 		mode.texture.Uniform(mode.program)
 		count = int32(utf8.RuneCountInString(word.text))
+		if count > int32(mode.maxWord.length) {
+			count = int32(mode.maxWord.length)
+		}
 
 		fader := float32(1.0)
 		if word.fader != nil {
@@ -306,7 +309,7 @@ func (mode *WordMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 				off += int32(1)
 			}
 		}
-		offset += count
+		offset += int32(utf8.RuneCountInString(word.text))
 	}
 	if DEBUG_WORDMODE && verbose {
 		//log.Debug("%s render %d words", mode.Desc(), len(words) )
