@@ -287,7 +287,7 @@ func (mode *WordMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 		}
 		mode.program.Uniform1f(WORDFADER, fader)
 
-		age := float32(0.0)
+		age := float32(-1.0)
 		if word.timer != nil {
 			age = word.timer.Value()
 		}

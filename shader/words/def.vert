@@ -70,32 +70,38 @@ void main() {
     colWidth = wordMaxWidth;
     colWidth += SPACER * fontRatio;
 
-    if (wordCount == 1.0) {
-        cols = 1.;
-    } else if (wordCount <= 8.0) {
-        cols = 2.;
-    } else if (wordCount <= 24.) {
-        cols = 3.;
-    } else if (wordCount <= 48.) {
-        cols = 4.;
-    } else {
-        cols = floor( sqrt(wordCount) / 1.6);
-    } 
-
-
-
-    rows = ceil( wordCount / cols );
-
     float wordRatio = wordMaxWidth / 1.;
     float ratio = wordRatio / screenRatio;
-
     float a = sqrt( wordCount );
     float b = floor(a/ratio);
 
+    if (wordCount == 1.0) {
+        cols = 1.;
+        rows = 1.;
+        col = 0.;
+        row = 0.;
+    } else if (wordCount == 2.0) {
+        cols = 2.;
+        rows = 1.;
+        col = wordIndex;
+        row = 0.;
+    } else {
+        if (wordCount <= 8.) {
+            cols = 2.;
+        } else if (wordCount <= 24.) {
+            cols = 3.;
+        } else if (wordCount <= 48.) {
+            cols = 4.;
+        } else {
+            cols = floor( sqrt(wordCount) / 1.6);
+        } 
+    
+        rows = ceil( wordCount / cols );
+        row = mod(wordIndex+1., rows) -1.;
+        row = rows - row - 1.; // switch top-down
+        col = floor((wordIndex+1.) / rows);
 
-    row = mod(wordIndex+1., rows) -1.;
-    row = rows - row - 1.; // switch top-down
-    col = floor((wordIndex+1.) / rows);
+    }
 
     pos.x += col * colWidth;
     pos.y += row;

@@ -39,10 +39,6 @@ float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
 float Identity(float x) { return x; }
 float EaseInEaseOut(float x) { return -0.5 * cos( x * PI ) + 0.5; }
 
-float EaseOut(float x) { return cos(x*PI/2. + 3.*PI/2. ); }
-float EaseIn(float x) { return  -1. * cos(x*PI/2. ) + 1.  ; }
-
-
 void main() {
     float fader = wordFader;
     
@@ -55,69 +51,74 @@ void main() {
     vWordWidth = wordWidth;
 
 
-    pos.y += 0.5;
-    pos.x += wordWidth/2.;
-    
-
-    float rows,cols;
-    float slots = wordCount;
-    float row,col;
-
-    float SPACER = 1.;
-    float colWidth = (wordMaxLength+SPACER)*fontRatio;
-    
-    
-    colWidth = wordMaxWidth;
-    colWidth += SPACER * fontRatio;
-
-    float wordRatio = wordMaxWidth / 1.;
-    float ratio = wordRatio / screenRatio;
-    float a = sqrt( wordCount );
-    float b = floor(a/ratio);
-
-    if (wordCount == 1.0) {
-        cols = 1.;
-        col = 0.;
-    } else if (wordCount == 2.0) {
-        cols = 2.;
-        col = wordIndex;
-    } else {
-        if (wordCount <= 8.) {
-            cols = 2.;
-        } else if (wordCount <= 24.) {
-            cols = 3.;
-        } else if (wordCount <= 48.) {
-            cols = 4.;
-        } else {
-            cols = floor( sqrt(wordCount) / 1.6);
-        } 
-        col = mod(wordIndex+1., cols) -1.;
-        
+    float s = 1.0;
+    if (mod(wordIndex,2.) == 1.0) {
+        s = -1.0;
     }
 
-    pos.x += col * colWidth;
-
-//    pos.y += floor((wordIndex+1.) / cols);; // DEBUG AS ROWS
 
 
-//    pos.y += 1.0;
 
-    pos.x -= (cols/2.) * colWidth;
+//    pos.y += s * (0.5*cos(PI+wordAge*PI)+0.5) * cos(wordIndex + pos.x + 2.*wordAge*PI + PI);
+
+//    pos.y += s * 1. * cos(wordIndex + pos.x + 2.*wordAge*PI + PI);
+
+//    pos.y += 1. * cos(pos.x  + PI/2.);
+
+
+
+    pos.y += s * (-sin(PI+wordAge*PI/2.)) * cos(pos.x + 2.*wordAge*PI + PI/2.);
+
+
+
+
+    pos.y -= .25;
+//    pos.x += wordWidth/2.;                 // center word horizontally
+//    pos.x -= wordMaxWidth/2.;
+//    pos.x += (wordMaxWidth-wordWidth)/2.;  // center chars in max word width
+
+
+
+
+
+
     
-    pos.y -= .5;
-    
+    if (wordCount > 1.0) { // distribute across screen width
+        float d = (wordCount) * fontRatio;
+        pos.x -= d/2.;
+        pos.x += (wordIndex/(wordCount-1.)) * d;
+    }
 
 
     float zoom = 1.0;
-    if (1==1) {
-        zoom = 2./(cols * colWidth) * screenRatio;
-    }
-    pos.x *= zoom;
-    pos.y *= zoom;
+    zoom = 2./(wordMaxWidth + wordCount*fontRatio) * screenRatio;
+    pos.xy *= zoom;
     
-    pos.y += 1.;
-    pos.y -= 2.*wordAge;
+    if (wordAge < 0.) {
+
+        pos.y -= -cos( (wordIndex/wordCount) * (TAU * wordCount*wordMaxWidth ));
+        
+    } else {
+        
+        
+        pos.y += 1.;
+        if (false) {
+            pos.y -= 2. * wordAge;
+        } else {
+            pos.y -= 2. * (sin(wordAge * PI/2. ));
+//            pos.x += s * (1. - cos(wordAge * PI/2.)) ;
+            pos.x +=  s * (.5 * -cos( wordAge * PI + PI/2. ) + .5);
+        }
+
+    }
+
+//    pos.x += cos( wordAge * PI/2. );
+
+
+
+
     
     gl_Position = projection * view * model * pos;
 }
+
 

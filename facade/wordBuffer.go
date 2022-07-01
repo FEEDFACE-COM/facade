@@ -15,7 +15,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDBUFFER = false
+const DEBUG_WORDBUFFER = true
 const DEBUG_WORDBUFFER_DUMP = false
 
 const maxWordLength = 64 // found experimentally
@@ -356,18 +356,27 @@ func (buffer *WordBuffer) Fill(fill []string) {
 		word.text = fill[row]
 		word.width = float32(utf8.RuneCountInString(word.text))
 		word.state = WORD_ALIVE
-		if buffer.lifetime != 0. {
-			fun := func(x float32) float32 { return 1. }
-			if buffer.aging {
-				fun = func(x float32) float32 { return 1. - math.EaseInEaseOut(x) }
-			}
+		if buffer.lifetime > 0.0 {
+    		
 			word.timer = gfx.WorldClock().NewTimer(
-				buffer.lifetime-1.*FadeDuration,
+				buffer.lifetime,
 				false,
-				fun,
-				func() { buffer.fadeoutWord(word) },
-			)
-		}
+				func(x float32) float32 { return x },
+				nil,
+            )
+            if buffer.lifetime <= FadeDuration {
+                
+                buffer.fadeoutWord(word)
+            
+            } else {
+                word.fader = gfx.WorldClock().NewTimer(
+                    buffer.lifetime-FadeDuration,
+                    false,
+                    func(x float32) float32 { return 1.0 },
+                    func() { buffer.fadeoutWord(word) },
+                )
+            }
+        }
 		buffer.words[idx] = word
 
 	}
@@ -394,30 +403,32 @@ func (buffer *WordBuffer) Desc() string {
 		}
 		ret += fmt.Sprintf("%d/%d ", c, buffer.slotCount)
 	}
-	{
-		slots := float32(buffer.slotCount)
-		count := float32(0.)
-		for i := 0; i < buffer.slotCount; i++ {
-			idx := (buffer.nextIndex + i) % buffer.slotCount
-			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
-				count += 1.
-			}
-		}
-		used := count / slots
-		ret += fmt.Sprintf("%0.1f:%0.1f", used, buffer.watermark)
+//	{
+//		slots := float32(buffer.slotCount)
+//		count := float32(0.)
+//		for i := 0; i < buffer.slotCount; i++ {
+//			idx := (buffer.nextIndex + i) % buffer.slotCount
+//			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
+//				count += 1.
+//			}
+//		}
+//		used := count / slots
+//		ret += fmt.Sprintf("%0.1f:%0.1f", used, buffer.watermark)
+//	}
+	if buffer.watermark <= 1. {
+		ret += fmt.Sprintf("%.1fm ", buffer.watermark)
+    }
+	if buffer.lifetime > 0. {
+		ret += fmt.Sprintf("%.1fl ", buffer.lifetime)
 	}
-	if buffer.lifetime != 0. {
-		ret += fmt.Sprintf(" %.1fs", buffer.lifetime)
-	}
-	if buffer.shuffle || buffer.aging {
-		ret += " "
-	}
+
 	if buffer.shuffle {
 		ret += "⧢"
 	}
 	if buffer.aging {
 		ret += "a"
 	}
+	ret = strings.TrimRight(ret, "\n")
 	ret += "]"
 	return ret
 }
