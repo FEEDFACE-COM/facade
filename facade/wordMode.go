@@ -485,7 +485,7 @@ zulu
 	default:
 		log.Error("no such wordbuffer fill pattern: '%s'", name)
 	}
-	return []string{}
+	return nil
 }
 
 func (mode *WordMode) Desc() string {
