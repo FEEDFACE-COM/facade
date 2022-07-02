@@ -57,25 +57,11 @@ void main() {
     }
 
 
+//    pos.y += .5*cos( s * (pos.x/(wordMaxWidth/2.)*PI/2.) + wordAge * PI/2.);
 
 
-//    pos.y += s * (0.5*cos(PI+wordAge*PI)+0.5) * cos(wordIndex + pos.x + 2.*wordAge*PI + PI);
-
-//    pos.y += s * 1. * cos(wordIndex + pos.x + 2.*wordAge*PI + PI);
-
-//    pos.y += 1. * cos(pos.x  + PI/2.);
-
-
-
-    pos.y += s * (-sin(PI+wordAge*PI/2.)) * cos(pos.x + 2.*wordAge*PI + PI/2.);
-
-
-
-
+//
     pos.y -= .25;
-//    pos.x += wordWidth/2.;                 // center word horizontally
-//    pos.x -= wordMaxWidth/2.;
-//    pos.x += (wordMaxWidth-wordWidth)/2.;  // center chars in max word width
 
 
 
@@ -106,13 +92,10 @@ void main() {
             pos.y -= 2. * wordAge;
         } else {
             pos.y -= 2. * (sin(wordAge * PI/2. ));
-//            pos.x += s * (1. - cos(wordAge * PI/2.)) ;
-            pos.x +=  s * (.5 * -cos( wordAge * PI + PI/2. ) + .5);
+            pos.x += .5 * s * sin(wordAge * PI);
         }
 
     }
-
-//    pos.x += cos( wordAge * PI/2. );
 
 
 

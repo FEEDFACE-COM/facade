@@ -12,7 +12,7 @@ uniform float wordMaxWidth;
 uniform float wordMaxLength;
 
 uniform float wordFader;
-uniform float wordValue;
+uniform float wordAge;
 
 uniform float screenRatio;
 uniform float fontRatio;
@@ -64,10 +64,9 @@ void main() {
     float row,col;
 
     float SPACER = 1.;
-    float colWidth = (wordMaxLength+SPACER)*fontRatio;
     
     
-    colWidth = wordMaxWidth;
+    float colWidth = wordMaxWidth;
     colWidth += SPACER * fontRatio;
 
     float wordRatio = wordMaxWidth / 1.;
@@ -81,10 +80,10 @@ void main() {
         col = 0.;
         row = 0.;
     } else if (wordCount == 2.0) {
-        cols = 2.;
-        rows = 1.;
-        col = wordIndex;
-        row = 0.;
+        cols = 1.;
+        rows = 2.;
+        row = wordIndex;
+        col = 0.;
     } else {
         if (wordCount <= 8.) {
             cols = 2.;
@@ -93,7 +92,7 @@ void main() {
         } else if (wordCount <= 48.) {
             cols = 4.;
         } else {
-            cols = floor( sqrt(wordCount) / 1.6);
+            cols = floor( sqrt(wordCount) *screenRatio);
         } 
     
         rows = ceil( wordCount / cols );
@@ -103,19 +102,16 @@ void main() {
 
     }
 
+
+
     pos.x += col * colWidth;
     pos.y += row;
 
     pos.x -= (cols/2.) * colWidth;
     pos.y -= rows/2.;
 
-//    //DEBUG
-//    if (wordIndex == floor(0)) { // 2
-//        pos.z+=100.;
-//    }
-//    if (wordIndex == floor(1)) { // 0
-//       pos.z+=100.;
-//    }
+    pos.x += (wordMaxWidth-wordWidth)/2.;
+
 
 
     float zoom = 1.0;
@@ -124,8 +120,11 @@ void main() {
         float zc = 2./(cols * colWidth) * screenRatio;
         zoom = min(zr,zc);
     }
-    pos.x *= zoom;
-    pos.y *= zoom;
+    pos.xy *= zoom;
+    
+    if (wordAge >= 0.) {
+        pos.z -= -2.*wordAge;
+    }
     
     
     gl_Position = projection * view * model * pos;
