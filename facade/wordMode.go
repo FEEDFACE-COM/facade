@@ -236,14 +236,13 @@ func (mode *WordMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	mode.wordBuffer.mutex.Unlock()
 
 	gl.ActiveTexture(gl.TEXTURE0)
-
 	mode.program.UseProgram(debug)
 	mode.object.BindBuffer()
 
 	mode.program.Uniform1f(WORDCOUNT, wordCount)
-
 	mode.program.Uniform1f(WORDMAXLENGTH, float32(mode.maxWord.length))
 	mode.program.Uniform1f(WORDMAXWIDTH, mode.maxWord.width)
+
 	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 	mode.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
@@ -456,31 +455,29 @@ func (mode *WordMode) fill(name string) []string {
 	case "alpha":
 		return strings.Split(`
 alpha
-bravo
-charlie
+beta
+gamma
 delta
-echo
-foxtrot
-golf
-hotel
-india
-juliet
-kilo
-lima
-mike
-november
-oscar
-papa
-quebec
-romeo
-sierra
-tango
-uniform
-victor
-whiskey
-xray
-yankee
-zulu
+epsilon
+zeta
+eta
+theta
+iota
+kappa
+lambda
+mu
+nu
+xi
+omicron
+pi
+rho
+sigma
+tau
+upsilon
+phi
+chi
+psi
+omega
 `, "\n")[1:]
 	default:
 		log.Error("no such wordbuffer fill pattern: '%s'", name)

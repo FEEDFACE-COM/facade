@@ -8,7 +8,6 @@ import (
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
 	"fmt"
-	"github.com/FEEDFACE-COM/piglet"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
@@ -143,7 +142,7 @@ func (renderer *Renderer) Init() error {
 	renderer.words = facade.NewWordMode(renderer.wordBuffer)
 	renderer.words.Init(renderer.programService, renderer.font)
 
-	renderer.chars = facade.NewScroll(renderer.charBuffer)
+	renderer.chars = facade.NewCharMode(renderer.charBuffer)
 	renderer.chars.Init(renderer.programService, renderer.font)
 
 	gfx.WorldClock().Reset()

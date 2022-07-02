@@ -13,11 +13,12 @@ import (
 	//    "fmt"
 )
 
-const DEBUG_CHARMODE = false
+const DEBUG_CHARMODE = true
 
 type CharMode struct {
 	charBuffer *CharBuffer
-	charCount  uint
+	charCount  uint    // chars in data
+	charWidth  float32 // total width of chars in data
 
 	texture *gfx.Texture
 	program *gfx.Program
@@ -30,6 +31,7 @@ type CharMode struct {
 
 const (
 	CHARCOUNT gfx.UniformName = "charCount"
+	CHARWIDTH gfx.UniformName = "charWidth"
 )
 
 const (
@@ -62,9 +64,10 @@ func (mode *CharMode) checkRefresh() bool {
 	return ret
 }
 
-func NewScroll(buffer *CharBuffer) *CharMode {
+func NewCharMode(buffer *CharBuffer) *CharMode {
 	ret := &CharMode{
 		charBuffer: buffer,
+		charCount:  0,
 	}
 
 	ret.vert = ShaderDefaults.GetVert()
@@ -92,8 +95,11 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 		offset += w
 	}
 
+	mode.object.BufferData(len(mode.data)*4, mode.data)
+	mode.charCount = uint(index)
+	mode.charWidth = float32(offset)
 	if DEBUG_CHARMODE {
-		log.Debug("%s generate %1.0f chars, wide:%.2f verts:%d floats:%d", mode.Desc(), index, offset, len(mode.data)/len(data), len(mode.data))
+		log.Debug("%s generate chars:%d width:%.1f verts:%d floats:%d", mode.Desc(), mode.charCount, mode.charWidth, 6*mode.charCount, len(mode.data))
 	}
 }
 
@@ -179,19 +185,20 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	}
 
 	//line := mode.charBuffer.GetLine()
-	charCount := mode.charBuffer.charCount
+	charCount := mode.charCount
+	charWidth := mode.charWidth
 	mode.charBuffer.mutex.Unlock()
 
 	gl.ActiveTexture(gl.TEXTURE0)
-
 	mode.program.UseProgram(debug)
 	mode.object.BindBuffer()
 
-	// FIXME: verify nothing missing
+	mode.program.Uniform1f(CHARCOUNT, float32(charCount))
+	mode.program.Uniform1f(CHARWIDTH, float32(charWidth))
+
 	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 	mode.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
-	mode.program.Uniform1f(CHARCOUNT, float32(charCount))
 
 	camera.Uniform(mode.program)
 	scale := float32(1.0)
@@ -209,14 +216,19 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	count := int32(charCount)
 	offset := 0
 
-	if DEBUG_CHARMODE && verbose {
-		log.Debug("%s render chars:%d verts:%d  ", mode.Desc(), count, count*(2*3))
-	}
+	//if DEBUG_CHARMODE && verbose {
+	//	log.Debug("%s render chars:%d verts:%d  ", mode.Desc(), count, count*(2*3))
+	//}
 
-	if !debug {
+	if charCount <= 0. {
+		return
+	}
+	mode.texture.Uniform(mode.program)
+
+	if !debug || debug {
 		mode.program.SetDebug(false)
 		mode.texture.BindTexture()
-		//gl.DrawArrays(gl.TRIANGLES, int32(offset*2*3), (count)*(2*3))
+		gl.DrawArrays(gl.TRIANGLES, int32(offset*2*3), (count)*(2*3))
 		mode.program.SetDebug(debug)
 	}
 
@@ -227,7 +239,7 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 		off := offset
 		// REM, use single gl.DrawElements call instead (create indice array before)
 		for c := int32(0); c < count; c++ {
-			//gl.DrawArrays(gl.LINE_STRIP, int32(off*2*3), int32(1*2*3))
+			gl.DrawArrays(gl.LINE_STRIP, int32(off*2*3), int32(1*2*3))
 			off += 1
 		}
 
@@ -248,7 +260,6 @@ func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
 	mode.program.Link(mode.vert, mode.frag)
 
 	mode.renderMap(font)
-
 	mode.ScheduleRefresh()
 
 }
@@ -341,35 +352,10 @@ func (mode *CharMode) fill(name string) string {
 		return ret
 	case "alpha":
 		ret := ""
-		alpha := []string{
-			"alpha",
-			"beta",
-			"gamma",
-			"delta",
-			"epsilon",
-			"zeta",
-			"eta",
-			"theta",
-			"iota",
-			"kappa",
-			"lambda",
-			"mu",
-			"nu",
-			"xi",
-			"omicron",
-			"pi",
-			"rho",
-			"sigma",
-			"tau",
-			"upsilon",
-			"phi",
-			"chi",
-			"psi",
-			"omega",
-		}
-		l := uint(0)
-		for i := 0; l < mode.charBuffer.charCount && i < len(alpha); i++ {
-			ret += alpha[i] + " "
+		alpha := " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+		d := uint(len(alpha))
+		for i := uint(0); i < mode.charBuffer.charCount; i++ {
+			ret += fmt.Sprintf("%c", alpha[i%d])
 		}
 		return ret
 

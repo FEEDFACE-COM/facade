@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-const DEBUG_CHARBUFFER = false
-const DEBUG_CHARBUFFER_DUMP = false
+const DEBUG_CHARBUFFER = true
+const DEBUG_CHARBUFFER_DUMP = true
 
 type CharBuffer struct {
 	line      Line
@@ -31,8 +31,7 @@ func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
-	ret.line = make(Line, 1)
-	ret.line[0] = ' '
+	ret.line = Line{}
 	ret.refreshChan = refreshChan
 
 	if DEBUG_CHARBUFFER {
@@ -45,8 +44,7 @@ func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 
 func (buffer *CharBuffer) Clear() {
 	buffer.mutex.Lock()
-	buffer.line = make([]rune, 1)
-	buffer.line[0] = ' '
+	buffer.line = Line{}
 	buffer.mutex.Unlock()
 
 	if DEBUG_CHARBUFFER {
