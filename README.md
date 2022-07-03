@@ -203,15 +203,15 @@ FACADE works very well if you just want to have some stylish text scrolling acro
 ~~~
 facade -q serve lines -w=50 -vert=crawl &
 MANWIDTH=50 MANPAGER=cat man git-rebase \
-| while read -r line; do echo "$line" | fcd; sleep .9; done
+| while read -r line; do echo "$line"; sleep .9; done | fcd
 ~~~
 
 
-#### `RFCs` - internetworking specifications in plain text format
+#### `rfc` - internetworking specifications in plain text format
 ~~~
 facade -q serve lines -w=72 -vert=rows &
 curl -L https://tools.ietf.org/rfc/rfc2460.txt \
-| while read -r line; do echo "$line" | fcd sleep .9; done
+| while read -r line; do echo "$line"; sleep .9; done | fcd
 ~~~
 
 
@@ -220,15 +220,15 @@ curl -L https://tools.ietf.org/rfc/rfc2460.txt \
 facade -q serve lines -w=80 -vert=roll &
 curl -L http://phrack.org/archives/tgz/phrack49.tar.gz \
 | tar xfz /dev/stdin ./14.txt --to-stdout \
-| while read -r line; do echo "$line" | fcd; sleep .9; done
+| while read -r line; do echo "$line"; sleep .9; done | fcd
 ~~~
 
 
-#### `pr0n` - nudes older than the <IMG> tag
+#### `pr0n` - online nudes before the `<IMG>` tag
 ~~~
 facade -q serve lines -w=80 -vert=wave -mask=mask &
 curl -L https://www.asciipr0n.com/pr0n/hunky/hunky00.txt \
-| while read -r line; do echo "$line" | fcd; sleep .9; done
+| while read -r line; do echo "$line"; sleep .9; done | fcd
 
 ~~~
 
@@ -237,7 +237,7 @@ curl -L https://www.asciipr0n.com/pr0n/hunky/hunky00.txt \
 ~~~
 facade -q serve lines -w=80 -vert=wave -mask=mask -font adore64 &
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
-| while read -r line; do echo "$line" | fcd; sleep .9; done
+| while read -r line; do echo "$line"; sleep .9; done | fcdx
 ~~~
 
 

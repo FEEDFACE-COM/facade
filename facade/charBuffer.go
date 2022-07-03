@@ -128,7 +128,9 @@ func (buffer *CharBuffer) ProcessRunes(runes []rune) {
 }
 
 func (buffer *CharBuffer) addLine(line Line) {
-
+	buffer.last = line
+	buffer.line = append(buffer.line, line...)
+	buffer.ScheduleRefresh()
 }
 
 func (buffer *CharBuffer) GetScroller() float32 {
@@ -197,11 +199,10 @@ func (buffer *CharBuffer) Dump() string {
 	}
 
 	pad := "%" + fmt.Sprintf("%d", c-1) + "d"
-	ret += "    0" + fmt.Sprintf(pad, c-1) + "\n"
-	ret += "    " + string(buffer.line) + "\n"
-	ret += "    +" + strings.Repeat(" ", c-2) + "+\n"
-	ret += "lst " + fmt.Sprintf("%s", string(buffer.last)) + "\n"
-	ret += "rem " + fmt.Sprintf("%s", string(buffer.rem)) + "\n"
+	ret += "0" + fmt.Sprintf(pad, c-1) + "\n"
+	ret += "" + string(buffer.line) + "\n"
+	ret += "+" + strings.Repeat(" ", c-2) + "+\n"
+	ret += "last " + fmt.Sprintf("%s", string(buffer.last)) + "\n"
 	return ret
 }
 

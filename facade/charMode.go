@@ -31,12 +31,10 @@ type CharMode struct {
 
 const (
 	CHARCOUNT gfx.UniformName = "charCount"
-	CHARLAST  gfx.UniformName = "charLast"
 )
 
 const (
-	CHAROFFSET gfx.AttribName = "charOffset"
-	CHARINDEX  gfx.AttribName = "charIndex"
+	CHARINDEX gfx.AttribName = "charIndex"
 )
 
 func (mode *CharMode) ScheduleRefresh() {
@@ -82,16 +80,15 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 	line := mode.charBuffer.GetLine()
 
 	index := float32(0.)
-	offset := float32(0.)
 
 	data := []float32{}
-	w := float32(0.)
 	for _, run := range line {
 
-		data, w = mode.vertices(run, index, offset, font)
-		mode.data = append(mode.data, data...)
+		if run != ' ' {
+			data = mode.vertices(run, index, font)
+			mode.data = append(mode.data, data...)
+		}
 		index += 1.
-		offset += w
 	}
 
 	mode.object.BufferData(len(mode.data)*4, mode.data)
@@ -104,9 +101,8 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 func (mode *CharMode) vertices(
 	run rune,
 	index float32,
-	offset float32,
 	font *gfx.Font,
-) ([]float32, float32) {
+) []float32 {
 
 	glyphCoord := getGlyphCoord(run)
 	glyphSize := font.Size(glyphCoord.X, glyphCoord.Y)
@@ -151,16 +147,16 @@ func (mode *CharMode) vertices(
 	*/
 
 	data := []float32{
-		//  x,     y,   z,      tx,      ty, idx, offset,
-		-w / 2., +h / 2., 0.0, 0. + ox, 0. + oy, index, offset, // A
-		-w / 2., -h / 2., 0.0, 0. + ox, th + oy, index, offset, // B
-		+w / 2., -h / 2., 0.0, tw + ox, th + oy, index, offset, // C
-		+w / 2., -h / 2., 0.0, tw + ox, th + oy, index, offset, // C
-		+w / 2., +h / 2., 0.0, tw + ox, 0. + oy, index, offset, // D
-		-w / 2., +h / 2., 0.0, 0. + ox, 0. + oy, index, offset, // A
+		//  x,     y,   z,      tx,      ty, idx,
+		-w / 2., +h / 2., 0.0, 0. + ox, 0. + oy, index, // A
+		-w / 2., -h / 2., 0.0, 0. + ox, th + oy, index, // B
+		+w / 2., -h / 2., 0.0, tw + ox, th + oy, index, // C
+		+w / 2., -h / 2., 0.0, tw + ox, th + oy, index, // C
+		+w / 2., +h / 2., 0.0, tw + ox, 0. + oy, index, // D
+		-w / 2., +h / 2., 0.0, 0. + ox, 0. + oy, index, // A
 	}
 
-	return data, w
+	return data
 
 }
 
@@ -189,7 +185,6 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	mode.object.BindBuffer()
 
 	mode.program.Uniform1f(CHARCOUNT, float32(mode.charBuffer.charCount))
-	mode.program.Uniform1f(CHARLAST, float32(mode.count))
 
 	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
@@ -209,10 +204,9 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	model = model.Mul4(mgl32.Scale3D(scale, scale, scale))
 	mode.program.UniformMatrix4fv(gfx.MODEL, 1, &model[0])
 
-	mode.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1+1)*4, (0)*4)
-	mode.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1+1)*4, (0+3)*4)
-	mode.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
-	mode.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1)*4, (0+3+2+1)*4)
+	mode.program.VertexAttribPointer(gfx.VERTEX, 3, (3+2+1)*4, (0)*4)
+	mode.program.VertexAttribPointer(gfx.TEXCOORD, 2, (3+2+1)*4, (0+3)*4)
+	mode.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1)*4, (0+3+2)*4)
 
 	count := int32(mode.count)
 	offset := 0
@@ -360,7 +354,8 @@ func (mode *CharMode) fill(name string) string {
 		return ret
 	case "alpha":
 		ret := ""
-		alpha := " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+
+		alpha := "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
 		d := uint(len(alpha))
 		for i := uint(0); i < mode.charBuffer.charCount; i++ {
 			ret += fmt.Sprintf("%c", alpha[i%d])

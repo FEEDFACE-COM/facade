@@ -21,7 +21,6 @@ uniform float screenRatio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
-attribute float charOffset;
 
 varying vec4 vTexCoord;
 varying vec4 vPosition;

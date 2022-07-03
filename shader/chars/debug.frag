@@ -11,7 +11,6 @@ uniform float debugFlag;          // 0.0 unless -D flag given by user
 varying vec4 vTexCoord;
 varying vec4 vPosition;
 varying float vCharIndex;
-varying float vCharOffset;
 
 bool DEBUG = debugFlag > 0.0;
 

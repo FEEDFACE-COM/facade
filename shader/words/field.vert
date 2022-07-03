@@ -19,7 +19,6 @@ uniform float fontRatio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
-attribute float charOffset;
 attribute float wordIndex;
 attribute float wordLength;
 attribute float wordWidth;

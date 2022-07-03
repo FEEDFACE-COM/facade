@@ -22,7 +22,6 @@ uniform float screenRatio;
 attribute vec3 vertex;
 attribute vec2 texCoord;
 attribute float charIndex;
-attribute float charOffset;
 
 varying vec4 vPosition;
 varying vec4 vTexCoord;
@@ -159,7 +158,7 @@ void main() {
 
     vec4 pos = vec4(vertex,1);
     
-    pos.x -= charOffset;
+//    pos.x -= charOffset;
     
     
     float charWidth = abs(pos.x*2.);
@@ -173,7 +172,7 @@ void main() {
     
     float center = 1. + wordCount / 8. + wordWidth/2.;
     
-    float inner = center + charOffset - charWidth/2.;
+    float inner = center + /*charOffset*/ - charWidth/2.;
     float outer = inner + charWidth;
 
     float alpha = (TAU/wordCount) / 2.0;

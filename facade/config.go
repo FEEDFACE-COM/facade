@@ -46,11 +46,9 @@ func (config *Config) Desc() string {
 	if chars := config.GetChars(); chars != nil {
 		ret += chars.Desc()
 	}
-
 	if config.GetSetFill() {
 		ret += "f:" + config.GetFill() + " "
 	}
-
 	if config.GetSetDebug() {
 		if config.GetDebug() {
 			ret += "DEBUG "
@@ -114,13 +112,9 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "D":
-			{
-				config.SetDebug = true
-			}
+			config.SetDebug = true
 		case "fill":
-			{
-				config.SetFill = true
-			}
+			config.SetFill = true
 		}
 	})
 
