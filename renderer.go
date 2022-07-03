@@ -363,7 +363,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA, gl.ZERO, gl.ONE)
 		renderer.mask.Render(renderer.debug)
 
-		if true || verboseFrame {
+		if renderFailed == false {
 			if DEBUG_PERIODIC {
 				renderer.printPeriodic()
 			}
@@ -544,11 +544,8 @@ func (renderer *Renderer) printPeriodic() {
 
 func (renderer *Renderer) GetInfo() string {
 
-	text := ""
+	return renderer.InfoMode()
 
-	text += fmt.Sprintf("%s\n", renderer.InfoMode())
-
-	return text
 }
 
 func (renderer *Renderer) printDebug() {

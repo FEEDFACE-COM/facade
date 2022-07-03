@@ -25,6 +25,12 @@ bool DEBUG = debugFlag > 0.0;
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
 
+float Ease(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
+
+mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w));}
+mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
+mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
+
 void main() {
     vec4 pos = vec4(vertex,1);
 
@@ -33,15 +39,19 @@ void main() {
     vCharIndex = charIndex;
 
 
-
-    pos.x += abs(pos.x);
-//    pos.x += 1. * fontRatio;
+    float w = -PI/4. * -sin( (charIndex+1.-scroller) * PI/charCount  - PI/2. + PI/2.);
+    pos.xyz *= rotz( w );
+    pos.x += 1. * fontRatio;
     pos.x += (charIndex) * fontRatio;
     pos.x -= (charCount*fontRatio)/2.;
     pos.x -= scroller * fontRatio;
 
 
-    pos.y += 2.*sin( (charIndex+1.-scroller) * TAU/charCount );
+
+    float x = charCount / 8.;
+    pos.y += x * -sin( (charIndex+1.-scroller) * PI/charCount - PI/2.);
+
+
 
     float zoom = 1.0;
     {

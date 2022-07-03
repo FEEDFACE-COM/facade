@@ -17,7 +17,7 @@ import (
 const DEBUG_CHARBUFFER = true
 const DEBUG_CHARBUFFER_DUMP = false
 
-const MAX_CHARCOUNT = 128
+const MAX_CHARCOUNT = 100
 
 type CharBuffer struct {
 	line Line
@@ -245,7 +245,7 @@ func (buffer *CharBuffer) Dump() string {
 	}
 	ret += "\n"
 	ret += "+" + strings.Repeat(" ", c-2) + "+\n"
-	ret += "last " + fmt.Sprintf("%s", string(buffer.last)) + "\n"
+	ret += fmt.Sprintf("%s", string(buffer.last)) + "\n"
 	return ret
 }
 

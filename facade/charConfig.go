@@ -12,7 +12,7 @@ import (
 var CharDefaults = CharConfig{
 	CharCount: 32,
 	Speed:     1.0,
-	Repeat:    true,
+	Repeat:    false,
 }
 
 func (config *CharConfig) Desc() string {
