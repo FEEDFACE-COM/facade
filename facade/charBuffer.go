@@ -254,6 +254,10 @@ func (buffer *CharBuffer) Resize(charCount uint) {
 		return
 	}
 
+    if charCount > MAX_CHARCOUNT {
+        charCount = MAX_CHARCOUNT
+    }
+
 	buffer.mutex.Lock()
 	buffer.charCount = charCount
 	buffer.mutex.Unlock()
