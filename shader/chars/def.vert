@@ -38,8 +38,8 @@ void main() {
 
 
 
-    pos.x += abs(pos.x);
-    pos.x += charIndex * fontRatio;
+//    pos.x += abs(pos.x);
+    pos.x += (charIndex+1.) * fontRatio;
     pos.x -= (charCount*fontRatio)/2.;
     pos.x -= scroller * fontRatio;
 
@@ -47,7 +47,7 @@ void main() {
 
     float zoom = 1.0;
     {
-        zoom = 1./((charCount*fontRatio)/2.) * screenRatio;
+        zoom = 1./(((charCount+1.)*fontRatio)/2.) * screenRatio;
     }
     pos.xy *= zoom;
                                                                                                                                                                                                                                             

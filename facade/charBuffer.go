@@ -139,7 +139,11 @@ func (buffer *CharBuffer) GetScroller() float32 {
 }
 
 func (buffer *CharBuffer) GetLine() Line {
-	return buffer.line
+	ret := buffer.line
+	if len(ret) > int(buffer.charCount) {
+		ret = ret[:buffer.charCount]
+	}
+	return ret
 }
 
 func (buffer *CharBuffer) CharCount() uint {
