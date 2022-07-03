@@ -121,7 +121,9 @@ func (server *Server) Info(ctx context.Context, empty *facade.Empty) (*facade.St
 func (server *Server) Conf(ctx context.Context, config *facade.Config) (*facade.Status, error) {
 	peer, ok := peer.FromContext(ctx)
 	if ok {
-		log.Notice("%s receive conf from %s", server.Desc(), peer.Addr)
+		if DEBUG_SERVER {
+			log.Debug("%s receive conf from %s", server.Desc(), peer.Addr)
+		}
 	} else {
 		log.Warning("%s receive conf from unknown peer", server.Desc())
 	}
@@ -134,7 +136,9 @@ func (server *Server) Pipe(stream facade.Facade_PipeServer) error {
 
 	peer, ok := peer.FromContext(stream.Context())
 	if ok {
-		log.Notice("%s receive stream from %s", server.Desc(), peer.Addr)
+		if DEBUG_SERVER {
+			log.Debug("%s receive stream from %s", server.Desc(), peer.Addr)
+		}
 	} else {
 		log.Warning("%s receive stream from unknown peer", server.Desc())
 	}

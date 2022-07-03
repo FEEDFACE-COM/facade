@@ -77,7 +77,21 @@ func (buffer *WordBuffer) ScheduleRefresh() {
 }
 
 func (buffer *WordBuffer) ProcessSequence(seq *ansi.S) {
-	return
+	sequence, ok := ansi.Table[seq.Code]
+	if !ok {
+		return
+	}
+
+	switch sequence {
+
+	case ansi.Table[ansi.ED]:
+		buffer.Clear()
+
+	default:
+		break
+
+	}
+
 }
 
 func (buffer *WordBuffer) ProcessRunes(runes []rune) {
@@ -357,26 +371,26 @@ func (buffer *WordBuffer) Fill(fill []string) {
 		word.width = float32(utf8.RuneCountInString(word.text))
 		word.state = WORD_ALIVE
 		if buffer.lifetime > 0.0 {
-    		
+
 			word.timer = gfx.WorldClock().NewTimer(
 				buffer.lifetime,
 				false,
 				func(x float32) float32 { return x },
 				nil,
-            )
-            if buffer.lifetime <= FadeDuration {
-                
-                buffer.fadeoutWord(word)
-            
-            } else {
-                word.fader = gfx.WorldClock().NewTimer(
-                    buffer.lifetime-FadeDuration,
-                    false,
-                    func(x float32) float32 { return 1.0 },
-                    func() { buffer.fadeoutWord(word) },
-                )
-            }
-        }
+			)
+			if buffer.lifetime <= FadeDuration {
+
+				buffer.fadeoutWord(word)
+
+			} else {
+				word.fader = gfx.WorldClock().NewTimer(
+					buffer.lifetime-FadeDuration,
+					false,
+					func(x float32) float32 { return 1.0 },
+					func() { buffer.fadeoutWord(word) },
+				)
+			}
+		}
 		buffer.words[idx] = word
 
 	}
@@ -403,21 +417,21 @@ func (buffer *WordBuffer) Desc() string {
 		}
 		ret += fmt.Sprintf("%d/%d ", c, buffer.slotCount)
 	}
-//	{
-//		slots := float32(buffer.slotCount)
-//		count := float32(0.)
-//		for i := 0; i < buffer.slotCount; i++ {
-//			idx := (buffer.nextIndex + i) % buffer.slotCount
-//			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
-//				count += 1.
-//			}
-//		}
-//		used := count / slots
-//		ret += fmt.Sprintf("%0.1f:%0.1f", used, buffer.watermark)
-//	}
+	//	{
+	//		slots := float32(buffer.slotCount)
+	//		count := float32(0.)
+	//		for i := 0; i < buffer.slotCount; i++ {
+	//			idx := (buffer.nextIndex + i) % buffer.slotCount
+	//			if buffer.words[idx] != nil && buffer.words[idx].state == WORD_ALIVE {
+	//				count += 1.
+	//			}
+	//		}
+	//		used := count / slots
+	//		ret += fmt.Sprintf("%0.1f:%0.1f", used, buffer.watermark)
+	//	}
 	if buffer.watermark <= 1. {
 		ret += fmt.Sprintf("%.1fm ", buffer.watermark)
-    }
+	}
 	if buffer.lifetime > 0. {
 		ret += fmt.Sprintf("%.1fl ", buffer.lifetime)
 	}

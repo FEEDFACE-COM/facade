@@ -5,6 +5,8 @@ uniform mat4 projection;          // projection transformation
 uniform float now;                // time since start of program, as seconds
 uniform float debugFlag;          // 0.0 unless -D flag given by user
 
+uniform float scroller;
+
 uniform float charCount;
 uniform float charWidth;
 
@@ -35,15 +37,17 @@ void main() {
     vCharOffset = charOffset;
 
 
+
     pos.x += abs(pos.x);
-    pos.x += charOffset;
-    pos.x -= charWidth/2.;
+    pos.x += charIndex * fontRatio;
+    pos.x -= (charCount*fontRatio)/2.;
+    pos.x -= scroller * fontRatio;
 
 
 
     float zoom = 1.0;
     {
-        zoom = 1./(charWidth/2.) * screenRatio;
+        zoom = 1./((charCount*fontRatio)/2.) * screenRatio;
     }
     pos.xy *= zoom;
                                                                                                                                                                                                                                             

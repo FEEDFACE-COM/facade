@@ -113,8 +113,9 @@ message WordConfig {
 
 message CharConfig {
     bool SetCharCount   =  1; uint64 CharCount  =  2;
-    bool SetRepeat      =  3; bool Repeat       =  4;
-    bool SetFill        =  5; string Fill       =  6;
+    bool SetSpeed       =  3; double Speed      =  4;
+    bool SetRepeat      =  5; bool Repeat       =  6;
+    bool SetFill        =  7; string Fill       =  8;
 }
 
 

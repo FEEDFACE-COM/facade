@@ -377,7 +377,9 @@ func getGlyphCoord(run rune) gfx.Coord {
 }
 
 func (mode *LineMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
-	log.Info("%s init", mode.Desc())
+	if DEBUG_LINEMODE {
+		log.Debug("%s init", mode.Desc())
+	}
 
 	mode.object = gfx.NewObject("lines")
 	mode.object.Init()

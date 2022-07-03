@@ -1,4 +1,10 @@
 
+uniform float charCount;
+uniform float charLast;
+
+uniform float scroller;
+
+
 uniform sampler2D texture;        
 uniform float debugFlag;          // 0.0 unless -D flag given by user
 
@@ -16,10 +22,17 @@ void main() {
     vec4 tex = vTexCoord;
 
     col = texture2DProj(texture, tex);
-//    col.a *= wordFader;
+    col.a = 1.;
+
+    if ( vCharIndex == 0.0 ) {
+        col.a = 1. - scroller;
+    } else if (vCharIndex == charCount-1.) {
+        col.a = scroller;
+    }
 
     if (DEBUG) { 
         col.rgb = vec3(1.,1.,1.);
+        col.a = 1.0;
     }
 
     if (!gl_FrontFacing) { col.a /= 4.; }

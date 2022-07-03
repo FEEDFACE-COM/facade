@@ -174,14 +174,12 @@ func (clock *Clock) Info(prev ClockFrame) string {
 	}
 	ret := fmt.Sprintf("#%05d %s %.2ffps%s", clock.frame, h, fps, s)
 	if DEBUG_CLOCK_DUMP {
-		for _,timer := range clock.timers {
-			s += "\n  " + timer.Desc()
+		for _, timer := range clock.timers {
+			ret += "\n  " + timer.Desc()
 		}
 	}
 	return ret
 }
-
-
 
 func (clock *Clock) Frame() ClockFrame { return ClockFrame{Frame: clock.frame, Time: clock.time} }
 

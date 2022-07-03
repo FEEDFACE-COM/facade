@@ -316,7 +316,9 @@ func (mode *WordMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 }
 
 func (mode *WordMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
-	log.Debug("%s init", mode.Desc())
+	if DEBUG_WORDMODE {
+		log.Debug("%s init", mode.Desc())
+	}
 
 	mode.object = gfx.NewObject("words")
 	mode.object.Init()

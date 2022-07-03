@@ -23,6 +23,9 @@ func (timer *Timer) SetDuration(duration float32) {
 	timer.duration = duration
 }
 
+func (timer *Timer) SetValueFun(fun func(float32) float32) { timer.valueFun = fun }
+func (timer *Timer) SetTriggerFun(fun func())              { timer.triggerFun = fun }
+
 func (timer *Timer) Duration() float32 { return timer.duration }
 func (timer *Timer) Count() uint       { return timer.count }
 func (timer *Timer) Fader() float32    { return timer.fader }
@@ -70,15 +73,14 @@ func (timer *Timer) Value() float32 {
 
 }
 
-//func (timer *Timer) Restart(now float32) {
-//    timer.start = now
-//    timer.amp = 1.
-//    timer.bias = 0.
-//}
+func (timer *Timer) Restart() {
+	now := Now()
+	timer.start = now
+	timer.fader = math.Clamp(timer.fade(now))
+}
 
-
-func (timer *Timer) Extend(now float32) bool {
-
+func (timer *Timer) Extend() bool {
+	now := Now()
 	const MAX = float32(0.95)
 
 	if timer.fade(now) >= MAX {
@@ -128,10 +130,10 @@ func (timer *Timer) Tick(now float32) (bool, func()) {
 }
 
 func (timer *Timer) Desc(opt ...string) string {
-    title := "t"
-    if len(opt) > 0 {
-        title = opt[0]
-    }
+	title := "t"
+	if len(opt) > 0 {
+		title = opt[0]
+	}
 	run := Now() - timer.start
 	ret := fmt.Sprintf("%s[%.1f/%.1f", title, run, timer.duration)
 	if timer.repeat {

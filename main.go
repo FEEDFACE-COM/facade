@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DEBUG_PERIODIC = false
+	DEBUG_PERIODIC = true
 	DEBUG_CHANGES  = true
 	DEBUG_DIAG     = false
 	DEBUG_CLOCK    = true

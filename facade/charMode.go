@@ -17,13 +17,14 @@ const DEBUG_CHARMODE = true
 
 type CharMode struct {
 	charBuffer *CharBuffer
-	charCount  uint    // chars in data
-	charWidth  float32 // total width of chars in data
 
 	texture *gfx.Texture
 	program *gfx.Program
 	object  *gfx.Object
-	data    []float32
+
+	data  []float32
+	count uint    // chars in data
+	width float32 // total width of chars in data
 
 	vert, frag  string
 	refreshChan chan bool
@@ -31,6 +32,7 @@ type CharMode struct {
 
 const (
 	CHARCOUNT gfx.UniformName = "charCount"
+	CHARLAST  gfx.UniformName = "charLast"
 	CHARWIDTH gfx.UniformName = "charWidth"
 )
 
@@ -67,7 +69,6 @@ func (mode *CharMode) checkRefresh() bool {
 func NewCharMode(buffer *CharBuffer) *CharMode {
 	ret := &CharMode{
 		charBuffer: buffer,
-		charCount:  0,
 	}
 
 	ret.vert = ShaderDefaults.GetVert()
@@ -96,11 +97,11 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 	}
 
 	mode.object.BufferData(len(mode.data)*4, mode.data)
-	mode.charCount = uint(index)
-	mode.charWidth = float32(offset)
-	if DEBUG_CHARMODE {
-		log.Debug("%s generate chars:%d width:%.1f verts:%d floats:%d", mode.Desc(), mode.charCount, mode.charWidth, 6*mode.charCount, len(mode.data))
-	}
+	mode.count = uint(index)
+	mode.width = float32(offset)
+	//if DEBUG_CHARMODE {
+	//	log.Debug("%s generate chars:%d width:%.1f verts:%d floats:%d", mode.Desc(), mode.count, mode.width, 6*mode.count, len(mode.data))
+	//}
 }
 
 func (mode *CharMode) vertices(
@@ -177,28 +178,32 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	mode.charBuffer.mutex.Lock()
 
 	if mode.checkRefresh() {
-		if DEBUG_CHARMODE {
-			log.Debug("%s refresh", mode.Desc())
-		}
+		//if DEBUG_CHARMODE {
+		//	log.Debug("%s refresh", mode.Desc())
+		//}
 		mode.generateData(font)
 		mode.renderMap(font)
 	}
 
-	//line := mode.charBuffer.GetLine()
-	charCount := mode.charCount
-	charWidth := mode.charWidth
 	mode.charBuffer.mutex.Unlock()
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	mode.program.UseProgram(debug)
 	mode.object.BindBuffer()
 
-	mode.program.Uniform1f(CHARCOUNT, float32(charCount))
-	mode.program.Uniform1f(CHARWIDTH, float32(charWidth))
+	mode.program.Uniform1f(CHARCOUNT, float32(mode.charBuffer.charCount))
+	mode.program.Uniform1f(CHARLAST, float32(mode.count))
+	mode.program.Uniform1f(CHARWIDTH, float32(mode.width))
 
 	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
 	mode.program.Uniform1f(gfx.CLOCKNOW, float32(gfx.Now()))
+
+	scroller := float32(0.0)
+	{
+		scroller = float32(mode.charBuffer.GetScroller())
+	}
+	mode.program.Uniform1f(SCROLLER, scroller)
 
 	camera.Uniform(mode.program)
 	scale := float32(1.0)
@@ -213,14 +218,14 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	mode.program.VertexAttribPointer(CHARINDEX, 1, (3+2+1+1)*4, (0+3+2)*4)
 	mode.program.VertexAttribPointer(CHAROFFSET, 1, (3+2+1+1)*4, (0+3+2+1)*4)
 
-	count := int32(charCount)
+	count := int32(mode.count)
 	offset := 0
 
 	//if DEBUG_CHARMODE && verbose {
 	//	log.Debug("%s render chars:%d verts:%d  ", mode.Desc(), count, count*(2*3))
 	//}
 
-	if charCount <= 0. {
+	if mode.count <= 0. {
 		return
 	}
 	mode.texture.Uniform(mode.program)
@@ -259,6 +264,8 @@ func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
 	mode.program = programService.GetProgram("chars", "chars/")
 	mode.program.Link(mode.vert, mode.frag)
 
+	mode.charBuffer.timer = gfx.WorldClock().NewTimer(mode.charBuffer.speed, true, nil, func() { mode.charBuffer.scroll() })
+
 	mode.renderMap(font)
 	mode.ScheduleRefresh()
 
@@ -266,9 +273,9 @@ func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
 
 func (mode *CharMode) renderMap(font *gfx.Font) error {
 
-	if DEBUG_CHARMODE {
-		log.Debug("%s render texture map %s", mode.Desc(), font.Desc())
-	}
+	//if DEBUG_CHARMODE {
+	//	log.Debug("%s render texture map %s", mode.Desc(), font.Desc())
+	//}
 
 	rgba, err := font.RenderMap(false)
 	if err != nil {
@@ -315,14 +322,18 @@ func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, camera
 				mode.vert = vert
 				mode.frag = frag
 			}
+			mode.ScheduleRefresh()
 		}
-		mode.ScheduleRefresh()
 	}
 
 	if config != nil {
 
 		if config.GetSetCharCount() {
 			mode.charBuffer.Resize(uint(config.GetCharCount()))
+		}
+
+		if config.GetSetSpeed() {
+			mode.charBuffer.SetSpeed(float32(config.GetSpeed()))
 		}
 
 		if config.GetSetFill() {
@@ -343,11 +354,11 @@ func (mode *CharMode) fill(name string) string {
 	case "index":
 		ret := ""
 		for i := 0; uint(i) < mode.charBuffer.charCount; i++ {
-			if i%10 == 0 {
-				ret += "#"
-			} else {
-				ret += fmt.Sprintf("%1d", i%10)
-			}
+			//if i%10 == 0 {
+			//	ret += "#"
+			//} else {
+			ret += fmt.Sprintf("%1d", i%10)
+			//}
 		}
 		return ret
 	case "alpha":
