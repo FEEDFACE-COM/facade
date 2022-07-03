@@ -47,6 +47,10 @@ func (config *Config) Desc() string {
 		ret += chars.Desc()
 	}
 
+	if config.GetSetFill() {
+		ret += "f:" + config.GetFill() + " "
+	}
+
 	if config.GetSetDebug() {
 		if config.GetDebug() {
 			ret += "DEBUG "
@@ -60,9 +64,21 @@ func (config *Config) Desc() string {
 	return ret
 }
 
-func (config *Config) AddFlags(flagset *flag.FlagSet) {
+func (config *Config) AddFlags(flagset *flag.FlagSet, mode Mode) {
 	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
 	var shader *ShaderConfig = config.GetShader()
+	var patterns = []string{}
+	switch mode {
+	case Mode_LINES:
+		patterns = LineDefaults.FillPatterns()
+	case Mode_WORDS:
+		patterns = WordDefaults.FillPatterns()
+	case Mode_CHARS:
+		patterns = CharDefaults.FillPatterns()
+	case Mode_TERM:
+		patterns = TermDefaults.FillPatterns()
+	}
+
 	if term := config.GetTerm(); term != nil {
 		term.AddFlags(flagset)
 		shader.AddFlags(flagset, Mode_TERM)
@@ -88,6 +104,9 @@ func (config *Config) AddFlags(flagset *flag.FlagSet) {
 	if mask := config.GetMask(); mask != nil {
 		mask.AddFlags(flagset)
 	}
+
+	flagset.StringVar(&config.Fill, "fill", "", "fill pattern ("+strings.Join(patterns, ",")+")")
+
 }
 
 func (config *Config) VisitFlags(flagset *flag.FlagSet) {
@@ -97,6 +116,10 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 		case "D":
 			{
 				config.SetDebug = true
+			}
+		case "fill":
+			{
+				config.SetFill = true
 			}
 		}
 	})
@@ -148,10 +171,14 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 
 }
 
-func (config *Config) Help() string {
+func (config *Config) Help(mode Mode) string {
 	ret := ""
 	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
-	config.AddFlags(tmp)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	config.AddFlags(tmp, mode)
+	for _, s := range []string{"fill", "D"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
 }

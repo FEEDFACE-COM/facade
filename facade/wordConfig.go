@@ -46,24 +46,23 @@ func (config *WordConfig) Desc() string {
 		}
 		ret += "å "
 	}
-	if config.GetSetFill() {
-		ret += "f:" + config.GetFill() + " "
-	}
 
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
+func (config *WordConfig) FillPatterns() []string {
+	return []string{"title", "index", "alpha", "clear"}
+}
+
 func (config *WordConfig) AddFlags(flagset *flag.FlagSet) {
-	patterns := "title,index,alpha,clear"
 	flagset.Uint64Var(&config.Slots, "n", WordDefaults.Slots, "word count")
 	flagset.Uint64Var(&config.MaxLength, "m", WordDefaults.MaxLength, "word max length")
 	flagset.Float64Var(&config.Lifetime, "life", WordDefaults.Lifetime, "word lifetime")
 	flagset.Float64Var(&config.Watermark, "mark", WordDefaults.Watermark, "buffer clear mark")
 	flagset.BoolVar(&config.Shuffle, "shuffle", WordDefaults.Shuffle, "shuffle words?")
 	flagset.BoolVar(&config.Aging, "aging", WordDefaults.Aging, "age words?")
-	flagset.StringVar(&config.Fill, "fill", WordDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *WordConfig) VisitFlags(flagset *flag.FlagSet) bool {
@@ -88,9 +87,6 @@ func (config *WordConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		case "aging":
 			config.SetAging = true
 			ret = true
-		case "fill":
-			config.SetFill = true
-			ret = true
 		}
 	})
 	return ret
@@ -100,7 +96,7 @@ func (config *WordConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("words", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "aging", "fill"} {
+	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "aging"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

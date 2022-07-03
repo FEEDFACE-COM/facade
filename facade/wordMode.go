@@ -355,7 +355,7 @@ func (mode *WordMode) renderMap(font *gfx.Font) error {
 	return nil
 }
 
-func (mode *WordMode) Configure(config *WordConfig, shader *ShaderConfig, camera *gfx.Camera, font *gfx.Font) {
+func (mode *WordMode) Configure(config *WordConfig, shader *ShaderConfig, fill string, camera *gfx.Camera, font *gfx.Font) {
 
 	s := ""
 	if shader != nil {
@@ -416,14 +416,16 @@ func (mode *WordMode) Configure(config *WordConfig, shader *ShaderConfig, camera
 			mode.wordBuffer.SetAging(config.GetAging())
 		}
 
-		if config.GetSetFill() {
-			fillStr := mode.fill(config.GetFill())
-			if fillStr != nil {
-				mode.wordBuffer.Fill(fillStr)
-			}
-		}
 		mode.ScheduleRefresh()
 
+	}
+
+	if fill != "" {
+		fillStr := mode.fill(fill)
+		if fillStr != nil {
+			mode.wordBuffer.Fill(fillStr)
+			mode.ScheduleRefresh()
+		}
 	}
 
 }

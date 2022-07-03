@@ -439,7 +439,7 @@ func (mode *LineMode) autoScale(camera *gfx.Camera, font *gfx.Font) float32 {
 	return float32(1.0)
 }
 
-func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *ShaderConfig, camera *gfx.Camera, font *gfx.Font) {
+func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *ShaderConfig, fill string, camera *gfx.Camera, font *gfx.Font) {
 
 	s := ""
 	if shader != nil {
@@ -467,10 +467,6 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 			mode.termBuffer.Resize(mode.width, mode.height)
 		}
 
-		if term.GetSetFill() {
-			fillStr := mode.fill(term.GetFill())
-			mode.termBuffer.Fill(fillStr)
-		}
 		mode.ScheduleRefresh()
 	}
 
@@ -518,11 +514,6 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 			mode.lineBuffer.Smooth = lines.GetSmooth()
 		}
 
-		if lines.GetSetFill() {
-			fillStr := mode.fill(lines.GetFill())
-			mode.lineBuffer.Fill(fillStr)
-		}
-
 		mode.ScheduleRefresh()
 	}
 
@@ -548,6 +539,17 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 			}
 			mode.ScheduleRefresh()
 		}
+	}
+
+	if fill != "" {
+		fillStr := mode.fill(fill)
+		if mode.lineBuffer != nil {
+			mode.lineBuffer.Fill(fillStr)
+		}
+		if mode.termBuffer != nil {
+			mode.termBuffer.Fill(fillStr)
+		}
+		mode.ScheduleRefresh()
 	}
 
 }

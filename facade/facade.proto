@@ -47,6 +47,9 @@ message Config {
     MaskConfig Mask     = 7;
     ShaderConfig Shader = 8;
 
+    bool SetFill        = 9;   string Fill    = 10;
+
+
     TermConfig Term     = 13;
     LineConfig Lines    = 14;
     WordConfig Words    = 15;
@@ -80,20 +83,18 @@ message ShaderConfig {
 message TermConfig {
     bool SetWidth    = 1;   uint64 Width   = 2;
     bool SetHeight   = 3;   uint64 Height  = 4;
-    bool SetFill     = 5;   string Fill    = 6;
 }
 
 
 message LineConfig {
     bool SetWidth    = 1;   uint64 Width     = 2;
     bool SetHeight   = 3;   uint64 Height    = 4;
-    bool SetFill     = 5;   string Fill      = 6;
-    bool SetDownward = 7;     bool Downward =  8;
-    bool SetSpeed    = 9;   double Speed    = 10;
-    bool SetFixed    =11;     bool Fixed    = 12;
-    bool SetDrop     =13;     bool Drop     = 14;
-    bool SetSmooth   =15;     bool Smooth   = 16;
-    bool SetBuffer   =17;   uint64 Buffer   = 18;
+    bool SetDownward = 5;     bool Downward =  6;
+    bool SetSpeed    = 7;   double Speed    =  8;
+    bool SetFixed    = 9;     bool Fixed    = 10;
+    bool SetDrop     =11;     bool Drop     = 12;
+    bool SetSmooth   =13;     bool Smooth   = 14;
+    bool SetBuffer   =15;   uint64 Buffer   = 16;
 }
 
 
@@ -106,8 +107,6 @@ message WordConfig {
     bool SetMaxLength   =  7;  uint64 MaxLength =  8;
     bool SetShuffle     =  9;  bool   Shuffle   = 10;
     bool SetAging       = 11;  bool   Aging     = 12;
-    bool SetFill        = 13;  string Fill      = 14;
-
 }
 
 
@@ -115,7 +114,6 @@ message CharConfig {
     bool SetCharCount   =  1; uint64 CharCount  =  2;
     bool SetSpeed       =  3; double Speed      =  4;
     bool SetRepeat      =  5; bool Repeat       =  6;
-    bool SetFill        =  7; string Fill       =  8;
 }
 
 

@@ -56,6 +56,10 @@ func (config *CameraConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("camera", flag.ExitOnError)
 	config.AddFlags(tmp)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	for _, s := range []string{"zoom", "iso"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
 }

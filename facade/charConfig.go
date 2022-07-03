@@ -34,21 +34,19 @@ func (config *CharConfig) Desc() string {
 		ret += "⟳ "
 	}
 
-	if config.GetSetFill() {
-		ret += "f:" + config.GetFill() + " "
-	}
-
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
+func (config *CharConfig) FillPatterns() []string {
+	return []string{"title", "index", "alpha", "clear"}
+}
+
 func (config *CharConfig) AddFlags(flagset *flag.FlagSet) {
-	patterns := "title,index,alpha,clear"
 	flagset.Uint64Var(&config.CharCount, "c", CharDefaults.CharCount, "char count")
 	flagset.Float64Var(&config.Speed, "speed", CharDefaults.Speed, "scroll speed")
 	flagset.BoolVar(&config.Repeat, "repeat", CharDefaults.Repeat, "repeat last?")
-	flagset.StringVar(&config.Fill, "fill", CharDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
@@ -64,9 +62,6 @@ func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		case "repeat":
 			config.SetRepeat = true
 			ret = true
-		case "fill":
-			config.SetFill = true
-			ret = true
 		}
 	})
 
@@ -77,7 +72,7 @@ func (config *CharConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("char", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"c", "speed", "repeat", "fill"} {
+	for _, s := range []string{"c", "speed", "repeat"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

@@ -188,7 +188,7 @@ func main() {
 		modeFlags.SetOutput(bufio.NewWriter(nil))
 		modeFlags.Usage = func() { ShowHelpMode(EXEC, config.Mode, *modeFlags) }
 
-		config.AddFlags(modeFlags)
+		config.AddFlags(modeFlags, facade.Mode_TERM)
 		modeFlags.Parse(args)
 		config.VisitFlags(modeFlags)
 
@@ -237,7 +237,7 @@ func main() {
 			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
 			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags) }
 			modeFlags.SetOutput(bufio.NewWriter(nil))
-			config.AddFlags(modeFlags)
+			config.AddFlags(modeFlags, config.Mode)
 			modeFlags.Parse(args[1:])
 			config.VisitFlags(modeFlags)
 		} else {

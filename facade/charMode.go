@@ -23,8 +23,7 @@ type CharMode struct {
 	object  *gfx.Object
 
 	data  []float32
-	count uint    // chars in data
-	width float32 // total width of chars in data
+	count uint // chars in data
 
 	vert, frag  string
 	refreshChan chan bool
@@ -33,7 +32,6 @@ type CharMode struct {
 const (
 	CHARCOUNT gfx.UniformName = "charCount"
 	CHARLAST  gfx.UniformName = "charLast"
-	CHARWIDTH gfx.UniformName = "charWidth"
 )
 
 const (
@@ -98,7 +96,6 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 
 	mode.object.BufferData(len(mode.data)*4, mode.data)
 	mode.count = uint(index)
-	mode.width = float32(offset)
 	//if DEBUG_CHARMODE {
 	//	log.Debug("%s generate chars:%d width:%.1f verts:%d floats:%d", mode.Desc(), mode.count, mode.width, 6*mode.count, len(mode.data))
 	//}
@@ -193,7 +190,6 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 
 	mode.program.Uniform1f(CHARCOUNT, float32(mode.charBuffer.charCount))
 	mode.program.Uniform1f(CHARLAST, float32(mode.count))
-	mode.program.Uniform1f(CHARWIDTH, float32(mode.width))
 
 	mode.program.Uniform1f(gfx.SCREENRATIO, camera.Ratio())
 	mode.program.Uniform1f(gfx.FONTRATIO, font.Ratio())
@@ -292,10 +288,13 @@ func (mode *CharMode) renderMap(font *gfx.Font) error {
 	return nil
 }
 
-func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, camera *gfx.Camera, font *gfx.Font) {
+func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, fill string, camera *gfx.Camera, font *gfx.Font) {
 	s := ""
 	if shader != nil {
-		s = " " + shader.Desc()
+		s += " " + shader.Desc()
+	}
+	if fill != "" {
+		s += " f:" + fill
 	}
 	log.Debug("%s configure %s%s", mode.Desc(), config.Desc(), s)
 
@@ -336,13 +335,15 @@ func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, camera
 			mode.charBuffer.SetSpeed(float32(config.GetSpeed()))
 		}
 
-		if config.GetSetFill() {
-			fillStr := mode.fill(config.GetFill())
-			if fillStr != "" {
-				mode.charBuffer.Fill(fillStr)
-			}
-		}
 		mode.ScheduleRefresh()
+	}
+
+	if fill != "" {
+		fillStr := mode.fill(fill)
+		if fillStr != "" {
+			mode.charBuffer.Fill(fillStr)
+			mode.ScheduleRefresh()
+		}
 	}
 
 }
@@ -354,11 +355,7 @@ func (mode *CharMode) fill(name string) string {
 	case "index":
 		ret := ""
 		for i := 0; uint(i) < mode.charBuffer.charCount; i++ {
-			//if i%10 == 0 {
-			//	ret += "#"
-			//} else {
 			ret += fmt.Sprintf("%1d", i%10)
-			//}
 		}
 		return ret
 	case "alpha":

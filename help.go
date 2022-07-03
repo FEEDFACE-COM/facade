@@ -43,7 +43,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "%s", facade.FontDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.CameraDefaults.Help())
 	fmt.Fprintf(os.Stderr, "%s", facade.MaskDefaults.Help())
-	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help())
+	fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help(mode))
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "%s", facade.ShaderDefaults.Help(mode))
 	fmt.Fprintf(os.Stderr, "\n")

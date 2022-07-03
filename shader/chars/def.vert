@@ -8,7 +8,6 @@ uniform float debugFlag;          // 0.0 unless -D flag given by user
 uniform float scroller;
 
 uniform float charCount;
-uniform float charWidth;
 
 uniform float screenRatio;
 uniform float fontRatio;

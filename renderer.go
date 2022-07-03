@@ -177,6 +177,10 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 		}
 	}
 
+	var fill string = ""
+	if config.GetSetFill() {
+		fill = config.GetFill()
+	}
 	if cfg := config.GetFont(); cfg != nil {
 
 		if cfg.GetSetName() {
@@ -232,13 +236,13 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 
 	switch renderer.mode {
 	case facade.Mode_LINES:
-		renderer.lines.Configure(config.GetLines(), nil, config.GetShader(), renderer.camera, renderer.font)
+		renderer.lines.Configure(config.GetLines(), nil, config.GetShader(), fill, renderer.camera, renderer.font)
 	case facade.Mode_TERM:
-		renderer.terminal.Configure(nil, config.GetTerm(), config.GetShader(), renderer.camera, renderer.font)
+		renderer.terminal.Configure(nil, config.GetTerm(), config.GetShader(), fill, renderer.camera, renderer.font)
 	case facade.Mode_WORDS:
-		renderer.words.Configure(config.GetWords(), config.GetShader(), renderer.camera, renderer.font)
+		renderer.words.Configure(config.GetWords(), config.GetShader(), fill, renderer.camera, renderer.font)
 	case facade.Mode_CHARS:
-		renderer.chars.Configure(config.GetChars(), config.GetShader(), renderer.camera, renderer.font)
+		renderer.chars.Configure(config.GetChars(), config.GetShader(), fill, renderer.camera, renderer.font)
 	}
 
 	if changed && DEBUG_CHANGES {

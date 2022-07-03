@@ -21,7 +21,6 @@ var LineDefaults LineConfig = LineConfig{
 	Drop:     true,
 	Smooth:   true,
 	Buffer:   8,
-	Fill:     "",
 }
 
 func (config *LineConfig) Desc() string {
@@ -85,19 +84,16 @@ func (config *LineConfig) Desc() string {
 		}
 	}
 
-	{
-		if config.GetSetFill() {
-			ret += "f:" + config.GetFill() + " "
-		}
-	}
-
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
 }
 
+func (config *LineConfig) FillPatterns() []string {
+	return []string{"title", "index", "alpha", "clear"}
+}
+
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
-	patterns := "title,grid,alpha,clear"
 	flagset.Uint64Var(&config.Width, "w", LineDefaults.Width, "line width")
 	flagset.Uint64Var(&config.Height, "h", LineDefaults.Height, "line count / height")
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
@@ -106,7 +102,6 @@ func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
 	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
 	flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "fixed scroll speed?")
 	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
-	flagset.StringVar(&config.Fill, "fill", LineDefaults.Fill, "fill pattern ("+patterns+")")
 }
 
 func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
@@ -121,11 +116,6 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 		case "h":
 			{
 				config.SetHeight = true
-				ret = true
-			}
-		case "fill":
-			{
-				config.SetFill = true
 				ret = true
 			}
 		case "down":
@@ -169,7 +159,7 @@ func (config *LineConfig) Help() string {
 	ret := ""
 	tmp := flag.NewFlagSet("lines", flag.ExitOnError)
 	config.AddFlags(tmp)
-	for _, s := range []string{"w", "h", "down", "drop", "smooth", "speed", "fixed", "buffer", "fill"} {
+	for _, s := range []string{"w", "h", "down", "drop", "smooth", "speed", "fixed", "buffer"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}
