@@ -7,8 +7,8 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"fmt"
 	"github.com/FEEDFACE-COM/piglet"
+	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
@@ -520,7 +520,7 @@ func (renderer *Renderer) printPeriodic() {
 	case facade.Mode_TERM:
 		text += fmt.Sprintf("%s\n", renderer.termBuffer.Desc())
 	case facade.Mode_WORDS:
-		text += fmt.Sprintf("%s\n", renderer.wordBuffer.Desc())
+		text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
 	case facade.Mode_CHARS:
 		text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
 	}

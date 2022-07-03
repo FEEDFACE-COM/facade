@@ -192,12 +192,12 @@ func (mode *WordMode) vertices(
 
 		data := []float32{
 			//        x,       y,   z,      tx,      ty,
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // A
-			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // B
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // C
-			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, off, wordIndex, wordWidth, wordLength, // C
-			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // D
-			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, off, wordIndex, wordWidth, wordLength, // A
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, wordIndex, wordWidth, wordLength, // A
+			-w/2. + off, -h / 2., 0.0, 0. + ox, th + oy, idx, wordIndex, wordWidth, wordLength, // B
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, wordIndex, wordWidth, wordLength, // C
+			+w/2. + off, -h / 2., 0.0, tw + ox, th + oy, idx, wordIndex, wordWidth, wordLength, // C
+			+w/2. + off, +h / 2., 0.0, tw + ox, 0. + oy, idx, wordIndex, wordWidth, wordLength, // D
+			-w/2. + off, +h / 2., 0.0, 0. + ox, 0. + oy, idx, wordIndex, wordWidth, wordLength, // A
 		}
 		ret = append(ret, data...)
 
