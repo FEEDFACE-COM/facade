@@ -420,16 +420,13 @@ func (mode *WordMode) Configure(config *WordConfig, shader *ShaderConfig, fill s
 	}
 
 	if fill != "" {
-		fillStr := mode.fill(fill)
-		if fillStr != nil {
-			mode.wordBuffer.Fill(fillStr)
-			mode.ScheduleRefresh()
-		}
+		mode.wordBuffer.Fill(mode.FillString(fill))
+		mode.ScheduleRefresh()
 	}
 
 }
 
-func (mode *WordMode) fill(name string) []string {
+func (mode *WordMode) FillString(name string) []string {
 	switch name {
 	case "title":
 		ret := []string{"FACADE"}

@@ -170,7 +170,7 @@ func (mode *LineMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	}
 }
 
-func (mode *LineMode) fill(name string) []string {
+func (mode *LineMode) FillString(name string) []string {
 	ret := []string{}
 
 	switch name {
@@ -542,12 +542,11 @@ func (mode *LineMode) Configure(lines *LineConfig, term *TermConfig, shader *Sha
 	}
 
 	if fill != "" {
-		fillStr := mode.fill(fill)
 		if mode.lineBuffer != nil {
-			mode.lineBuffer.Fill(fillStr)
+			mode.lineBuffer.Fill(mode.FillString(fill))
 		}
 		if mode.termBuffer != nil {
-			mode.termBuffer.Fill(fillStr)
+			mode.termBuffer.Fill(mode.FillString(fill))
 		}
 		mode.ScheduleRefresh()
 	}

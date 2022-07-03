@@ -80,21 +80,23 @@ func (mode *CharMode) generateData(font *gfx.Font) {
 	line := mode.charBuffer.GetLine()
 
 	index := float32(0.)
-
 	data := []float32{}
+	count := uint(0)
 	for _, run := range line {
 
 		if run != ' ' {
 			data = mode.vertices(run, index, font)
 			mode.data = append(mode.data, data...)
+			count += 1
 		}
 		index += 1.
 	}
 
 	mode.object.BufferData(len(mode.data)*4, mode.data)
-	mode.count = uint(index)
+	mode.count = count
 	//if DEBUG_CHARMODE {
-	//	log.Debug("%s generate chars:%d width:%.1f verts:%d floats:%d", mode.Desc(), mode.count, mode.width, 6*mode.count, len(mode.data))
+	//	log.Debug("%s generate '%s'",mode.Desc(),string(line))
+	//	log.Debug("%s generate chars:%d verts:%d floats:%d", mode.Desc(), mode.count, 6*mode.count, len(mode.data))
 	//}
 }
 
@@ -329,20 +331,21 @@ func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, fill s
 			mode.charBuffer.SetSpeed(float32(config.GetSpeed()))
 		}
 
+		if config.GetSetRepeat() {
+			mode.charBuffer.SetRepeat(config.GetRepeat())
+		}
+
 		mode.ScheduleRefresh()
 	}
 
 	if fill != "" {
-		fillStr := mode.fill(fill)
-		if fillStr != "" {
-			mode.charBuffer.Fill(fillStr)
-			mode.ScheduleRefresh()
-		}
+		mode.charBuffer.Fill(mode.FillString(fill))
+		mode.ScheduleRefresh()
 	}
 
 }
 
-func (mode *CharMode) fill(name string) string {
+func (mode *CharMode) FillString(name string) string {
 	switch name {
 	case "title":
 		return "FACADE"
@@ -361,7 +364,8 @@ func (mode *CharMode) fill(name string) string {
 			ret += fmt.Sprintf("%c", alpha[i%d])
 		}
 		return ret
-
+	case "text":
+		return "GREETINGS PROFESSOR FALKEN. SHALL WE PLAY A GAME?"
 	default:
 		log.Error("no such charbuffer fill pattern: '%s'", name)
 	}

@@ -17,13 +17,16 @@ import (
 const DEBUG_CHARBUFFER = true
 const DEBUG_CHARBUFFER_DUMP = false
 
+const MAX_CHARCOUNT = 128
+
 type CharBuffer struct {
 	line Line
 	last Line
 	rem  []rune
 
-	timer *gfx.Timer
-	speed float32
+	timer  *gfx.Timer
+	speed  float32
+	repeat bool
 
 	charCount uint
 
@@ -36,38 +39,50 @@ func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 	ret := &CharBuffer{
 		charCount:   uint(CharDefaults.CharCount),
 		speed:       float32(CharDefaults.Speed),
+		repeat:      CharDefaults.Repeat,
+		line:        Line{},
+		last:        Line{},
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
-	ret.line = Line{}
-	ret.last = Line{}
-
 	ret.timer = gfx.WorldClock().NewTimer(0., false, nil, nil)
-
-	ret.refreshChan = refreshChan
 	if DEBUG_CHARBUFFER {
 		log.Debug("%s created", ret.Desc())
 	}
-
 	return ret
-
 }
 
 func (buffer *CharBuffer) scroll() {
+
+	buffer.timer.Restart()
 
 	if len(buffer.line) <= 0 {
 		return
 	}
 
-	buffer.timer.Restart()
-	buffer.line = buffer.line[1:]
+	if len(buffer.line) == 1 { // scroll out last char, check for refill
 
-	//if DEBUG_CHARBUFFER_DUMP {
-	//	log.Debug("%s scroll: %s\n%s",buffer.Desc(),buffer.timer.Desc(),buffer.Dump())
-	//} else if DEBUG_CHARBUFFER {
-	//	log.Debug("%s scroll: %s",buffer.Desc(),buffer.timer.Desc())
-	//}
+		if buffer.Repeat() && len(buffer.last) > 0 { // refill with last line received
+
+			buffer.line = EmptyLine(int(buffer.charCount))
+			buffer.line = append(buffer.line, buffer.last...)
+
+		} else { // empty buffer
+			buffer.line = Line{}
+		}
+
+		//if DEBUG_CHARBUFFER {
+		//	log.Debug("%s scroll",buffer.Desc())
+		//}
+
+	} else {
+
+		buffer.line = buffer.line[1:]
+
+	}
+
 	buffer.ScheduleRefresh()
+
 }
 
 func (buffer *CharBuffer) Clear() {
@@ -128,7 +143,21 @@ func (buffer *CharBuffer) ProcessRunes(runes []rune) {
 }
 
 func (buffer *CharBuffer) addLine(line Line) {
+
+	if len(line)+len(buffer.line) > MAX_CHARCOUNT {
+		if DEBUG_CHARMODE {
+			log.Debug("%s drop line %d+%d chars > %d max", buffer.Desc(), len(line), len(buffer.line), MAX_CHARCOUNT)
+		}
+		return
+	}
 	buffer.last = line
+
+	//fillup with spaces?
+	n := int(buffer.charCount) - len(buffer.line)
+	if n > 0 {
+		buffer.line = append(buffer.line, EmptyLine(n-1)...)
+	}
+	buffer.line = append(buffer.line, EmptyLine(1)...)
 	buffer.line = append(buffer.line, line...)
 	buffer.ScheduleRefresh()
 }
@@ -141,11 +170,11 @@ func (buffer *CharBuffer) GetScroller() float32 {
 }
 
 func (buffer *CharBuffer) GetLine() Line {
-	ret := buffer.line
-	if len(ret) > int(buffer.charCount) {
-		ret = ret[:buffer.charCount]
+	n := uint(len(buffer.line))
+	if n > buffer.charCount {
+		n = buffer.charCount
 	}
-	return ret
+	return buffer.line[:n]
 }
 
 func (buffer *CharBuffer) CharCount() uint {
@@ -153,15 +182,20 @@ func (buffer *CharBuffer) CharCount() uint {
 }
 
 func (buffer *CharBuffer) Repeat() bool {
-	return false
+	return buffer.repeat
+}
+
+func (buffer *CharBuffer) SetRepeat(repeat bool) {
+	buffer.repeat = repeat
 }
 
 func (buffer *CharBuffer) Fill(fill string) {
 	log.Debug("fill %s", fill)
 	n := utf8.RuneCountInString(fill)
-	if n > int(buffer.charCount) {
-		n = int(buffer.charCount)
+	if n > int(MAX_CHARCOUNT) {
+		n = int(MAX_CHARCOUNT)
 	}
+	buffer.last = Line{}
 	buffer.line = make([]rune, n)
 
 	off := 0
@@ -183,7 +217,10 @@ func (buffer *CharBuffer) Fill(fill string) {
 func (buffer *CharBuffer) Desc() string {
 
 	ret := "charbuffer["
-	ret += fmt.Sprintf("#%d:%d %.1f s%.1f", buffer.charCount, len(buffer.line), buffer.timer.Value(), buffer.timer.Duration())
+	ret += fmt.Sprintf("#%d:%d %.1f s%.1f ", buffer.charCount, len(buffer.line), buffer.timer.Value(), buffer.timer.Duration())
+	if buffer.repeat {
+		ret += "⟳ "
+	}
 	ret = strings.TrimSuffix(ret, " ")
 	ret += "]"
 	return ret
@@ -200,7 +237,13 @@ func (buffer *CharBuffer) Dump() string {
 
 	pad := "%" + fmt.Sprintf("%d", c-1) + "d"
 	ret += "0" + fmt.Sprintf(pad, c-1) + "\n"
-	ret += "" + string(buffer.line) + "\n"
+	for _, run := range buffer.line {
+		if run == ' ' {
+			run = '.'
+		}
+		ret += fmt.Sprintf("%c", run)
+	}
+	ret += "\n"
 	ret += "+" + strings.Repeat(" ", c-2) + "+\n"
 	ret += "last " + fmt.Sprintf("%s", string(buffer.last)) + "\n"
 	return ret

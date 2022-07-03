@@ -34,8 +34,9 @@ void main() {
 
 
 
-//    pos.x += abs(pos.x);
-    pos.x += (charIndex+1.) * fontRatio;
+    pos.x += abs(pos.x);
+//    pos.x += 1. * fontRatio;
+    pos.x += (charIndex) * fontRatio;
     pos.x -= (charCount*fontRatio)/2.;
     pos.x -= scroller * fontRatio;
 

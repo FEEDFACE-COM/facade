@@ -12,6 +12,14 @@ const DEBUG_ANSI_DUMP = false
 
 type Line []rune
 
+func EmptyLine(n int) Line {
+	ret := make(Line, n)
+	for i := 0; i < n; i++ {
+		ret[i] = ' '
+	}
+	return ret
+}
+
 type TextSeq struct {
 	Text []rune
 	Seq  *ansi.S

@@ -32,10 +32,10 @@ void main() {
 
     if ( vCharIndex == 0.0 ) {
         col.rgb = CYAN;
-        col.a = 1.-scroller;
+//        col.a = 1.-scroller;
     } else if (vCharIndex == charCount-1.0) {
         col.rgb = MAGENTA;
-        col.a = scroller;
+//        col.a = scroller;
     } else if ( mod(vCharIndex,2.) == 1.) {
         col.rgb = DARKGRAY  + (-.5*cos(scroller*TAU+PI)+.5) * DARKGRAY;
     } else {
