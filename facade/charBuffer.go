@@ -21,7 +21,7 @@ const MAX_CHARCOUNT = 100
 
 type CharBuffer struct {
 	line Line
-	last Line
+	next Line
 	rem  []rune
 
 	timer  *gfx.Timer
@@ -41,7 +41,7 @@ func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 		speed:       float32(CharDefaults.Speed),
 		repeat:      CharDefaults.Repeat,
 		line:        Line{},
-		last:        Line{},
+		next:        Line{},
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
@@ -62,10 +62,10 @@ func (buffer *CharBuffer) scroll() {
 
 	if len(buffer.line) == 1 { // scroll out last char, check for refill
 
-		if buffer.Repeat() && len(buffer.last) > 0 { // refill with last line received
+		if buffer.Repeat() && len(buffer.next) > 0 { // refill with last line received
 
 			buffer.line = EmptyLine(int(buffer.charCount))
-			buffer.line = append(buffer.line, buffer.last...)
+			buffer.line = append(buffer.line, buffer.next...)
 
 		} else { // empty buffer
 			buffer.line = Line{}
@@ -88,7 +88,7 @@ func (buffer *CharBuffer) scroll() {
 func (buffer *CharBuffer) Clear() {
 	buffer.mutex.Lock()
 	buffer.line = Line{}
-	buffer.last = Line{}
+	buffer.next = Line{}
 	buffer.mutex.Unlock()
 
 	if DEBUG_CHARBUFFER {
@@ -144,13 +144,23 @@ func (buffer *CharBuffer) ProcessRunes(runes []rune) {
 
 func (buffer *CharBuffer) addLine(line Line) {
 
-	if len(line)+len(buffer.line) > MAX_CHARCOUNT {
+	if len(line) > MAX_CHARCOUNT {
 		if DEBUG_CHARMODE {
-			log.Debug("%s drop line %d+%d chars > %d max", buffer.Desc(), len(line), len(buffer.line), MAX_CHARCOUNT)
+			log.Debug("%s drop line %d > %d max", buffer.Desc(), len(line), MAX_CHARCOUNT)
 		}
 		return
 	}
-	buffer.last = line
+
+	buffer.next = line
+
+	if len(line)+len(buffer.line) > MAX_CHARCOUNT {
+		if DEBUG_CHARMODE {
+			log.Debug("%s hold line %d+%d > %d max", buffer.Desc(), len(line), len(buffer.line), MAX_CHARCOUNT)
+		}
+		return
+
+	}
+
 
 	//fillup with spaces?
 	n := int(buffer.charCount) - len(buffer.line)
@@ -195,7 +205,7 @@ func (buffer *CharBuffer) Fill(fill string) {
 	if n > int(MAX_CHARCOUNT) {
 		n = int(MAX_CHARCOUNT)
 	}
-	buffer.last = Line{}
+	buffer.next = Line{}
 	buffer.line = make([]rune, n)
 
 	off := 0
@@ -245,7 +255,7 @@ func (buffer *CharBuffer) Dump() string {
 	}
 	ret += "\n"
 	ret += "+" + strings.Repeat(" ", c-2) + "+\n"
-	ret += fmt.Sprintf("%s", string(buffer.last)) + "\n"
+	ret += fmt.Sprintf("%s", string(buffer.next)) + "\n"
 	return ret
 }
 
