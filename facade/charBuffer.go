@@ -17,7 +17,7 @@ import (
 const DEBUG_CHARBUFFER = true
 const DEBUG_CHARBUFFER_DUMP = false
 
-const MAX_CHARCOUNT = 100
+const MAX_CHARCOUNT = 128
 
 type CharBuffer struct {
 	line Line
