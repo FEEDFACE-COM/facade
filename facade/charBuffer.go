@@ -154,13 +154,19 @@ func (buffer *CharBuffer) addLine(line Line) {
 	buffer.next = line
 
 	if len(line)+len(buffer.line) > MAX_CHARCOUNT {
-		if DEBUG_CHARMODE {
-			log.Debug("%s hold line %d+%d > %d max", buffer.Desc(), len(line), len(buffer.line), MAX_CHARCOUNT)
-		}
-		return
 
+		return // too long total line
+
+		//if DEBUG_CHARMODE {
+		//	log.Debug("%s hold line %d+%d > %d max", buffer.Desc(), len(line), len(buffer.line), MAX_CHARCOUNT)
+		//}
 	}
 
+	if uint(len(buffer.line)) > buffer.charCount {
+
+		return // already out of bounds
+
+	}
 
 	//fillup with spaces?
 	n := int(buffer.charCount) - len(buffer.line)
@@ -227,7 +233,7 @@ func (buffer *CharBuffer) Fill(fill string) {
 func (buffer *CharBuffer) Desc() string {
 
 	ret := "charbuffer["
-	ret += fmt.Sprintf("#%d:%d %.1f s%.1f ", buffer.charCount, len(buffer.line), buffer.timer.Value(), buffer.timer.Duration())
+	ret += fmt.Sprintf("#%d/%d s%.1f %.1f/%.1f ", len(buffer.line), buffer.charCount, buffer.speed, buffer.timer.Value(), buffer.timer.Duration())
 	if buffer.repeat {
 		ret += "⟳ "
 	}
@@ -248,9 +254,9 @@ func (buffer *CharBuffer) Dump() string {
 	pad := "%" + fmt.Sprintf("%d", c-1) + "d"
 	ret += "0" + fmt.Sprintf(pad, c-1) + "\n"
 	for _, run := range buffer.line {
-		if run == ' ' {
-			run = '.'
-		}
+		//if run == ' ' {
+		//	run = '.'
+		//}
 		ret += fmt.Sprintf("%c", run)
 	}
 	ret += "\n"
@@ -264,12 +270,13 @@ func (buffer *CharBuffer) Resize(charCount uint) {
 		return
 	}
 
-    if charCount > MAX_CHARCOUNT {
-        charCount = MAX_CHARCOUNT
-    }
+	if charCount > MAX_CHARCOUNT {
+		charCount = MAX_CHARCOUNT
+	}
 
 	buffer.mutex.Lock()
 	buffer.charCount = charCount
+	buffer.timer.SetDuration(buffer.speed / float32(buffer.charCount))
 	buffer.mutex.Unlock()
 
 	if DEBUG_CHARBUFFER_DUMP {
@@ -283,10 +290,16 @@ func (buffer *CharBuffer) Resize(charCount uint) {
 
 func (buffer *CharBuffer) SetSpeed(speed float32) {
 
-	if speed > 0. {
+	buffer.speed = speed // time (s) to traverse screen horizontal in
+
+	if buffer.speed > 0. {
+
+		duration := buffer.speed / float32(buffer.charCount)
+
 		buffer.timer.SetValueFun(func(x float32) float32 { return x })
 		buffer.timer.SetTriggerFun(func() { buffer.scroll() })
-		buffer.timer.SetDuration(speed)
+		buffer.timer.SetDuration(duration)
+
 	} else {
 		buffer.timer.SetValueFun(func(x float32) float32 { return 0. })
 		buffer.timer.SetTriggerFun(nil)
