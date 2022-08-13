@@ -45,7 +45,12 @@ func NewCharBuffer(refreshChan chan bool) *CharBuffer {
 		refreshChan: refreshChan,
 		mutex:       &sync.Mutex{},
 	}
-	ret.timer = gfx.WorldClock().NewTimer(0., false, nil, nil)
+	ret.timer = gfx.WorldClock().NewTimer(0., false, func(x float32) float32 { return 0. }, nil)
+	if ret.speed > 0. {
+		ret.timer.SetValueFun(func(x float32) float32 { return x })
+		ret.timer.SetTriggerFun(func() { ret.scroll() })
+		ret.timer.SetDuration(ret.speed)
+	}
 	if DEBUG_CHARBUFFER {
 		log.Debug("%s created", ret.Desc())
 	}
@@ -276,7 +281,7 @@ func (buffer *CharBuffer) Resize(charCount uint) {
 
 	buffer.mutex.Lock()
 	buffer.charCount = charCount
-	buffer.timer.SetDuration(buffer.speed / float32(buffer.charCount))
+	buffer.timer.SetDuration(buffer.speed)
 	buffer.mutex.Unlock()
 
 	if DEBUG_CHARBUFFER_DUMP {
@@ -290,15 +295,13 @@ func (buffer *CharBuffer) Resize(charCount uint) {
 
 func (buffer *CharBuffer) SetSpeed(speed float32) {
 
-	buffer.speed = speed // time (s) to traverse screen horizontal in
+	buffer.speed = speed // time (seconds) to travel 1 char horizontally
 
 	if buffer.speed > 0. {
 
-		duration := buffer.speed / float32(buffer.charCount)
-
 		buffer.timer.SetValueFun(func(x float32) float32 { return x })
 		buffer.timer.SetTriggerFun(func() { buffer.scroll() })
-		buffer.timer.SetDuration(duration)
+		buffer.timer.SetDuration(buffer.speed)
 
 	} else {
 		buffer.timer.SetValueFun(func(x float32) float32 { return 0. })
