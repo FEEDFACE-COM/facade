@@ -35,6 +35,7 @@ mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w)
 mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
 mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
 
+
 void main() {
     vec4 pos = vec4(vertex,1);
 
@@ -42,8 +43,9 @@ void main() {
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
 
+    float phase = -now/16.;
 
-    float w = -PI/4. * -sin( (charIndex+1.-scroller) * PI/charCount  - PI/2. + PI/2.);
+    float w = -PI/4. * -sin( (charIndex+1.-scroller) * PI/charCount  - PI/2. + PI/2. + phase);
     pos.xyz *= rotz( w );
     pos.x += 1. * fontRatio;
     pos.x += (charIndex) * fontRatio;
@@ -53,8 +55,8 @@ void main() {
 
 
     float x = charCount / 8.;
-    pos.y += x * -sin( (charIndex+1.-scroller) * PI/charCount - PI/2.);
-
+    pos.y += x * -sin( (charIndex+1.-scroller) * PI/charCount - PI/2. + phase);
+    
 
 
     float zoom = 1.0;
