@@ -246,7 +246,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	}
 
 	if changed && DEBUG_CHANGES {
-		renderer.printDebug()
+    	log.Debug("%s", renderer.InfoMode())
 	}
 
 	return nil
@@ -422,25 +422,26 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 
 func (renderer *Renderer) ProcessQueries(queryChan chan (chan string)) error {
 
-	if DEBUG_RENDERER {
-		log.Debug("%s start process info queries", renderer.Desc())
-	}
+//	if DEBUG_RENDERER {
+//		log.Debug("%s start process info queries", renderer.Desc())
+//	}
+//
+//	for {
+//
+//		chn := <-queryChan
+//		info := renderer.Info()
+//
+//		select {
+//		case chn <- info:
+//			continue
+//
+//		case <-time.After(1000. * time.Millisecond):
+//			continue
+//		}
+//
+//	}
 
-	for {
-
-		chn := <-queryChan
-		info := renderer.Info()
-
-		select {
-		case chn <- info:
-			continue
-
-		case <-time.After(1000. * time.Millisecond):
-			continue
-		}
-
-	}
-
+    return nil
 }
 
 func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
@@ -512,18 +513,20 @@ func (renderer *Renderer) printPeriodic() {
 
 	text := ""
 	text += fmt.Sprintf("## FACADE %s ##\n", gfx.WorldClock().Info(renderer.prevFrame))
-	text += renderer.GetInfo() + "\n"
+	text += renderer.InfoMode() + "\n"
 
-	switch renderer.mode {
-	case facade.Mode_LINES:
-		text += fmt.Sprintf("%s\n", renderer.lineBuffer.Desc())
-	case facade.Mode_TERM:
-		text += fmt.Sprintf("%s\n", renderer.termBuffer.Desc())
-	case facade.Mode_WORDS:
-		text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
-	case facade.Mode_CHARS:
-		text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
-	}
+    if DEBUG_BUFFER {
+        switch renderer.mode {
+        case facade.Mode_LINES:
+            text += fmt.Sprintf("%s\n", renderer.lineBuffer.Dump(80))
+        case facade.Mode_TERM:
+            text += fmt.Sprintf("%s\n", renderer.termBuffer.Dump())
+        case facade.Mode_WORDS:
+            text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
+        case facade.Mode_CHARS:
+            text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
+        }
+    }
 
 	text = strings.TrimRight(text, "\n")
 	text += "\n##\n"
@@ -542,99 +545,25 @@ func (renderer *Renderer) printPeriodic() {
 
 }
 
-func (renderer *Renderer) GetInfo() string {
 
-	return renderer.InfoMode()
 
-}
-
-func (renderer *Renderer) printDebug() {
-
-	log.Debug("%s", renderer.GetInfo())
-	return
-
-	//if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
-	//	log.Info("")
-	//}
-	//
-	//if DEBUG_MEMORY {
-	//	log.Info("memory usage %s", MemUsage())
-	//}
-	//
-	//if DEBUG_DIAG {
-	//	log.Info("%s    %s", gfx.WorldClock().Info(renderer.prevFrame), InfoDiag())
-	//}
-	//
-	//if DEBUG_CLOCK {
-	//	log.Info("%s", gfx.WorldClock().Info(renderer.prevFrame))
-	//}
-	//
-	//if DEBUG_MODE {
-	//	log.Info("  %s", renderer.InfoMode())
-	//	switch renderer.mode {
-	//	case facade.Mode_LINES:
-	//		log.Info("  %s", renderer.lineBuffer.Desc())
-	//	case facade.Mode_TERM:
-	//		log.Info("  %s", renderer.termBuffer.Desc())
-	//	case facade.Mode_WORDS:
-	//		log.Info("  %s", renderer.wordBuffer.Desc())
-	//	case facade.Mode_CHARS:
-	//		log.Info("  %s", renderer.charBuffer.Desc())
-	//	}
-	//}
-	//
-	//if DEBUG_FONT {
-	//	log.Info("  %s", renderer.fontService.Desc())
-	//	if renderer.font != nil {
-	//		log.Info("  %s", renderer.font.Desc())
-	//	}
-	//}
-	//
-	//if DEBUG_BUFFER && log.DebugLogging() {
-	//	renderer.dumpBuffer()
-	//}
-	//
-	//if DEBUG_MEMORY || DEBUG_DIAG || DEBUG_CLOCK || DEBUG_MODE || DEBUG_FONT {
-	//	log.Info("")
-	//}
-	//
-
-}
-
-func (renderer *Renderer) dumpBuffer() {
-	if !DEBUG_BUFFER {
-		return
-	}
-	if renderer.mode == facade.Mode_TERM {
-		os.Stdout.Write([]byte(renderer.terminal.DumpBuffer()))
-	} else if renderer.mode == facade.Mode_LINES {
-		os.Stdout.Write([]byte(renderer.lines.DumpBuffer()))
-	} else if renderer.mode == facade.Mode_WORDS {
-		os.Stdout.Write([]byte(renderer.wordBuffer.Dump()))
-	} else if renderer.mode == facade.Mode_CHARS {
-		os.Stdout.Write([]byte(renderer.charBuffer.Dump()))
-	}
-	os.Stdout.Write([]byte("\n"))
-	os.Stdout.Sync()
-}
-
-func (renderer *Renderer) Info() string {
-	ret := ""
-
-	ret += InfoAuthor()
-	ret += InfoVersion()
-	ret += "\n\n"
-
-	ret += gfx.WorldClock().Info(renderer.prevFrame)
-	ret += "\n  " + renderer.InfoMode()
-	ret += "\n  " + renderer.lineBuffer.Desc()
-	ret += "\n  " + renderer.termBuffer.Desc()
-	ret += "\n  " + renderer.wordBuffer.Desc()
-	ret += "\n  " + renderer.charBuffer.Desc()
-	ret += "\n\n"
-
-	return ret
-}
+//func (renderer *Renderer) Info() string {
+//	ret := ""
+//
+//	ret += InfoAuthor()
+//	ret += InfoVersion()
+//	ret += "\n\n"
+//
+//	ret += gfx.WorldClock().Info(renderer.prevFrame)
+//	ret += "\n  " + renderer.InfoMode()
+//	ret += "\n  " + renderer.lineBuffer.Desc()
+//	ret += "\n  " + renderer.termBuffer.Desc()
+//	ret += "\n  " + renderer.wordBuffer.Desc()
+//	ret += "\n  " + renderer.charBuffer.Desc()
+//	ret += "\n\n"
+//
+//	return ret
+//}
 
 func (renderer *Renderer) Desc() string {
 	ret := "renderer["

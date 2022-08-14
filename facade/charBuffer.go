@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-const DEBUG_CHARBUFFER = true
+const DEBUG_CHARBUFFER = false
 const DEBUG_CHARBUFFER_DUMP = false
 
 const MAX_CHARCOUNT = 128
