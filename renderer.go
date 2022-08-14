@@ -7,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"github.com/FEEDFACE-COM/piglet"
+	"FEEDFACE.COM/facade/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
@@ -246,7 +246,7 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 	}
 
 	if changed && DEBUG_CHANGES {
-    	log.Debug("%s", renderer.InfoMode())
+		log.Debug("%s", renderer.InfoMode())
 	}
 
 	return nil
@@ -420,30 +420,6 @@ func (renderer *Renderer) ProcessConf(confChan chan facade.Config) {
 	}
 }
 
-func (renderer *Renderer) ProcessQueries(queryChan chan (chan string)) error {
-
-//	if DEBUG_RENDERER {
-//		log.Debug("%s start process info queries", renderer.Desc())
-//	}
-//
-//	for {
-//
-//		chn := <-queryChan
-//		info := renderer.Info()
-//
-//		select {
-//		case chn <- info:
-//			continue
-//
-//		case <-time.After(1000. * time.Millisecond):
-//			continue
-//		}
-//
-//	}
-
-    return nil
-}
-
 func (renderer *Renderer) ProcessTextSeqs(textChan chan facade.TextSeq) error {
 
 	if DEBUG_RENDERER {
@@ -515,18 +491,18 @@ func (renderer *Renderer) printPeriodic() {
 	text += fmt.Sprintf("## FACADE %s ##\n", gfx.WorldClock().Info(renderer.prevFrame))
 	text += renderer.InfoMode() + "\n"
 
-    if DEBUG_BUFFER {
-        switch renderer.mode {
-        case facade.Mode_LINES:
-            text += fmt.Sprintf("%s\n", renderer.lineBuffer.Dump(80))
-        case facade.Mode_TERM:
-            text += fmt.Sprintf("%s\n", renderer.termBuffer.Dump())
-        case facade.Mode_WORDS:
-            text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
-        case facade.Mode_CHARS:
-            text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
-        }
-    }
+	if DEBUG_BUFFER {
+		switch renderer.mode {
+		case facade.Mode_LINES:
+			text += fmt.Sprintf("%s\n", renderer.lineBuffer.Dump(80))
+		case facade.Mode_TERM:
+			text += fmt.Sprintf("%s\n", renderer.termBuffer.Dump())
+		case facade.Mode_WORDS:
+			text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
+		case facade.Mode_CHARS:
+			text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
+		}
+	}
 
 	text = strings.TrimRight(text, "\n")
 	text += "\n##\n"
@@ -544,26 +520,6 @@ func (renderer *Renderer) printPeriodic() {
 	fmt.Fprintf(os.Stderr, "\033[%dB", ht-i)
 
 }
-
-
-
-//func (renderer *Renderer) Info() string {
-//	ret := ""
-//
-//	ret += InfoAuthor()
-//	ret += InfoVersion()
-//	ret += "\n\n"
-//
-//	ret += gfx.WorldClock().Info(renderer.prevFrame)
-//	ret += "\n  " + renderer.InfoMode()
-//	ret += "\n  " + renderer.lineBuffer.Desc()
-//	ret += "\n  " + renderer.termBuffer.Desc()
-//	ret += "\n  " + renderer.wordBuffer.Desc()
-//	ret += "\n  " + renderer.charBuffer.Desc()
-//	ret += "\n\n"
-//
-//	return ret
-//}
 
 func (renderer *Renderer) Desc() string {
 	ret := "renderer["

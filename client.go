@@ -224,30 +224,6 @@ func (client *Client) SendConf(config *facade.Config) error {
 	return nil
 }
 
-func (client *Client) QueryInfo() (string, error) {
-	if client.connection == nil {
-		return "", log.NewError("no connection")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
-	defer cancel()
-
-	status, err := client.client.Info(ctx, &facade.Empty{})
-	if err != nil {
-		stat, _ := grpcstatus.FromError(err)
-		return "", log.NewError("fail to send: %s", stat.Message())
-	} else if !status.GetSuccess() {
-		return "", log.NewError("query error: %s", status.GetError())
-	}
-
-	info := status.GetInfo()
-	if info == "" {
-		return "", log.NewError("empty info")
-	}
-
-	return info, nil
-
-}
-
 func (client *Client) Dial() error {
 	var err error
 

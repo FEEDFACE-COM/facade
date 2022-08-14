@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type FacadeClient interface {
 	Conf(ctx context.Context, in *Config, opts ...grpc.CallOption) (*Status, error)
 	Pipe(ctx context.Context, opts ...grpc.CallOption) (Facade_PipeClient, error)
-	Info(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Status, error)
 }
 
 type facadeClient struct {
@@ -78,22 +77,12 @@ func (x *facadePipeClient) CloseAndRecv() (*Status, error) {
 	return m, nil
 }
 
-func (c *facadeClient) Info(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Status, error) {
-	out := new(Status)
-	err := c.cc.Invoke(ctx, "/facade.Facade/Info", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // FacadeServer is the server API for Facade service.
 // All implementations should embed UnimplementedFacadeServer
 // for forward compatibility
 type FacadeServer interface {
 	Conf(context.Context, *Config) (*Status, error)
 	Pipe(Facade_PipeServer) error
-	Info(context.Context, *Empty) (*Status, error)
 }
 
 // UnimplementedFacadeServer should be embedded to have forward compatible implementations.
@@ -105,9 +94,6 @@ func (UnimplementedFacadeServer) Conf(context.Context, *Config) (*Status, error)
 }
 func (UnimplementedFacadeServer) Pipe(Facade_PipeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Pipe not implemented")
-}
-func (UnimplementedFacadeServer) Info(context.Context, *Empty) (*Status, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
 }
 
 // UnsafeFacadeServer may be embedded to opt out of forward compatibility for this service.
@@ -165,24 +151,6 @@ func (x *facadePipeServer) Recv() (*RawText, error) {
 	return m, nil
 }
 
-func _Facade_Info_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FacadeServer).Info(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/facade.Facade/Info",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FacadeServer).Info(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Facade_ServiceDesc is the grpc.ServiceDesc for Facade service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -193,10 +161,6 @@ var Facade_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Conf",
 			Handler:    _Facade_Conf_Handler,
-		},
-		{
-			MethodName: "Info",
-			Handler:    _Facade_Info_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

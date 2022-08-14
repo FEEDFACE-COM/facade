@@ -31,7 +31,6 @@ type Server struct {
 
 	bufferChan chan facade.TextSeq
 	confChan   chan facade.Config
-	queryChan  chan (chan string)
 }
 
 func NewServer(host string, confPort uint, textPort uint, timeout float64, noIPv4 bool, noIPv6 bool) *Server {
@@ -85,37 +84,6 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 		go server.ReceiveText(textConn, bufChan)
 
 	}
-}
-
-func (server *Server) Info(ctx context.Context, empty *facade.Empty) (*facade.Status, error) {
-	if DEBUG_SERVER {
-		log.Debug("%s received info request", server.Desc())
-	}
-	ret := &facade.Status{}
-
-	chn := make(chan string)
-	server.queryChan <- chn
-
-	info := ""
-	select {
-	case info = <-chn:
-		ret.Info = info
-
-	case <-time.After(5. * time.Second):
-		if DEBUG_SERVER {
-			log.Debug("%s query channel time out", server.Desc())
-		}
-		return &facade.Status{Success: false, Error: "timeout"}, log.NewError("timeout")
-
-	}
-
-	if DEBUG_SERVER {
-		log.Debug("%s respond query info: %s", server.Desc(), ret.Info)
-	}
-
-	ret.Success = true
-	return ret, nil
-
 }
 
 func (server *Server) Conf(ctx context.Context, config *facade.Config) (*facade.Status, error) {
@@ -223,13 +191,11 @@ func (server *Server) ReceiveText(textConn net.Conn, bufChan chan facade.TextSeq
 func (server *Server) Listen(
 	confChan chan facade.Config,
 	bufferChan chan facade.TextSeq,
-	queryChan chan (chan string),
 ) {
 	var err error
 
 	server.confChan = confChan
 	server.bufferChan = bufferChan
-	server.queryChan = queryChan
 
 	if server.transport == "" {
 		return
@@ -246,7 +212,7 @@ func (server *Server) Listen(
 	}
 
 	serv := grpc.NewServer()
-	facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan, queryChan: queryChan})
+	facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan})
 
 	log.Notice("%s listen on %s", server.Desc(), listener.Addr())
 

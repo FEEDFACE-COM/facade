@@ -73,7 +73,6 @@ func main() {
 
 	confs := make(chan facade.Config)
 	texts := make(chan facade.TextSeq)
-	quers := make(chan (chan string))
 	ticks := make(chan bool, 2)
 
 	log.SetVerbosity(log.NOTICE)
@@ -273,7 +272,7 @@ func main() {
 			scanner = NewScanner()
 			go scanner.ScanText(texts)
 		}
-		go server.Listen(confs, texts, quers)
+		go server.Listen(confs, texts)
 		go server.ListenText(texts)
 		runtime.LockOSThread()
 		if err = renderer.Init(); err != nil {
@@ -282,7 +281,6 @@ func main() {
 
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
-		go renderer.ProcessQueries(quers)
 
 		//if !noTitle {
 		//	titleConfig := &facade.Config{}

@@ -17,7 +17,6 @@ enum Mode {
 service Facade {
     rpc Conf(Config) returns (Status) {}
     rpc Pipe(stream RawText) returns (Status) {}
-    rpc Info(Empty) returns (Status) {}
 }
 
 message Empty {}
@@ -25,8 +24,6 @@ message Empty {}
 message Status {
     bool Success = 1;
     string Error = 2;
-
-    string Info = 3;
 }
 
 
