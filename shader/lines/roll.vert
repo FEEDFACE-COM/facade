@@ -30,6 +30,9 @@ float PI = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU= 6.2831853071795864769252867665590057683943387987502116419498891840;
 float ease1(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 
+mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w));}
+mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
+mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
 
 
 
@@ -40,11 +43,12 @@ void main() {
     
     vec4 pos = vec4(vertex,1);
 
-    float offset = PI/16.;
-    offset = 0.0;
-    float ARC = PI/2. - offset;
+    float offset = PI/4.;
+//    offset = 0.0;
+    float ARC = 6.*PI/4. - offset;
     float RADIUS = tileCount.y/2. * tileSize.y /2. ;
 
+     RADIUS += .25 * cos( tileCoord.x/tileCount.x * PI + PI*now );
 
     
 
@@ -78,7 +82,6 @@ void main() {
     } else if ( pos.x < 0. && pos.y < 0. ) {
         pos.xyz = D;
     }
-
 
     float ratio = screenRatio / fontRatio;
     float zoom = ratio * 2. / ( tileCount.x );
