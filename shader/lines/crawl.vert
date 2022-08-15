@@ -52,12 +52,19 @@ void main() {
     pos.y += (scroller * tileSize.y);
     pos.x += (tileCoord.x * tileSize.x);
     pos.y += (tileCoord.y * tileSize.y);
-    pos.y += 7.;
+//    pos.y += 7.;
 
     pos.x += ( tileOffset.x * tileSize.x);
     pos.y += ( tileOffset.y * tileSize.y);
 
     pos.z -= 2.*pos.y;
+
+    float zoom = 1./2.;
+    pos.xyz *= zoom;
+
+//    float h = tileCount.y*tileSize.y;
+//    float x = sqrt( h*h + (2.*h * 2.*h) );
+    
 
     gl_Position = projection * view * model * pos;
 }

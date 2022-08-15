@@ -25,11 +25,16 @@ bool DEBUG = debugFlag > 0.0;
 float PI  = 3.1415926535897932384626433832795028841971693993751058209749445920;
 float TAU = 6.2831853071795864769252867665590057683943387987502116419498891840;
 
-float Ease(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
+float Ease(float x)    { return   .5 * cos( x*PI + PI ) + 0.5; }
+
+float EaseOut(float x) { return        sin( x * PI/2. ); }
+float EaseIn(float x)  { return   1. - cos( x * PI/2. ); }
+
 
 mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w));}
 mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
 mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
+
 
 void main() {
     vec4 pos = vec4(vertex,1);
@@ -38,50 +43,31 @@ void main() {
     vTexCoord = vec4(texCoord.xy,1.,1.);
     vCharIndex = charIndex;
 
+    float phase = 0.;
+    phase = -now/8.;
 
-    float w = -PI/4. * -sin( (charIndex+1.-scroller) * PI/charCount  - PI/2. + PI/2.);
-
-    float ARC = TAU;
-    float GAP = 1.;
-    
-    
-    float c = (charCount+GAP) * fontRatio;  // circumference
-    float r = c / TAU;                      // radius
-    r += log(charCount + GAP);              // adjust smaller charcounts
-    
-    
-    float gamma = 0.;
-    gamma += 0.*PI/64.;                     // adjust start point
-    
-    float x = (charIndex-scroller) / (charCount + GAP);
-    float a = 2.;
-    a -= log(charCount + GAP);
-    float b = 2.;
-
-    pos.xyz *= rotz( a*PI/32. * cos(x*b*TAU ) );
-    pos.y +=                a * cos(x*b*TAU - 3.*PI/2. );
-
-    gamma -= x;
+    float w = -PI/4. * -sin( (charIndex+1.-scroller) * PI/charCount  - PI/2. + PI/2. + phase);
+    pos.xyz *= rotx(  cos(now/4.) * PI/4. );
+    pos.xyz *= rotx( PI/4. + PI/4. * (cos( ((charIndex+1.-scroller)/charCount) * TAU)) );
+    pos.xyz *= rotz( w );
+    pos.x += 1. * fontRatio;
+    pos.x += (charIndex) * fontRatio;
+    pos.x -= (charCount*fontRatio)/2.;
+    pos.x -= scroller * fontRatio;
 
 
-    pos.xyz *= roty( -gamma*ARC + PI/2. );  // face outwards
-    
-    pos.x += r * cos( gamma * ARC );
-    pos.z += r * sin( gamma * ARC );
+
+    float x = charCount / 8.;
+    pos.y += x * -sin( (charIndex+1.-scroller) * PI/charCount - PI/2. + phase);
+//    pos.z += PI/16. * cos( (charIndex+1.-scroller) * PI/charCount - PI/2. + phase); 
     
 
-
-
-   pos.xyz *= rotx( -PI/(a*8.) * cos(now/2.) ); // animated swifel
-/*   pos.xyz *= roty( now / 8.); // rotate whole ring */
 
     float zoom = 1.0;
     {
-        zoom = 11. / (8.*r);
+        zoom = 1./(((charCount+1.)*fontRatio)/2.) * screenRatio;
     }
-    pos.xyz *= zoom;
-    
-    
+    pos.xy *= zoom;
                                                                                                                                                                                                                                             
     gl_Position = projection * view * model * pos;
 }
