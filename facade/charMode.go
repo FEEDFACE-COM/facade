@@ -357,8 +357,8 @@ func (mode *CharMode) FillString(name string) string {
 		return ret
 	case "alpha":
 		ret := ""
-
-		alpha := "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
+//		alpha := "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
+        alpha := "alpha bravo charlie delta echo foxtrott golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu"
 		d := uint(len(alpha))
 		for i := uint(0); i < mode.charBuffer.charCount; i++ {
 			ret += fmt.Sprintf("%c", alpha[i%d])
