@@ -44,7 +44,7 @@ float Ease(float x)          { return 0.5 * cos(     x + PI/2.0 ) + 0.5; }
 
 mat3 rotx(float w) {return mat3(1.0,0.0,0.0,0.0,cos(w),sin(w),0.0,-sin(w),cos(w));}
 mat3 roty(float w) {return mat3(cos(w),0.0,sin(w),0.0,1.0,0.0,-sin(w),0.0,cos(w));}
-mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,0.0);}
+mat3 rotz(float w) {return mat3(cos(w),sin(w),0.0,-sin(w),cos(w),0.0,0.0,0.0,1.0);}
 
 vec3 translate(float w, float r, vec3 v) {
     v.x += cos(w)*r;
@@ -65,42 +65,25 @@ void main() {
     vWordWidth = wordWidth;
 
 
-    float radius = 8.;
-    float gamma = 0.;
-    float ARC = TAU * 2./6.;
-    float sector = (2.*ARC) / wordCount;
+    float r0 = 2.;
+    float r1 = r0 * screenRatio;
+    float sector = TAU / wordCount;
+
+    float gamma =  PI/2. + (sector) * -wordIndex;
 
 
-
-    if ( wordIndex <= wordCount/2. ) {
- 
-        float index = wordIndex;
- 
-        gamma =  PI/2. + ARC/4. + sector * index;
-
- 
-        
-    } else {
-
-        float index = wordIndex;
- 
-        gamma =  PI + ARC/4. + sector * index;
-        
-    }
-
-    pos.x += cos(gamma) * radius;
-    pos.y += sin(gamma) * radius;
-
+    pos.x += cos(gamma) * r1;
+    pos.y += sin(gamma) * r0;
+    pos.z = 0.0;
 
     pos.xy /= 4.;
+    pos.z += 2.*wordAge;
 
     float zoom = 1.0;
     {
-        zoom = 1./ (radius+log(wordMaxWidth));
+        zoom = 1./ (r0+log(wordMaxWidth));
     }
     pos.xy *= zoom;
-
-    pos.z += 2.*wordAge;
 
 
     gl_Position = projection * view * model * pos;

@@ -51,8 +51,8 @@ void main() {
 
 
     float c = count * fontRatio;  // circumference
-    float r = c / TAU;                      // radius
-    r += log(charCount);              // adjust smaller charcounts
+    float r = c / TAU;            // radius
+    r += log(charCount);          // adjust smaller charcounts
 
 
     float a;

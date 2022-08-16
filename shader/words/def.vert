@@ -122,9 +122,6 @@ void main() {
     }
     pos.xy *= zoom;
     
-    if (wordAge >= 0.) {
-        pos.z -= -2.*wordAge;
-    }
     
     
     gl_Position = projection * view * model * pos;

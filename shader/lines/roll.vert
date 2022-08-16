@@ -48,7 +48,7 @@ void main() {
     float ARC = 6.*PI/4. - offset;
     float RADIUS = tileCount.y/2. * tileSize.y /2. ;
 
-     RADIUS += .25 * cos( tileCoord.x/tileCount.x * PI + PI*now );
+//     RADIUS += .25 * cos( tileCoord.x/tileCount.x * PI + PI*now );
 
     
 

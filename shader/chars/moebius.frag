@@ -32,89 +32,33 @@ void main() {
     col = texture2DProj(texture, vTexCoord);
 
 
-
-//    col = vec4(1.);
-    bool front = gl_FrontFacing;
-
     float count = floor(charCount/2.);
     float index = vCharIndex;
     if (index >= count) {
         index -= count;
-//        one = true;
     }
 
-    if (front) { 
+    if (gl_FrontFacing) { 
 
-
-        if (false) { // color ends
-            if (vCharIndex == 0.0 ) {
-                col.rgb = GREEN;
-            }
-            if (vCharIndex == count-1. ) {
-                col.rgb = RED;
-            }
-    
-            // second half
-            if (vCharIndex == count) {
-                col.rgb = CYAN;
-            }
-            if (vCharIndex == charCount-1.) {
-                col.rgb = MAGENTA;
-            }
-        }
-
-        
-//        col.a = 1.;
-        
-//        col.rgb = LIGHTGRAY;
-//        if (vCharIndex >= count) {
-//            col.rgb = DARKGRAY;
-//        }
-
-
-        // first half 
         if (vCharIndex == 0.0 ) {
             col.a *= 1. - scroller;
         }
-//        else if (vCharIndex == count-1. ) {
-//        }
-
-        // second half
-//        else if (vCharIndex == count) {
-//        } 
         else if (vCharIndex == charCount-2.) {
             col.a *= scroller;
         } 
         else if (vCharIndex == charCount-1.) {
-//            col.a *= scroller;
-//            col.a = 1.;
-//            col.rgb = RED;
             col.a = 0.;
         }
-        
-        
-        
-//        if (vCharIndex == count) {
-//            col.rgb = BLUE;    
-//        }
-
-
 
         
-    } else {
+    } else { // hide back side
         col.a = 0.;
-
-        col.rgb = BLACK;
-        col.a = 0.0;
     }
 
 
     if (DEBUG) { 
         col.rgb = WHITE;
-        col.a = 0.1;
     }
-
-//    col.rgb = WHITE * 1. / floor(2.);
 
     gl_FragColor = col;
     

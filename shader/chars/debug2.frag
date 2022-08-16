@@ -29,7 +29,9 @@ void main() {
     vec4 pos = vPosition;
     vec4 tex = vTexCoord;
 
-    col = vec4(0.);
+    col = vec4(1.);
+//    col = texture2DProj(texture, vTexCoord);
+
     bool front = gl_FrontFacing;
 
     float count = floor(charCount/2.);
@@ -66,21 +68,20 @@ void main() {
         
         
         
-//        if (vCharIndex == count) {
-//            col.rgb = BLUE;    
-//        }
-
-
-
         
     } else {
-        col.a = 0.;
-        col.rgb = BLACK;
+        col.a = 0.0;
+        
+//        if (vCharIndex < count) {
+//        col.rgb = RED;
+//        } else {
+//        col.rgb = RED;
+//        }
     }
 
 
     if (DEBUG) { 
-        col.rgb = WHITE;
+        col.rgb = GRAY;
         col.a = 1.0;
     }
 
