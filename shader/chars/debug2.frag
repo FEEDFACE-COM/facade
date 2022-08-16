@@ -29,11 +29,7 @@ void main() {
     vec4 pos = vPosition;
     vec4 tex = vTexCoord;
 
-    col = texture2DProj(texture, vTexCoord);
-
-
-
-//    col = vec4(1.);
+    col = vec4(0.);
     bool front = gl_FrontFacing;
 
     float count = floor(charCount/2.);
@@ -44,52 +40,28 @@ void main() {
     }
 
     if (front) { 
-
-
-        if (false) { // color ends
-            if (vCharIndex == 0.0 ) {
-                col.rgb = GREEN;
-            }
-            if (vCharIndex == count-1. ) {
-                col.rgb = RED;
-            }
-    
-            // second half
-            if (vCharIndex == count) {
-                col.rgb = CYAN;
-            }
-            if (vCharIndex == charCount-1.) {
-                col.rgb = MAGENTA;
-            }
+        col.a = 1.;
+        
+        col.rgb = LIGHTGRAY;
+        if (vCharIndex >= count) {
+            col.rgb = DARKGRAY;
         }
-
-        
-//        col.a = 1.;
-        
-//        col.rgb = LIGHTGRAY;
-//        if (vCharIndex >= count) {
-//            col.rgb = DARKGRAY;
-//        }
 
 
         // first half 
         if (vCharIndex == 0.0 ) {
-            col.a *= 1. - scroller;
+            col.rgb = GREEN;
         }
-//        else if (vCharIndex == count-1. ) {
-//        }
+        if (vCharIndex == count-1. ) {
+            col.rgb = RED;
+        }
 
         // second half
-//        else if (vCharIndex == count) {
-//        } 
-        else if (vCharIndex == charCount-2.) {
-            col.a *= scroller;
-        } 
-        else if (vCharIndex == charCount-1.) {
-//            col.a *= scroller;
-//            col.a = 1.;
-//            col.rgb = RED;
-            col.a = 0.;
+        if (vCharIndex == count) {
+            col.rgb = CYAN;
+        }
+        if (vCharIndex == charCount-1.) {
+            col.rgb = MAGENTA;
         }
         
         
@@ -103,15 +75,13 @@ void main() {
         
     } else {
         col.a = 0.;
-
         col.rgb = BLACK;
-        col.a = 0.0;
     }
 
 
     if (DEBUG) { 
         col.rgb = WHITE;
-        col.a = 0.1;
+        col.a = 1.0;
     }
 
 //    col.rgb = WHITE * 1. / floor(2.);
