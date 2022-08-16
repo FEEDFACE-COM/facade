@@ -24,7 +24,7 @@ SHADERS += lines/def.frag lines/debug.frag
 SHADERS += words/def.vert words/field.vert words/flower.vert 
 SHADERS += words/def.frag words/debug.frag
 SHADERS += chars/def.vert chars/moebius.vert
-SHADERS += chars/def.frag chars/moebius.vert chars/debug.frag
+SHADERS += chars/def.frag chars/moebius.frag chars/debug.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
 
