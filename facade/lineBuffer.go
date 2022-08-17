@@ -557,7 +557,20 @@ func (buffer *LineBuffer) Dump(width uint) string {
 	ret := ""
 	for i := uint(0); i < buffer.rows+buffer.offs; i++ {
 
-		if i > buffer.rows+2 && i < buffer.rows+buffer.offs-2 {
+		if i == buffer.rows {
+			ret += "----+"
+			for c := uint(0); c < width; c++ {
+				ret += "-"
+			}
+			ret += "\n"
+		}
+
+		if i == buffer.rows + 1 {
+			ret += fmt.Sprintf("  : |\n")
+			continue
+		}
+
+		if i >= buffer.rows + 1 && i < buffer.rows+buffer.offs-1 {
 			continue
 		}
 
@@ -571,13 +584,6 @@ func (buffer *LineBuffer) Dump(width uint) string {
 		}
 		ret += "\n"
 
-		if i == buffer.rows-1 {
-			ret += "----+"
-			for c := uint(0); c < width; c++ {
-				ret += "-"
-			}
-			ret += "\n"
-		}
 
 	}
 	return ret

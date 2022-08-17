@@ -245,7 +245,9 @@ func (mode *CharMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 }
 
 func (mode *CharMode) Init(programService *gfx.ProgramService, font *gfx.Font) {
-	log.Debug("%s init", mode.Desc())
+	if DEBUG_CHARMODE {
+		log.Debug("%s init", mode.Desc())
+	}
 
 	mode.object = gfx.NewObject("chars")
 	mode.object.Init()
@@ -292,7 +294,9 @@ func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, fill s
 	if fill != "" {
 		s += " f:" + fill
 	}
-	log.Debug("%s configure %s%s", mode.Desc(), config.Desc(), s)
+	if DEBUG_CHARMODE {
+		log.Debug("%s configure %s%s", mode.Desc(), config.Desc(), s)
+	}
 
 	if shader != nil {
 		changed := false

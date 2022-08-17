@@ -7,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"github.com/FEEDFACE-COM/piglet"
+	"FEEDFACE.COM/facade/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
@@ -90,7 +90,9 @@ func (renderer *Renderer) checkRefresh() bool {
 
 func (renderer *Renderer) Init() error {
 	var err error
-	log.Notice("%s init %s", renderer.Desc(), renderer.directory)
+	if DEBUG_RENDERER {
+		log.Debug("%s init %s", renderer.Desc(), renderer.directory)
+	}
 
 	err = piglet.CreateContext()
 	if err != nil {
@@ -502,18 +504,20 @@ func (renderer *Renderer) InfoMode() string {
 		buffer = renderer.charBuffer.Desc()
 	}
 
-
-	return fmt.Sprintf("%s%s\n%s %s %s\n%s", mode, dbg, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc(),buffer)
-
+	ret := ""
+	ret += fmt.Sprintf("%s %s %s\n",renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc())
+	ret += fmt.Sprintf("%s%s\n", mode, dbg)
+	ret += fmt.Sprintf("%s", buffer)
+	return ret
 }
 
-const DEBUGINFO_INFO = 5
-const DEBUGINFO_BUFFER  = 20
-const DEBUGINFO_MESSAGES = 20
+
+const DEBUGINFO_INFO = 4
+const DEBUGINFO_BUFFER  = 12
+const DEBUGINFO_HEIGHT = DEBUGINFO_INFO + DEBUGINFO_BUFFER
 
 func (renderer *Renderer) printDebugInfo(info string) {
 
-	DEBUGINFO_HEIGHT := DEBUGINFO_INFO + DEBUGINFO_BUFFER + DEBUGINFO_MESSAGES
 	text := ""
 
 	text += fmt.Sprintf("FACADE %s\n", info)
@@ -536,25 +540,47 @@ func (renderer *Renderer) printDebugInfo(info string) {
 		count := len(buffer)
 		if count <= DEBUGINFO_BUFFER {
 			text += strings.Join(buffer,"\n")
+			for i:=count; i<DEBUGINFO_BUFFER; i++ {
+				text += "\n"
+			}
 		} else {
-			text += strings.Join(buffer[0:DEBUGINFO_BUFFER/2], "\n")
-			text += strings.Join(buffer[count-DEBUGINFO_BUFFER/2:count], "\n")
+			text += strings.Join(buffer[0:DEBUGINFO_BUFFER], "\n")
 		}
 	}
 
-	text = strings.TrimRight(text, "\n")
-	text += fmt.Sprintf("\n## FACADE %s ##\n", info)
+	text += "\n"
+	//text += fmt.Sprintf("FACADE %s\n", info)
 
+	text = strings.TrimRight(text, "\n")
+	//text += fmt.Sprintf("\n## FACADE %s ##\n", info)
 
 	lines := strings.Split(text, "\n")
 
-	fmt.Fprintf(os.Stderr, "\033[%dA", DEBUGINFO_HEIGHT) // cursor up HEIGHT lines
+	//log.Debug("have %d lines",len(lines))
 
-	i := 0
-	for ; i < DEBUGINFO_HEIGHT && i < len(lines); i++ {
-		fmt.Fprintf(os.Stderr, "\033[0K%s\n", lines[i]) // erase to eol and write single line
+	fmt.Fprintf(os.Stderr, "\0337") // save cursor pos
+	fmt.Fprintf(os.Stderr, "\033[H") // jump to origin
+
+
+	for i:=0; i < DEBUGINFO_HEIGHT; i++ {
+		fmt.Fprintf(os.Stderr, "\033[0K")
+		if i < len(lines) {
+			fmt.Fprintf(os.Stderr, "%s\n", lines[i]) // erase to eol and write single line
+		} else {
+			fmt.Fprintf(os.Stderr,"\n")
+		}
 	}
-	fmt.Fprintf(os.Stderr, "\033[%dB", DEBUGINFO_HEIGHT-i) // cursor down remaining lines
+
+	fmt.Fprintf(os.Stderr, "\0338") // restore cursor pos
+
+
+	//fmt.Fprintf(os.Stderr, "\033[%dA", DEBUGINFO_HEIGHT) // cursor up HEIGHT lines
+	//
+	//i := 0
+	//for ; i < DEBUGINFO_HEIGHT && i < len(lines); i++ {
+	//	fmt.Fprintf(os.Stderr, "\033[0K%s\n", lines[i]) // erase to eol and write single line
+	//}
+	//fmt.Fprintf(os.Stderr, "\033[%dB", DEBUGINFO_HEIGHT-i) // cursor down remaining lines
 
 }
 

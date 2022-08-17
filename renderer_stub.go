@@ -17,11 +17,11 @@ func (renderer *Renderer) Init() error {
 	return log.NewError("RENDERER NOT AVAILABLE")
 }
 
-func (renderer *Renderer) Configure(config *facade.Config) error {
+func (renderer *Renderer) Configure(*facade.Config) error {
 	return log.NewError("RENDERER NOT AVAILABLE")
 }
 
-func (renderer *Renderer) Render(chan facade.Config) error {
+func (renderer *Renderer) Render(chan facade.Config, bool) error {
 	return log.NewError("RENDERER NOT AVAILABLE")
 }
 

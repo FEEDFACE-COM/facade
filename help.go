@@ -21,7 +21,7 @@ func ShowHelp(flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, InfoAuthor())
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nUsage:\n")
-	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, " | "))
+	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, "|"))
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nCommand Flags:\n")
 	str := ""
@@ -87,9 +87,9 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\nCommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "read text from network and render")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from network and render")
 	}
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to server")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to network")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send config to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdout/stderr to server")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", README, "show documentation")
@@ -97,14 +97,14 @@ func ShowCommands() {
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nModes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "scrolling words")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling characters")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines of text")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling letters")
+	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "fading words")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
 }
 
 func InfoAuthor() string {
-	return fmt.Sprintf("%s\n", AUTHOR)
+	return fmt.Sprintf("%s\n", strings.TrimLeft(AUTHOR,"\n") )
 }
 
 func InfoVersion() string {

@@ -648,11 +648,25 @@ func (buffer *TermBuffer) Desc() string {
 
 func (buffer *TermBuffer) Dump() string {
 	ret := ""
+	for c := uint(1); c <= buffer.max.x; c++ {
+		if c%10 == 0 {
+			ret += fmt.Sprintf("%01d", (c/10)%10)
+		} else {
+			ret += " "
+		}
+	}
+	ret += "\n "
+	for c := uint(1); c <= buffer.max.x; c++ {
+		ret += fmt.Sprintf("%01d", c%10)
+	}
+	ret += "\n"
 	ret += "+"
 	for c := uint(1); c <= buffer.max.x; c++ {
 		ret += "-"
 	}
 	ret += "+\n"
+
+
 	for r := uint(1); r <= buffer.max.y; r++ {
 		ret += "|"
 		for c := uint(1); c <= buffer.max.x; c++ {
@@ -677,18 +691,6 @@ func (buffer *TermBuffer) Dump() string {
 		ret += "-"
 	}
 	ret += "+\n "
-	for c := uint(1); c <= buffer.max.x; c++ {
-		if c%10 == 0 {
-			ret += fmt.Sprintf("%01d", (c/10)%10)
-		} else {
-			ret += " "
-		}
-	}
-	ret += "\n "
-	for c := uint(1); c <= buffer.max.x; c++ {
-		ret += fmt.Sprintf("%01d", c%10)
-	}
-	ret += "\n"
 	return ret
 }
 

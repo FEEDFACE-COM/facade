@@ -16,16 +16,10 @@ import (
 )
 
 const (
-	DEBUG_BUFFER   = true
-	DEBUG_CHANGES  = true
-	DEBUG_CLOCK    = true
-	DEBUG_DIAG     = false
-	DEBUG_CONFIG   = false
-	DEBUG_FONT     = false
-	DEBUG_SHADER   = false
-	DEBUG_MODE     = true
-	DEBUG_MEMORY   = false
 	DEBUG_RENDERER = false
+	DEBUG_BUFFER   = true
+	DEBUG_CHANGES  = false
+	DEBUG_DIAG     = false
 )
 
 const RENDER_FRAME_RATE = 60.0
@@ -264,9 +258,11 @@ func main() {
 	switch cmd {
 
 	case SERVE:
-		for i:=0; i<DEBUGINFO_INFO + DEBUGINFO_BUFFER; i++ {
-			fmt.Fprintf(os.Stderr,"\n")
-		}
+		// REM: use DEBUGINFO_HEIGHT constant here..
+		fmt.Fprintf(os.Stderr,"\033[2J\033[H") // clear screen, jump to origin
+		fmt.Fprintf(os.Stderr,"\033[%d;1H", 16+1) // cursor down
+
+
 		log.Notice(strings.TrimLeft(AUTHOR,"\n"))
 		runtime.LockOSThread()
 

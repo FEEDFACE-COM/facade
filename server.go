@@ -65,7 +65,7 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 		log.PANIC("%s fail listen on %s: %s", server.Desc(), textListenStr, err)
 	}
 	defer func() { textListener.Close() }()
-	log.Notice("%s listen text on %s", server.Desc(), textListener.Addr())
+	log.Notice("%s listen for text on %s", server.Desc(), textListener.Addr())
 
 	for {
 		textConn, err := textListener.Accept()
@@ -204,21 +204,21 @@ func (server *Server) Listen(
 	server.connStr = fmt.Sprintf("%s:%d", server.host, server.confPort)
 
 	if DEBUG_SERVER {
-		log.Debug("%s listen %s", server.Desc(), server.connStr)
+		log.Debug("%s listen for conf on %s", server.Desc(), server.connStr)
 	}
 	listener, err := net.Listen(server.transport, server.connStr)
 	if err != nil {
-		log.PANIC("%s fail to listen %s: %s", server.Desc(), server.connStr, err)
+		log.PANIC("%s fail listen on %s: %s", server.Desc(), server.connStr, err)
 	}
 
 	serv := grpc.NewServer()
 	facade.RegisterFacadeServer(serv, &Server{confChan: confChan, bufferChan: bufferChan})
 
-	log.Notice("%s listen on %s", server.Desc(), listener.Addr())
+	log.Notice("%s listen for conf on %s", server.Desc(), listener.Addr())
 
 	err = serv.Serve(listener)
 	if err != nil {
-		log.PANIC("%s fail to serve: %s", server.Desc(), err)
+		log.PANIC("%s fail serve: %s", server.Desc(), err)
 	}
 	if DEBUG_SERVER {
 		log.Debug("%s listen done.", server.Desc())

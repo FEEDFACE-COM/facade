@@ -7,8 +7,7 @@ import (
 	"strings"
 )
 
-var DEFAULT_DIRECTORY = "~/.facade/"
-
+var DEFAULT_DIRECTORY = "."
 var DEFAULT_MODE Mode = Mode_LINES
 
 var Defaults = Config{
