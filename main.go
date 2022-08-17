@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,7 +16,6 @@ import (
 )
 
 const (
-	DEBUG_PERIODIC = true
 	DEBUG_BUFFER   = true
 	DEBUG_CHANGES  = true
 	DEBUG_CLOCK    = true
@@ -102,7 +102,9 @@ func main() {
 		commandFlags[cmd].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
 	}
 
-	if commandFlags[SERVE] != nil {
+	if RENDERER_AVAILABLE {
+		globalFlags.StringVar(&directory, "D", directory, "asset directory")
+
 		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for config")
 		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `textport` for text")
 		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host` for config and text")
@@ -114,9 +116,8 @@ func main() {
 	}
 
 	{
-		globalFlags.StringVar(&directory, "D", directory, "asset directory")
-		globalFlags.BoolVar(&debug, "d", debug, "show debug messages")
-		globalFlags.BoolVar(&quiet, "q", quiet, "show error messages only")
+		globalFlags.BoolVar(&debug, "d", debug, "show debug info")
+		globalFlags.BoolVar(&quiet, "q", quiet, "show errors only")
 	}
 
 	globalFlags.Parse(os.Args[1:])
@@ -263,7 +264,10 @@ func main() {
 	switch cmd {
 
 	case SERVE:
-		log.Notice(AUTHOR)
+		for i:=0; i<DEBUGINFO_INFO + DEBUGINFO_BUFFER; i++ {
+			fmt.Fprintf(os.Stderr,"\n")
+		}
+		log.Notice(strings.TrimLeft(AUTHOR,"\n"))
 		runtime.LockOSThread()
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
@@ -298,7 +302,7 @@ func main() {
 		//	renderer.Configure(titleConfig)
 		//}
 
-		err = renderer.Render(confs)
+		err = renderer.Render(confs,debug)
 		if err != nil {
 			log.Error("fail to render: %s", err)
 		}

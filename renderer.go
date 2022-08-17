@@ -287,7 +287,7 @@ func (renderer *Renderer) tock() bool {
 	return true
 }
 
-func (renderer *Renderer) Render(confChan chan facade.Config) error {
+func (renderer *Renderer) Render(confChan chan facade.Config, showDebugInfo bool) error {
 
 	go renderer.tick()
 
@@ -363,12 +363,6 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 		gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA, gl.ZERO, gl.ONE)
 		renderer.mask.Render(renderer.debug)
 
-		if renderFailed == false {
-			if DEBUG_PERIODIC {
-				renderer.printPeriodic()
-			}
-			renderer.prevFrame = gfx.WorldClock().Frame()
-		}
 
 		piglet.SwapBuffers()
 		renderer.stateMutex.Unlock()
@@ -394,6 +388,20 @@ func (renderer *Renderer) Render(confChan chan facade.Config) error {
 			DiagDone()
 		}
 
+
+		if showDebugInfo {
+			if renderFailed {
+				renderer.printDebugInfo( "RENDER FAILURE: " + piglet.ErrorString(e) )
+			} else {
+				renderer.printDebugInfo( gfx.WorldClock().Info(renderer.prevFrame) )
+			}
+		}
+
+		if renderFailed == false {
+			renderer.prevFrame = gfx.WorldClock().Frame()
+		}
+
+		// wait for redraw timer
 		if !renderer.tock() {
 			break
 		}
@@ -481,43 +489,72 @@ func (renderer *Renderer) InfoMode() string {
 	if renderer.debug {
 		dbg = " DEBUG"
 	}
-	return fmt.Sprintf("%s%s\n%s %s %s", mode, dbg, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc())
+
+	buffer := ""
+	switch renderer.mode {
+	case facade.Mode_TERM:
+		buffer = renderer.termBuffer.Desc()
+	case facade.Mode_LINES:
+		buffer = renderer.lineBuffer.Desc()
+	case facade.Mode_WORDS:
+		buffer = renderer.wordBuffer.Desc()
+	case facade.Mode_CHARS:
+		buffer = renderer.charBuffer.Desc()
+	}
+
+
+	return fmt.Sprintf("%s%s\n%s %s %s\n%s", mode, dbg, renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc(),buffer)
 
 }
 
-func (renderer *Renderer) printPeriodic() {
+const DEBUGINFO_INFO = 5
+const DEBUGINFO_BUFFER  = 20
+const DEBUGINFO_MESSAGES = 20
 
+func (renderer *Renderer) printDebugInfo(info string) {
+
+	DEBUGINFO_HEIGHT := DEBUGINFO_INFO + DEBUGINFO_BUFFER + DEBUGINFO_MESSAGES
 	text := ""
-	text += fmt.Sprintf("## FACADE %s ##\n", gfx.WorldClock().Info(renderer.prevFrame))
+
+	text += fmt.Sprintf("FACADE %s\n", info)
 	text += renderer.InfoMode() + "\n"
 
+
 	if DEBUG_BUFFER {
+		tmp := ""
 		switch renderer.mode {
 		case facade.Mode_LINES:
-			text += fmt.Sprintf("%s\n", renderer.lineBuffer.Dump(80))
+			tmp = renderer.lineBuffer.Dump(80)
 		case facade.Mode_TERM:
-			text += fmt.Sprintf("%s\n", renderer.termBuffer.Dump())
+			tmp = renderer.termBuffer.Dump()
 		case facade.Mode_WORDS:
-			text += fmt.Sprintf("%s\n", renderer.wordBuffer.Dump())
+			tmp = renderer.wordBuffer.Dump()
 		case facade.Mode_CHARS:
-			text += fmt.Sprintf("%s\n", renderer.charBuffer.Dump())
+			tmp = renderer.charBuffer.Dump()
+		}
+		buffer := strings.Split(tmp,"\n")
+		count := len(buffer)
+		if count <= DEBUGINFO_BUFFER {
+			text += strings.Join(buffer,"\n")
+		} else {
+			text += strings.Join(buffer[0:DEBUGINFO_BUFFER/2], "\n")
+			text += strings.Join(buffer[count-DEBUGINFO_BUFFER/2:count], "\n")
 		}
 	}
 
 	text = strings.TrimRight(text, "\n")
-	text += "\n##\n"
+	text += fmt.Sprintf("\n## FACADE %s ##\n", info)
+
+
 	lines := strings.Split(text, "\n")
 
-	ht := 35
-	hl := len(lines)
-
-	fmt.Fprintf(os.Stderr, "\033[%dA", ht)
+	fmt.Fprintf(os.Stderr, "\033[%dA", DEBUGINFO_HEIGHT) // cursor up HEIGHT lines
 
 	i := 0
-	for ; i < ht && i < hl; i++ {
-		fmt.Fprintf(os.Stderr, "\033[0K%s\n", lines[i])
+	for ; i < DEBUGINFO_HEIGHT && i < len(lines); i++ {
+		fmt.Fprintf(os.Stderr, "\033[0K%s\n", lines[i]) // erase to eol and write single line
 	}
-	fmt.Fprintf(os.Stderr, "\033[%dB", ht-i)
+	fmt.Fprintf(os.Stderr, "\033[%dB", DEBUGINFO_HEIGHT-i) // cursor down remaining lines
 
 }
 
