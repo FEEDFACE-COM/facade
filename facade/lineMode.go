@@ -146,7 +146,7 @@ func (mode *LineMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	count := int32(mode.width * (mode.height + 1))
 	offset := int32(0)
 
-	if !debug {
+	if !debug || debug {
 		mode.program.SetDebug(false)
 		mode.texture.BindTexture()
 		gl.DrawArrays(gl.TRIANGLES, int32(offset*2*3), (count)*(2*3))
@@ -154,6 +154,7 @@ func (mode *LineMode) Render(camera *gfx.Camera, font *gfx.Font, debug, verbose 
 	}
 
 	if debug {
+		mode.program.SetDebug(true)
 		gl.LineWidth(3.0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 		off := offset
