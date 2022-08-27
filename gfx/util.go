@@ -1,5 +1,12 @@
 package gfx
 
+type ShaderType string
+
+const (
+	VertType ShaderType = "vert"
+	FragType ShaderType = "frag"
+)
+
 //ring buffer
 type RB struct {
 	buf      []float32

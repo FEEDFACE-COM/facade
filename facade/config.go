@@ -15,6 +15,28 @@ var Defaults = Config{
 	Debug: false,
 }
 
+func NewConfig(mode Mode) *Config {
+	ret := &Config{
+		SetMode: true,
+		Mode:    mode,
+		Font:    &FontConfig{},
+		Camera:  &CameraConfig{},
+		Mask:    &MaskConfig{},
+		Shader:  &ShaderConfig{},
+	}
+	switch mode {
+	case Mode_LINES:
+		ret.Lines = &LineConfig{}
+	case Mode_TERM:
+		ret.Term = &TermConfig{}
+	case Mode_WORDS:
+		ret.Words = &WordConfig{}
+	case Mode_CHARS:
+		ret.Chars = &CharConfig{}
+	}
+	return ret
+}
+
 func (config *Config) Desc() string {
 	ret := "cfg["
 	if config.GetSetMode() {
@@ -166,6 +188,11 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 
 func (config *Config) Help(mode Mode) string {
 	ret := ""
+
+	ret += FontDefaults.Help()
+	ret += CameraDefaults.Help()
+	ret += MaskDefaults.Help()
+
 	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
 	config.AddFlags(tmp, mode)
 	for _, s := range []string{"fill", "D"} {
@@ -173,5 +200,21 @@ func (config *Config) Help(mode Mode) string {
 			ret += gfx.FlagHelp(flg)
 		}
 	}
+	ret += "\n"
+	ret += ShaderDefaults.Help(mode)
+	ret += "\n"
+
+	switch mode {
+	case Mode_LINES:
+		ret += LineDefaults.Help()
+	case Mode_WORDS:
+		ret += WordDefaults.Help()
+	case Mode_CHARS:
+		ret += CharDefaults.Help()
+	case Mode_TERM:
+		ret += TermDefaults.Help()
+	}
+	ret += "\n"
+
 	return ret
 }

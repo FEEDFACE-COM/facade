@@ -20,7 +20,7 @@ func (config *FontConfig) Desc() string {
 }
 
 func (config *FontConfig) AddFlags(flagset *flag.FlagSet) {
-	fonts := " (" + availableFonts() + ")"
+	fonts := " (" + AvailableFonts() + ")"
 	flagset.StringVar(&config.Name, "font", FontDefaults.Name, "typeface"+fonts)
 }
 
@@ -44,7 +44,7 @@ func (config *FontConfig) Help() string {
 	return ret
 }
 
-func availableFonts() string {
+func AvailableFonts() string {
 	ret := ""
 	for name, _ := range FontAsset {
 		ret += name

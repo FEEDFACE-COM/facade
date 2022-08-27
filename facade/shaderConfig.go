@@ -41,8 +41,8 @@ func (config *ShaderConfig) Desc() string {
 
 func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode) {
 
-	frags := " (" + availableShaders(prefixForMode(mode), ".frag") + ")"
-	verts := " (" + availableShaders(prefixForMode(mode), ".vert") + ")"
+	frags := " (" + AvailableShaders(PrefixForMode(mode), ".frag") + ")"
+	verts := " (" + AvailableShaders(PrefixForMode(mode), ".vert") + ")"
 
 	flagset.StringVar(&config.Vert, "vert", ShaderDefaults.Vert, "vertex shader"+verts)
 	flagset.StringVar(&config.Frag, "frag", ShaderDefaults.Frag, "fragment shader"+frags)
@@ -73,7 +73,7 @@ func (config *ShaderConfig) Help(mode Mode) string {
 	return ret
 }
 
-func availableShaders(prefix, suffix string) string {
+func AvailableShaders(prefix, suffix string) string {
 	ret := ""
 	for name, _ := range ShaderAsset {
 		if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
@@ -85,7 +85,7 @@ func availableShaders(prefix, suffix string) string {
 	return ret
 }
 
-func prefixForMode(mode Mode) string {
+func PrefixForMode(mode Mode) string {
 	switch mode {
 	case Mode_LINES:
 		return "lines/"

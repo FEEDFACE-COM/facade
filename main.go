@@ -156,11 +156,8 @@ func main() {
 		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
 
-	var config *facade.Config = &facade.Config{}
-	config.Font = &facade.FontConfig{}
-	config.Camera = &facade.CameraConfig{}
-	config.Mask = &facade.MaskConfig{}
-	config.Shader = &facade.ShaderConfig{}
+	var config *facade.Config
+	var options *Options
 
 	var args []string
 	var modeFlags *flag.FlagSet
@@ -169,10 +166,6 @@ func main() {
 
 	case EXEC:
 
-		config.SetMode = true
-		config.Mode = facade.Mode_TERM
-		config.Term = &facade.TermConfig{}
-
 		args = commandFlags[cmd].Args()
 		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
 			args = args[1:]
@@ -180,15 +173,24 @@ func main() {
 
 		modeFlags = flag.NewFlagSet("exec", flag.ExitOnError)
 		modeFlags.SetOutput(bufio.NewWriter(nil))
-		modeFlags.Usage = func() { ShowHelpMode(EXEC, config.Mode, *modeFlags) }
 
-		config.AddFlags(modeFlags, facade.Mode_TERM)
-		modeFlags.Parse(args)
-		config.VisitFlags(modeFlags)
+		if !debug { // BASIC_OPTIONS
+			options = NewOptions(facade.Mode_TERM)
+			modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options) }
+			modeFlags.Parse(args)
+			config = options.VisitFlags(cmd, modeFlags)
+
+		} else {
+			config = facade.NewConfig(facade.Mode_TERM)
+			modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options) }
+			config.AddFlags(modeFlags, facade.Mode_TERM)
+			modeFlags.Parse(args)
+			config.VisitFlags(modeFlags)
+		}
 
 		args = modeFlags.Args()
 		if len(args) <= 0 {
-			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags)
+			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options)
 			os.Exit(-2)
 		}
 
@@ -197,6 +199,7 @@ func main() {
 
 	case SERVE, PIPE, CONF:
 		args = commandFlags[cmd].Args()
+		mode := facade.DEFAULT_MODE
 
 		// parse mode, if given
 		if len(args) > 0 {
@@ -204,38 +207,38 @@ func main() {
 			switch strings.ToUpper(args[0]) {
 
 			case facade.Mode_TERM.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_TERM
-				config.Term = &facade.TermConfig{}
-
+				mode = facade.Mode_TERM
 			case facade.Mode_LINES.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_LINES
-				config.Lines = &facade.LineConfig{}
-
+				mode = facade.Mode_LINES
 			case facade.Mode_WORDS.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_WORDS
-				config.Words = &facade.WordConfig{}
-
+				mode = facade.Mode_WORDS
 			case facade.Mode_CHARS.String():
-				config.SetMode = true
-				config.Mode = facade.Mode_CHARS
-				config.Chars = &facade.CharConfig{}
-
+				mode = facade.Mode_CHARS
 			default:
 				ShowHelpCommand(cmd, *commandFlags[cmd])
 				os.Exit(-2)
 
 			}
-			modeFlags = flag.NewFlagSet(strings.ToLower(config.Mode.String()), flag.ExitOnError)
-			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags) }
+
+			modeFlags = flag.NewFlagSet(strings.ToLower(mode.String()), flag.ExitOnError)
 			modeFlags.SetOutput(bufio.NewWriter(nil))
-			config.AddFlags(modeFlags, config.Mode)
-			modeFlags.Parse(args[1:])
-			config.VisitFlags(modeFlags)
-		} else {
-			config = nil
+
+			if !debug { // BASIC_OPTIONS
+
+				options = NewOptions(mode)
+				modeFlags.Usage = func() { ShowHelpMode(cmd, mode, *modeFlags, config, options) }
+				options.AddFlags(modeFlags, options.Mode)
+				modeFlags.Parse(args[1:])
+				config = options.VisitFlags(cmd, modeFlags)
+
+			} else {
+				config = facade.NewConfig(mode)
+				modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags, config, options) }
+				config.AddFlags(modeFlags, config.Mode)
+				modeFlags.Parse(args[1:])
+				config.VisitFlags(modeFlags)
+
+			}
 		}
 
 	case README:
@@ -259,11 +262,10 @@ func main() {
 
 	case SERVE:
 		// REM: use DEBUGINFO_HEIGHT constant here..
-		fmt.Fprintf(os.Stderr,"\033[2J\033[H") // clear screen, jump to origin
-		fmt.Fprintf(os.Stderr,"\033[%d;1H", 16+1) // cursor down
+		fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
+		fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
 
-
-		log.Notice(strings.TrimLeft(AUTHOR,"\n"))
+		log.Notice(strings.TrimLeft(AUTHOR, "\n"))
 		runtime.LockOSThread()
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
@@ -298,7 +300,7 @@ func main() {
 		//	renderer.Configure(titleConfig)
 		//}
 
-		err = renderer.Render(confs,debug)
+		err = renderer.Render(confs, debug)
 		if err != nil {
 			log.Error("fail to render: %s", err)
 		}

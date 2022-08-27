@@ -6,7 +6,7 @@ import (
 )
 
 var MaskDefaults MaskConfig = MaskConfig{
-	Name: "def",
+	Name: "mask",
 }
 
 func (config *MaskConfig) Desc() string {
@@ -19,7 +19,7 @@ func (config *MaskConfig) Desc() string {
 }
 
 func (config *MaskConfig) AddFlags(flagset *flag.FlagSet) {
-	masks := " (" + availableShaders("mask/", ".frag") + ")"
+	masks := " (" + AvailableShaders("mask/", ".frag") + ")"
 	flagset.StringVar(&config.Name, "mask", MaskDefaults.Name, "overlay mask"+masks)
 }
 

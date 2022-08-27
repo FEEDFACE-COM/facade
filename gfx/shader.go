@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package gfx
@@ -35,13 +36,6 @@ const (
 	VERTEX   AttribName = "vertex"
 	COLOR    AttribName = "color"
 	TEXCOORD AttribName = "texCoord"
-)
-
-type ShaderType string
-
-const (
-	VertType ShaderType = "vert"
-	FragType ShaderType = "frag"
 )
 
 func (shader *Shader) LoadSource(src string) {
