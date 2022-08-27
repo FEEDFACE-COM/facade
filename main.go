@@ -25,6 +25,8 @@ const (
 const RENDER_FRAME_RATE = 60.0
 const TEXT_BUFFER_SIZE = 1024
 
+const DEFAULT_DIRECTORY = ""
+
 const DEFAULT_RECEIVE_HOST = "[::]"
 const DEFAULT_CONNECT_HOST = "localhost"
 
@@ -53,16 +55,16 @@ var (
 	connectHost    string  = ""
 	connectTimeout float64 = 5.0
 	readTimeout    float64 = 0.0
-	noIPv4         bool    = false
-	noIPv6         bool    = false
+	ipv4           bool    = true
+	ipv6           bool    = true
 	stdin          bool    = false
-	noTitle        bool    = true
+	title          bool    = true
 )
 
 func main() {
 	runtime.LockOSThread()
 	quiet, debug := false, false
-	directory := facade.DEFAULT_DIRECTORY
+	directory := DEFAULT_DIRECTORY
 	var err error
 
 	confs := make(chan facade.Config)
@@ -92,26 +94,25 @@ func main() {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
-		commandFlags[cmd].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
-		commandFlags[cmd].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
+		commandFlags[cmd].BoolVar(&ipv4, "inet", ipv4, "enable IPv4 networking")
+		commandFlags[cmd].BoolVar(&ipv6, "inet6", ipv6, "enable IPv6 networking")
 	}
 
 	if RENDERER_AVAILABLE {
-		globalFlags.StringVar(&directory, "D", directory, "asset directory")
-
-		commandFlags[SERVE].UintVar(&port, "port", port, "listen on `port` for config")
-		commandFlags[SERVE].UintVar(&textPort, "textport", textPort, "listen on `textport` for text")
+		commandFlags[SERVE].StringVar(&directory, "dir", DEFAULT_DIRECTORY, "asset directory")
+		commandFlags[SERVE].UintVar(&port, "port-fcd", port, "listen on `port-fcd`")
+		commandFlags[SERVE].UintVar(&textPort, "port-txt", textPort, "listen on `port-txt` for raw text")
 		commandFlags[SERVE].StringVar(&receiveHost, "host", DEFAULT_RECEIVE_HOST, "listen on `host` for config and text")
 		commandFlags[SERVE].Float64Var(&readTimeout, "timeout", readTimeout, "timeout read after `seconds`")
-		commandFlags[SERVE].BoolVar(&noIPv4, "noinet", noIPv4, "disable IPv4 networking")
-		commandFlags[SERVE].BoolVar(&noIPv6, "noinet6", noIPv6, "disable IPv6 networking")
-		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "also read text from stdin")
-		commandFlags[SERVE].BoolVar(&noTitle, "notitle", noTitle, "no title on startup")
+		commandFlags[SERVE].BoolVar(&ipv4, "inet", ipv4, "use IPv4 networking")
+		commandFlags[SERVE].BoolVar(&ipv6, "inet6", ipv6, "use IPv6 networking")
+		commandFlags[SERVE].BoolVar(&stdin, "stdin", stdin, "read text from stdin")
+		commandFlags[SERVE].BoolVar(&title, "title", title, "show title on startup")
 	}
 
 	{
-		globalFlags.BoolVar(&debug, "d", debug, "show debug info")
-		globalFlags.BoolVar(&quiet, "q", quiet, "show errors only")
+		globalFlags.BoolVar(&debug, "d", debug, "debug - show debug info")
+		globalFlags.BoolVar(&quiet, "q", quiet, "quiet - show errors only")
 	}
 
 	globalFlags.Parse(os.Args[1:])
@@ -268,7 +269,7 @@ func main() {
 		log.Notice(strings.TrimLeft(AUTHOR, "\n"))
 		runtime.LockOSThread()
 
-		server = NewServer(receiveHost, port, textPort, readTimeout, noIPv4, noIPv6)
+		server = NewServer(receiveHost, port, textPort, readTimeout, ipv4, ipv6)
 		renderer = NewRenderer(directory, ticks)
 		if stdin {
 			scanner = NewScanner()
@@ -284,7 +285,7 @@ func main() {
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 
-		//if !noTitle {
+		//if !title {
 		//	titleConfig := &facade.Config{}
 		//	if renderer.mode == facade.Mode_TERM {
 		//		if config.Terminal == nil || !config.Terminal.Grid.GetSetFill() {
@@ -307,7 +308,7 @@ func main() {
 		renderer.Finish()
 
 	case PIPE:
-		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
+		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -328,7 +329,7 @@ func main() {
 		time.Sleep(time.Duration(int64(time.Second / 10.))) //wait until all text flushed
 
 	case CONF:
-		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
+		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -360,7 +361,7 @@ func main() {
 		config.Term.Height = rows
 		config.Term.SetHeight = true
 
-		client = NewClient(connectHost, port, connectTimeout, noIPv4, noIPv6)
+		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
 		executor = NewExecutor(client, uint(cols), uint(rows), path, args)
 
 		if err = client.Dial(); err != nil {

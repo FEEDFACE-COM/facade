@@ -8,9 +8,9 @@ import (
 func FlagHelp(f *flag.Flag) string {
 	name := f.Name
 	if f.DefValue == "false" {
-		name = f.Name
+		name = f.Name + "=f"
 	} else if f.DefValue == "true" {
-		name = f.Name + "=" + "t"
+		name = f.Name + "=t"
 	} else {
 		name = f.Name + "=" + f.DefValue
 	}
