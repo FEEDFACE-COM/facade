@@ -24,7 +24,7 @@ var LineDefaults LineConfig = LineConfig{
 }
 
 func (config *LineConfig) Desc() string {
-	ret := "line["
+	ret := "lines["
 
 	{
 		wok := config.GetSetWidth()

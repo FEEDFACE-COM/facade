@@ -40,7 +40,7 @@ func NewConfig(mode Mode) *Config {
 func (config *Config) Desc() string {
 	ret := "cfg["
 	if config.GetSetMode() {
-		ret += strings.ToUpper(config.GetMode().String()) + " "
+		ret += strings.ToLower(config.GetMode().String()) + " "
 	}
 
 	if font := config.GetFont(); font != nil {
