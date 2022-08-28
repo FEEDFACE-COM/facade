@@ -22,11 +22,9 @@ const (
 	DEBUG_DIAG     = false
 )
 
-const RENDER_FRAME_RATE = 60.0
-const TEXT_BUFFER_SIZE = 1024
+const PAUSABLE = true
 
 const DEFAULT_DIRECTORY = ""
-
 const DEFAULT_RECEIVE_HOST = "[::]"
 const DEFAULT_CONNECT_HOST = "localhost"
 
@@ -46,6 +44,14 @@ const (
 	CONF   Command = "conf"
 	HELP   Command = "help"
 	README Command = "readme"
+)
+
+type Tick int
+
+const (
+	TICK Tick = iota
+	QUIT Tick = iota
+	STOP Tick = iota
 )
 
 var (
@@ -69,7 +75,7 @@ func main() {
 
 	confs := make(chan facade.Config)
 	texts := make(chan facade.TextSeq)
-	ticks := make(chan bool, 2)
+	ticks := make(chan Tick, 2)
 
 	log.SetVerbosity(log.NOTICE)
 
@@ -94,8 +100,8 @@ func main() {
 		commandFlags[cmd].UintVar(&port, "port", port, "connect to server at `port`")
 		commandFlags[cmd].StringVar(&connectHost, "host", DEFAULT_CONNECT_HOST, "connect to server at `host`")
 		commandFlags[cmd].Float64Var(&connectTimeout, "timeout", connectTimeout, "timeout connect after `seconds`")
-		commandFlags[cmd].BoolVar(&ipv4, "inet", ipv4, "enable IPv4 networking")
-		commandFlags[cmd].BoolVar(&ipv6, "inet6", ipv6, "enable IPv6 networking")
+		commandFlags[cmd].BoolVar(&ipv4, "inet", ipv4, "use IPv4 networking")
+		commandFlags[cmd].BoolVar(&ipv6, "inet6", ipv6, "use IPv6 networking")
 	}
 
 	if RENDERER_AVAILABLE {
@@ -126,22 +132,11 @@ func main() {
 		log.SetVerbosity(log.ERROR)
 	}
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
-	go func() {
-		for {
-			sig := <-signals
-			log.Notice("signal %s", sig)
-			ticks <- false
-		}
-	}()
-
 	var client *Client
 	var server *Server
 	var scanner *Scanner
 	var renderer *Renderer
 	var executor *Executor
-	var path string
 
 	cmd := Command(globalFlags.Args()[0])
 
@@ -157,11 +152,12 @@ func main() {
 		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
 
-	var config *facade.Config
+	var config *facade.Config = nil
 	var options *Options
 
 	var args []string
 	var modeFlags *flag.FlagSet
+	var path string
 
 	switch cmd {
 
@@ -240,6 +236,14 @@ func main() {
 				config.VisitFlags(modeFlags)
 
 			}
+		} else { // no more args, empty config
+			config = facade.NewConfig(facade.DEFAULT_MODE)
+		}
+
+		// add title if not given
+		if title && !config.SetFill {
+			config.SetFill = true
+			config.Fill = "title"
 		}
 
 	case README:
@@ -266,7 +270,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
 		fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
 
-		log.Notice(strings.TrimLeft(AUTHOR, "\n"))
+		if !debug {
+			log.Notice(strings.TrimLeft(AUTHOR, "\n"))
+		}
+
+		// install signal handler
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals, syscall.SIGINT, syscall.SIGQUIT)
+		go handleSignals(signals, ticks)
+
 		runtime.LockOSThread()
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, ipv4, ipv6)
@@ -284,22 +296,6 @@ func main() {
 
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
-
-		//if !title {
-		//	titleConfig := &facade.Config{}
-		//	if renderer.mode == facade.Mode_TERM {
-		//		if config.Terminal == nil || !config.Terminal.Grid.GetSetFill() {
-		//			gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
-		//			titleConfig.Terminal = &facade.TermConfig{Grid: gridConfig}
-		//		}
-		//	} else if renderer.mode == facade.Mode_LINES {
-		//		if config.Lines == nil || !config.Lines.Grid.GetSetFill() {
-		//			gridConfig := &facade.GridConfig{SetFill: true, Fill: "title"}
-		//			titleConfig.Lines = &facade.LineConfig{Grid: gridConfig}
-		//		}
-		//	}
-		//	renderer.Configure(titleConfig)
-		//}
 
 		err = renderer.Render(confs, debug)
 		if err != nil {
@@ -390,6 +386,18 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+func handleSignals(signals chan os.Signal, ticks chan Tick) {
+	for {
+		sig := <-signals
+		log.Notice("signal %s", sig)
+		if PAUSABLE && sig == syscall.SIGINT {
+			ticks <- STOP
+			continue
+		}
+		ticks <- QUIT
+	}
 }
 
 const AUTHOR = `

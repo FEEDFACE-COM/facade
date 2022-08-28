@@ -1,3 +1,4 @@
+//go:build !RENDERER
 // +build !RENDERER
 
 package main
@@ -9,9 +10,9 @@ import (
 
 const RENDERER_AVAILABLE = false
 
-type Renderer struct{ mode facade.Mode }
+type Renderer struct{}
 
-func NewRenderer(string, chan bool) *Renderer { return &Renderer{} }
+func NewRenderer(string, chan Tick) *Renderer { return &Renderer{} }
 
 func (renderer *Renderer) Init() error {
 	return log.NewError("RENDERER NOT AVAILABLE")

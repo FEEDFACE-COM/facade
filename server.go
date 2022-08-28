@@ -16,6 +16,8 @@ import (
 const DEBUG_SERVER = false
 const DEBUG_SERVER_DUMP = false
 
+const TEXT_BUFFER_SIZE = 1024
+
 type Server struct {
 	host     string
 	confPort uint

@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+const RENDER_FRAME_RATE = 60.0
+
 type Renderer struct {
 	screen gfx.Size
 
@@ -48,10 +50,10 @@ type Renderer struct {
 
 	prevFrame gfx.ClockFrame
 
-	tickChannel chan bool
+	tickChannel chan Tick
 }
 
-func NewRenderer(directory string, tickChannel chan bool) *Renderer {
+func NewRenderer(directory string, tickChannel chan Tick) *Renderer {
 	ret := &Renderer{directory: directory, tickChannel: tickChannel}
 	ret.stateMutex = &sync.Mutex{}
 	ret.refreshChan = make(chan bool, 1)
@@ -262,31 +264,36 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 func (renderer *Renderer) tick() {
 
 	for { //forever
-		renderer.tickChannel <- true // wait until can send
+		renderer.tickChannel <- TICK // wait until can send
 		time.Sleep(time.Duration(int64(time.Second / RENDER_FRAME_RATE)))
 	}
 
 }
 
 func (renderer *Renderer) tock() bool {
-	var tick bool
+	var tick Tick
 
 	// wait for message
 	tick = <-renderer.tickChannel
-	if !tick {
-		return false // indicate stop render
-	}
 
 	// clear all messages
 	for {
+
+		switch tick {
+		case QUIT:
+			return false
+		case STOP:
+			renderer.TogglePause()
+		}
+
 		select {
+
 		case tick = <-renderer.tickChannel:
-			if !tick {
-				return false // indicate stop render
-			}
+			continue // evaluate
 
 		default:
 			return true // indicate render one frame
+
 		}
 	}
 
