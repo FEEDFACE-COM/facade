@@ -154,7 +154,7 @@ func main() {
 		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
 
-	var config = facade.NewConfig(facade.DEFAULT_MODE)
+	var config = &facade.Config{}
 
 	var args []string
 	var modeFlags *flag.FlagSet
