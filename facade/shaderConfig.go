@@ -42,8 +42,8 @@ func (config *ShaderConfig) Desc() string {
 
 func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) {
 
-	frags := " (" + AvailableShaders(PrefixForMode(mode), ".frag") + ")"
-	verts := " (" + AvailableShaders(PrefixForMode(mode), ".vert") + ")"
+	verts := " (" + AvailableShaders(PrefixForMode(mode), string(gfx.VertType)) + ")"
+	frags := " (" + AvailableShaders(PrefixForMode(mode), string(gfx.FragType)) + ")"
 
 	if basicOptions {
 		flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "shape"+verts)

@@ -10,11 +10,6 @@ import (
 	"strings"
 )
 
-type ShaderType string
-const (
-	VertType ShaderType = "vert"
-	FragType ShaderType = "frag"
-)
 
 type Shader struct {
 	Name   string
