@@ -352,7 +352,21 @@ func (mode *CharMode) Configure(config *CharConfig, shader *ShaderConfig, fill s
 func (mode *CharMode) FillString(name string) string {
 	switch name {
 	case "title":
-		return "FACADE"
+		ret := ""
+		n := int(mode.charBuffer.charCount)
+		if n >= 3*22 {
+			ret = "FACADE by FEEDFACE.COM"
+		} else if n >= 3*11 {
+			ret = "F A C A D E"
+		} else if n >= 2*6 {
+			ret = "FACADE"
+		} else if n >= 5 {
+			ret = "FCD"
+		}
+
+		s := strings.Repeat(" ", n)
+		ret = s + ret
+		return ret
 	case "index":
 		ret := ""
 		for i := 0; uint(i) < mode.charBuffer.charCount; i++ {
@@ -361,8 +375,8 @@ func (mode *CharMode) FillString(name string) string {
 		return ret
 	case "alpha":
 		ret := ""
-//		alpha := "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
-        alpha := "alpha bravo charlie delta echo foxtrott golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu"
+		alpha := "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ "
+		//        alpha := "alpha bravo charlie delta echo foxtrott golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankee zulu"
 		d := uint(len(alpha))
 		for i := uint(0); i < mode.charBuffer.charCount; i++ {
 			ret += fmt.Sprintf("%c", alpha[i%d])

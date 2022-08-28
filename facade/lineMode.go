@@ -178,24 +178,16 @@ func (mode *LineMode) FillString(name string) []string {
 	case "title":
 		title := []string{""}
 
-		if mode.width >= 80 && mode.height >= 16 {
-			title = strings.Split(`
- _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _      
-|_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|
-|   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |
-`, "\n")[1:]
-		} else if mode.width >= 40 && mode.height >= 8 {
-			title = strings.Split(`
- _   _   _   _   _   _
-|_  |_| /   |_| | \ |_
-|   | | \_  | | |_/ |_
-                      
-       by FEEDFACE.COM
-`, "\n")[1:]
+		if mode.width >= 17 && mode.height >= 26 {
+			title = []string{"    FACADE     ", "               ", "by FEEDFACE.COM", ""}
+		} else if mode.width >= 24 && mode.height >= 17 {
+			title = []string{"FACADE by FEEDFACE.COM", ""}
 		} else if mode.width >= 13 {
 			title = []string{"F A C A D E", ""}
 		} else if mode.width >= 8 {
 			title = []string{"FACADE", ""}
+		} else if mode.width >= 5 {
+			title = []string{"FCD", ""}
 		}
 
 		gw, gh := int(mode.width), int(mode.height)

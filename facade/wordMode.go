@@ -434,7 +434,7 @@ func (mode *WordMode) FillString(name string) []string {
 			ret = []string{"F A C A D E"}
 		}
 		if mode.maxLength >= 15. {
-			ret = append(ret, "by FEEDFACE.COM")
+			ret = []string{"FACADE by FEEDFACE.COM"}
 		}
 		return ret
 

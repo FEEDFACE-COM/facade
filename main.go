@@ -392,7 +392,7 @@ func handleSignals(signals chan os.Signal, ticks chan Tick) {
 	for {
 		sig := <-signals
 		log.Notice("signal %s", sig)
-		if PAUSABLE && sig == syscall.SIGINT {
+		if PAUSABLE && sig == syscall.SIGQUIT {
 			ticks <- STOP
 			continue
 		}

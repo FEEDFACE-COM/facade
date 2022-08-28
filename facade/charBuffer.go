@@ -211,7 +211,6 @@ func (buffer *CharBuffer) SetRepeat(repeat bool) {
 }
 
 func (buffer *CharBuffer) Fill(fill string) {
-	log.Debug("fill %s", fill)
 	n := utf8.RuneCountInString(fill)
 	if n > int(MAX_CHARCOUNT) {
 		n = int(MAX_CHARCOUNT)
@@ -226,6 +225,8 @@ func (buffer *CharBuffer) Fill(fill string) {
 		off += s
 		run, s = utf8.DecodeRuneInString(fill[off:])
 	}
+
+	buffer.next = buffer.line
 
 	if DEBUG_CHARBUFFER_DUMP {
 		log.Debug("%s filled %d chars:\n%s", buffer.Desc(), n, buffer.Dump())
