@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-const DEBUG_WORDMODE = false
+const DEBUG_WORDMODE = true
 
 const HARD_MAX_LENGTH = 80.0
 
@@ -75,6 +75,7 @@ func NewWordMode(buffer *WordBuffer) *WordMode {
 	ret := &WordMode{
 		wordBuffer: buffer,
 		maxWord:    Word{},
+		maxLength: uint(WordDefaults.MaxLength),
 	}
 
 	ret.vert = ShaderDefaults.GetVert()
@@ -440,7 +441,7 @@ func (mode *WordMode) FillString(name string) []string {
 
 	case "index":
 		maxLength := 8
-		if mode.maxLength >= 1.0 {
+		if mode.maxLength > 0.0 {
 			maxLength = int(mode.maxLength)
 		}
 		ret := []string{}
