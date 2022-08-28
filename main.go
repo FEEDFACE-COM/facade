@@ -240,11 +240,6 @@ func main() {
 			config = facade.NewConfig(facade.DEFAULT_MODE)
 		}
 
-		// add title if not given
-		if title && !config.SetFill {
-			config.SetFill = true
-			config.Fill = "title"
-		}
 
 	case README:
 		readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
@@ -280,6 +275,12 @@ func main() {
 		go handleSignals(signals, ticks)
 
 		runtime.LockOSThread()
+
+		// add title if not given
+		if title && !config.SetFill {
+			config.SetFill = true
+			config.Fill = "title"
+		}
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, ipv4, ipv6)
 		renderer = NewRenderer(directory, ticks)
