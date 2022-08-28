@@ -7,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"FEEDFACE.COM/facade/piglet"
+	"github.com/FEEDFACE-COM/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
