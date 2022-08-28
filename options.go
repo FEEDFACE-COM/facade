@@ -163,7 +163,7 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 		ret.Words = &facade.WordConfig{}
 		flagset.Visit(func(flg *flag.Flag) {
 			switch flg.Name {
-			case "c":
+			case "n":
 				ret.Words.Slots = uint64(options.WordsCount)
 				ret.Words.SetSlots = true
 			case "life":
