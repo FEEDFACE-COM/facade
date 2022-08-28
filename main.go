@@ -164,9 +164,11 @@ func main() {
 	case EXEC:
 
 		args = commandFlags[cmd].Args()
-		if len(args) > 0 && strings.ToUpper(args[0]) == facade.Mode_TERM.String() {
-			args = args[1:]
+		if len(args) <= 0 || strings.ToUpper(args[0]) != facade.Mode_TERM.String() {
+			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options)
+			os.Exit(-2)
 		}
+		args = args[1:]
 
 		modeFlags = flag.NewFlagSet("exec", flag.ExitOnError)
 		modeFlags.SetOutput(bufio.NewWriter(nil))
@@ -174,6 +176,7 @@ func main() {
 		if !debug { // BASIC_OPTIONS
 			options = NewOptions(facade.Mode_TERM)
 			modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options) }
+			options.AddFlags(modeFlags, facade.Mode_TERM)
 			modeFlags.Parse(args)
 			config = options.VisitFlags(cmd, modeFlags)
 
@@ -217,6 +220,8 @@ func main() {
 
 			}
 
+			args = args[1:]
+
 			modeFlags = flag.NewFlagSet(strings.ToLower(mode.String()), flag.ExitOnError)
 			modeFlags.SetOutput(bufio.NewWriter(nil))
 
@@ -225,21 +230,20 @@ func main() {
 				options = NewOptions(mode)
 				modeFlags.Usage = func() { ShowHelpMode(cmd, mode, *modeFlags, config, options) }
 				options.AddFlags(modeFlags, options.Mode)
-				modeFlags.Parse(args[1:])
+				modeFlags.Parse(args)
 				config = options.VisitFlags(cmd, modeFlags)
 
 			} else {
 				config = facade.NewConfig(mode)
 				modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags, config, options) }
 				config.AddFlags(modeFlags, config.Mode)
-				modeFlags.Parse(args[1:])
+				modeFlags.Parse(args)
 				config.VisitFlags(modeFlags)
 
 			}
 		} else { // no more args, empty config
 			config = facade.NewConfig(facade.DEFAULT_MODE)
 		}
-
 
 	case README:
 		readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
