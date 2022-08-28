@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package gfx
@@ -18,7 +19,7 @@ var ForegroundColor = image.White
 var BackgroundColor = image.Transparent
 var DebugColor = image.NewUniform(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
-var Extensions = []string{".ttf", ".ttc"}
+var Extensions = []string{"ttf", "ttc"}
 
 type FontService struct {
 	fonts   map[string]*Font
@@ -57,58 +58,86 @@ func (service *FontService) GetFont(fontName string) (*Font, error) {
 
 }
 
+func (service *FontService) dataFromAsset(name string) ([]byte, error) {
+
+	encoded := service.asset[name]
+	if encoded == "" {
+		return []byte{}, log.NewError("no asset data for font %s", name)
+	}
+
+	if DEBUG_FONTSERVICE {
+		log.Debug("%s decode embedded font %s", service.Desc(), name)
+	}
+	data, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return []byte{}, log.NewError("fail to decode embedded font %s: %s", name, err)
+	}
+
+	return data, nil
+}
+
+func (service *FontService) dataFromFile(name string) ([]byte, error) {
+
+	path, err := service.getFilePathForName(name)
+
+	if err != nil {
+		if DEBUG_FONTSERVICE {
+			log.Debug("%s no file for font %s: %s", service.Desc(), name, err)
+		}
+		return []byte{}, err
+	}
+
+	if DEBUG_FONTSERVICE {
+		log.Debug("%s read font %s from %s", service.Desc(), name, path)
+	}
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		if DEBUG_FONTSERVICE {
+			log.Debug("%s fail to read font from %s: %s", service.Desc(), path, err)
+		}
+		return []byte{}, err
+	}
+	if len(data) <= 0 {
+		if DEBUG_FONTSERVICE {
+			log.Debug("%s fail to read font from %s: zero bytes", service.Desc(), path)
+		}
+		return []byte{}, log.NewError("zero bytes")
+	}
+
+	return data, nil
+
+}
+
 func (service *FontService) LoadFont(name string) error {
 	name = strings.ToLower(name)
 
 	var err error
 	var data []byte = []byte{}
 
-	if font := service.fonts[name]; font != nil {
+	if font := service.fonts[name]; font != nil { // font already loaded
 		return nil
-		//        return log.NewError("font %s already loaded: %s",name,font.Desc())
 	}
 
-	{
+	if service.directory == "" { // no asset directory
 
-		path, err := service.getFilePathForName(name)
-
-		if err == nil {
-
-			if DEBUG_FONTSERVICE {
-				log.Debug("%s read font %s from %s", service.Desc(), name, path)
-			}
-			data, err = ioutil.ReadFile(path)
-			if err != nil {
-				return log.NewError("fail to read font from %s: %s", path, err)
-			}
-
-		} else { // no file found, try asset
-
-			if DEBUG_FONTSERVICE {
-				log.Debug("%s no file for font %s: %s", service.Desc(), name, err)
-			}
-
-			encoded := service.asset[name]
-			if encoded == "" {
-				return log.NewError("no asset data for font %s", name)
-			}
-
-			if DEBUG_FONTSERVICE {
-				log.Debug("%s decode font %s", service.Desc(), name)
-			}
-			data, err = base64.StdEncoding.DecodeString(encoded)
-			if err != nil {
-				return log.NewError("fail to decode font %s: %s", name, err)
-			}
+		data, err = service.dataFromAsset(name)
+		if err != nil {
+			return log.NewError("%s fail load font %s: %s", service.Desc(), name, err)
 		}
+
+	} else { // asset directory given
+
+		data, err = service.dataFromFile(name)
+		if err != nil || len(data) <= 0 { // no file found, try asset
+			log.Error("%s fail load font %s: %s", service.Desc(), name, err)
+			data, err = service.dataFromAsset(name)
+		}
+
 	}
 
 	if len(data) <= 0 {
-		if DEBUG_FONTSERVICE {
-			log.Debug("%s no data for font %s", service.Desc(), name)
-		}
 		return log.NewError("no data for font %s", name)
-
 	}
 
 	font := NewFont(name, service.scratch)
@@ -133,11 +162,11 @@ func (service *FontService) getFilePathForName(fontName string) (string, error) 
 	var err error
 	files, err := ioutil.ReadDir(service.directory)
 	if err != nil {
-		return "", log.NewError("fail list fonts: %s", err)
+		return "", log.NewError("fail list fonts at %s: %s", service.directory, err)
 	}
 	for _, f := range files {
 		for _, ext := range Extensions {
-			if strings.ToLower(f.Name()) == strings.ToLower(fontName+ext) {
+			if strings.ToLower(f.Name()) == strings.ToLower(fontName+"."+ext) {
 				if DEBUG_FONTSERVICE {
 					log.Debug("%s found font file %s", service.Desc(), f.Name())
 				}
@@ -145,7 +174,7 @@ func (service *FontService) getFilePathForName(fontName string) (string, error) 
 			}
 		}
 	}
-	return "", log.NewError("no file for font %s", fontName)
+	return "", log.NewError("no file %s/%s.{%s}", service.directory, fontName, strings.Join(Extensions, ","))
 }
 
 func (service *FontService) Desc() string {

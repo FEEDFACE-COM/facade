@@ -7,7 +7,7 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-    "github.com/FEEDFACE-COM/piglet"
+	"FEEDFACE.COM/facade/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
@@ -15,6 +15,8 @@ import (
 	"sync"
 	"time"
 )
+
+const RENDER_FRAME_RATE = 60.0
 
 type Renderer struct {
 	screen gfx.Size
@@ -48,18 +50,23 @@ type Renderer struct {
 
 	prevFrame gfx.ClockFrame
 
-	tickChannel chan bool
+	tickChannel chan Tick
 }
 
-func NewRenderer(directory string, tickChannel chan bool) *Renderer {
+func NewRenderer(directory string, tickChannel chan Tick) *Renderer {
 	ret := &Renderer{directory: directory, tickChannel: tickChannel}
 	ret.stateMutex = &sync.Mutex{}
 	ret.refreshChan = make(chan bool, 1)
-	if strings.HasPrefix(ret.directory, "~/") {
-		ret.directory = os.Getenv("HOME") + ret.directory[1:]
+	if ret.directory == "" {
+		ret.fontService = gfx.NewFontService("", facade.FontAsset)
+		ret.programService = gfx.NewProgramService("", facade.ShaderAsset)
+	} else {
+		if strings.HasPrefix(ret.directory, "~/") {
+			ret.directory = os.Getenv("HOME") + ret.directory[1:]
+		}
+		ret.fontService = gfx.NewFontService(ret.directory+"/font", facade.FontAsset)
+		ret.programService = gfx.NewProgramService(ret.directory+"/shader", facade.ShaderAsset)
 	}
-	ret.fontService = gfx.NewFontService(ret.directory+"/font", facade.FontAsset)
-	ret.programService = gfx.NewProgramService(ret.directory+"/shader", facade.ShaderAsset)
 	return ret
 }
 
@@ -257,31 +264,36 @@ func (renderer *Renderer) Configure(config *facade.Config) error {
 func (renderer *Renderer) tick() {
 
 	for { //forever
-		renderer.tickChannel <- true // wait until can send
+		renderer.tickChannel <- TICK // wait until can send
 		time.Sleep(time.Duration(int64(time.Second / RENDER_FRAME_RATE)))
 	}
 
 }
 
 func (renderer *Renderer) tock() bool {
-	var tick bool
+	var tick Tick
 
 	// wait for message
 	tick = <-renderer.tickChannel
-	if !tick {
-		return false // indicate stop render
-	}
 
 	// clear all messages
 	for {
+
+		switch tick {
+		case QUIT:
+			return false
+		case STOP:
+			renderer.TogglePause()
+		}
+
 		select {
+
 		case tick = <-renderer.tickChannel:
-			if !tick {
-				return false // indicate stop render
-			}
+			continue // evaluate
 
 		default:
 			return true // indicate render one frame
+
 		}
 	}
 
@@ -365,7 +377,6 @@ func (renderer *Renderer) Render(confChan chan facade.Config, showDebugInfo bool
 		gl.BlendFuncSeparate(gl.ONE, gl.SRC_ALPHA, gl.ZERO, gl.ONE)
 		renderer.mask.Render(renderer.debug)
 
-
 		piglet.SwapBuffers()
 		renderer.stateMutex.Unlock()
 
@@ -390,12 +401,11 @@ func (renderer *Renderer) Render(confChan chan facade.Config, showDebugInfo bool
 			DiagDone()
 		}
 
-
 		if showDebugInfo {
 			if renderFailed {
-				renderer.printDebugInfo( "RENDER FAILURE: " + piglet.ErrorString(e) )
+				renderer.printDebugInfo("RENDER FAILURE: " + piglet.ErrorString(e))
 			} else {
-				renderer.printDebugInfo( gfx.WorldClock().Info(renderer.prevFrame) )
+				renderer.printDebugInfo(gfx.WorldClock().Info(renderer.prevFrame))
 			}
 		}
 
@@ -505,15 +515,14 @@ func (renderer *Renderer) InfoMode() string {
 	}
 
 	ret := ""
-	ret += fmt.Sprintf("%s %s %s\n",renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc())
+	ret += fmt.Sprintf("%s %s %s\n", renderer.font.Desc(), renderer.camera.Desc(), renderer.mask.Desc())
 	ret += fmt.Sprintf("%s%s\n", mode, dbg)
 	ret += fmt.Sprintf("%s", buffer)
 	return ret
 }
 
-
 const DEBUGINFO_INFO = 4
-const DEBUGINFO_BUFFER  = 12
+const DEBUGINFO_BUFFER = 12
 const DEBUGINFO_HEIGHT = DEBUGINFO_INFO + DEBUGINFO_BUFFER
 
 func (renderer *Renderer) printDebugInfo(info string) {
@@ -522,7 +531,6 @@ func (renderer *Renderer) printDebugInfo(info string) {
 
 	text += fmt.Sprintf("FACADE %s\n", info)
 	text += renderer.InfoMode() + "\n"
-
 
 	if DEBUG_BUFFER {
 		tmp := ""
@@ -536,11 +544,11 @@ func (renderer *Renderer) printDebugInfo(info string) {
 		case facade.Mode_CHARS:
 			tmp = renderer.charBuffer.Dump()
 		}
-		buffer := strings.Split(tmp,"\n")
+		buffer := strings.Split(tmp, "\n")
 		count := len(buffer)
 		if count <= DEBUGINFO_BUFFER {
-			text += strings.Join(buffer,"\n")
-			for i:=count; i<DEBUGINFO_BUFFER; i++ {
+			text += strings.Join(buffer, "\n")
+			for i := count; i < DEBUGINFO_BUFFER; i++ {
 				text += "\n"
 			}
 		} else {
@@ -558,21 +566,19 @@ func (renderer *Renderer) printDebugInfo(info string) {
 
 	//log.Debug("have %d lines",len(lines))
 
-	fmt.Fprintf(os.Stderr, "\0337") // save cursor pos
+	fmt.Fprintf(os.Stderr, "\0337")  // save cursor pos
 	fmt.Fprintf(os.Stderr, "\033[H") // jump to origin
 
-
-	for i:=0; i < DEBUGINFO_HEIGHT; i++ {
+	for i := 0; i < DEBUGINFO_HEIGHT; i++ {
 		fmt.Fprintf(os.Stderr, "\033[0K")
 		if i < len(lines) {
 			fmt.Fprintf(os.Stderr, "%s\n", lines[i]) // erase to eol and write single line
 		} else {
-			fmt.Fprintf(os.Stderr,"\n")
+			fmt.Fprintf(os.Stderr, "\n")
 		}
 	}
 
 	fmt.Fprintf(os.Stderr, "\0338") // restore cursor pos
-
 
 	//fmt.Fprintf(os.Stderr, "\033[%dA", DEBUGINFO_HEIGHT) // cursor up HEIGHT lines
 	//

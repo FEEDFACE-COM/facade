@@ -24,7 +24,7 @@ var LineDefaults LineConfig = LineConfig{
 }
 
 func (config *LineConfig) Desc() string {
-	ret := "line["
+	ret := "lines["
 
 	{
 		wok := config.GetSetWidth()
@@ -94,8 +94,8 @@ func (config *LineConfig) FillPatterns() []string {
 }
 
 func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
-	flagset.Uint64Var(&config.Width, "w", LineDefaults.Width, "line width")
-	flagset.Uint64Var(&config.Height, "h", LineDefaults.Height, "line count / height")
+	flagset.Uint64Var(&config.Width, "w", LineDefaults.Width, "width: chars per line")
+	flagset.Uint64Var(&config.Height, "h", LineDefaults.Height, "height: line count")
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
 	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
 	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "scroll smooth?")

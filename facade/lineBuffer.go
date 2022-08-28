@@ -521,22 +521,22 @@ func (buffer *LineBuffer) Desc() string {
 	}
 
 	{
-		ret += fmt.Sprintf("speed%.2f ", buffer.speed)
+		ret += fmt.Sprintf("s%.2f ", buffer.speed)
 		if buffer.Fixed {
 			ret += fmt.Sprintf("fixed ")
 		} else if !buffer.Fixed {
-			ret += fmt.Sprintf("adapt%.2f ", buffer.adaptedSpeed())
+			ret += fmt.Sprintf("a%.2f ", buffer.adaptedSpeed())
 		}
 
-		ret += fmt.Sprintf("avg%.2f ", buffer.meterBuffer.Average())
+		ret += fmt.Sprintf("∅%.2f ", buffer.meterBuffer.Average())
 	}
 
 	if !buffer.Smooth {
-		ret += "!smooth "
+		ret += "!s "
 	}
 
 	if !buffer.Drop {
-		ret += "!drop "
+		ret += "!d "
 	}
 
 	if DEBUG_LINEBUFFER {
