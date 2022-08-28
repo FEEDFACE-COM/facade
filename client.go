@@ -26,27 +26,27 @@ type Client struct {
 	cancel     context.CancelFunc
 }
 
-func NewClient(host string, port uint, timeout float64, noIPv4 bool, noIPv6 bool) *Client {
+func NewClient(host string, port uint, timeout float64, inet bool, inet6 bool) *Client {
 
 	ret := &Client{connStr: ""}
 
 	var address string = host
 
-	if noIPv4 && noIPv6 {
+	if !inet && !inet6 {
 		log.PANIC("all network families disabled")
 	}
 
-	if noIPv4 || noIPv6 {
+	if inet || inet6 {
 
 		// force network protocol by resolving hostname explicitly
 
 		ip := net.ParseIP(host)
-		if ip.To4() != nil && noIPv6 {
+		if ip.To4() != nil && inet {
 			if DEBUG_CLIENT {
 				log.Debug("%s use given ipv4 address %s", ret.Desc(), ip.String())
 			}
 			address = ip.String()
-		} else if ip.To16() != nil && noIPv4 {
+		} else if ip.To16() != nil && inet6 {
 			if DEBUG_CLIENT {
 				log.Debug("%s use given ipv6 address %s", ret.Desc(), ip.String())
 			}
@@ -61,15 +61,16 @@ func NewClient(host string, port uint, timeout float64, noIPv4 bool, noIPv6 bool
 			}
 			for _, name := range names {
 				ip := net.ParseIP(name)
-				if ip.To4() != nil && noIPv6 {
+				if ip.To16() != nil && inet6 {
 					if DEBUG_CLIENT {
-						log.Debug("%s use resolved ipv4 address %s", ret.Desc(), ip.String())
+						log.Debug("%s use resolved ipv6 address %s", ret.Desc(), ip.String())
 					}
 					address = ip.String()
 					break
-				} else if ip.To4() == nil && noIPv4 {
+				}
+				if ip.To4() != nil && inet {
 					if DEBUG_CLIENT {
-						log.Debug("%s use resolved ipv6 address %s", ret.Desc(), ip.String())
+						log.Debug("%s use resolved ipv4 address %s", ret.Desc(), ip.String())
 					}
 					address = ip.String()
 					break

@@ -35,7 +35,7 @@ type Server struct {
 	confChan   chan facade.Config
 }
 
-func NewServer(host string, confPort uint, textPort uint, timeout float64, noIPv4 bool, noIPv6 bool) *Server {
+func NewServer(host string, confPort uint, textPort uint, timeout float64, inet bool, inet6 bool) *Server {
 	ret := Server{
 		host:       host,
 		confPort:   confPort,
@@ -45,13 +45,14 @@ func NewServer(host string, confPort uint, textPort uint, timeout float64, noIPv
 		transport:  "tcp",
 	}
 
-	if noIPv4 && noIPv6 {
-		ret.transport = ""
-	} else if noIPv4 {
-		ret.transport = "tcp6"
-	} else if noIPv6 {
+	if inet && !inet6 {
 		ret.transport = "tcp4"
+	} else if !inet && inet6 {
+		ret.transport = "tcp6"
+	} else if !inet && !inet6 {
+		ret.transport = ""
 	}
+
 	return &ret
 }
 

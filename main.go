@@ -266,13 +266,11 @@ func main() {
 	switch cmd {
 
 	case SERVE:
-        if debug {
-		    // REM: use DEBUGINFO_HEIGHT constant here..
-		    fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
-		    fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
-        }
-
-		if !debug {
+		if DEBUG_BUFFER && debug {
+			// REM: use DEBUGINFO_HEIGHT constant here..
+			fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
+			fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
+		} else {
 			log.Notice(strings.TrimLeft(AUTHOR, "\n"))
 		}
 
