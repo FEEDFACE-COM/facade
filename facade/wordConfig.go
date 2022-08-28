@@ -12,9 +12,9 @@ import (
 
 var WordDefaults = WordConfig{
 	Slots:     8,
-	MaxLength: 0,
-	Lifetime:  0.0,
-	Watermark: 0.5,
+	MaxLength: 20,
+	Lifetime:  8.0,
+	Watermark: 0.8,
 	Shuffle:   false,
 	Aging:     false,
 }

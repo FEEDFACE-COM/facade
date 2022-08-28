@@ -430,10 +430,10 @@ func (mode *WordMode) FillString(name string) []string {
 	switch name {
 	case "title":
 		ret := []string{"FACADE"}
-		if mode.maxLength >= 11. {
+		if mode.maxLength >= 11 {
 			ret = []string{"F A C A D E"}
 		}
-		if mode.maxLength >= 15. {
+		if mode.maxLength >= 22 {
 			ret = []string{"FACADE by FEEDFACE.COM"}
 		}
 		return ret
