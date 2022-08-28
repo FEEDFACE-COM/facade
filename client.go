@@ -214,6 +214,7 @@ func (client *Client) SendConf(config *facade.Config) error {
 	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
 	defer cancel()
 
+	log.Info("%s send config %s", client.Desc(), config.Desc())
 	status, err := client.client.Conf(ctx, config)
 	if err != nil {
 		stat, _ := grpcstatus.FromError(err)
@@ -221,7 +222,6 @@ func (client *Client) SendConf(config *facade.Config) error {
 	} else if !status.GetSuccess() {
 		return log.NewError("conf error: %s", status.GetError())
 	}
-	log.Info("%s sent %s", client.Desc(), config.Desc())
 	return nil
 }
 
@@ -231,8 +231,10 @@ func (client *Client) Dial() error {
 	opts := grpc.WithInsecure()
 
 	if DEBUG_CLIENT {
-		log.Debug("%s dial timeout %.1fs", client.Desc(), client.timeout.Seconds())
+		log.Debug("%s dial %s timeout %.1fs", client.Desc(), client.connStr, client.timeout.Seconds())
 	}
+	log.Info("%s connect %s", client.Desc(), client.connStr)
+
 	client.connection, err = grpc.Dial(client.connStr, opts)
 	if err != nil {
 		return log.NewError("fail to dial %s: %s", client.connStr, err)
