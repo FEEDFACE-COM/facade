@@ -35,7 +35,11 @@ func (config *MaskConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) b
 			{
 				config.SetName = true
 				if basicOptions {
-					config.Name = "mask"
+					if MASK_QUICKFIX {
+						config.Name = "mask"
+					} else {
+						config.Name = "def"
+					}
 				}
 			}
 		}
