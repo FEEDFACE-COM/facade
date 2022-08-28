@@ -55,11 +55,22 @@ func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode, basicOpti
 }
 
 func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) bool {
+
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "shape":
 			{
 				config.SetVert = true
+				if basicOptions {
+					frag := PrefixForMode(mode) + config.Vert + "." + string(gfx.FragType)
+					if _, ok := ShaderAsset[frag]; ok {
+						config.SetFrag = true
+						config.Frag = config.Vert
+					} else {
+						config.SetFrag = true
+						config.Frag = ShaderDefaults.Frag
+					}
+				}
 			}
 		case "color":
 			{
