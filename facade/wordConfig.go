@@ -57,10 +57,10 @@ func (config *WordConfig) FillPatterns() []string {
 }
 
 func (config *WordConfig) AddFlags(flagset *flag.FlagSet) {
-	flagset.Uint64Var(&config.Slots, "n", WordDefaults.Slots, "word count")
+	flagset.Uint64Var(&config.Slots, "n", WordDefaults.Slots, "number of word slots")
 	flagset.Uint64Var(&config.MaxLength, "m", WordDefaults.MaxLength, "word max length")
 	flagset.Float64Var(&config.Lifetime, "life", WordDefaults.Lifetime, "word lifetime")
-	flagset.Float64Var(&config.Watermark, "mark", WordDefaults.Watermark, "buffer clear mark")
+	flagset.Float64Var(&config.Watermark, "mark", WordDefaults.Watermark, "buffer fill mark")
 	flagset.BoolVar(&config.Shuffle, "shuffle", WordDefaults.Shuffle, "shuffle words?")
 	flagset.BoolVar(&config.Aging, "aging", WordDefaults.Aging, "age words?")
 }

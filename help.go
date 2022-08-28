@@ -80,7 +80,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\ncommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from network and display")
+		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from network and draw to screen")
 	}
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to network")
 	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send config to network")

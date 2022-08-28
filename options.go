@@ -68,18 +68,18 @@ func (options *Options) AddFlags(flagset *flag.FlagSet, mode facade.Mode) {
 
 	switch mode {
 	case facade.Mode_LINES:
-		flagset.UintVar(&options.LinesWidth, "width", DefaultOptions.LinesWidth, "width / chars per line")
-		flagset.UintVar(&options.LinesHeight, "height", DefaultOptions.LinesHeight, "height / line count")
+		flagset.UintVar(&options.LinesWidth, "w", DefaultOptions.LinesWidth, "width: chars per line")
+		flagset.UintVar(&options.LinesHeight, "h", DefaultOptions.LinesHeight, "height: line count")
 		flagset.Float64Var(&options.Speed, "speed", DefaultOptions.Speed, "scroll speed")
 		flagset.BoolVar(&options.LinesDownward, "down", DefaultOptions.LinesDownward, "scroll downward?")
 	case facade.Mode_TERM:
-		flagset.UintVar(&options.LinesWidth, "width", DefaultOptions.LinesWidth, "width / chars per line")
-		flagset.UintVar(&options.LinesHeight, "height", DefaultOptions.LinesHeight, "height / line count")
+		flagset.UintVar(&options.LinesWidth, "w", DefaultOptions.LinesWidth, "terminal width")
+		flagset.UintVar(&options.LinesHeight, "h", DefaultOptions.LinesHeight, "terminal height")
 	case facade.Mode_CHARS:
-		flagset.UintVar(&options.CharsCount, "count", DefaultOptions.CharsCount, "width / char count")
+		flagset.UintVar(&options.CharsCount, "w", DefaultOptions.CharsCount, "width: chars in line")
 		flagset.Float64Var(&options.Speed, "speed", DefaultOptions.Speed, "scroll speed")
 	case facade.Mode_WORDS:
-		flagset.UintVar(&options.WordsCount, "count", DefaultOptions.WordsCount, "slots / word count")
+		flagset.UintVar(&options.WordsCount, "n", DefaultOptions.WordsCount, "number of word slots")
 		flagset.Float64Var(&options.WordsLifeTime, "life", DefaultOptions.WordsLifeTime, "word lifetime")
 		flagset.Float64Var(&options.WordsFillMark, "mark", DefaultOptions.WordsFillMark, "buffer fill mark")
 		flagset.BoolVar(&options.WordsShuffle, "shuffle", DefaultOptions.WordsShuffle, "shuffle words?")
@@ -133,10 +133,10 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 		ret.Lines = &facade.LineConfig{}
 		flagset.Visit(func(flg *flag.Flag) {
 			switch flg.Name {
-			case "width":
+			case "w":
 				ret.Lines.Width = uint64(options.LinesWidth)
 				ret.Lines.SetWidth = true
-			case "height":
+			case "h":
 				ret.Lines.Height = uint64(options.LinesHeight)
 				ret.Lines.SetHeight = true
 			case "speed":
@@ -151,7 +151,7 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 		ret.Chars = &facade.CharConfig{}
 		flagset.Visit(func(flg *flag.Flag) {
 			switch flg.Name {
-			case "count":
+			case "w":
 				ret.Chars.CharCount = uint64(options.CharsCount)
 				ret.Chars.SetCharCount = true
 			case "speed":
@@ -163,7 +163,7 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 		ret.Words = &facade.WordConfig{}
 		flagset.Visit(func(flg *flag.Flag) {
 			switch flg.Name {
-			case "count":
+			case "c":
 				ret.Words.Slots = uint64(options.WordsCount)
 				ret.Words.SetSlots = true
 			case "life":
@@ -182,10 +182,10 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 		ret.Lines = &facade.LineConfig{}
 		flagset.Visit(func(flg *flag.Flag) {
 			switch flg.Name {
-			case "width":
+			case "w":
 				ret.Term.Width = uint64(options.LinesWidth)
 				ret.Term.SetWidth = true
-			case "height":
+			case "h":
 				ret.Term.Height = uint64(options.LinesHeight)
 				ret.Term.SetHeight = true
 			}
@@ -208,18 +208,18 @@ func (options *Options) Help(mode facade.Mode) string {
 	ret += "\n"
 	switch mode {
 	case facade.Mode_TERM:
-		ret += gfx.FlagHelp(tmp.Lookup("width"))
-		ret += gfx.FlagHelp(tmp.Lookup("height"))
+		ret += gfx.FlagHelp(tmp.Lookup("w"))
+		ret += gfx.FlagHelp(tmp.Lookup("h"))
 	case facade.Mode_LINES:
-		ret += gfx.FlagHelp(tmp.Lookup("width"))
-		ret += gfx.FlagHelp(tmp.Lookup("height"))
+		ret += gfx.FlagHelp(tmp.Lookup("w"))
+		ret += gfx.FlagHelp(tmp.Lookup("h"))
 		ret += gfx.FlagHelp(tmp.Lookup("speed"))
 		ret += gfx.FlagHelp(tmp.Lookup("down"))
 	case facade.Mode_CHARS:
-		ret += gfx.FlagHelp(tmp.Lookup("count"))
+		ret += gfx.FlagHelp(tmp.Lookup("w"))
 		ret += gfx.FlagHelp(tmp.Lookup("speed"))
 	case facade.Mode_WORDS:
-		ret += gfx.FlagHelp(tmp.Lookup("count"))
+		ret += gfx.FlagHelp(tmp.Lookup("n"))
 		ret += gfx.FlagHelp(tmp.Lookup("life"))
 		ret += gfx.FlagHelp(tmp.Lookup("mark"))
 		ret += gfx.FlagHelp(tmp.Lookup("shuffle"))

@@ -44,7 +44,7 @@ func (config *CharConfig) FillPatterns() []string {
 }
 
 func (config *CharConfig) AddFlags(flagset *flag.FlagSet) {
-	flagset.Uint64Var(&config.CharCount, "c", CharDefaults.CharCount, "char count")
+	flagset.Uint64Var(&config.CharCount, "w", CharDefaults.CharCount, "width: chars in line")
 	flagset.Float64Var(&config.Speed, "speed", CharDefaults.Speed, "scroll speed")
 	flagset.BoolVar(&config.Repeat, "repeat", CharDefaults.Repeat, "repeat last?")
 }
@@ -53,7 +53,7 @@ func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
-		case "c":
+		case "w":
 			config.SetCharCount = true
 			ret = true
 		case "speed":

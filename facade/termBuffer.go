@@ -1,3 +1,4 @@
+//go:build RENDERER
 // +build RENDERER
 
 package facade
@@ -648,6 +649,7 @@ func (buffer *TermBuffer) Desc() string {
 
 func (buffer *TermBuffer) Dump() string {
 	ret := ""
+	ret += " "
 	for c := uint(1); c <= buffer.max.x; c++ {
 		if c%10 == 0 {
 			ret += fmt.Sprintf("%01d", (c/10)%10)
@@ -657,7 +659,11 @@ func (buffer *TermBuffer) Dump() string {
 	}
 	ret += "\n "
 	for c := uint(1); c <= buffer.max.x; c++ {
-		ret += fmt.Sprintf("%01d", c%10)
+		if c%10 == 0 || c%10 == 5 {
+			ret += fmt.Sprintf("%01d", c%10)
+		} else {
+			ret += " "
+		}
 	}
 	ret += "\n"
 	ret += "+"
@@ -665,7 +671,6 @@ func (buffer *TermBuffer) Dump() string {
 		ret += "-"
 	}
 	ret += "+\n"
-
 
 	for r := uint(1); r <= buffer.max.y; r++ {
 		ret += "|"
