@@ -50,7 +50,7 @@ void main() {
     float ARC = TAU;
     float A0 = PI;
   
-    float alpha,gamma;
+    float alpha,gamma = 0.;
     
     float row = (-tileCoord.y+tileCount.y/2.);
 
