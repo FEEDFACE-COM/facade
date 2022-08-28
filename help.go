@@ -25,7 +25,11 @@ func ShowHelp(flags flag.FlagSet) {
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nflags:\n")
 	str := ""
-	flags.VisitAll(func(f *flag.Flag) { str += gfx.FlagHelp(f) })
+	for _,s := range[]string{"d","q"} {
+		if flg := flags.Lookup(s); flg != nil {
+			str += gfx.FlagHelp(flg)
+		}
+	}
 	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 

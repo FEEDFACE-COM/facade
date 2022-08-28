@@ -45,9 +45,11 @@ func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode, basicOpti
 	frags := " (" + AvailableShaders(PrefixForMode(mode), ".frag") + ")"
 	verts := " (" + AvailableShaders(PrefixForMode(mode), ".vert") + ")"
 
-	flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "shape: vertex shader"+verts)
-	if !basicOptions {
-		flagset.StringVar(&config.Frag, "color", ShaderDefaults.Frag, "color: fragment shader"+frags)
+	if basicOptions {
+		flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "shape"+verts)
+	} else {
+		flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "vertex shader"+verts)
+		flagset.StringVar(&config.Frag, "color", ShaderDefaults.Frag, "fragment shader"+frags)
 	}
 
 }
