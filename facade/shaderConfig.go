@@ -45,19 +45,19 @@ func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode) {
 	frags := " (" + AvailableShaders(PrefixForMode(mode), ".frag") + ")"
 	verts := " (" + AvailableShaders(PrefixForMode(mode), ".vert") + ")"
 
-	flagset.StringVar(&config.Vert, "vert", ShaderDefaults.Vert, "vertex shader"+verts)
-	flagset.StringVar(&config.Frag, "frag", ShaderDefaults.Frag, "fragment shader"+frags)
+	flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "shape: vertex shader"+verts)
+	flagset.StringVar(&config.Frag, "color", ShaderDefaults.Frag, "color: fragment shader"+frags)
 
 }
 
 func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
-		case "vert":
+		case "shape":
 			{
 				config.SetVert = true
 			}
-		case "frag":
+		case "color":
 			{
 				config.SetFrag = true
 			}

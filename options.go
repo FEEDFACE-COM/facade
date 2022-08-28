@@ -64,7 +64,7 @@ func (options *Options) AddFlags(flagset *flag.FlagSet, mode facade.Mode) {
 	flagset.StringVar(&options.FontName, "font", DefaultOptions.FontName, "typeface ("+facade.AvailableFonts()+")")
 	flagset.BoolVar(&options.Mask, "mask", DefaultOptions.Mask, "overlay mask?")
 	flagset.Float64Var(&options.Zoom, "zoom", DefaultOptions.Zoom, "camera zoom")
-	flagset.StringVar(&options.StyleName, "style", DefaultOptions.StyleName, "style ("+facade.AvailableShaders(facade.PrefixForMode(mode), ".vert")+")")
+	flagset.StringVar(&options.StyleName, "shape", DefaultOptions.StyleName, "shape ("+facade.AvailableShaders(facade.PrefixForMode(mode), ".vert")+")")
 
 	switch mode {
 	case facade.Mode_LINES:
@@ -107,7 +107,7 @@ func (options *Options) VisitFlags(cmd Command, flagset *flag.FlagSet) *facade.C
 			}
 		case "zoom":
 			ret.Camera = &facade.CameraConfig{SetZoom: true, Zoom: options.Zoom}
-		case "style":
+		case "shape":
 			vert := facade.PrefixForMode(options.Mode) + options.StyleName + "." + string(gfx.VertType)
 			frag := facade.PrefixForMode(options.Mode) + options.StyleName + "." + string(gfx.FragType)
 			ret.Shader = &facade.ShaderConfig{SetVert: true, SetFrag: true}
@@ -204,7 +204,7 @@ func (options *Options) Help(mode facade.Mode) string {
 	ret += gfx.FlagHelp(tmp.Lookup("zoom"))
 	ret += gfx.FlagHelp(tmp.Lookup("mask"))
 	ret += "\n"
-	ret += gfx.FlagHelp(tmp.Lookup("style"))
+	ret += gfx.FlagHelp(tmp.Lookup("shape"))
 	ret += "\n"
 	switch mode {
 	case facade.Mode_TERM:
