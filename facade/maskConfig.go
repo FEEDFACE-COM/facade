@@ -18,27 +18,35 @@ func (config *MaskConfig) Desc() string {
 	return ret
 }
 
-func (config *MaskConfig) AddFlags(flagset *flag.FlagSet) {
+var MASK_QUICKFIX bool = MaskDefaults.Name == "mask"
+func (config *MaskConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	masks := " (" + AvailableShaders("mask/", ".frag") + ")"
-	flagset.StringVar(&config.Name, "mask", MaskDefaults.Name, "overlay mask"+masks)
+	if basicOptions {
+		flagset.BoolVar(&MASK_QUICKFIX, "mask", MASK_QUICKFIX, "overlay mask?")
+	} else {
+		flagset.StringVar(&config.Name, "mask", MaskDefaults.Name, "overlay mask"+masks)
+	}
 }
 
-func (config *MaskConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *MaskConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "mask":
 			{
 				config.SetName = true
+				if basicOptions {
+					config.Name = "mask"
+				}
 			}
 		}
 	})
 	return config.SetName
 }
 
-func (config *MaskConfig) Help() string {
+func (config *MaskConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("mask", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp,basicOptions)
 	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

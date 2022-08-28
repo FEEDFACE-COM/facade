@@ -20,12 +20,12 @@ func (config *FontConfig) Desc() string {
 	return ret
 }
 
-func (config *FontConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *FontConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	fonts := " (" + AvailableFonts() + ")"
 	flagset.StringVar(&config.Name, "font", FontDefaults.Name, "typeface"+fonts)
 }
 
-func (config *FontConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *FontConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "font":
@@ -37,10 +37,10 @@ func (config *FontConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return config.SetName
 }
 
-func (config *FontConfig) Help() string {
+func (config *FontConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("font", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp,basicOptions)
 	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

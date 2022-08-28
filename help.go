@@ -29,7 +29,7 @@ func ShowHelp(flags flag.FlagSet) {
 	fmt.Fprintf(os.Stderr, "%s\n", str)
 }
 
-func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet, config *facade.Config, options *Options) {
+func ShowHelpMode(cmd Command, mode facade.Mode, basicOptions bool) {
 	fmt.Fprintf(os.Stderr, InfoAuthor())
 	fmt.Fprintf(os.Stderr, InfoVersion())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
@@ -40,16 +40,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, flags flag.FlagSet, config *fac
 	}
 
 	fmt.Fprintf(os.Stderr, "\nflags:\n")
-
-	if config != nil {
-
-		fmt.Fprintf(os.Stderr, "%s", facade.Defaults.Help(mode))
-
-	} else if options != nil {
-
-		fmt.Fprintf(os.Stderr, "%s", DefaultOptions.Help(mode))
-
-	}
+	fmt.Fprintf(os.Stderr, facade.Defaults.Help(mode,basicOptions) )
 
 	fmt.Fprintf(os.Stderr, "\n")
 }

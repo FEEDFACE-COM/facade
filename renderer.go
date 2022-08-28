@@ -7,13 +7,18 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"github.com/FEEDFACE-COM/piglet"
+	"FEEDFACE.COM/facade/piglet"
 	"fmt"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
 	"sync"
 	"time"
+)
+
+const (
+	DEBUG_RENDERER = false
+	DEBUG_CHANGES  = false
 )
 
 const RENDER_FRAME_RATE = 60.0
@@ -532,7 +537,7 @@ func (renderer *Renderer) printDebugInfo(info string) {
 	text += fmt.Sprintf("FACADE %s\n", info)
 	text += renderer.InfoMode() + "\n"
 
-	if DEBUG_BUFFER {
+	if DEBUG_BUFFERS {
 		tmp := ""
 		switch renderer.mode {
 		case facade.Mode_LINES:

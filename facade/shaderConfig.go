@@ -40,17 +40,19 @@ func (config *ShaderConfig) Desc() string {
 	return ret
 }
 
-func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode) {
+func (config *ShaderConfig) AddFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) {
 
 	frags := " (" + AvailableShaders(PrefixForMode(mode), ".frag") + ")"
 	verts := " (" + AvailableShaders(PrefixForMode(mode), ".vert") + ")"
 
 	flagset.StringVar(&config.Vert, "shape", ShaderDefaults.Vert, "shape: vertex shader"+verts)
-	flagset.StringVar(&config.Frag, "color", ShaderDefaults.Frag, "color: fragment shader"+frags)
+	if !basicOptions {
+		flagset.StringVar(&config.Frag, "color", ShaderDefaults.Frag, "color: fragment shader"+frags)
+	}
 
 }
 
-func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "shape":
@@ -66,10 +68,10 @@ func (config *ShaderConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return config.SetVert || config.SetFrag
 }
 
-func (config *ShaderConfig) Help(mode Mode) string {
+func (config *ShaderConfig) Help(mode Mode, basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("shader", flag.ExitOnError)
-	config.AddFlags(tmp, mode)
+	config.AddFlags(tmp, mode, basicOptions)
 	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
 	return ret
 }

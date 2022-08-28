@@ -43,13 +43,15 @@ func (config *CharConfig) FillPatterns() []string {
 	return []string{"title", "index", "alpha", "clear"}
 }
 
-func (config *CharConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *CharConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	flagset.Uint64Var(&config.CharCount, "w", CharDefaults.CharCount, "width: chars in line")
 	flagset.Float64Var(&config.Speed, "speed", CharDefaults.Speed, "scroll speed")
-	flagset.BoolVar(&config.Repeat, "repeat", CharDefaults.Repeat, "repeat last?")
+	if !basicOptions {
+		flagset.BoolVar(&config.Repeat, "repeat", CharDefaults.Repeat, "repeat last?")
+	}
 }
 
-func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *CharConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
@@ -68,10 +70,10 @@ func (config *CharConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return ret
 }
 
-func (config *CharConfig) Help() string {
+func (config *CharConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("char", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp,basicOptions)
 	for _, s := range []string{"c", "speed", "repeat"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)

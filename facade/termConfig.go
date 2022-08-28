@@ -44,12 +44,12 @@ func (config *TermConfig) FillPatterns() []string {
 	return []string{"title", "index", "alpha", "clear"}
 }
 
-func (config *TermConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *TermConfig) AddFlags(flagset *flag.FlagSet, basicFlags bool) {
 	flagset.Uint64Var(&config.Width, "w", TermDefaults.Width, "terminal width")
 	flagset.Uint64Var(&config.Height, "h", TermDefaults.Height, "terminal height")
 }
 
-func (config *TermConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *TermConfig) VisitFlags(flagset *flag.FlagSet, basicFlags bool) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
@@ -69,10 +69,10 @@ func (config *TermConfig) VisitFlags(flagset *flag.FlagSet) bool {
 
 }
 
-func (config *TermConfig) Help() string {
+func (config *TermConfig) Help(basicOptions bool) string {
 	ret := ""
-	tmp := flag.NewFlagSet("lines", flag.ExitOnError)
-	config.AddFlags(tmp)
+	tmp := flag.NewFlagSet("term", flag.ExitOnError)
+	config.AddFlags(tmp,basicOptions)
 	for _, s := range []string{"w", "h"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)

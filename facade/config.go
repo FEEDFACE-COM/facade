@@ -82,8 +82,10 @@ func (config *Config) Desc() string {
 	return ret
 }
 
-func (config *Config) AddFlags(flagset *flag.FlagSet, mode Mode) {
-	flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
+func (config *Config) AddFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) {
+	if !basicOptions {
+		flagset.BoolVar(&config.Debug, "D", Defaults.Debug, "draw debug?")
+	}
 	var shader *ShaderConfig = config.GetShader()
 	var patterns = []string{}
 	switch mode {
@@ -98,36 +100,38 @@ func (config *Config) AddFlags(flagset *flag.FlagSet, mode Mode) {
 	}
 
 	if term := config.GetTerm(); term != nil {
-		term.AddFlags(flagset)
-		shader.AddFlags(flagset, Mode_TERM)
+		term.AddFlags(flagset, basicOptions)
+		shader.AddFlags(flagset, Mode_TERM, basicOptions)
 	}
 	if lines := config.GetLines(); lines != nil {
-		lines.AddFlags(flagset)
-		shader.AddFlags(flagset, Mode_LINES)
+		lines.AddFlags(flagset, basicOptions)
+		shader.AddFlags(flagset, Mode_LINES, basicOptions)
 	}
 	if words := config.GetWords(); words != nil {
-		words.AddFlags(flagset)
-		shader.AddFlags(flagset, Mode_WORDS)
+		words.AddFlags(flagset, basicOptions)
+		shader.AddFlags(flagset, Mode_WORDS, basicOptions)
 	}
 	if chars := config.GetChars(); chars != nil {
-		chars.AddFlags(flagset)
-		shader.AddFlags(flagset, Mode_CHARS)
+		chars.AddFlags(flagset, basicOptions)
+		shader.AddFlags(flagset, Mode_CHARS, basicOptions)
 	}
 	if font := config.GetFont(); font != nil {
-		font.AddFlags(flagset)
+		font.AddFlags(flagset, basicOptions)
 	}
 	if cam := config.GetCamera(); cam != nil {
-		cam.AddFlags(flagset)
+		cam.AddFlags(flagset, basicOptions)
 	}
 	if mask := config.GetMask(); mask != nil {
-		mask.AddFlags(flagset)
+		mask.AddFlags(flagset, basicOptions)
 	}
 
-	flagset.StringVar(&config.Fill, "fill", "", "fill pattern ("+strings.Join(patterns, ",")+")")
+	if !basicOptions {
+		flagset.StringVar(&config.Fill, "fill", "", "fill pattern ("+strings.Join(patterns, ",")+")")
+	}
 
 }
 
-func (config *Config) VisitFlags(flagset *flag.FlagSet) {
+func (config *Config) VisitFlags(flagset *flag.FlagSet, mode Mode, basicOptions bool) {
 
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
@@ -139,79 +143,79 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet) {
 	})
 
 	if term := config.GetTerm(); term != nil {
-		if !term.VisitFlags(flagset) {
+		if !term.VisitFlags(flagset,basicOptions) {
 			config.Term = nil
 		} // no flags used
 	}
 	if lines := config.GetLines(); lines != nil {
-		if !lines.VisitFlags(flagset) {
+		if !lines.VisitFlags(flagset,basicOptions) {
 			config.Lines = nil
 		} // no flags used
 	}
 	if words := config.GetWords(); words != nil {
-		if !words.VisitFlags(flagset) {
+		if !words.VisitFlags(flagset,basicOptions) {
 			config.Words = nil
 		}
 	}
 	if chars := config.GetChars(); chars != nil {
-		if !chars.VisitFlags(flagset) {
+		if !chars.VisitFlags(flagset,basicOptions) {
 			config.Chars = nil
 		} // no flags used
 	}
 
 	if font := config.GetFont(); font != nil {
-		if !font.VisitFlags(flagset) {
+		if !font.VisitFlags(flagset,basicOptions) {
 			config.Font = nil
 		} // no flags used
 	}
 
 	if cam := config.GetCamera(); cam != nil {
-		if !cam.VisitFlags(flagset) {
+		if !cam.VisitFlags(flagset,basicOptions) {
 			config.Camera = nil
 		} // no flags used
 	}
 
 	if mask := config.GetMask(); mask != nil {
-		if !mask.VisitFlags(flagset) {
+		if !mask.VisitFlags(flagset,basicOptions) {
 			config.Mask = nil
 		} // no flags used
 	}
 
 	if shader := config.GetShader(); shader != nil {
-		if !shader.VisitFlags(flagset) {
+		if !shader.VisitFlags(flagset,mode,basicOptions) {
 			config.Shader = nil
 		} // no flags used
 	}
 
 }
 
-func (config *Config) Help(mode Mode) string {
+func (config *Config) Help(mode Mode, basicOptions bool) string {
 	ret := ""
 
-	ret += FontDefaults.Help()
-	ret += CameraDefaults.Help()
-	ret += MaskDefaults.Help()
+	ret += FontDefaults.Help(basicOptions)
+	ret += CameraDefaults.Help(basicOptions)
+	ret += MaskDefaults.Help(basicOptions)
 
 	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
-	config.AddFlags(tmp, mode)
+	config.AddFlags(tmp, mode,basicOptions)
 	for _, s := range []string{"fill", "D"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}
 	}
 	ret += "\n"
-	ret += ShaderDefaults.Help(mode)
+	ret += ShaderDefaults.Help(mode,basicOptions)
 	ret += "\n"
 
 	switch mode {
 	case Mode_LINES:
-		ret += LineDefaults.Help()
+		ret += LineDefaults.Help(basicOptions)
 	case Mode_WORDS:
-		ret += WordDefaults.Help()
+		ret += WordDefaults.Help(basicOptions)
 	case Mode_CHARS:
-		ret += CharDefaults.Help()
+		ret += CharDefaults.Help(basicOptions)
 	case Mode_TERM:
-		ret += TermDefaults.Help()
+		ret += TermDefaults.Help(basicOptions)
 	}
 	ret += "\n"
 

@@ -93,18 +93,20 @@ func (config *LineConfig) FillPatterns() []string {
 	return []string{"title", "index", "alpha", "clear"}
 }
 
-func (config *LineConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *LineConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	flagset.Uint64Var(&config.Width, "w", LineDefaults.Width, "width: chars per line")
 	flagset.Uint64Var(&config.Height, "h", LineDefaults.Height, "height: line count")
 	flagset.BoolVar(&config.Downward, "down", LineDefaults.Downward, "scroll downward?")
-	flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
-	flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "scroll smooth?")
-	flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
-	flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "fixed scroll speed?")
-	flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
+	if !basicOptions {
+		flagset.BoolVar(&config.Drop, "drop", LineDefaults.Drop, "drop lines?")
+		flagset.BoolVar(&config.Smooth, "smooth", LineDefaults.Smooth, "scroll smooth?")
+		flagset.Float64Var(&config.Speed, "speed", LineDefaults.Speed, "scroll speed")
+		flagset.BoolVar(&config.Fixed, "fixed", LineDefaults.Fixed, "fixed scroll speed?")
+		flagset.Uint64Var(&config.Buffer, "buffer", LineDefaults.Buffer, "buffer length")
+	}
 }
 
-func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *LineConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) bool {
 	ret := false
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
@@ -155,10 +157,10 @@ func (config *LineConfig) VisitFlags(flagset *flag.FlagSet) bool {
 
 }
 
-func (config *LineConfig) Help() string {
+func (config *LineConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("lines", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp,basicOptions)
 	for _, s := range []string{"w", "h", "down", "drop", "smooth", "speed", "fixed", "buffer"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)

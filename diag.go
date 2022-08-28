@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const DEBUG_DIAG     = false
+
 func MemUsage() string {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

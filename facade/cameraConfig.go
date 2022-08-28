@@ -29,14 +29,16 @@ func (config *CameraConfig) Desc() string {
 	return ret
 }
 
-func (config *CameraConfig) AddFlags(flagset *flag.FlagSet) {
+func (config *CameraConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	flagset.Float64Var(&config.Zoom, "zoom", CameraDefaults.Zoom, "camera zoom")
-	if ENABLE_CAMERA_ISOMETRIC {
-		flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera isometric?")
+	if !basicOptions {
+		if ENABLE_CAMERA_ISOMETRIC {
+			flagset.BoolVar(&config.Isometric, "iso", CameraDefaults.Isometric, "camera isometric?")
+		}
 	}
 }
 
-func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
+func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) bool {
 	flagset.Visit(func(flg *flag.Flag) {
 		switch flg.Name {
 		case "zoom":
@@ -52,10 +54,10 @@ func (config *CameraConfig) VisitFlags(flagset *flag.FlagSet) bool {
 	return config.SetZoom || config.SetIsometric
 }
 
-func (config *CameraConfig) Help() string {
+func (config *CameraConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("camera", flag.ExitOnError)
-	config.AddFlags(tmp)
+	config.AddFlags(tmp,basicOptions)
 	for _, s := range []string{"zoom", "iso"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)

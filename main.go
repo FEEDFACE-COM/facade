@@ -4,7 +4,6 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/log"
 	"bufio"
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"os"
@@ -15,18 +14,18 @@ import (
 	"time"
 )
 
+
 const (
-	DEBUG_RENDERER = false
-	DEBUG_BUFFER   = true
-	DEBUG_CHANGES  = false
-	DEBUG_DIAG     = false
+	DEFAULT_DIRECTORY = ""
+	DEFAULT_RECEIVE_HOST = "[::]"
+	DEFAULT_CONNECT_HOST = "localhost"
+	DEFAULT_BASIC_OPTIONS = true
+	DEFAULT_DEBUG_VIEW   = false
+
 )
 
 const PAUSABLE = true
-
-const DEFAULT_DIRECTORY = ""
-const DEFAULT_RECEIVE_HOST = "[::]"
-const DEFAULT_CONNECT_HOST = "localhost"
+const DEBUG_BUFFERS = true
 
 var (
 	BUILD_NAME     string = "facade"
@@ -43,7 +42,7 @@ const (
 	EXEC   Command = "exec"
 	CONF   Command = "conf"
 	HELP   Command = "help"
-	README Command = "readme"
+	//README Command = "readme"
 )
 
 type Tick int
@@ -70,6 +69,7 @@ var (
 func main() {
 	runtime.LockOSThread()
 	quiet, debug := false, false
+	basicOptions, debugView := DEFAULT_BASIC_OPTIONS, DEFAULT_DEBUG_VIEW
 	directory := DEFAULT_DIRECTORY
 	var err error
 
@@ -117,8 +117,9 @@ func main() {
 	}
 
 	{
-		globalFlags.BoolVar(&debug, "d", debug, "debug - show debug info")
-		globalFlags.BoolVar(&quiet, "q", quiet, "quiet - show errors only")
+		globalFlags.BoolVar(&debug, "d", debug, "debug messages and flags")
+		globalFlags.BoolVar(&quiet, "q", quiet, "error messages only")
+		globalFlags.BoolVar(&debugView, "D", debugView, "debug view")
 	}
 
 	globalFlags.Parse(os.Args[1:])
@@ -128,6 +129,7 @@ func main() {
 	}
 	if debug {
 		log.SetVerbosity(log.DEBUG)
+		basicOptions = false
 	} else if quiet {
 		log.SetVerbosity(log.ERROR)
 	}
@@ -152,8 +154,7 @@ func main() {
 		commandFlags[cmd].Parse(globalFlags.Args()[1:])
 	}
 
-	var config *facade.Config = nil
-	var options *Options
+	var config = facade.NewConfig(facade.DEFAULT_MODE)
 
 	var args []string
 	var modeFlags *flag.FlagSet
@@ -165,7 +166,7 @@ func main() {
 
 		args = commandFlags[cmd].Args()
 		if len(args) <= 0 || strings.ToUpper(args[0]) != facade.Mode_TERM.String() {
-			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options)
+			ShowHelpMode(EXEC, facade.Mode_TERM, basicOptions)
 			os.Exit(-2)
 		}
 		args = args[1:]
@@ -173,24 +174,15 @@ func main() {
 		modeFlags = flag.NewFlagSet("exec", flag.ExitOnError)
 		modeFlags.SetOutput(bufio.NewWriter(nil))
 
-		if !debug { // BASIC_OPTIONS
-			options = NewOptions(facade.Mode_TERM)
-			modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options) }
-			options.AddFlags(modeFlags, facade.Mode_TERM)
-			modeFlags.Parse(args)
-			config = options.VisitFlags(cmd, modeFlags)
-
-		} else {
-			config = facade.NewConfig(facade.Mode_TERM)
-			modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options) }
-			config.AddFlags(modeFlags, facade.Mode_TERM)
-			modeFlags.Parse(args)
-			config.VisitFlags(modeFlags)
-		}
+		config = facade.NewConfig(facade.Mode_TERM)
+		modeFlags.Usage = func() { ShowHelpMode(EXEC, facade.Mode_TERM, basicOptions) }
+		config.AddFlags(modeFlags, facade.Mode_TERM, basicOptions)
+		modeFlags.Parse(args)
+		config.VisitFlags(modeFlags,facade.Mode_TERM, basicOptions)
 
 		args = modeFlags.Args()
 		if len(args) <= 0 {
-			ShowHelpMode(EXEC, facade.Mode_TERM, *modeFlags, config, options)
+			ShowHelpMode(EXEC, facade.Mode_TERM, basicOptions)
 			os.Exit(-2)
 		}
 
@@ -225,33 +217,27 @@ func main() {
 			modeFlags = flag.NewFlagSet(strings.ToLower(mode.String()), flag.ExitOnError)
 			modeFlags.SetOutput(bufio.NewWriter(nil))
 
-			if !debug { // BASIC_OPTIONS
+			config = facade.NewConfig(mode)
+			modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, basicOptions) }
+			config.AddFlags(modeFlags, config.Mode, basicOptions)
+			modeFlags.Parse(args)
+			config.VisitFlags(modeFlags, config.Mode, basicOptions)
 
-				options = NewOptions(mode)
-				modeFlags.Usage = func() { ShowHelpMode(cmd, mode, *modeFlags, config, options) }
-				options.AddFlags(modeFlags, options.Mode)
-				modeFlags.Parse(args)
-				config = options.VisitFlags(cmd, modeFlags)
-
-			} else {
-				config = facade.NewConfig(mode)
-				modeFlags.Usage = func() { ShowHelpMode(cmd, config.Mode, *modeFlags, config, options) }
-				config.AddFlags(modeFlags, config.Mode)
-				modeFlags.Parse(args)
-				config.VisitFlags(modeFlags)
-
+			if len( modeFlags.Args() ) > 0 {
+				ShowHelpMode(cmd,config.Mode, basicOptions)
+				os.Exit(-2)
 			}
-		} else { // no more args, empty config
-			config = facade.NewConfig(facade.DEFAULT_MODE)
+
+
 		}
 
-	case README:
-		readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
-		if err != nil {
-			log.PANIC("fail to decode readme: %s", err)
-		}
-		os.Stdout.Write(readme)
-		os.Exit(0)
+	//case README:
+	//	readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
+	//	if err != nil {
+	//		log.PANIC("fail to decode readme: %s", err)
+	//	}
+	//	os.Stdout.Write(readme)
+	//	os.Exit(0)
 
 	case HELP:
 		fallthrough
@@ -265,7 +251,7 @@ func main() {
 	switch cmd {
 
 	case SERVE:
-		if DEBUG_BUFFER && debug {
+		if DEBUG_BUFFERS && debugView {
 			// REM: use DEBUGINFO_HEIGHT constant here..
 			fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
 			fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
@@ -276,7 +262,7 @@ func main() {
 		// install signal handler
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGQUIT)
-		go handleSignals(signals, ticks)
+		go handleSignals(signals, ticks, debugView)
 
 		runtime.LockOSThread()
 
@@ -302,7 +288,7 @@ func main() {
 		renderer.Configure(config)
 		go renderer.ProcessTextSeqs(texts)
 
-		err = renderer.Render(confs, debug)
+		err = renderer.Render(confs, debugView)
 		if err != nil {
 			log.Error("fail to render: %s", err)
 		}
@@ -393,11 +379,11 @@ func main() {
 	os.Exit(0)
 }
 
-func handleSignals(signals chan os.Signal, ticks chan Tick) {
+func handleSignals(signals chan os.Signal, ticks chan Tick, pausable bool) {
 	for {
 		sig := <-signals
 		log.Notice("signal %s", sig)
-		if PAUSABLE && sig == syscall.SIGQUIT {
+		if PAUSABLE && pausable && sig == syscall.SIGQUIT {
 			ticks <- STOP
 			continue
 		}
