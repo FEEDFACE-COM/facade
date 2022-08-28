@@ -6,6 +6,7 @@ package facade
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"flag"
+	"sort"
 	"strings"
 )
 
@@ -75,7 +76,12 @@ func (config *ShaderConfig) Help(mode Mode) string {
 
 func AvailableShaders(prefix, suffix string) string {
 	ret := ""
-	for name, _ := range ShaderAsset {
+	names := []string{}
+	for k, _ := range ShaderAsset {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	for _, name := range names {
 		if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, suffix) {
 			ret += strings.TrimSuffix(strings.TrimPrefix(name, prefix), suffix)
 			ret += ", "

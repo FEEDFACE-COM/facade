@@ -3,6 +3,7 @@ package facade
 import (
 	"FEEDFACE.COM/facade/gfx"
 	"flag"
+	"sort"
 	"strings"
 )
 
@@ -46,7 +47,12 @@ func (config *FontConfig) Help() string {
 
 func AvailableFonts() string {
 	ret := ""
-	for name, _ := range FontAsset {
+	names := []string{}
+	for k, _ := range FontAsset {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	for _, name := range names {
 		ret += name
 		ret += ", "
 	}
