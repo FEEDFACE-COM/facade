@@ -25,7 +25,7 @@ func ShowHelp(flags flag.FlagSet) {
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nflags:\n")
 	str := ""
-	for _,s := range[]string{"d","q"} {
+	for _,s := range[]string{"q","d", "D"} {
 		if flg := flags.Lookup(s); flg != nil {
 			str += gfx.FlagHelp(flg)
 		}
@@ -75,20 +75,20 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\ncommands:\n")
 	if RENDERER_AVAILABLE {
-		fmt.Fprintf(os.Stderr, "%6s     %s\n", SERVE, "receive text from network and draw to screen")
+		fmt.Fprintf(os.Stderr, "  %6s     %s\n", SERVE, "receive text from network and draw to screen")
 	}
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", PIPE, "read text from stdin and send to network")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", CONF, "send config to network")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", EXEC, "execute command and send stdout/stderr to network")
+	fmt.Fprintf(os.Stderr, "%  6s     %s\n", PIPE, "read text from stdin and send to renderer")
+	fmt.Fprintf(os.Stderr, "%  6s     %s\n", CONF, "send config to renderer")
+	fmt.Fprintf(os.Stderr, "%  6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
 	//	fmt.Fprintf(os.Stderr, "%6s     %s\n", README, "show documentation")
 }
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nmodes:\n")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines of text")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling letters")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "fading words")
-	fmt.Fprintf(os.Stderr, "%6s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines of text")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling letters")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "fading words")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
 }
 
 func InfoAuthor() string {

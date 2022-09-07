@@ -37,7 +37,7 @@ var (
 type Command string
 
 const (
-	SERVE  Command = "serve"
+	SERVE  Command = "render"
 	PIPE   Command = "pipe"
 	EXEC   Command = "exec"
 	CONF   Command = "conf"

@@ -61,6 +61,11 @@ func (server *Server) ListenText(bufChan chan facade.TextSeq) {
 	if server.transport == "" {
 		return
 	}
+	
+	if server.textPort == 0 {
+    	return
+    }
+
 
 	textListenStr := fmt.Sprintf("%s:%d", server.host, server.textPort)
 	textListener, err := net.Listen(server.transport, textListenStr)
@@ -204,6 +209,10 @@ func (server *Server) Listen(
 		return
 	}
 
+    if server.confPort == 0 {
+        return
+    }
+    
 	server.connStr = fmt.Sprintf("%s:%d", server.host, server.confPort)
 
 	if DEBUG_SERVER {
