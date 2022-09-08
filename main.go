@@ -391,8 +391,9 @@ func handleSignals(signals chan os.Signal, ticks chan Tick, pausable bool) {
 	}
 }
 
+
 const AUTHOR = `
-   _   _   _   _   _   _      _   _   _   _   _   _   _   _     _   _        
-  |_  |_| /   |_| | \ |_     |_  |_  |_  | \ |_  |_| /   |_    /   / \ |\/|  
-  |   | | \_  | | |_/ |_  BY |   |_  |_  |_/ |   | | \_  |_  o \_  \_/ |  |  
+   _   _   _   _   _   _                  
+  |_  |_| /   |_| | \ |_                  
+  |   | | \_  | | |_/ |_  by FEEDFACE.COM 
 `

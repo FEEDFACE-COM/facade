@@ -18,8 +18,7 @@ func ShowHelp(flags flag.FlagSet) {
 		cmds = append(cmds, string(c))
 	}
 
-	fmt.Fprintf(os.Stderr, InfoAuthor())
-	fmt.Fprintf(os.Stderr, InfoVersion())
+	fmt.Fprintf(os.Stderr, ShowVersion())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, "|"))
 	ShowCommands()
@@ -34,8 +33,7 @@ func ShowHelp(flags flag.FlagSet) {
 }
 
 func ShowHelpMode(cmd Command, mode facade.Mode, basicOptions bool) {
-	fmt.Fprintf(os.Stderr, InfoAuthor())
-	fmt.Fprintf(os.Stderr, InfoVersion())
+	fmt.Fprintf(os.Stderr, ShowVersion())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	if cmd == EXEC {
 		fmt.Fprintf(os.Stderr, "  %s exec term [flags] /path/to/executable [args]\n", BUILD_NAME)
@@ -56,8 +54,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 		strings.ToLower(facade.Mode_WORDS.String()),
 		strings.ToLower(facade.Mode_TERM.String()),
 	}
-	fmt.Fprintf(os.Stderr, InfoAuthor())
-	fmt.Fprintf(os.Stderr, InfoVersion())
+	fmt.Fprintf(os.Stderr, ShowVersion())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	switch cmd {
 	case EXEC:
@@ -74,28 +71,27 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\ncommands:\n")
-	if RENDERER_AVAILABLE {
+	if RENDERER_AVAILABLE { 
 		fmt.Fprintf(os.Stderr, "  %6s     %s\n", SERVE, "receive text from network and draw to screen")
 	}
-	fmt.Fprintf(os.Stderr, "%  6s     %s\n", PIPE, "read text from stdin and send to renderer")
-	fmt.Fprintf(os.Stderr, "%  6s     %s\n", CONF, "send config to renderer")
-	fmt.Fprintf(os.Stderr, "%  6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
-	//	fmt.Fprintf(os.Stderr, "%6s     %s\n", README, "show documentation")
+    fmt.Fprintf(os.Stderr, "  %6s     %s\n", PIPE, "read text from stdin and send to renderer")
+    fmt.Fprintf(os.Stderr, "  %6s     %s\n", CONF, "send config to renderer")
+    fmt.Fprintf(os.Stderr, "  %6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
+	//	fmt.Fprintf(os.Stderr, "  %6s     %s\n", README, "show documentation")
 }
 
 func ShowModes() {
 	fmt.Fprintf(os.Stderr, "\nmodes:\n")
-	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scrolling lines of text")
-	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scrolling letters")
-	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "fading words")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_LINES.String()), "scroll lines of text vertically")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_CHARS.String()), "scroll single letters horizontally")
+	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_WORDS.String()), "scroll or fade single words")
 	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
 }
 
-func InfoAuthor() string {
-	return fmt.Sprintf("%s\n", strings.TrimLeft(AUTHOR, "\n"))
+func ShowVersion() string {
+    ret := ""
+    ret += fmt.Sprintf("%s\n",strings.TrimLeft(AUTHOR, "\n"))
+	ret += fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
+    return ret
 }
 
-func InfoVersion() string {
-	return fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
-
-}
