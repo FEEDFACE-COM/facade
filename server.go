@@ -239,7 +239,8 @@ func (server *Server) Listen(
 
 func (server *Server) Desc() string {
 	ret := "server["
-	ret += fmt.Sprintf("%s", server.transport)
+	ret += fmt.Sprintf("%s", server.host)
+//	ret += fmt.Sprintf("%s", server.transport)
 	ret += "]"
 	return ret
 }

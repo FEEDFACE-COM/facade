@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
 	"runtime"
 	"strings"
 	"syscall"
@@ -158,7 +159,7 @@ func main() {
 
 	var args []string
 	var modeFlags *flag.FlagSet
-	var path string
+	var execPath string
 
 	switch cmd {
 
@@ -186,7 +187,7 @@ func main() {
 			os.Exit(-2)
 		}
 
-		path = args[0]
+		execPath = args[0]
 		args = args[1:]
 
 	case SERVE, PIPE, CONF:
@@ -264,7 +265,9 @@ func main() {
 		signal.Notify(signals, syscall.SIGINT, syscall.SIGQUIT)
 		go handleSignals(signals, ticks, debugView)
 
+
 		runtime.LockOSThread()
+
 
 		// add title if not given
 		if title && !config.SetFill {
@@ -274,12 +277,14 @@ func main() {
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, ipv4, ipv6)
 		renderer = NewRenderer(directory, ticks)
-		if stdin {
-			scanner = NewScanner()
-			go scanner.ScanText(texts)
-		}
+		if stdin { scanner = NewScanner() }
+		
+        log.Notice("FACADE receive text on %s:%d and draw to screen", server.host, server.textPort)
+		
+		
 		go server.Listen(confs, texts)
 		go server.ListenText(texts)
+		if scanner != nil { go scanner.ScanText(texts) }
 		runtime.LockOSThread()
 		if err = renderer.Init(); err != nil {
 			log.PANIC("fail to initialize renderer: %s", err)
@@ -296,6 +301,8 @@ func main() {
 
 	case PIPE:
 		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
+        log.Notice("FACADE read text from stdin and send to %s", client.connStr)
+
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -317,6 +324,7 @@ func main() {
 
 	case CONF:
 		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
+        log.Notice("FACADE configure renderer at %s", client.connStr)
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
 		}
@@ -349,7 +357,9 @@ func main() {
 		config.Term.SetHeight = true
 
 		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
-		executor = NewExecutor(client, uint(cols), uint(rows), path, args)
+		executor = NewExecutor(client, uint(cols), uint(rows), execPath, args)
+
+        log.Notice("FACADE execute %s and send stdout/stderr to %s",path.Base(executor.path),client.connStr)
 
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)

@@ -17,6 +17,7 @@ const DEBUG_CLIENT = false
 const DEBUG_CLIENT_DUMP = false
 
 type Client struct {
+    hostStr string
 	connStr string
 	timeout time.Duration
 
@@ -28,7 +29,7 @@ type Client struct {
 
 func NewClient(host string, port uint, timeout float64, inet bool, inet6 bool) *Client {
 
-	ret := &Client{connStr: ""}
+	ret := &Client{connStr: "", hostStr: host}
 
 	var address string = host
 
@@ -233,7 +234,7 @@ func (client *Client) Dial() error {
 	if DEBUG_CLIENT {
 		log.Debug("%s dial %s timeout %.1fs", client.Desc(), client.connStr, client.timeout.Seconds())
 	}
-	log.Info("%s connect %s", client.Desc(), client.connStr)
+	log.Info("%s connect to %s", client.Desc(), client.connStr)
 
 	client.connection, err = grpc.Dial(client.connStr, opts)
 	if err != nil {
@@ -245,7 +246,7 @@ func (client *Client) Dial() error {
 
 func (client *Client) Desc() string {
 	ret := "client["
-	ret += client.connStr
+	ret += "→" + client.hostStr
 	ret += "]"
 	return ret
 

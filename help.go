@@ -75,7 +75,7 @@ func ShowCommands() {
 		fmt.Fprintf(os.Stderr, "  %6s     %s\n", SERVE, "receive text from network and draw to screen")
 	}
     fmt.Fprintf(os.Stderr, "  %6s     %s\n", PIPE, "read text from stdin and send to renderer")
-    fmt.Fprintf(os.Stderr, "  %6s     %s\n", CONF, "send config to renderer")
+    fmt.Fprintf(os.Stderr, "  %6s     %s\n", CONF, "configure renderer")
     fmt.Fprintf(os.Stderr, "  %6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
 	//	fmt.Fprintf(os.Stderr, "  %6s     %s\n", README, "show documentation")
 }
