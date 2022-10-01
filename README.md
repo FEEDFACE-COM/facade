@@ -1,160 +1,157 @@
 # FACADE by FEEDFACE.COM
     
-
-### Informative Use
-
-FACADE can show you the live status of your machines, services and networks, eg:
-
+## Examples
 
 #### system status: `top`
 ```
-
-facade serve term -shape wave &
+# raspi #
+facade render term -shape wave
+# client #
 facade exec -host raspi term -w 80 -h 25 top -1
 
+```
+
+
+#### network traffic: `tshark`
+```
+# raspi #
+facade render words -shape field -n 32 -life 4 -mark 1 -shuffle 
+# client #
+sudo tshark -i wlan0 -l -T fields -e ip.src \
+| nc raspi 4045
 
 ```
 
 
-#### network traffic: `tcpdump`
+#### logfiles: `tail`
 ```
-
-facade serve words -shape field -n 32 -life 4 -mark 1 -shuffle &
-sudo tcpdump -i wlan0 -n -l -t tcp[tcpflags]=tcp-syn \
- | egrep --line-buffered -o "> [0-9]+\.[0-9]+.[0-9]+\.[0-9]+"  \
- | awk "//{print \$2;fflush}"  \
- | nc -D raspi 4045                                  
-
-
-```
-
-
-#### access logs: `tail`
-```
-
-facade serve lines -shape disk  -w 150 -h 12 &
+# raspi #
+facade render lines -shape disk -w 150 -h 12
+# client #
 tail -f /var/log/nginx/access.log \
- | nc -D raspi 4045
+| nc raspi 4045
 
 
 ```
 
 #### trace route: `mtr`
 ```
-
-facade serve term -shape vortex &
-facade exec term -w 120 -h 16 sudo mtr -m 10 --displaymode 1 wikipedia.org
+# raspi #
+facade serve term -shape vortex
+# client #
+facade exec term -w 120 -h 16 sudo mtr -m 10 --displaymode 2 wikipedia.org
 
 
 ```
 
 
-#### clock: `date`
+#### wall time: `date`
 ```
-
-facade serve chars -shape moebius -w 64 -speed .5 -font spacemono &
+# raspi #
+facade render chars -shape moebius -w 64 -speed .5 -font spacemono 
+# client #
 while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done \
- | nc -D raspi 4056
-
-
-```
+| nc raspi 4045
 
 ```
 
-facade -d serve lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8 -smooth=f &
-while true; do \
-  date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; \
-done \
- | nc -D raspi 4056
+```
+# raspi #
+facade serve lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8
+# client #
+while true; do date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; done \
+| nc raspi 4045
 
 ```
 
 
-	
-
-
-### Collaborative Use
-
-You can use FACADE to look at text output together, ie one person directly interacts with a program while the other people in the room can observe and comment:
-
-
-#### `bash` - show your team what exactly you are doing in your shell
+#### shell sharing: `bash`
 
 ```
-
-facade serve term &
+# raspi #
+facade render term -mask=f
+# client #
 facade exec -host raspi term -w 80 -h 25 bash
 
-
 ```
 
 
-#### `frotz` - play text adventures on your wall
+#### text adventures: `frotz`
 
 ```
-facade serve -dir=. term -shape slate &
-facade exec term -w 110 -h 30 frotz /path/to/hitchhikers_guide.z5
+# raspi #
+facade render term -shape slate -zoom .75
+# client #
+facade exec -host raspi term -w 110 -h 30 frotz /path/to/hitchhikers_guide.z5
 ```
 
 
-
-
-### Decorative Use
-
-FACADE works very well if you just want to have some stylish text scrolling across your wall:
-
-
-#### `man` - some manpages are quite pretty :)
+#### some man pages are quite pretty: `man`
 ```
-facade -q serve lines -w=50 -vert=crawl &
+# raspi #
+facade render lines -w 50 -shape crawl
+# client #
 MANWIDTH=50 MANPAGER=cat man ssh \
-| while read -r line; do echo "$line"; sleep .9; done | fcd
+ | while read line; do echo "$line"; sleep .9; done \
+ | nc raspi 4045
 ```
 
 
-#### `rfc` - internetworking specifications in plain text format
+#### internetworking specifications in plain text format: `rfc`
 ```
-facade serve -dir=. lines -w=72 -shape rows
+# raspi #
+facade render lines -w 72 -shape rows
+# client #
 curl -L https://tools.ietf.org/rfc/rfc792.txt \
-| while read -r line; do echo "$line"; sleep .9; done | fcd
+| while read -r line; do echo "$line"; sleep .9; done \
+| nc raspi 4045
 ```
 
 
-#### `PHRACK` - your favourite hacking zine articles
+#### your favourite hacking zine articles: `PHRACK`
 ```
-facade serve -dir=. lines -w=80 -shape roll &
+# raspi #
+facade render lines -w 80 -shape roll
+# client #
 curl -sL http://phrack.org/archives/tgz/phrack49.tar.gz \
 | tar xfz /dev/stdin --to-stdout ./14.txt \
-| while read -r line; do echo "$line"; sleep .9; done | fcd
+| while read -r line; do echo "$line"; sleep .9; done \
+| nc raspi 4045
 ```
 
 
-#### `pr0n` - online nudes before the `<IMG>` tag
+#### nudes older than the `<IMG>` tag: `asciipr0n`
 ```
-facade serve -dir=. lines -w 80 -shape slate 
+# raspi #
+facade serve lines -w 80 -shape slate 
+# client #
 curl -sL https://www.asciipr0n.com/pr0n/pinups/pinup00.txt \
-| while read -r line; do echo "$line"; sleep .9; done | fcd
+| while read -r line; do echo "$line"; sleep .5; done \
+| nc raspi 4045
 
 ```
 
 
-#### `.nfo` - demo scene release notes with 1337 ascii art
+#### demo scene release notes: `.nfo`
 ```
-facade -q serve lines -w=80 -vert=wave -mask=mask -font adore64 &
+# raspi #
+facade render lines -w=80 -vert=wave -mask=mask -font adore64
+# client #
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
-| while read -r line; do echo "$line"; sleep .9; done | fcdx
+| while read -r line; do echo "$line"; sleep .9; done \
+| nc raspi 4045
 ```
 
 
-#### curl parrot.live
+#### w
 ```
-facade serve term 
-facade exec term -w 40 -h 20 curl parrot.live
-
+# raspi #
+facade render term -shape slate
+# client #
+facade exec term -w 50 -h 20 curl parrot.live
 ```
 
-----
-
+## Author
 
 If you enjoy FACADE, tell us how you are using it at <facade@feedface.com>!
 
