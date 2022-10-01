@@ -1,5 +1,7 @@
 # FACADE by FEEDFACE.COM
     
+Pipe text from stdout to FACADE to throw it straight onto the wall of your home/office/hackerspace.
+
 ## Examples
 
 #### `top` - system status
