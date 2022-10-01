@@ -2,152 +2,156 @@
     
 ## Examples
 
-#### system status: `top`
+#### `top` - system status
 ```
-# raspi #
+# on raspi:
 facade render term -shape wave
-# client #
+
+# on client:
 facade exec -host raspi term -w 80 -h 25 top -1
-
 ```
 
 
-#### network traffic: `tshark`
+#### `tshark` - network traffic
 ```
-# raspi #
+# on raspi:
 facade render words -shape field -n 32 -life 4 -mark 1 -shuffle 
-# client #
-sudo tshark -i wlan0 -l -T fields -e ip.src \
-| nc raspi 4045
 
+# on client:
+alias fcd='nc raspi 4045'
+sudo tshark -i wlan0 -l -T fields -e ip.src | fcd
 ```
 
 
-#### logfiles: `tail`
+#### `tail` - logfiles
 ```
-# raspi #
+# on raspi:
 facade render lines -shape disk -w 150 -h 12
-# client #
-tail -f /var/log/nginx/access.log \
-| nc raspi 4045
 
-
+# on client:
+alias fcd='nc raspi 4045'
+tail -f /var/log/nginx/access.log | fcd
 ```
 
-#### trace route: `mtr`
+#### `mtr` - trace route
 ```
-# raspi #
+# on raspi:
 facade serve term -shape vortex
-# client #
+
+# on client:
 facade exec term -w 120 -h 16 sudo mtr -m 10 --displaymode 2 wikipedia.org
-
-
 ```
 
 
-#### wall time: `date`
+#### `date` - wall time
 ```
-# raspi #
-facade render chars -shape moebius -w 64 -speed .5 -font spacemono 
-# client #
-while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done \
-| nc raspi 4045
+# on raspi:
+facade render chars -shape moebius -w 64 -speed .5 -font spacemono
+
+# on client:
+alias fcd='nc raspi 4045'
+while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done | fcd
+```
 
 ```
-
-```
-# raspi #
+# on raspi:
 facade serve lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8
-# client #
-while true; do date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; done \
-| nc raspi 4045
 
+# on client:
+alias fcd='nc raspi 4045'
+while true; do date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; done | fcd
 ```
 
 
-#### shell sharing: `bash`
+#### `bash` - command line collaboration
 
 ```
-# raspi #
+# on raspi:
 facade render term -mask=f
-# client #
+
+# on client:
 facade exec -host raspi term -w 80 -h 25 bash
-
 ```
 
 
-#### text adventures: `frotz`
+#### `frotz` - interactive fiction
 
 ```
-# raspi #
+# on raspi:
 facade render term -shape slate -zoom .75
-# client #
+
+# on client:
 facade exec -host raspi term -w 110 -h 30 frotz /path/to/hitchhikers_guide.z5
 ```
 
 
-#### some man pages are quite pretty: `man`
+#### `man` - some manuals are quite pretty
 ```
-# raspi #
+# on raspi:
 facade render lines -w 50 -shape crawl
-# client #
+
+# on client:
+alias fcd='nc raspi 4045'
 MANWIDTH=50 MANPAGER=cat man ssh \
- | while read line; do echo "$line"; sleep .9; done \
- | nc raspi 4045
+ | while read line; do echo "$line"; sleep .9; done | fcd
 ```
 
 
-#### internetworking specifications in plain text format: `rfc`
+#### `RFC` - protocol specifications in plaintext
 ```
-# raspi #
+# on raspi:
 facade render lines -w 72 -shape rows
-# client #
+
+# on client:
+alias fcd='nc raspi 4045'
 curl -L https://tools.ietf.org/rfc/rfc792.txt \
-| while read -r line; do echo "$line"; sleep .9; done \
-| nc raspi 4045
+ | while read -r line; do echo "$line"; sleep .9; done | fcd
 ```
 
 
-#### your favourite hacking zine articles: `PHRACK`
+#### `PHRACK` - your favourite hacking zine articles
 ```
-# raspi #
+# on raspi:
 facade render lines -w 80 -shape roll
-# client #
+
+# on client:
+alias fcd='nc raspi 4045'
 curl -sL http://phrack.org/archives/tgz/phrack49.tar.gz \
-| tar xfz /dev/stdin --to-stdout ./14.txt \
-| while read -r line; do echo "$line"; sleep .9; done \
-| nc raspi 4045
+ | tar xfz /dev/stdin --to-stdout ./14.txt \
+ | while read -r line; do echo "$line"; sleep .9; done | fcd
 ```
 
 
-#### nudes older than the `<IMG>` tag: `asciipr0n`
+#### `asciipr0n` - nudes older than the `<IMG>` tag
 ```
-# raspi #
-facade serve lines -w 80 -shape slate 
-# client #
+# on raspi:
+facade serve lines -w 80 -shape slate
+
+# on client:
+alias fcd='nc raspi 4045'
 curl -sL https://www.asciipr0n.com/pr0n/pinups/pinup00.txt \
-| while read -r line; do echo "$line"; sleep .5; done \
-| nc raspi 4045
-
+ | while read -r line; do echo "$line"; sleep .5; done | fcd
 ```
 
 
-#### demo scene release notes: `.nfo`
+#### `.nfo` - demo scene release notez
 ```
-# raspi #
+# on raspi:
 facade render lines -w=80 -vert=wave -mask=mask -font adore64
-# client #
+
+# on client:
+alias fcd='nc raspi 4045'
 curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
-| while read -r line; do echo "$line"; sleep .9; done \
-| nc raspi 4045
+ | while read -r line; do echo "$line"; sleep .9; done | fcd
 ```
 
 
-#### w
+#### `parrot.live` - http streaming
 ```
-# raspi #
+# on raspi:
 facade render term -shape slate
-# client #
+
+# on client:
 facade exec term -w 50 -h 20 curl parrot.live
 ```
 
