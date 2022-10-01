@@ -38,7 +38,7 @@ tail -f /var/log/nginx/access.log | fcd
 #### `mtr` - trace route
 ```
 # on raspi:
-facade serve term -shape vortex
+facade render term -shape vortex
 
 # on client:
 facade exec term -w 120 -h 16 sudo mtr -m 10 --displaymode 2 wikipedia.org
@@ -57,7 +57,7 @@ while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done | fcd
 
 ```
 # on raspi:
-facade serve lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8
+facade render lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8
 
 # on client:
 alias fcd='nc raspi 4045'
@@ -127,7 +127,7 @@ curl -sL http://phrack.org/archives/tgz/phrack49.tar.gz \
 #### `asciipr0n` - nudes older than the `<IMG>` tag
 ```
 # on raspi:
-facade serve lines -w 80 -shape slate
+facade render lines -w 80 -shape slate
 
 # on client:
 alias fcd='nc raspi 4045'
