@@ -91,10 +91,10 @@ func ShowModes() {
 func ShowVersion() string {
 	ret := ""
 
-	ret += `  _   _   _   _   _   _ ` + "\n"
-	ret += ` |_  |_| /   |_| | \ |_  ` + BUILD_NAME + " " + BUILD_PLATFORM + "\n"
-	ret += ` |   | | \_  | | |_/ |_  version ` + BUILD_VERSION + "\n"
-	ret += `        by FEEDFACE.COM  built ` + BUILD_DATE + "\n"
+	ret += `  _   _   _   _   _   _             `+"\n"
+	ret += ` |_  |_| /   |_| | \ |_             `+BUILD_NAME+" "+BUILD_PLATFORM+"\n"
+	ret += ` |   | | \_  | | |_/ |_             version `+BUILD_VERSION+"\n"
+	ret += `        by FEEDFACE.COM             built `+BUILD_DATE+"\n"
 
 	//ret += fmt.Sprintf("%s\n",strings.TrimLeft(AUTHOR, "\n"))
 	//ret += fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
