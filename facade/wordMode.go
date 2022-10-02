@@ -416,6 +416,10 @@ func (mode *WordMode) Configure(config *WordConfig, shader *ShaderConfig, fill s
 			mode.wordBuffer.SetAging(config.GetAging())
 		}
 
+		if config.GetSetUnique() {
+			mode.wordBuffer.SetUnique(config.GetUnique())
+		}
+
 		mode.ScheduleRefresh()
 
 	}
@@ -502,6 +506,9 @@ func (mode *WordMode) Desc() string {
 	if mode.wordBuffer.aging {
 		ret += "å"
 	}
+	if mode.wordBuffer.unique {
+		ret += "û"
+	}
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
@@ -515,6 +522,7 @@ func (mode *WordMode) Config() *WordConfig {
 		SetWatermark: true, Watermark: float64(mode.wordBuffer.Watermark()),
 		SetShuffle: true, Shuffle: bool(mode.wordBuffer.Shuffle()),
 		SetAging: true, Aging: bool(mode.wordBuffer.Aging()),
+		SetUnique: true, Unique: bool(mode.wordBuffer.Unique()),
 	}
 	return ret
 
