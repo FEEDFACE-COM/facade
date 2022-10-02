@@ -17,6 +17,7 @@ var WordDefaults = WordConfig{
 	Watermark: 0.8,
 	Shuffle:   false,
 	Aging:     false,
+	Unique:    false,
 }
 
 func (config *WordConfig) Desc() string {
@@ -47,6 +48,13 @@ func (config *WordConfig) Desc() string {
 		ret += "å "
 	}
 
+	if config.GetSetUnique() {
+		if !config.GetUnique() {
+			ret += "!"
+		}
+		ret += "û "
+	}
+
 	ret = strings.TrimRight(ret, " ")
 	ret += "]"
 	return ret
@@ -64,6 +72,7 @@ func (config *WordConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	if !basicOptions {
 		flagset.Uint64Var(&config.MaxLength, "m", WordDefaults.MaxLength, "word max length")
 		flagset.BoolVar(&config.Aging, "aging", WordDefaults.Aging, "age words?")
+		flagset.BoolVar(&config.Unique, "unique", WordDefaults.Unique, "only unique words?")
 	}
 }
 
@@ -98,7 +107,7 @@ func (config *WordConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("words", flag.ExitOnError)
 	config.AddFlags(tmp,basicOptions)
-	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "aging"} {
+	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "unique", "aging"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

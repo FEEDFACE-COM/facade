@@ -49,6 +49,7 @@ type WordBuffer struct {
 	watermark float32
 	shuffle   bool
 	aging     bool
+	unique    bool
 
 	rem         []rune
 	refreshChan chan bool
@@ -189,6 +190,22 @@ func (buffer *WordBuffer) addWord(raw []rune) {
 
 	buffer.mutex.Lock()
 	buffer.checkWatermark()
+
+	// check if already in buffer
+	if buffer.unique {
+		for i := 0; i < buffer.slotCount; i++ {
+			idx := (buffer.nextIndex + i) % buffer.slotCount
+			if buffer.words[idx] != nil && buffer.words[idx].text == text {
+				uniq := buffer.words[idx]
+				if DEBUG_WORDBUFFER {
+					log.Debug("%s word already in #%d: %s", buffer.Desc(), uniq.index, text)
+				}
+				buffer.mutex.Unlock()
+				return
+			}
+		}
+	}
+
 
 	var index int = -1
 
@@ -440,7 +457,10 @@ func (buffer *WordBuffer) Desc() string {
 		ret += "⧢"
 	}
 	if buffer.aging {
-		ret += "a"
+		ret += "å"
+	}
+	if buffer.unique {
+		ret += "û"
 	}
 	ret = strings.TrimRight(ret, "\n")
 	ret += "]"
@@ -502,13 +522,17 @@ func (buffer *WordBuffer) Lifetime() float32  { return buffer.lifetime }
 func (buffer *WordBuffer) Watermark() float32 { return buffer.watermark }
 func (buffer *WordBuffer) Shuffle() bool      { return buffer.shuffle }
 func (buffer *WordBuffer) Aging() bool        { return buffer.aging }
-
+func (buffer *WordBuffer) Unique() bool       { return buffer.unique }
 func (buffer *WordBuffer) SetShuffle(shuffle bool) {
 	buffer.shuffle = shuffle
 }
 
 func (buffer *WordBuffer) SetAging(aging bool) {
 	buffer.aging = aging
+}
+
+func (buffer *WordBuffer) SetUnique(unique bool) {
+	buffer.unique = unique
 }
 
 func (buffer *WordBuffer) SetLifetime(lifetime float32) {
