@@ -71,7 +71,7 @@ func (config *Config) Desc() string {
 	}
 	if config.GetSetDebug() {
 		if config.GetDebug() {
-			ret += "DEBUG "
+			ret += "debug "
 		} else {
 			ret += "nobug "
 		}
@@ -143,46 +143,46 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet, mode Mode, basicOptions 
 	})
 
 	if term := config.GetTerm(); term != nil {
-		if !term.VisitFlags(flagset,basicOptions) {
+		if !term.VisitFlags(flagset, basicOptions) {
 			config.Term = nil
 		} // no flags used
 	}
 	if lines := config.GetLines(); lines != nil {
-		if !lines.VisitFlags(flagset,basicOptions) {
+		if !lines.VisitFlags(flagset, basicOptions) {
 			config.Lines = nil
 		} // no flags used
 	}
 	if words := config.GetWords(); words != nil {
-		if !words.VisitFlags(flagset,basicOptions) {
+		if !words.VisitFlags(flagset, basicOptions) {
 			config.Words = nil
 		}
 	}
 	if chars := config.GetChars(); chars != nil {
-		if !chars.VisitFlags(flagset,basicOptions) {
+		if !chars.VisitFlags(flagset, basicOptions) {
 			config.Chars = nil
 		} // no flags used
 	}
 
 	if font := config.GetFont(); font != nil {
-		if !font.VisitFlags(flagset,basicOptions) {
+		if !font.VisitFlags(flagset, basicOptions) {
 			config.Font = nil
 		} // no flags used
 	}
 
 	if cam := config.GetCamera(); cam != nil {
-		if !cam.VisitFlags(flagset,basicOptions) {
+		if !cam.VisitFlags(flagset, basicOptions) {
 			config.Camera = nil
 		} // no flags used
 	}
 
 	if mask := config.GetMask(); mask != nil {
-		if !mask.VisitFlags(flagset,basicOptions) {
+		if !mask.VisitFlags(flagset, basicOptions) {
 			config.Mask = nil
 		} // no flags used
 	}
 
 	if shader := config.GetShader(); shader != nil {
-		if !shader.VisitFlags(flagset,mode,basicOptions) {
+		if !shader.VisitFlags(flagset, mode, basicOptions) {
 			config.Shader = nil
 		} // no flags used
 	}
@@ -191,21 +191,6 @@ func (config *Config) VisitFlags(flagset *flag.FlagSet, mode Mode, basicOptions 
 
 func (config *Config) Help(mode Mode, basicOptions bool) string {
 	ret := ""
-
-	ret += FontDefaults.Help(basicOptions)
-	ret += CameraDefaults.Help(basicOptions)
-	ret += MaskDefaults.Help(basicOptions)
-
-	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
-	config.AddFlags(tmp, mode,basicOptions)
-	for _, s := range []string{"fill", "D"} {
-		if flg := tmp.Lookup(s); flg != nil {
-			ret += gfx.FlagHelp(flg)
-		}
-	}
-	ret += "\n"
-	ret += ShaderDefaults.Help(mode,basicOptions)
-	ret += "\n"
 
 	switch mode {
 	case Mode_LINES:
@@ -217,6 +202,23 @@ func (config *Config) Help(mode Mode, basicOptions bool) string {
 	case Mode_TERM:
 		ret += TermDefaults.Help(basicOptions)
 	}
+
+	ret += "\n"
+	ret += ShaderDefaults.Help(mode, basicOptions)
+	ret += "\n"
+
+	ret += FontDefaults.Help(basicOptions)
+	ret += CameraDefaults.Help(basicOptions)
+	ret += MaskDefaults.Help(basicOptions)
+
+	tmp := flag.NewFlagSet("facade", flag.ExitOnError)
+	config.AddFlags(tmp, mode, basicOptions)
+	for _, s := range []string{"fill", "D"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
+
 	ret += "\n"
 
 	return ret

@@ -7,8 +7,8 @@ import (
 	"FEEDFACE.COM/facade/facade"
 	"FEEDFACE.COM/facade/gfx"
 	"FEEDFACE.COM/facade/log"
-	"github.com/FEEDFACE-COM/piglet"
 	"fmt"
+	"github.com/FEEDFACE-COM/piglet"
 	gl "github.com/FEEDFACE-COM/piglet/gles2"
 	"os"
 	"strings"
@@ -597,10 +597,10 @@ func (renderer *Renderer) printDebugInfo(info string) {
 
 func (renderer *Renderer) Desc() string {
 	ret := "renderer["
-	ret += fmt.Sprintf("%dx%d ", int(renderer.screen.W), int(renderer.screen.H))
+	//ret += fmt.Sprintf("%dx%d ", int(renderer.screen.W), int(renderer.screen.H))
 	ret += strings.ToLower(renderer.mode.String())
 	if renderer.debug {
-		ret += " DEBUG"
+		ret += " debug"
 	}
 	ret += "]"
 	return ret

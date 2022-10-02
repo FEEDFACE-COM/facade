@@ -24,7 +24,7 @@ func ShowHelp(flags flag.FlagSet) {
 	ShowCommands()
 	fmt.Fprintf(os.Stderr, "\nflags:\n")
 	str := ""
-	for _,s := range[]string{"q","d", "D"} {
+	for _, s := range []string{"q", "d", "D"} {
 		if flg := flags.Lookup(s); flg != nil {
 			str += gfx.FlagHelp(flg)
 		}
@@ -42,7 +42,7 @@ func ShowHelpMode(cmd Command, mode facade.Mode, basicOptions bool) {
 	}
 
 	fmt.Fprintf(os.Stderr, "\nflags:\n")
-	fmt.Fprintf(os.Stderr, facade.Defaults.Help(mode,basicOptions) )
+	fmt.Fprintf(os.Stderr, facade.Defaults.Help(mode, basicOptions))
 
 	fmt.Fprintf(os.Stderr, "\n")
 }
@@ -71,12 +71,12 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 
 func ShowCommands() {
 	fmt.Fprintf(os.Stderr, "\ncommands:\n")
-	if RENDERER_AVAILABLE { 
+	if RENDERER_AVAILABLE {
 		fmt.Fprintf(os.Stderr, "  %6s     %s\n", SERVE, "receive text from network and draw to screen")
 	}
-    fmt.Fprintf(os.Stderr, "  %6s     %s\n", PIPE, "read text from stdin and send to renderer")
-    fmt.Fprintf(os.Stderr, "  %6s     %s\n", CONF, "configure renderer")
-    fmt.Fprintf(os.Stderr, "  %6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
+	fmt.Fprintf(os.Stderr, "  %6s     %s\n", PIPE, "read text from stdin and send to renderer")
+	fmt.Fprintf(os.Stderr, "  %6s     %s\n", CONF, "configure renderer")
+	fmt.Fprintf(os.Stderr, "  %6s     %s\n", EXEC, "execute command and send stdout/stderr to renderer")
 	//	fmt.Fprintf(os.Stderr, "  %6s     %s\n", README, "show documentation")
 }
 
@@ -89,9 +89,14 @@ func ShowModes() {
 }
 
 func ShowVersion() string {
-    ret := ""
-    ret += fmt.Sprintf("%s\n",strings.TrimLeft(AUTHOR, "\n"))
-	ret += fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
-    return ret
-}
+	ret := ""
 
+	ret += `  _   _   _   _   _   _ ` + "\n"
+	ret += ` |_  |_| /   |_| | \ |_  ` + BUILD_NAME + " " + BUILD_PLATFORM + "\n"
+	ret += ` |   | | \_  | | |_/ |_  version ` + BUILD_VERSION + "\n"
+	ret += `        by FEEDFACE.COM  built ` + BUILD_DATE + "\n"
+
+	//ret += fmt.Sprintf("%s\n",strings.TrimLeft(AUTHOR, "\n"))
+	//ret += fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
+	return ret
+}

@@ -527,8 +527,13 @@ func (buffer *TermBuffer) ProcessSequence(seq *ansi.S) {
 
 	sequence, ok := lookupSequence(seq.Code)
 	if !ok {
+		log.Warning("%s unknown ansi sequence!", buffer.Desc())
 		return
 		//unlock mutex tho?
+	}
+
+	if DEBUG_TERMBUFFER {
+		log.Debug("%s process sequence: %s", buffer.Desc(), sequence.Desc)
 	}
 
 	switch sequence {

@@ -73,8 +73,8 @@ func (config *CharConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) b
 func (config *CharConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("char", flag.ExitOnError)
-	config.AddFlags(tmp,basicOptions)
-	for _, s := range []string{"c", "speed", "repeat"} {
+	config.AddFlags(tmp, basicOptions)
+	for _, s := range []string{"w", "speed", "repeat"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}
