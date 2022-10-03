@@ -71,8 +71,8 @@ func (config *WordConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {
 	flagset.BoolVar(&config.Shuffle, "shuffle", WordDefaults.Shuffle, "shuffle words?")
 	if !basicOptions {
 		flagset.Uint64Var(&config.MaxLength, "m", WordDefaults.MaxLength, "word max length")
-		flagset.BoolVar(&config.Aging, "aging", WordDefaults.Aging, "age words?")
-		flagset.BoolVar(&config.Unique, "unique", WordDefaults.Unique, "only unique words?")
+		flagset.BoolVar(&config.Aging, "age", WordDefaults.Aging, "decaying words?")
+		flagset.BoolVar(&config.Unique, "uniq", WordDefaults.Unique, "only unique words?")
 	}
 }
 
@@ -95,9 +95,13 @@ func (config *WordConfig) VisitFlags(flagset *flag.FlagSet, basicOptions bool) b
 		case "shuffle":
 			config.SetShuffle = true
 			ret = true
-		case "aging":
+		case "age":
 			config.SetAging = true
 			ret = true
+		case "uniq":
+			config.SetUnique = true
+			ret = true
+
 		}
 	})
 	return ret
@@ -107,7 +111,7 @@ func (config *WordConfig) Help(basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("words", flag.ExitOnError)
 	config.AddFlags(tmp,basicOptions)
-	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "unique", "aging"} {
+	for _, s := range []string{"n", "m", "life", "mark", "shuffle", "uniq", "age"} {
 		if flg := tmp.Lookup(s); flg != nil {
 			ret += gfx.FlagHelp(flg)
 		}

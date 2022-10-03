@@ -85,7 +85,11 @@ func (config *ShaderConfig) Help(mode Mode, basicOptions bool) string {
 	ret := ""
 	tmp := flag.NewFlagSet("shader", flag.ExitOnError)
 	config.AddFlags(tmp, mode, basicOptions)
-	tmp.VisitAll(func(f *flag.Flag) { ret += gfx.FlagHelp(f) })
+	for _, s := range []string{"shape", "color"} {
+		if flg := tmp.Lookup(s); flg != nil {
+			ret += gfx.FlagHelp(flg)
+		}
+	}
 	return ret
 }
 
