@@ -257,7 +257,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "\033[2J\033[H")    // clear screen, jump to origin
 			fmt.Fprintf(os.Stderr, "\033[%d;1H", 16+1) // cursor down
 		} else {
-			log.Notice(strings.TrimLeft(AUTHOR, "\n"))
+			log.Notice(FacadeTitle())
 		}
 
 		// install signal handler
@@ -402,8 +402,3 @@ func handleSignals(signals chan os.Signal, ticks chan Tick, pausable bool) {
 }
 
 
-const AUTHOR = `
-   _   _   _   _   _   _                  
-  |_  |_| /   |_| | \ |_                  
-  |   | | \_  | | |_/ |_  by FEEDFACE.COM 
-`
