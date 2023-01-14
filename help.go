@@ -18,7 +18,7 @@ func ShowHelp(flags flag.FlagSet) {
 		cmds = append(cmds, string(c))
 	}
 
-	fmt.Fprintf(os.Stderr, ShowVersion())
+	fmt.Fprintf(os.Stderr, FacadeTitle())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	fmt.Fprintf(os.Stderr, "  %s [flags]  %s\n", BUILD_NAME, strings.Join(cmds, "|"))
 	ShowCommands()
@@ -33,7 +33,7 @@ func ShowHelp(flags flag.FlagSet) {
 }
 
 func ShowHelpMode(cmd Command, mode facade.Mode, basicOptions bool) {
-	fmt.Fprintf(os.Stderr, ShowVersion())
+	fmt.Fprintf(os.Stderr, FacadeTitle())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	if cmd == EXEC {
 		fmt.Fprintf(os.Stderr, "  %s exec term [flags] /path/to/executable [args]\n", BUILD_NAME)
@@ -54,7 +54,7 @@ func ShowHelpCommand(cmd Command, flags flag.FlagSet) {
 		strings.ToLower(facade.Mode_WORDS.String()),
 		strings.ToLower(facade.Mode_TERM.String()),
 	}
-	fmt.Fprintf(os.Stderr, ShowVersion())
+	fmt.Fprintf(os.Stderr, FacadeTitle())
 	fmt.Fprintf(os.Stderr, "\nusage:\n")
 	switch cmd {
 	case EXEC:
@@ -88,15 +88,10 @@ func ShowModes() {
 	fmt.Fprintf(os.Stderr, "  %5s     %s\n", strings.ToLower(facade.Mode_TERM.String()), "ansi terminal")
 }
 
-func ShowVersion() string {
+func FacadeTitle() string {
 	ret := ""
-
-	ret += `  _   _   _   _   _   _             `+"\n"
-	ret += ` |_  |_| /   |_| | \ |_             `+BUILD_NAME+" "+BUILD_PLATFORM+"\n"
-	ret += ` |   | | \_  | | |_/ |_             version `+BUILD_VERSION+"\n"
-	ret += `        by FEEDFACE.COM             built `+BUILD_DATE+"\n"
-
-	//ret += fmt.Sprintf("%s\n",strings.TrimLeft(AUTHOR, "\n"))
-	//ret += fmt.Sprintf("%s version %s for %s built %s\n", BUILD_NAME, BUILD_VERSION, BUILD_PLATFORM, BUILD_DATE)
+	ret += `  _   _   _   _   _   _         `+"\n"
+	ret += ` |_  |_| /   |_| | \ |_         `+BUILD_NAME+" "+BUILD_PLATFORM+" "+BUILD_VERSION+"\n"
+	ret += ` |   | | \_  | | |_/ |_         `+"by FEEDFACE.COM "+BUILD_DATE+"\n"
 	return ret
 }
