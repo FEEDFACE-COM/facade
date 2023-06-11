@@ -61,7 +61,7 @@ func (config *WordConfig) Desc() string {
 }
 
 func (config *WordConfig) FillPatterns() []string {
-	return []string{"title", "index", "alpha", "clear"}
+	return []string{"title", "index", "index2", "alpha", "clear"}
 }
 
 func (config *WordConfig) AddFlags(flagset *flag.FlagSet, basicOptions bool) {

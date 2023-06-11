@@ -126,7 +126,7 @@ func (config *Config) AddFlags(flagset *flag.FlagSet, mode Mode, basicOptions bo
 	}
 
 	if !basicOptions {
-		flagset.StringVar(&config.Fill, "fill", "", "fill pattern ("+strings.Join(patterns, ",")+")")
+		flagset.StringVar(&config.Fill, "fill", "", "fill pattern ("+strings.Join(patterns, ", ")+")")
 	}
 
 }

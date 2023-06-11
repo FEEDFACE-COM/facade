@@ -270,16 +270,29 @@ func main() {
 
 
 		// add title if not given
-		if title && !config.SetFill {
+		if !debug && title && !config.SetFill {
 			config.SetFill = true
 			config.Fill = "title"
 		}
+		
+		// default mask for default shape
+		if !debug && config.GetShader()==nil && config.GetMask()==nil {
+			config.Mask = &facade.MaskConfig{Name: "def", SetName: true}
+        }
 
 		server = NewServer(receiveHost, port, textPort, readTimeout, ipv4, ipv6)
 		renderer = NewRenderer(directory, ticks)
 		if stdin { scanner = NewScanner() }
 		
-        log.Notice("FACADE receive text on %s:%d and draw to screen", server.host, server.textPort)
+		if (ipv4 || ipv6) && stdin {
+			log.Notice("FACADE render to screen, listen on %s:%d, read from stdin", server.host, server.textPort)
+		} else if ipv4 || ipv6 {
+			log.Notice("FACADE render to screen, listen on %s:%d", server.host, server.textPort)
+		} else if stdin {
+			log.Notice("FACADE render to screen, read from stdin")			   
+		} else {
+			log.Notice("FACADE render to screen, no network, no stdio")
+		}
 		
 		
 		go server.Listen(confs, texts)
@@ -301,7 +314,7 @@ func main() {
 
 	case PIPE:
 		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
-        log.Notice("FACADE read text from stdin and send to %s", client.connStr)
+        log.Notice("FACADE read from stdin, send to %s", client.connStr)
 
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)
@@ -359,7 +372,7 @@ func main() {
 		client = NewClient(connectHost, port, connectTimeout, ipv4, ipv6)
 		executor = NewExecutor(client, uint(cols), uint(rows), execPath, args)
 
-        log.Notice("FACADE execute %s and send stdout/stderr to %s",path.Base(executor.path),client.connStr)
+        log.Notice("FACADE run %s, send stdout/stderr to %s",path.Base(executor.path),client.connStr)
 
 		if err = client.Dial(); err != nil {
 			log.Error("fail to dial: %s", err)

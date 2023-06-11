@@ -321,7 +321,7 @@ func (renderer *Renderer) Render(confChan chan facade.Config, showDebugInfo bool
 
 	gfx.WorldClock().Tick()
 	renderer.prevFrame = gfx.WorldClock().Frame()
-	log.Notice("%s start render", renderer.Desc())
+	log.Notice("%s start render..", renderer.Desc())
 
 	renderFailed := false
 	for piglet.Loop() {

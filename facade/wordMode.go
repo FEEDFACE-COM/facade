@@ -457,8 +457,23 @@ func (mode *WordMode) FillString(name string) []string {
 			ret = append(ret, s)
 		}
 		return ret
+	case "index2":
+		maxLength := 8
+		if mode.maxLength > 0.0 {
+			maxLength = int(mode.maxLength)
+		}
+		ret := []string{}
+		for i := 0; i < mode.wordBuffer.slotCount; i++ {
+			s := ""
+			for j := 0; j < maxLength; j++ {
+				s += fmt.Sprintf("%1x", j%0x10)
+			}
+			ret = append(ret, s)
+		}
+		return ret
 	case "alpha":
-		return strings.Split(`
+		ret := []string{}	
+		a := strings.Split(`
 alpha
 beta
 gamma
@@ -484,6 +499,12 @@ chi
 psi
 omega
 `, "\n")[1:]
+        for i := 0; i < mode.wordBuffer.slotCount; i++ {
+            ret = append(ret, a[ i%len(a) ] )
+        }
+        return ret
+    case "clear":
+        return []string{}
 	default:
 		log.Error("no such wordbuffer fill pattern: '%s'", name)
 	}
