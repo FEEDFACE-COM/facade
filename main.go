@@ -43,7 +43,6 @@ const (
 	EXEC   Command = "exec"
 	CONF   Command = "conf"
 	HELP   Command = "help"
-	//README Command = "readme"
 )
 
 type Tick int
@@ -231,14 +230,6 @@ func main() {
 
 
 		}
-
-	//case README:
-	//	readme, err := base64.StdEncoding.DecodeString(facade.Asset["README"])
-	//	if err != nil {
-	//		log.PANIC("fail to decode readme: %s", err)
-	//	}
-	//	os.Stdout.Write(readme)
-	//	os.Exit(0)
 
 	case HELP:
 		fallthrough

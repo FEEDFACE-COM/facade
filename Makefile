@@ -224,13 +224,10 @@ font/amiga4ever.ttf:
 	curl -L -o $@.zip https://dl.dafont.com/dl/?f=amiga_forever
 	unzip -j -o -b $@.zip $$(basename $@) -d font/ && unlink $@.zip
 
-facade/assets.go: README.md
+facade/assets.go:
 	echo ""                                 >|$@
 	echo "package facade"                   >>$@
 	echo "var Asset = map[string]string{"   >>$@
-	echo "\n\"README\":\`"                  >>$@
-	cat README.md | base64                  >>$@
-	echo "\`,\n\n"                          >>$@
 	echo "}"                                >>$@
 	go fmt $@
 
