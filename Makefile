@@ -21,10 +21,10 @@ ifeq ($(BUILD_PLATFORM), raspbian11-arm)
   BUILD_TAGS += BROADCOM # needs LINUXDRM?
 endif
 ifeq ($(BUILD_PLATFORM), raspbian11-arm64)
-#  BUILD_TAGS += RENDERER
-#  BUILD_TAGS += BROADCOM # needs LINUXDRM?
 endif
-
+ifeq ($(BUILD_PLATFORM), darwin-arm64)
+   BUILD_TAGS += #RENDERER # darwin hack
+endif
 
 
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
@@ -160,17 +160,17 @@ reset:
 proto: ${PROTOS}
 	@echo "#FACADE built proto ${PROTOS}"
 
-rig: touch clean
+rig: touch
 	sed -i '' -e 's|gl "github.com/FEEDFACE-COM/piglet/gles2"|gl "github.com/go-gl/gl/v4.1-core/gl"|' gfx/*.go facade/*.go renderer.go
 	sed -i '' -e 's|"github.com/FEEDFACE-COM/piglet"|"FEEDFACE.COM/facade/piglet"|'  renderer.go
-	sed -i '' -e 's/^#BUILD_FLAGS += --tags RENDERER/BUILD_FLAGS += --tags RENDERER/' Makefile
+	sed -i '' -e 's/^   BUILD_TAGS += #RENDERER # darwin hack/   BUILD_TAGS +=  RENDERER # darwin hack/' Makefile
 	sed -i '' -e 's/^BUILD_NAME      = facade$$/BUILD_NAME      = facade-gui/' Makefile
 	@echo "#FACADE rigged for darwin-gui"
 
-unrig: touch clean
+unrig: touch
 	sed -i '' -e 's|gl "github.com/go-gl/gl/v4.1-core/gl"|gl "github.com/FEEDFACE-COM/piglet/gles2"|' gfx/*.go facade/*.go renderer.go
 	sed -i '' -e 's|"FEEDFACE.COM/facade/piglet"|"github.com/FEEDFACE-COM/piglet"|'  renderer.go
-	sed -i '' -e 's/^BUILD_FLAGS += --tags RENDERER/#BUILD_FLAGS += --tags RENDERER/' Makefile
+	sed -i '' -e 's/^   BUILD_TAGS +=  RENDERER # darwin hack/   BUILD_TAGS += #RENDERER # darwin hack/' Makefile
 	sed -i '' -e 's/^BUILD_NAME      = facade-gui$$/BUILD_NAME      = facade/' Makefile
 	@echo "#FACADE unrigged"
 
