@@ -1,11 +1,30 @@
 
 BUILD_NAME      = facade
-BUILD_VERSION  ?= $(shell git describe --tags)
-BUILD_RELEASE   = $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
-BUILD_DATE     ?= $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
-BUILD_PLATFORM ?= $(shell go env GOOS )-$(shell go env GOARCH)
+BUILD_VERSION  := $(shell git describe --tags)
+BUILD_RELEASE  := $(shell if echo ${BUILD_VERSION} | egrep -q '^[0-9]+\.[0-9]+\.[0-9]+$$'; then echo true; else echo false; fi )
+BUILD_DATE     := $(shell if ${BUILD_RELEASE}; then date -u +"%Y-%m-%d"; else date -u +"%Y-%m-%dT%H:%M:%S%z"; fi)
+BUILD_PLATFORM := $(shell go env GOOS )-$(shell go env GOARCH)
+ifeq ($(BUILD_PLATFORM), linux-arm)
+ifeq ($(shell lsb_release -s -i), Raspbian)
+  BUILD_PLATFORM := $(shell lsb_release -s -i -r |tr -d '\n' | tr [:upper:] [:lower:] )-$(shell go env GOARCH)
+endif
+endif
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
 BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
+BUILD_TAGS     ?= 
+ifeq ($(BUILD_PLATFORM), raspbian10-arm)
+  BUILD_TAGS += RENDERER
+  BUILD_TAGS += BROADCOM
+endif
+ifeq ($(BUILD_PLATFORM), raspbian11-arm)
+  BUILD_TAGS += RENDERER
+  BUILD_TAGS += BROADCOM # needs LINUXDRM?
+endif
+ifeq ($(BUILD_PLATFORM), raspbian11-arm64)
+#  BUILD_TAGS += RENDERER
+#  BUILD_TAGS += BROADCOM # needs LINUXDRM?
+endif
+
 
 
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
@@ -19,7 +38,8 @@ ASSET_FONT= $(foreach x,$(FONTS),font/$(x))
 SHADERS ?= def.vert def.frag 
 SHADERS += color.vert color.frag 
 SHADERS += lines/def.vert lines/crawl.vert lines/wave.vert
-SHADERS += lines/disk.vert lines/vortex.vert lines/rows.vert lines/slate.vert lines/roll.vert
+SHADERS += lines/disk.vert lines/vortex.vert lines/rows.vert 
+SHADERS += lines/slate.vert lines/roll.vert lines/torus.vert
 SHADERS += lines/def.frag lines/debug.frag
 SHADERS += words/def.vert words/field.vert words/flower.vert 
 SHADERS += words/def.frag words/debug.frag
@@ -27,7 +47,6 @@ SHADERS += chars/def.vert chars/moebius.vert
 SHADERS += chars/def.frag chars/moebius.frag chars/debug.frag
 SHADERS += mask/def.vert mask/def.frag mask/mask.frag mask/debug.frag 
 ASSET_SHADER = $(foreach x,$(SHADERS),shader/$(x))
-
 
 GCFLAGS ?= 
 # REM, for debug: GCFLAGS="-N -l"; make
@@ -37,12 +56,16 @@ LDFLAGS ?=
 LDFLAGS += -X main.BUILD_NAME=${BUILD_NAME} -X main.BUILD_VERSION=${BUILD_VERSION} -X main.BUILD_PLATFORM=${BUILD_PLATFORM} -X main.BUILD_DATE=${BUILD_DATE}
 
 
+
 BUILD_FLAGS ?= 
 BUILD_FLAGS += -v
-#BUILD_FLAGS += --tags RENDERER
-ifeq ($(BUILD_PLATFORM), linux-arm)
-  BUILD_FLAGS += --tags RENDERER
+ifneq (0,$(words $(BUILD_TAGS))) 
+    null  :=
+    space := $(null) #
+    comma := ,
+    BUILD_FLAGS += --tags $(subst $(space),$(comma),$(strip $(BUILD_TAGS)))
 endif
+
 
 
 default: build
@@ -50,15 +73,15 @@ default: build
 help:
 	@echo "#FACADE Help"
 	@echo " make info     # show build info"
+	@echo " make bom      # show build materials"
 	@echo " make build    # build static executable"
+	@echo " make package  # build platform package"
 	@echo " make get      # fetch golang packages"
-	@echo " make assets   # build fonts and shaders"
+	@echo " make mod      # create go.mod"
+	@echo " make assets   # rebuild fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
-	@echo " make package  # build platform package"
-	@echo " make rig      # prep for building darwin-gui"
-	@echo " make demo     # for 'make demo | facade pipe lines'"
-	
+	@echo " make demo     # for 'make demo | facade render -stdin'"
 
 info:
 	@echo "#FACADE Info"
@@ -68,6 +91,11 @@ info:
 	@echo " date       ${BUILD_DATE}"
 	@echo " product    ${BUILD_PRODUCT}"
 	@echo " package    ${BUILD_PACKAGE}"
+	@echo " tags       ${BUILD_TAGS}"
+#	@echo " flags      ${BUILD_FLAGS}"
+
+bom:
+	@echo "#FACADE Build Materials"
 	@echo "\n#FACADE Sources"
 	@echo "${SOURCES}"
 	@echo "\n#FACADE Protos"
@@ -80,6 +108,10 @@ info:
 	@echo "${ASSET_FONT}"   
 	@echo "\n#FACADE Extras"
 	@echo "${EXTRAS}"
+
+
+
+
 	
 build: ${BUILD_PRODUCT}
 	@echo "#FACADE built ${BUILD_PRODUCT}"
@@ -95,8 +127,14 @@ demo:
 	@for f in ${SOURCES}; do IFS=$(echo); echo "## $$f ##"; echo; cat $$f | while read -r line; do /bin/echo "$$line"; sleep .8; done; echo; echo; sleep 4; done
 
 get:
-	go get -v -u
+	go get -v
 	@echo "#FACADE got dependencies"
+	
+mod:
+	go mod init FEEDFACE.COM/facade
+	@echo "#FACADE go.mod"
+
+	
 
 clean:
 	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
@@ -206,7 +244,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:shader/::'); \
       echo "\n\n\"$${name}\":\`";\
-      echo "${BUILD_FLAGS}" | grep -q "RENDERER" && (cat $$src | base64 ); \
+      echo "${BUILD_TAGS}" | grep -q "RENDERER" && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                                >>$@
 	echo "}"                                            >>$@
@@ -214,7 +252,7 @@ facade/shaderAssets.go: ${ASSET_SHADER}
 
 
 facade/fontAssets.go: ${ASSET_FONT}
-	echo "fonts: ${BUILD_FLAGS}"
+	echo "fonts: ${BUILD_TAGS}"
 	echo ""                                         >|$@
 	echo "package facade"                           >>$@
 	echo "var FontAsset = map[string]string{"       >>$@
@@ -223,7 +261,7 @@ facade/fontAssets.go: ${ASSET_FONT}
       name=$$(echo $$name | tr "[:upper:]" "[:lower:]") \
       name=$$(echo $$name | sed -e 's:font/::;s:\.[tT][tT][fFcC]::' ); \
       echo "\n\n\"$${name}\":\`";\
-      echo "${BUILD_FLAGS}" | grep -q "RENDERER" && (cat $$src | base64 ); \
+      echo "${BUILD_TAGS}" | grep -q "RENDERER" && (cat $$src | base64 ); \
       echo "\`,\n\n"; \
     done                                            >>$@
 	echo "}"                                        >>$@

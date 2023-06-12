@@ -2,5 +2,6 @@ facade-*-*-*
 facade-*-*
 .AppleDouble
 .DS_Store
+._*
 tmp/*
 release/*
