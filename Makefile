@@ -25,7 +25,7 @@ endif
 ifeq ($(BUILD_PLATFORM), darwin-arm64)
    BUILD_TAGS += #RENDERER # darwin hack
 endif
-ifeq ($(findstring RENDERER,$(BUILD_TAGS),RENDERER)
+ifeq ($(findstring RENDERER,$(BUILD_TAGS)),RENDERER)
     BUILD_PACKAGE   = ${BUILD_NAME}-render-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 endif
 
