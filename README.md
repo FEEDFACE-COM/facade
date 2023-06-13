@@ -1,180 +1,225 @@
 # FACADE by FEEDFACE.COM
     
-1. Setup Rasberry Pi with Raspbian
-2. Connect projector via HDMI port
-3. run `facade render` on RasPi
-4. pipe any text to `facade pipe` or `nc raspi 4045` 
-5. text shows up on the wall of your home/office/hackerspace
+pipe stdout to light
+
+
+## FAQ
+
+* ##### What is FACADE?
+
+  FACADE is a command line tool for Raspberry Pi that reads ASCII/ANSI text from stdin or network and renders it to the display in different shapes.
+
+* ##### What is the recommended FACADE setup?
+
+  FACADE works best on a Raspberry Pi with an LED projector connected to the display port.  
+  The FACADE renderer receives text from other hosts over wireless network and displays it on the projector.
+  
+	~~~
+	                                                  /  H|      
+	+------------------+         +--------+  +-----+ /   E|      
+	| echo HELLO | fcd |.))   ((.| FACADE |--|     <     L|      
+	+------------------+         +--------+  +-----+ \   L|      
+	 host                         raspi     projector \  O| wall 
+	~~~  
+
+
+* ##### What are the FACADE requirements?  
+
+  The FACADE renderer requires a Raspberry Pi with the Broadcom BCM libraries.  
+  It is tested on the following systems:
+
+	*  Raspberry Pi 2 - Raspbian 10 (buster) Lite
+	*  Raspberry Pi 3 - Raspbian 10 (buster) Lite
+	*  Raspberry Pi 3 - Raspbian 11 (bullseye) Lite
+		* requires `/opt/vc/lib/*.so` from Raspbian 10
+
+	The FACADE renderer does not require X11 and has no external dependencies on Raspbian 10.  
+	The FACADE client is tested on various UNIX-like systems.
+
+* ##### Why is FACADE?
+
+  FACADE was created to enjoy, highlight and share the beauty of text on the terminal.
+
+   
+## Usage
+
+
+* ### Render text from stdin
+
+  On Raspberry Pi, FACADE reads text from stdin and renders to screen:
+
+		[user@raspi ~]$ echo 'Hello, World!' | facade render -stdin lines 
+
+	![echo](gallery/facade-hello.gif)
+
+
+
+* ### Render text from network
+ 
+   On Raspberry Pi, FACADE reads text from network and renders to screen:
+
+		[user@raspi ~]$ facade render lines -shape crawl
+
+	On another machine, FACADE reads text from stdin and sends to Raspberry Pi:
+
+		[user@host ~]$ ping -c 3 9.9.9.9 | facade pipe -host raspi 
+
+	![echo](gallery/facade-ping.gif)
+
+
+* ### Send text with _netcat_
+
+   On Raspberry Pi, FACADE reads text from network and renders to screen:
+
+		[user@raspi ~]$ facade render words -n 1 -uniq
+
+
+	On another machine, netcat reads text from stdin and sends to Raspberry Pi:
+
+	
+		[user@host ~]$ alias fcd='nc -N raspi 4045'
+		[user@host ~]$ while true; do date +%T; sleep .5; done | fcd	
+
+	![echo](gallery/facade-time.gif)
+
+
+## Help System
+
+FACADE shows available options depending on context:
+
+*	`facade -h` shows global options, and available commands
+*	`facade render -h` shows options for _render_ command, and available modes
+*	`facade render lines -h`  shows options for _lines_ mode, and available styles
+
+When the debug flag `-d` is given, more mode options are available:
+
+*	`facade -d render lines -h`  shows all options for _lines_ mode
+	
+
+
+  
 
 ## Examples
 
-#### `top` - system status
-~~~
-# on raspi:
-facade render term -shape wave
 
-# on client:
-facade exec -host raspi term -w 80 -h 25 top -1
-~~~
+* ### `man` - some manual pages are quite pretty
+![man](gallery/facade-man.gif)
 
-
-#### `tshark` - network traffic
-~~~
-# on raspi:
-facade render words -shape field -n 32 -life 4 -mark 1 -shuffle 
-
-# on client:
-alias fcd='nc raspi 4045'
-sudo tshark -i wlan0 -ql -f "tcp[tcpflags]&(tcp-syn|tcp-ack)==tcp-syn" -T fields -e ip.dst | fcd
-~~~
+		# Raspi
+		facade render lines -w 50 -shape crawl
+		
+		# Host
+		MANWIDTH=50 MANPAGER=cat man nc \
+		 | while read line; do echo "$line"; sleep .9; done | fcd
 
 
 
-~~~
-# on raspi:
-facade -d render words -shape field -n 32 -life 4 -mark 1 -shuffle -uniq
-
-# on client:
-alias fcd='nc raspi 4045'
-sudo tshark -n -i wlan0 -q -l -f "port 53" -T fields -e dns.qry.name \
- | awk '{ n=split($0,a,"."); printf("%s.%s\n",a[n-1],a[n]); fflush(); }' | fcd
-~~~
-
-~~~
-
-#### `tail` - logfiles
-~~~
-# on raspi:
-facade render lines -shape disk -w 150 -h 12
-
-# on client:
-alias fcd='nc raspi 4045'
-tail -f /var/log/nginx/access.log | fcd
-~~~
-
-#### `mtr` - trace route
-~~~
-# on raspi:
-facade render term -shape vortex
-
-# on client:
-facade exec term -w 120 -h 16 sudo mtr -m 10 --displaymode 2 wikipedia.org
-~~~
 
 
-#### `date` - wall time
-~~~
-# on raspi:
-facade render chars -shape moebius -w 64 -speed .5 -font spacemono
-
-# on client:
-alias fcd='nc raspi 4045'
-while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done | fcd
-~~~
-
-~~~
-# on raspi:
-facade render lines -shape wave -h 2 -w 10 -down -font ocraext -zoom .8
-
-# on client:
-alias fcd='nc raspi 4045'
-while true; do date "+%Y-%m-%d"; sleep 1; date "+ %H:%M:%S"; sleep 1; done | fcd
-~~~
 
 
-#### `bash` - command line collaboration
 
-~~~
-# on raspi:
-facade render term -mask=f
+* ### `RFC` - plaintext protocol specifications
+![rfc](gallery/facade-rfc.gif)
 
-# on client:
-facade exec -host raspi term -w 80 -h 25 bash
-~~~
-
-
-#### `frotz` - interactive fiction
-
-~~~
-# on raspi:
-facade render term -shape slate -zoom .75
-
-# on client:
-facade exec -host raspi term -w 110 -h 30 frotz /path/to/hitchhikers_guide.z5
-~~~
+		# Raspi
+    	facade render lines -w 72 -shape roll
+		
+		# Host
+		curl -L https://tools.ietf.org/rfc/rfc791.txt \
+		 | while read -r line; do echo "$line"; sleep .9; done | fcd
 
 
-#### `man` - some manual pages are quite pretty
-~~~
-# on raspi:
-facade render lines -w 50 -shape crawl
-
-# on client:
-alias fcd='nc raspi 4045'
-MANWIDTH=50 MANPAGER=cat man ssh \
- | while read line; do echo "$line"; sleep .9; done | fcd
-~~~
 
 
-#### `RFC` - protocol specifications in plaintext
-~~~
-# on raspi:
-facade render lines -w 72 -shape rows
-
-# on client:
-alias fcd='nc raspi 4045'
-curl -L https://tools.ietf.org/rfc/rfc792.txt \
- | while read -r line; do echo "$line"; sleep .9; done | fcd
-~~~
 
 
-#### `PHRACK` - your favourite hacking zine articles
-~~~
-# on raspi:
-facade render lines -w 80 -shape roll
 
-# on client:
-alias fcd='nc raspi 4045'
-curl -sL http://phrack.org/archives/tgz/phrack49.tar.gz \
- | tar xfz /dev/stdin --to-stdout ./14.txt \
- | while read -r line; do echo "$line"; sleep .9; done | fcd
-~~~
+* ### `PHRACK` - philes about hacking
 
+		# Raspi
+		facade render lines -w 80 -shape roll
 
-#### `asciipr0n` - nudes before the `<IMG>` tag
-~~~
-# on raspi:
-facade render lines -w 80 -shape slate
+		# Host
+		curl -sL http://phrack.org/archives/tgz/phrack49.tar.gz \
+		 | tar xfz /dev/stdin --to-stdout ./14.txt \
+		 | while read -r line; do echo "$line"; sleep .9; done | fcd
 
-# on client:
-alias fcd='nc raspi 4045'
-curl -sL https://www.asciipr0n.com/pr0n/pinups/pinup00.txt \
- | while read -r line; do echo "$line"; sleep .5; done | fcd
-~~~
+	![phrack](gallery/facade-phrack.gif)
+--
 
 
-#### `.nfo` - demo scene release notez
-~~~
-# on raspi:
-facade render lines -w=80 -shape=wave -mask=mask -font adore64
+* ### `asciipr0n` - nudes without the `<IMG>` tag
 
-# on client:
-alias fcd='nc raspi 4045'
-curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
- | while read -r line; do echo "$line"; sleep .9; done | fcd
-~~~
+		# Raspi
+		facade render lines -w 80 -shape slate
+	
+		# Host
+		curl -sL https://www.asciipr0n.com/pr0n/pinups/pinup00.txt \
+		 | while read -r line; do echo "$line"; sleep .5; done | fcd
+
+	![pr0n](gallery/facade-pr0n.gif)
+--
 
 
-#### `parrot.live` - http streaming
-~~~
-# on raspi:
-facade render term -shape slate
+* ### `.nfo` - demo scene release notez
 
-# on client:
-facade exec term -w 50 -h 20 curl parrot.live
-~~~
+		# Raspi
+		facade render lines -w 80 -shape wave  -font adore64
+	
+		# Host
+		curl -L https://content.pouet.net/files/nfos/00012/00012031.txt \
+		 | while read -r line; do echo "$line"; sleep .9; done | fcd
 
-## Author
 
-If you enjoy FACADE, tell us how you are using it at <facade@feedface.com>!
+	![nfo](gallery/facade-nfo.gif)
+--
+
+
+* ### `date` - wall time
+
+		# Raspi
+		facade -d render chars -shape moebius -color moebius -w 64 -speed .5 -font spacemono
+		
+		# Host
+		alias fcd='nc raspi 4045'
+		while true; do date +"%Y-%m-%dT%H:%M:%S%z"; sleep 1; done | fcd
+
+	![date](gallery/facade-date.gif)
+
+
+* ### `tshark` - network traffic
+
+		# Raspi
+		facade -d render words -shape field -n 32 -life 4 -mark 1 -shuffle -uniq
+		
+		# Host
+		sudo tshark -i wlan0 -l -T fields -e ip.src | tr -u ',' '\n' | fcd
+
+
+	![tshark](gallery/facade-tshark.gif)
+--
+
+
+
+* ### `mtr` - visual trace route
+
+		# Raspi
+		facade render term -shape vortex
+	
+		# Host
+		facade exec -host raspi term -w 120 -h 16 sudo mtr -m 10 --displaymode 1 9.9.9.9
+
+	![mtr](gallery/facade-mtr.gif)
+--
+
+
+
+
+
+
+
+--
+
+FACADE by FEEDFACE.COM 2023-05
 

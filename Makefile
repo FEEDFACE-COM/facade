@@ -10,7 +10,7 @@ ifeq ($(shell lsb_release -s -i), Raspbian)
 endif
 endif
 BUILD_PRODUCT   = ${BUILD_NAME}-${BUILD_PLATFORM}
-BUILD_PACKAGE   = ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
+BUILD_PACKAGE   = ${BUILD_NAME}-client-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
 BUILD_TAGS     ?= 
 ifeq ($(BUILD_PLATFORM), raspbian10-arm)
   BUILD_TAGS += RENDERER
@@ -25,7 +25,9 @@ endif
 ifeq ($(BUILD_PLATFORM), darwin-arm64)
    BUILD_TAGS += #RENDERER # darwin hack
 endif
-
+ifeq ($(findstring RENDERER,$(BUILD_TAGS),RENDERER)
+    BUILD_PACKAGE   = ${BUILD_NAME}-render-${BUILD_VERSION}-${BUILD_PLATFORM}.tgz
+endif
 
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
@@ -81,6 +83,7 @@ help:
 	@echo " make assets   # rebuild fonts and shaders"
 	@echo " make proto    # rebuild protobuf code"
 	@echo " make clean    # remove binaries and golang objects"
+	@echo " make purge    # remove golang objects and clear cache"
 	@echo " make demo     # for 'make demo | facade render -stdin'"
 
 info:
@@ -139,11 +142,11 @@ mod:
 clean:
 	-rm -f ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	-rm -rf package/${BUILD_PLATFORM}/
-	go clean -r
+	go clean -r -x
 	@echo "#FACADE cleaned up"
 
 purge:
-	go clean -r -cache -modcache
+	go clean -r -cache -modcache -x
 	@echo "#FACADE purged cache"
 
 touch:
