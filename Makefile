@@ -32,7 +32,7 @@ endif
 PROTOS  = facade/facade.pb.go facade/facade_grpc.pb.go
 ASSETS  = facade/shaderAssets.go facade/fontAssets.go facade/assets.go
 SOURCES = $(filter-out ${PROTOS} , $(filter-out ${ASSETS} , $(wildcard */*.go *.go ) ) )
-EXTRAS  = README.md
+EXTRAS  = README.md EXAMPLES.md SHADERS.md gallery/
 
 FONTS ?= Monaco.ttf RobotoMono.ttf SpaceMono.ttf VT323.ttf Adore64.ttf OCRAExt.ttf
 ASSET_FONT= $(foreach x,$(FONTS),font/$(x))
@@ -123,7 +123,7 @@ remove:
 	rm -f ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}
 	@echo "#FACADE removed ${BUILD_PRODUCT} ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}"
 
-package: clean ${BUILD_PACKAGE}
+package: ${BUILD_PACKAGE}
 	@echo "#FACADE packaged ${BUILD_PACKAGE}"
 
 demo:
@@ -186,9 +186,10 @@ ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM}: ${SOURCES} ${PROTOS} ${ASSETS}
 
 ${BUILD_PACKAGE}: ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} ${EXTRAS}
 	@if ${BUILD_RELEASE}; then true; else { echo "REFUSE TO RELEASE UNTAGGED VERSION ${BUILD_VERSION}"; false; }; fi;
+	rm -rf package/${BUILD_PLATFORM}/
 	mkdir -p package/${BUILD_PLATFORM}/
 	cp -f ${BUILD_NAME}-${BUILD_VERSION}-${BUILD_PLATFORM} package/${BUILD_PLATFORM}/${BUILD_NAME}
-	cp -f ${EXTRAS} package/${BUILD_PLATFORM}/
+	cp -fr ${EXTRAS} package/${BUILD_PLATFORM}/
 	cd package/${BUILD_PLATFORM}/ \
     && tar cfz ../${BUILD_PACKAGE} ${BUILD_NAME} ${EXTRAS} \
     && cd ..
@@ -269,5 +270,5 @@ facade/fontAssets.go: ${ASSET_FONT}
 
 
 
-.PHONY: help build package get info assets proto demo touch clean rig unrig reset remove
+.PHONY: help build package get mod info bom assets proto demo touch clean rig unrig reset remove
 
